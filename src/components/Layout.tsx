@@ -9,7 +9,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="min-h-screen flex flex-col">
             {/* Navbar */}
             <nav className="">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className=" mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex items-center">
                             <a href="/" className="text-xl font-bold">
@@ -49,7 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Footer */}
             <footer className="bg-gray-800 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="mx-auto px-4 sm:px-6 lg:px-8 py-12">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div>
                             <h3 className="text-lg font-semibold mb-4">About Bond</h3>

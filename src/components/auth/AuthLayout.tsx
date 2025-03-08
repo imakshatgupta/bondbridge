@@ -7,6 +7,8 @@ interface AuthLayoutProps {
   subtitle: string;
   image: string;
   isLogin?: boolean;
+  showOTP?: boolean;
+  otpMessage?: string;
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ 
@@ -14,40 +16,52 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   title, 
   subtitle, 
   image,
-  isLogin = false 
+  isLogin = false,
+  showOTP = false,
+  otpMessage = "Welcome, We are glad to see you!"
 }) => {
   return (
-    <div className=" md:px-40">
+    <div className="md:px-40">
       <div className="mx-auto grid grid-cols-1 md:grid-cols-2">
         <div className="flex flex-col p-8">
-
           
-          <div className="flex space-x-6 mb-8 text-3xl font-bold">
-            <Link 
-              to="/signup" 
-              className={` ${!isLogin ? 'text-black uppercase' : 'text-gray-400'}`}
-            >
-              SIGN UP
-            </Link>
-            <Link 
-              to="/login" 
-              className={` ${isLogin ? 'text-black uppercase' : 'text-gray-400'}`}
-            >
-              LOG IN
-            </Link>
-          </div>
-          
-          {isLogin && (
-            <p className="text-sm text-gray-500 mb-4">Welcome back, I'm so happy to see you again!</p>
+          {!showOTP && (
+            <>
+              <div className="flex space-x-6 mb-8 text-3xl font-bold">
+                <Link 
+                  to="/signup" 
+                  className={` ${!isLogin ? 'text-black uppercase' : 'text-gray-400'}`}
+                >
+                  SIGN UP
+                </Link>
+                <Link 
+                  to="/login" 
+                  className={` ${isLogin ? 'text-black uppercase' : 'text-gray-400'}`}
+                >
+                  LOG IN
+                </Link>
+              </div>
+              
+              {isLogin && (
+                <p className="text-sm text-gray-500 mb-4">Welcome back, I'm so happy to see you again!</p>
+              )}
+              
+              {!isLogin && (
+                <p className="text-sm text-gray-500 mb-4">Welcome, we are glad to see you!</p>
+              )}
+            </>
           )}
           
-          {!isLogin && (
-            <p className="text-sm text-gray-500 mb-4">Welcome, we are glad to see you!</p>
+          {showOTP && (
+            <div className="mb-4">
+              <h2 className="text-xl font-bold mb-1">Enter OTP</h2>
+              <p className="text-sm text-gray-500">{otpMessage}</p>
+            </div>
           )}
           
           {children}
           
-          {isLogin && (
+          {isLogin && !showOTP && (
             <div className="mt-4 text-center text-xs text-gray-500">
               Not a member of "Bond Community"? <Link to="/signup" className="text-blue-500">Sign up</Link>
             </div>
