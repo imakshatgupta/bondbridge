@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
+@plugin "tailwind-scrollbar";
 /* @custom-variant dark (&:where(.dark, .dark *)); */
 
 :root {
@@ -131,3 +132,18 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+
+
+
+.app-scrollbar, * {
+  @apply scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent;
+  @apply focus-visible:outline-none;
+
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb, *::-webkit-scrollbar-thumb {
+  width: 8px;  /* Vertical scrollbar width */
+  height: 8px; /* Horizontal scrollbar height */
+}
+
