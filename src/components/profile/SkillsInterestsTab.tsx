@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const SkillsInterestsTab: React.FC = () => {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([
@@ -13,15 +14,29 @@ const SkillsInterestsTab: React.FC = () => {
   const addSkill = (skill: string) => {
     if (!selectedSkills.includes(skill)) {
       setSelectedSkills([...selectedSkills, skill]);
-      //remove from skills array
       setSkills(skills.filter(s => s !== skill));
     }
   };
 
   const removeSkill = (skill: string) => {
     setSelectedSkills(selectedSkills.filter(s => s !== skill));
-    //add to skills array
     setSkills([...skills, skill]);
+  };
+
+  const saveSkills = async () => {
+    try {
+      const response = await axios.post("https://api.example.com/save-skills", {
+        skills: selectedSkills
+      }, {
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      
+      console.log("Skills saved successfully:", response.data);
+    } catch (error) {
+      console.error("Error saving skills:", error);
+    }
   };
 
   return (
@@ -52,9 +67,15 @@ const SkillsInterestsTab: React.FC = () => {
 
       <div className="flex justify-between items-center mt-4">
         <button className="text-blue-500">Explore More</button>
+        <button 
+          className="bg-green-500 text-white px-4 py-2 rounded-md" 
+          onClick={saveSkills}
+        >
+          Save Skills
+        </button>
       </div>
     </div>
   );
 };
 
-export default SkillsInterestsTab; 
+export default SkillsInterestsTab;
