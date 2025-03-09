@@ -1,4 +1,4 @@
-import { MoreHorizontal, Heart, MessageCircle } from "lucide-react";
+import { MoreHorizontal, Heart, MessageCircle, MessageSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export interface PostProps {
   user: string;
@@ -17,9 +18,10 @@ export interface PostProps {
   likes: number;
   comments: number;
   datePosted: string;
+  onCommentClick?: () => void;
 }
 
-export function Post({ user, avatar, postDate, caption, image, likes, comments, datePosted }: PostProps) {
+export function Post({ user, avatar, postDate, caption, image, likes, comments, datePosted, onCommentClick }: PostProps) {
   return (
     <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-2">
       <div className="flex items-center justify-between p-4">
@@ -58,9 +60,15 @@ export function Post({ user, avatar, postDate, caption, image, likes, comments, 
             <button className="flex items-center gap-1 hover:text-destructive">
               <Heart className="w-5 h-5" /> {likes}
             </button>
-            <button className="flex items-center gap-1 hover:text-primary">
-              <MessageCircle className="w-5 h-5" /> {comments}
-            </button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 px-2 text-muted-foreground"
+              onClick={onCommentClick}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              {comments}
+            </Button>
           </div>
           <div className="text-sm text-muted-foreground mr-3">{datePosted}</div>
         </div>

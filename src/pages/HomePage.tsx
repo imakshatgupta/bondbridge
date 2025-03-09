@@ -1,7 +1,7 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
 import avatarImage from "@/assets/avatar.png";
-import { Separator } from "@/components/ui/separator"
+import { useNavigate } from "react-router-dom";
 
 
 const StoryData = [
@@ -37,8 +37,14 @@ const PostsData = [
 ];
 
 export default function HomePage() {
+  const navigate = useNavigate();
+  
+  const handleCommentClick = (postId: number) => {
+    navigate(`/comments/${postId}`);
+  };
+  
   return (
-    <div className="max-w-2xl mx-auto ">
+    <div className="max-w-2xl mx-auto">
       {/* Stories Section */}
       <div className="mb-2 overflow-x-auto">
         <div className="flex gap-4 pb-2">
@@ -53,10 +59,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="-mx-10">
-        <Separator />
-      </div>
-
       {/* Posts Section */}
       {PostsData.map((post) => (
         <Post 
@@ -69,6 +71,7 @@ export default function HomePage() {
           likes={post.likes}
           comments={post.comments}
           datePosted={post.datePosted}
+          onCommentClick={() => handleCommentClick(post.id)}
         />
       ))}
     </div>
