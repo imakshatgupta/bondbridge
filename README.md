@@ -1,4 +1,4 @@
-Project is running
+Project is running and functioning
 
 # React + TypeScript + Vite
 
