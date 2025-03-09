@@ -5,6 +5,7 @@ import SetupProfile from './pages/SetupProfile';
 import './App.css'
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
+import Notifications from './pages/Notifications';
 function App() {
   return (
     <Router>
@@ -13,6 +14,7 @@ function App() {
         <Route path="/signup" element={<Layout><Signup /></Layout>} />
         <Route path="/setup-profile" element={<Layout><SetupProfile /></Layout>} />
         <Route path="/" element={<Layout showSidebars={true}><HomePage /></Layout>} />
+        <Route path="/notifications" element={<Layout showSidebars={true}><Notifications /></Layout>} />
       </Routes>
     </Router>
   );
