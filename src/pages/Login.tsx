@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
 import OTPForm from '../components/auth/OTPForm';
@@ -11,6 +11,8 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const [otpMessage, setOtpMessage] = useState('');
     const navigate = useNavigate();
+
+    
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
