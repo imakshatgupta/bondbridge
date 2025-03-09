@@ -111,7 +111,7 @@ const Navbar: React.FC = () => {
 
 const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
     return (
-        <div className=" flex flex-col h-screen w-screen">
+        <div className=" flex flex-col h-screen w-screen overflow-y-hidden ">
             {/* Navbar */}
             <Navbar />
 
@@ -127,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="col-span-3 p-5 space-y-6 *:rounded-xl">
+                    <div className="overflow-y-scroll h-[calc(100vh-40px)] col-span-3 p-5 space-y-6 *:rounded-xl">
                         {/* Profile Section */}
                         <div className="p-4 border-2 border-sidebar-border ">
                             <div className="flex flex-col items-center">
