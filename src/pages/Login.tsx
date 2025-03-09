@@ -1,5 +1,5 @@
-// src/pages/Login.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
 import OTPForm from '../components/auth/OTPForm';
 import { Link } from 'react-router-dom';
@@ -7,17 +7,63 @@ import { Button } from '@/components/ui/button';
 
 const Login: React.FC = () => {
     const [showOTP, setShowOTP] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [otpMessage, setOtpMessage] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Show OTP screen after form submission
-        setShowOTP(true);
+        
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Send OTP after successful email/password verification
+                const otpResponse = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+
+                if (otpResponse.ok) {
+                    setShowOTP(true);
+                    setOtpMessage('OTP sent successfully. Please enter the OTP to continue.');
+                } else {
+                    throw new Error('Failed to send OTP');
+                }
+            } else {
+                throw new Error(data.message || 'Invalid credentials');
+            }
+        } catch (error: any) {
+            alert(error.message);
+        }
     };
 
-    const handleVerifyOTP = (otp: string) => {
-        // Handle OTP verification logic
-        console.log('Verifying OTP:', otp);
-        // Redirect to dashboard or home page after successful verification
+    const handleVerifyOTP = async (otp: string) => {
+        try {
+            const response = await fetch('/api/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                navigate('/home'); // Redirect to home page after OTP verification
+            } else {
+                throw new Error(data.message || 'Invalid OTP');
+            }
+        } catch (error: any) {
+            alert(error.message);
+        }
     };
 
     const handleBack = () => {
@@ -31,7 +77,7 @@ const Login: React.FC = () => {
             image="/auth/login.png"
             isLogin
             showOTP={showOTP}
-            otpMessage="Welcome back, I'm so happy to see you again!"
+            otpMessage={otpMessage}
         >
             {!showOTP ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -40,17 +86,20 @@ const Login: React.FC = () => {
                         <input
                             type="email"
                             id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
                     </div>
                     <div>
                         <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-
                         <div className="relative">
                             <input
                                 type="password"
                                 id="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="mt-1 block w-full pr-7 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 required
                             />

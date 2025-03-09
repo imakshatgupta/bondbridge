@@ -1,6 +1,5 @@
-// src/pages/Signup.tsx
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
 import OTPForm from '../components/auth/OTPForm';
 import { Button } from '@/components/ui/button';
@@ -8,21 +7,88 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Show OTP screen after form submission
-    setShowOTP(true);
+    setError(null);
+
+    try {
+      // const response = await fetch('/api/send-otp', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ phone }),
+      // });
+
+      const response = {
+        ok: true,
+        json: async () => ({})
+      } 
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setShowOTP(true);
+      } else {
+        setError(data.message || 'Failed to send OTP. Try again.');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+      console.error('Error sending OTP:', error);
+    }
   };
 
-  const handleVerifyOTP = (otp: string) => {
-    // Handle OTP verification logic
-    console.log('Verifying OTP:', otp);
-    // Redirect to dashboard or home page after successful verification
+  const handleVerifyOTP = async (otp: string) => {
+    setError(null);
+
+    try {
+      // const response = await fetch('/api/verify-otp', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ phone, otp }),
+      // });
+
+      const response = {
+        ok: true,
+        json: async () => ({})
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // await registerUser();
+        alert('OTP verified successfully');
+      } else {
+        setError(data.message || 'Invalid OTP. Please try again.');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+      console.error('Error verifying OTP:', error);
+    }
   };
 
-  const handleBack = () => {
-    setShowOTP(false);
+  const registerUser = async () => {
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        navigate('/dashboard');
+      } else {
+        setError(data.message || 'Registration failed. Try again.');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+      console.error('Error registering user:', error);
+    }
   };
 
   return (
@@ -33,6 +99,8 @@ const Signup: React.FC = () => {
       showOTP={showOTP}
       otpMessage="Welcome, We are glad to see you!"
     >
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
       {!showOTP ? (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -40,6 +108,8 @@ const Signup: React.FC = () => {
             <input
               type="tel"
               id="phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               required
             />
@@ -51,11 +121,13 @@ const Signup: React.FC = () => {
               <input
                 type="password"
                 id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full pr-7 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required
               />
               <Button
-                variant={"ghost"}
+                variant="ghost"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400"
                 style={{ top: '4px' }}
                 onClick={() => {
@@ -73,7 +145,7 @@ const Signup: React.FC = () => {
           
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
-              <Checkbox id="terms" />
+              <Checkbox id="terms" required />
               <label htmlFor="terms" className="text-xs text-gray-700">
                 I agree to Bond's <Link to="/terms" className="text-blue-500">Terms of Conditions</Link> and <Link to="/privacy" className="text-blue-500">Privacy Policy</Link>
               </label>
@@ -98,7 +170,7 @@ const Signup: React.FC = () => {
         <>
           <OTPForm onVerify={handleVerifyOTP} />
           <button
-            onClick={handleBack}
+            onClick={() => setShowOTP(false)}
             className="mt-4 text-blue-500 hover:underline"
           >
             Back
