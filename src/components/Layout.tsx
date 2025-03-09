@@ -111,7 +111,7 @@ const Navbar: React.FC = () => {
 
 const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
     return (
-        <div className=" flex flex-col h-screen w-screen">
+        <div className=" flex flex-col h-screen w-screen overflow-hidden">
             {/* Navbar */}
             <Navbar />
 
@@ -119,15 +119,17 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
                 <div className="grid lg:grid-cols-12 w-full h-full">
                     {/* Left Sidebar */}
                     <LeftSidebar />
+                    <div className='flex col-span-10'>
+                       
                     
 
                     {/* Main Content */}
-                    <div className="col-span-7 border-r border-border">
+                    <div className="border-r w-full border-border">
                         {children}
                     </div>
 
                     {/* Right Sidebar */}
-                    <div className="col-span-3 p-5 space-y-6 *:rounded-xl">
+                    <div className="p-5 w-1/2  px-12 space-y-6 *:rounded-xl ">
                         {/* Profile Section */}
                         <div className="p-4 border-2 border-sidebar-border ">
                             <div className="flex flex-col items-center">
@@ -141,7 +143,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
                         </div>
 
                         {/* People Section */}
-                        <div className="p-6 border-2">
+                        <div className="p-6 border-2 overflow-y-scroll max-h-[52vh] app-scrollbar">
                             <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">People</h3>
                             <ul className="space-y-3">
                                <SidebarAvatar/>
@@ -149,8 +151,18 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
                                <SidebarAvatar/>
                                <SidebarAvatar/>
                                <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
+                               <SidebarAvatar/>
                             </ul>
                         </div>
+                    </div>
                     </div>
                 </div>
             ) : (
