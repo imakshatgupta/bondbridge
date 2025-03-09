@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
 import OTPForm from '../components/auth/OTPForm';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAppDispatch, useAppSelector } from '@/app/store';
+import { setName } from '@/features/tempSlice/slice';
 
 const Login: React.FC = () => {
     const [showOTP, setShowOTP] = useState(false);
@@ -12,8 +14,20 @@ const Login: React.FC = () => {
     const [otpMessage, setOtpMessage] = useState('');
     const navigate = useNavigate();
 
+    const dispatch = useAppDispatch();
+
+    const name = useAppSelector((state) => state.temp.name);
+
+    useEffect(() => {
+        console.log('Name:', name);
+    }, [name]);
+
+    
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        dispatch(setName('John Doe'));
         
         try {
             const response = await fetch('/api/auth/login', {
