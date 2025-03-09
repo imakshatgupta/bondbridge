@@ -1,6 +1,8 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
 import avatarImage from "@/assets/avatar.png";
+import { Separator } from "@/components/ui/separator"
+
 
 const StoryData = [
   { id: 1, user: "name one", avatar: avatarImage, isLive: true },
@@ -36,9 +38,9 @@ const PostsData = [
 
 export default function HomePage() {
   return (
-    <div className="max-w-2xl mx-auto mt-6">
+    <div className="max-w-2xl mx-auto ">
       {/* Stories Section */}
-      <div className="mb-6 overflow-x-auto">
+      <div className="mb-2 overflow-x-auto">
         <div className="flex gap-4 pb-2">
           {StoryData.map((story) => (
             <Story
@@ -49,6 +51,10 @@ export default function HomePage() {
             />
           ))}
         </div>
+      </div>
+
+      <div className="-mx-10">
+        <Separator />
       </div>
 
       {/* Posts Section */}
