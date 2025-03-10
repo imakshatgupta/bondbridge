@@ -1,6 +1,6 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
-import avatarImage from "@/assets/avatar.png";
+import avatarImage from "/activity/cat.png";
 import { useNavigate } from "react-router-dom";
 
 
