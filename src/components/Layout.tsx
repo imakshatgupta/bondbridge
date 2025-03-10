@@ -90,7 +90,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
                     
 
                     {/* Main Content */}
-                    <div className="border-r w-full border-border p-10 h-[calc(100vh-64px)] overflow-y-auto app-scrollbar">
+                    <div className="border-r w-full border-border p-10 h-[calc(100vh-64px)] overflow-y-auto app-scrollbar bg-background">
                         {children}
                     </div>
 
