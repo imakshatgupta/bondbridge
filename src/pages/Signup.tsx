@@ -4,6 +4,7 @@ import AuthLayout from '../components/auth/AuthLayout';
 import OTPForm from '../components/auth/OTPForm';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import axios from 'axios';
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
@@ -12,88 +13,70 @@ const Signup: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
+  
     try {
-      // const response = await fetch('/api/send-otp', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ phone }),
-      // });
-
+      // const response = await axios.post('/api/send-otp', { phone });
+  
       const response = {
-        ok: true,
-        json: async () => ({})
-      } 
-
-      const data = await response.json();
-
-      if (response.ok) {
+        status: 200,
+        data: {}
+      };
+  
+      if (response.status === 200) {
         setShowOTP(true);
       } else {
-        setError(data.message || 'Failed to send OTP. Try again.');
+        setError(response.data.message || 'Failed to send OTP. Try again.');
       }
     } catch (error) {
       setError('Network error. Please try again.');
       console.error('Error sending OTP:', error);
     }
   };
-
+  
   const handleVerifyOTP = async (otp: string) => {
     setError(null);
-
+  
     try {
-      // const response = await fetch('/api/verify-otp', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ phone, otp }),
-      // });
-
+      // const response = await axios.post('/api/verify-otp', { phone, otp });
+  
       const response = {
-        ok: true,
-        json: async () => ({})
-      }
-
-      const data = await response.json();
-
-      if (response.ok) {
+        status: 200,
+        data: {}
+      };
+  
+      if (response.status === 200) {
         // await registerUser();
         alert('OTP verified successfully');
       } else {
-        setError(data.message || 'Invalid OTP. Please try again.');
+        setError(response.data.message || 'Invalid OTP. Please try again.');
       }
     } catch (error) {
       setError('Network error. Please try again.');
       console.error('Error verifying OTP:', error);
     }
   };
-
+  
   const registerUser = async () => {
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
+      const response = await axios.post('/api/register', { phone, password });
+  
+      if (response.status === 200) {
         navigate('/dashboard');
       } else {
-        setError(data.message || 'Registration failed. Try again.');
+        setError(response.data.message || 'Registration failed. Try again.');
       }
     } catch (error) {
       setError('Network error. Please try again.');
       console.error('Error registering user:', error);
     }
   };
-
   return (
-    <AuthLayout 
-      title="Connecting Dreams, Fostering Growth" 
+    <AuthLayout
+      title="Connecting Dreams, Fostering Growth"
       subtitle="Sign up for your Bond Bridge journey today!"
       image="/auth/signup.png"
       showOTP={showOTP}
@@ -114,7 +97,7 @@ const Signup: React.FC = () => {
               required
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
             <div className="relative">
@@ -142,7 +125,7 @@ const Signup: React.FC = () => {
               </Button>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" required />
@@ -150,7 +133,7 @@ const Signup: React.FC = () => {
                 I agree to Bond's <Link to="/terms" className="text-blue-500">Terms of Conditions</Link> and <Link to="/privacy" className="text-blue-500">Privacy Policy</Link>
               </label>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Checkbox id="newsletter" />
               <label htmlFor="newsletter" className="text-xs text-gray-700">
@@ -158,7 +141,7 @@ const Signup: React.FC = () => {
               </label>
             </div>
           </div>
-          
+
           <button
             type="submit"
             className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
