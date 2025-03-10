@@ -1,4 +1,4 @@
-import { MoreHorizontal, Heart, MessageCircle, MessageSquare } from "lucide-react";
+import { MoreHorizontal, Heart, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export interface PostProps {
   user: string;
@@ -22,10 +22,15 @@ export interface PostProps {
 }
 
 export function Post({ user, avatar, postDate, caption, image, likes, comments, datePosted, onCommentClick }: PostProps) {
+  const navigate = useNavigate();
+
   return (
     <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-2">
       <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3">
+        <div 
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => navigate(`/profile/${user}`)}
+        >
           <Avatar>
             <AvatarImage src={avatar} alt={user} />
             <AvatarFallback>{user?.charAt(0)}</AvatarFallback>
@@ -60,15 +65,12 @@ export function Post({ user, avatar, postDate, caption, image, likes, comments, 
             <button className="flex items-center gap-1 hover:text-destructive">
               <Heart className="w-5 h-5" /> {likes}
             </button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-2 text-muted-foreground"
+            <button 
+              className="flex items-center gap-1 hover:text-primary"
               onClick={onCommentClick}
             >
-              <MessageSquare className="h-4 w-4 mr-1" />
-              {comments}
-            </Button>
+              <MessageCircle className="w-5 h-5" /> {comments}
+            </button>
           </div>
           <div className="text-sm text-muted-foreground mr-3">{datePosted}</div>
         </div>

@@ -97,6 +97,16 @@ export function Comment({ comment, isReply = false }: CommentProps) {
               variant="ghost" 
               size="sm" 
               className="h-8 px-2 text-muted-foreground"
+              onClick={() => setShowReplies(!showReplies)}
+            >
+              <MessageSquare className="h-4 w-4 mr-1" />
+              {comment.replies?.length || 0}
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 px-2 text-muted-foreground"
               onClick={() => setShowReplyInput(!showReplyInput)}
             >
               <Reply className="h-4 w-4 mr-1" />

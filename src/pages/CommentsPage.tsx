@@ -1,7 +1,11 @@
-import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Comments } from "@/components/Comments";
+import { Comment } from "@/components/Comment";
+import { Post } from "@/components/Post";
+import { Input } from "@/components/ui/input";
 import avatarImage from "@/assets/avatar.png";
 
 const commentsData = [
@@ -56,6 +60,7 @@ const commentsData = [
 
 export default function CommentsPage() {
   const navigate = useNavigate();
+  const [newComment, setNewComment] = useState("");
   
   return (
     <div className="relative max-w-2xl mx-auto bg-background min-h-screen flex flex-col">
@@ -72,15 +77,53 @@ export default function CommentsPage() {
         <h1 className="text-lg font-semibold">Comments</h1>
       </div>
 
-      <Comments 
-        postAuthor="Post Author"
-        postAvatar={avatarImage}
-        postCaption="Original post caption appears here..."
-        postLikes={2100}
-        postComments={24}
-        postDate="2 days ago"
-        comments={commentsData}
-      />
+      {/* Post Summary and Comment Input */}
+      <div className="flex-none">
+        <Post 
+          user="Post Author"
+          avatar={avatarImage}
+          caption="Original post caption appears here..."
+          image=""
+          likes={2100}
+          comments={24}
+          datePosted="2 days ago"
+          postDate=""
+        />
+
+        {/* Comment Input */}
+        <div className="p-4 border-b flex items-center gap-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={avatarImage} alt="Your avatar" />
+            <AvatarFallback>YA</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 relative">
+            <Input
+              placeholder="Add Your Comment"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="pr-12 rounded-full bg-muted"
+            />
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
+              disabled={!newComment.trim()}
+            >
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Comments List */}
+      <div className="flex-1 overflow-y-auto">
+        {commentsData.map((comment) => (
+          <Comment 
+            key={comment.id}
+            comment={comment}
+          />
+        ))}
+      </div>
     </div>
   );
 } 
