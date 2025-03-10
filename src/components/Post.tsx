@@ -1,4 +1,4 @@
-import { MoreHorizontal, Heart, MessageCircle } from "lucide-react";
+import { MoreHorizontal, Heart, MessageCircle,  Share2, Flag, Trash } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -25,7 +25,7 @@ export function Post({ user, avatar, postDate, caption, image, likes, comments, 
   const navigate = useNavigate();
 
   return (
-    <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-2">
+    <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
       <div className="flex items-center justify-between p-4">
         <div 
           className="flex items-center gap-3 cursor-pointer"
@@ -45,13 +45,14 @@ export function Post({ user, avatar, postDate, caption, image, likes, comments, 
             <MoreHorizontal className="w-5 h-5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Billing</DropdownMenuItem>
-            <DropdownMenuItem>Team</DropdownMenuItem>
+            <DropdownMenuItem><Share2 className="w-4 h-4 mr-2" /> Share</DropdownMenuItem>
+            <DropdownMenuItem><Flag className="w-4 h-4 mr-2" /> Report</DropdownMenuItem>
+             {/* show only if user is the owner of the post */}
+            <DropdownMenuItem><Trash className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem> 
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <CardContent className="mt-4">
+      <CardContent className="">
         <p className="text-card-foreground">{caption}</p>
         {image && (
           <img
