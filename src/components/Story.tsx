@@ -12,8 +12,8 @@ export const Story: FC<StoryProps> = ({
   user, 
   avatar, 
   isLive, 
-  liveRingColor = 'ring-pink-500 dark:ring-pink-400 ',
-  defaultRingColor = 'ring-gray-300 dark:ring-gray-600'
+  liveRingColor = 'ring-primary ',
+  defaultRingColor = 'ring-muted'
 }) => {
   return (
     <div className="flex flex-col items-center space-y-1 mx-2 my-1">

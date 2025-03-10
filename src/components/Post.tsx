@@ -73,7 +73,7 @@ export function Post({ user, avatar, postDate, caption, image, likes, comments, 
               <MessageCircle className="w-5 h-5" /> {comments}
             </button>
           </div>
-          <div className="text-sm text-muted-foreground mr-3">{datePosted}</div>
+          <div className="text-sm text-muted-foreground">{datePosted}</div>
         </div>
       </CardContent>
     </Card>
