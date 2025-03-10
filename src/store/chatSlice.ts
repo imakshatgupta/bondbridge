@@ -14,14 +14,15 @@ interface ChatState {
 }
 
 const initialState: ChatState = {
-  activeChat:   {
-    id: 1,
-    name: 'Michel Smithwick',
-    avatar: '/profile/user.png',
-    lastMessage: 'Hey, Nice to connect with you!',
-    timestamp: '2h',
-    unread: true
-  }
+  activeChat: null
+  //   {
+  //   id: 1,
+  //   name: 'Michel Smithwick',
+  //   avatar: '/profile/user.png',
+  //   lastMessage: 'Hey, Nice to connect with you!',
+  //   timestamp: '2h',
+  //   unread: true
+  // }
 };
 
 const chatSlice = createSlice({
