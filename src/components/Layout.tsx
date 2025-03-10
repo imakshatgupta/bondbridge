@@ -77,7 +77,7 @@ const LeftSidebar: React.FC = () => {
 
 const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
     return (
-        <div className=" flex flex-col h-screen w-screen overflow-hidden">
+        <div className=" flex flex-col">
             {/* Navbar */}
             <Navbar />
 

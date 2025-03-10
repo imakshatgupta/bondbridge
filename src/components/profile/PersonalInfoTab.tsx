@@ -1,24 +1,51 @@
-import React, { useState } from "react";
+import React, { use,useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
+import { 
+  setName, 
+  setEmail, 
+  setDateOfBirth, 
+  setPassword 
+} from "../../features/createProfileSlice/createProfile";
+import { RootState } from "../../app/store";
 
 const PersonalInfoTab: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    dob: "",
-    password: "",
-  });
+  const dispatch = useDispatch();
+  const { name, email, dateOfBirth, password } = useSelector(
+    (state: RootState) => state.createProfile
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
+    const { id, value } = e.target;
+    
+    switch (id) {
+      case "name":
+        dispatch(setName(value));
+        break;
+      case "email":
+        dispatch(setEmail(value));
+        break;
+      case "dob":
+        dispatch(setDateOfBirth(value));
+        break;
+      case "password":
+        dispatch(setPassword(value));
+        break;
+    }
   };
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post("https://your-api-endpoint.com/personal-info", formData);
+      const formData = {
+        name, 
+        email,
+        dob: dateOfBirth,
+        password
+      };
+      
+      // console.log("Personal Info:", formData);
+
+      const response = await axios.post("http://localhost:3000/api/edit-profile", formData);
       console.log("Response:", response.data);
       alert("Data submitted successfully!");
     } catch (error) {
@@ -34,7 +61,7 @@ const PersonalInfoTab: React.FC = () => {
         <input
           type="text"
           id="name"
-          value={formData.name}
+          value={name}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
@@ -45,7 +72,7 @@ const PersonalInfoTab: React.FC = () => {
         <input
           type="email"
           id="email"
-          value={formData.email}
+          value={email}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
@@ -56,7 +83,7 @@ const PersonalInfoTab: React.FC = () => {
         <input
           type="date"
           id="dob"
-          value={formData.dob}
+          value={dateOfBirth}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
@@ -67,7 +94,7 @@ const PersonalInfoTab: React.FC = () => {
         <input
           type="password"
           id="password"
-          value={formData.password}
+          value={password}
           onChange={handleChange}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />

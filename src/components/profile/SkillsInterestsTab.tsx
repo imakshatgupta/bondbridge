@@ -1,32 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import axios from 'axios';
+import {
+  addSkill,
+  removeSkill
+} from '../../features/createProfileSlice/createProfile';
+import { useAppDispatch, useAppSelector } from '../../app/store';
 
 const SkillsInterestsTab: React.FC = () => {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([
-    "Rock", "Indie Pop", "Fashion", "Motor Cycles"
-  ]);
+  const dispatch = useAppDispatch();
+  const { skillSelected, skillsAvailable } = useAppSelector(
+    (state) => state.createProfile
+  );
 
-  const [skills, setSkills] = useState<string[]>([
-    "NEWS", "Music", "Sports", "Racing cars", "Marketing",
-    "Science", "Chess"
-  ]);
-
-  const addSkill = (skill: string) => {
-    if (!selectedSkills.includes(skill)) {
-      setSelectedSkills([...selectedSkills, skill]);
-      setSkills(skills.filter(s => s !== skill));
-    }
+  const handleAddSkill = (skill: string) => {
+    dispatch(addSkill(skill));
   };
 
-  const removeSkill = (skill: string) => {
-    setSelectedSkills(selectedSkills.filter(s => s !== skill));
-    setSkills([...skills, skill]);
+  const handleRemoveSkill = (skill: string) => {
+    dispatch(removeSkill(skill));
   };
 
   const saveSkills = async () => {
     try {
+      console.log("Saving skills:", skillSelected);
       const response = await axios.post("https://api.example.com/save-skills", {
-        skills: selectedSkills
+        skills: skillSelected
       }, {
         headers: {
           "Content-Type": "application/json"
@@ -39,26 +37,30 @@ const SkillsInterestsTab: React.FC = () => {
     }
   };
 
+  // useEffect(() => {
+  //   console.log("Selected Skills:", skillSelected);
+  // }, [skillSelected]);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        {selectedSkills.map((selectedSkill) => (
+        {skillSelected.map((selectedSkill) => (
           <button
             key={selectedSkill}
             className="bg-purple-500 text-white px-3 py-1 rounded-full flex items-center"
-            onClick={() => removeSkill(selectedSkill)}
+            onClick={() => handleRemoveSkill(selectedSkill)}
           >
-            {selectedSkill} <span className="ml-2">✕</span>
+            {selectedSkill} <span className="ml-2 cursor-pointer">✕</span>
           </button>
         ))}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {skills.map((skill) => (
+        {skillsAvailable.map((skill) => (
           <button
             key={skill}
-            className="border-2 border-gray-300 text-gray-700 px-3 py-1 rounded-full flex items-center"
-            onClick={() => addSkill(skill)}
+            className="border-2 border-gray-300 text-gray-700 px-3 py-1 rounded-full flex items-center cursor-pointer hover:bg-gray-50"
+            onClick={() => handleAddSkill(skill)}
           >
             + {skill}
           </button>

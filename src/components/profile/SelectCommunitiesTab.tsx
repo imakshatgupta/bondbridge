@@ -1,20 +1,32 @@
-import React, { useState } from 'react';
-
-const communities = [
-  { id: 1, name: 'Tech Enthusiasts', members: 2450, pfp: '/profile/community/pubg.png' },
-  { id: 2, name: 'Creative Arts', members: 1820, pfp: '/profile/community/pubg.png' },
-  { id: 3, name: 'Fitness & Health', members: 3100, pfp: '/profile/community/pubg.png' },
-  { id: 4, name: 'Book Club', members: 940, pfp: '/profile/community/pubg.png' },
-  { id: 5, name: 'Travel Adventurers', members: 2700, pfp: '/profile/community/pubg.png' },
-  { id: 6, name: 'Food & Cooking', members: 1560, pfp: '/profile/community/pubg.png' },
-];
+import React, { useEffect } from 'react';
+import { addCommunity, removeCommunity } from '@/features/createProfileSlice/createProfile';
+import { useAppDispatch, useAppSelector } from '@/app/store';
 
 const SelectCommunitiesTab: React.FC = () => {
-  const [selectedCommunity, setSelectedCommunity] = useState<number | null>(null);
+  const dispatch = useAppDispatch();
+  
+  // Get communities data from Redux store
+  const communities = useAppSelector(state => state.createProfile.communitiesAvailable);
+  const selectedCommunities = useAppSelector(state => state.createProfile.communitiesSelected);
 
-  const toggleCommunity = (id: number) => {
-    setSelectedCommunity(selectedCommunity === id ? null : id);
+  const isCommunitySelected = (id: number) => {
+    return selectedCommunities.some(community => community.id === id);
   };
+
+  // Toggle community selection
+  const toggleCommunity = (community: { id: number; name: string; members: number; pfp: string }) => {
+    if (isCommunitySelected(community.id)) {
+      // If already selected, remove it from selected list
+      dispatch(removeCommunity(community));
+    } else {
+      // If not selected, add it to selected list
+      dispatch(addCommunity(community));
+    }
+  };
+
+  useEffect(() => {
+    console.log("Selected Communities:", selectedCommunities);
+  }, [selectedCommunities]);
 
   return (
     <div className="">
@@ -26,12 +38,21 @@ const SelectCommunitiesTab: React.FC = () => {
           <div 
             key={community.id}
             className={`relative rounded-xl cursor-pointer transition-all ${
-              selectedCommunity === community.id 
+              isCommunitySelected(community.id) 
                 ? 'bg-purple-50' 
                 : 'bg-gray-50'
             }`}
-            onClick={() => toggleCommunity(community.id)}
+            onClick={() => toggleCommunity(community)}
           >
+            {/* Selection Indicator */}
+            {isCommunitySelected(community.id) && (
+              <div className="absolute top-2 right-2 bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+            )}
+
             {/* Cover Image */}
             <div className="h-16 w-full rounded-t-xl overflow-hidden">
               <img 
@@ -55,7 +76,7 @@ const SelectCommunitiesTab: React.FC = () => {
             {/* Content */}
             <div className="pt-6 pb-2 px-4 text-center">
               <h3 className={`text-base font-medium ${
-                selectedCommunity === community.id ? 'text-purple-500' : 'text-gray-900'
+                isCommunitySelected(community.id) ? 'text-purple-500' : 'text-gray-900'
               }`}>
                 {community.name}
               </h3>
@@ -66,8 +87,17 @@ const SelectCommunitiesTab: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Display selected count */}
+      {selectedCommunities.length > 0 && (
+        <div className="mt-6 text-center">
+          <p className="text-purple-600 font-medium">
+            You've selected {selectedCommunities.length} {selectedCommunities.length === 1 ? 'community' : 'communities'}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
 
-export default SelectCommunitiesTab; 
+export default SelectCommunitiesTab;

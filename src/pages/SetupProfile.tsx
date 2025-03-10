@@ -37,7 +37,7 @@ const SetupProfile: React.FC = () => {
   };
 
   return (
-        <div className="grid p-8 grid-cols-4">
+        <div className="grid ml-20 py-24 grid-cols-4 gap-5">
           {/* Left Section: Heading + Nav */}
           <div className="">
             <h1 className="text-5xl font-medium mb-6">
