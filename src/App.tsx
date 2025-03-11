@@ -14,6 +14,7 @@ import CreateGroup from './pages/CreateGroup';
 import ProfilePage from "@/pages/ProfilePage";
 import OthersProfilePage from "./pages/OthersProfilePage";
 import Activity from '@/pages/Activity';
+import BondChat from './pages/BondChat';
 
 function App() {
   return (
@@ -28,13 +29,14 @@ function App() {
           <Route path="/search" element={<Layout showSidebars={true}><Search /></Layout>} />
           <Route path="/comments/:postId" element={<Layout showSidebars={true}><CommentsPage /></Layout>} />
           <Route path="/activity" element={<Layout showSidebars={true}><Activity /></Layout>} />
-        <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
-        <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
-        <Route path="/others-profile" element={
-          <Layout showSidebars={true}>
-            <OthersProfilePage />
-          </Layout>
-        } />
+          <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
+          <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
+          <Route path="/others-profile" element={
+            <Layout showSidebars={true}>
+              <OthersProfilePage />
+            </Layout>
+          } />
+          <Route path="/bondchat" element={<Layout showSidebars={true} className='py-0'><BondChat /></Layout>} />
         </Routes>
       </Router>
     </Provider>
