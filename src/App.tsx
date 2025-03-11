@@ -35,7 +35,7 @@ function App() {
           <Layout showSidebars={true}>
             <OthersProfilePage />
           </Layout>
-        } />
+        } />               
         </Routes>
       </Router>
     </Provider>

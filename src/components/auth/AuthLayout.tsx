@@ -61,11 +61,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           
           {children}
           
-          {isLogin && !showOTP && (
-            <div className="mt-4 text-center text-xs text-muted-foreground">
-              Not a member of "Bond Community"? <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
-            </div>
-          )}
+
           
           {/* {!isLogin && (
             <div className="mt-4 text-xs text-gray-500">
