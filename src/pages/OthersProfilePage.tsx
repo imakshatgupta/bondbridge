@@ -1,6 +1,5 @@
-import React from "react";
 import Profile from "@/components/Profile";
-import avatar from "@/assets/avatar.png";
+import avatar from "/profile/user.png";
 
 export default function OthersProfilePage() {
   // Mock data for demonstration

@@ -50,7 +50,7 @@ export const GridContentPanel: React.FC<{
   return (
     <div
       className={cn(
-        "bg-white/50 py-10 px-14 rounded-lg border backdrop-blur-md border-gray-200 shadow-sm relative z-10",
+        "bg-background/50 py-10 px-14 rounded-lg border backdrop-blur-md border-border shadow-sm relative z-10",
         className
       )}
     >
