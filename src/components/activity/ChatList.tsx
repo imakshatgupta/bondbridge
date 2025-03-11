@@ -47,7 +47,6 @@ const ChatList = () => {
         console.error("Failed to fetch chats", error);
       }
     };
-
     fetchChats();
   }, []);
 
