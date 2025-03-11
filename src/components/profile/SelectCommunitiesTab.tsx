@@ -31,7 +31,7 @@ const SelectCommunitiesTab: React.FC = () => {
 
   return (
     <div className="">
-      <h1 className="text-3xl font-medium mb-1 text-muted-foreground">Let's Join Exciting Communities</h1>
+      <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
       <p className="text-muted-foreground mb-8">select communities you want to join</p>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -81,7 +81,7 @@ const SelectCommunitiesTab: React.FC = () => {
               }`}>
                 {community.name}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 members: {community.members.toLocaleString()}
               </p>
             </div>

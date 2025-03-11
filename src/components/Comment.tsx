@@ -128,7 +128,7 @@ export function Comment({ comment, isReply = false }: CommentProps) {
               className="h-8 px-2 text-muted-foreground"
               onClick={toggleLiked}
             >
-              <Heart className={`h-4 w-4 mr-1 ${liked ? "fill-red-500 text-red-500" : ""}`} />
+              <Heart className={`h-4 w-4 mr-1 ${liked ? "text-destructive fill-destructive" : ""}`} />
               {formattedLikes}
             </Button>
 

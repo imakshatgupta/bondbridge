@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import Notifications from './pages/Notifications';
 import Search from './pages/Search';
 import CommentsPage from '@/pages/CommentsPage';
+import CreateGroup from './pages/CreateGroup';
 import Activity from '@/pages/Activity';
 
 const App: React.FC = () => {
