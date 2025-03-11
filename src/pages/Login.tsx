@@ -67,6 +67,8 @@ const Login: React.FC = () => {
             console.log("data ", data);
             if (data.userDetails.statusCode == 1) {
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('socketToken', data.socketToken);
+                console.log("user from login: ", data.userDetails._id);
                 dispatch(setUserId(data.userDetails._id));
                 navigate('/');
             }

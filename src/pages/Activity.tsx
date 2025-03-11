@@ -11,9 +11,6 @@ import CommunityList from '@/components/activity/CommunityList';
 export default function Activity() {
   const [searchQuery, setSearchQuery] = useState('');
 
-
-
-
   return (
     <div className="max-w-2xl mx-auto space-y-6 flex flex-col">
       {/* Header */}
