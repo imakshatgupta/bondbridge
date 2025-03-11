@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Comment } from "@/components/Comment";
 import { Post } from "@/components/Post";
 import { Input } from "@/components/ui/input";
-import avatarImage from "@/assets/avatar.png";
+import avatarImage from "/profile/user.png";
 
 const commentsData = [
   {
