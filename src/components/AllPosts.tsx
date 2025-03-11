@@ -1,0 +1,22 @@
+interface Post {
+  id: number;
+  imageSrc: string;
+}
+
+interface AllPostsProps {
+  posts: Post[];
+}
+
+const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {posts.map(post => (
+        <div key={post.id} className="aspect-square overflow-hidden">
+          <img src={post.imageSrc} alt="" className="w-full h-full object-cover" />
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default AllPosts; 

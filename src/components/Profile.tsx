@@ -1,15 +1,13 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings, MoreVertical, Share2, Flag } from "lucide-react";
+import { ArrowLeft, Settings} from "lucide-react";
 import avatar from "/activity/cat.png";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import AllPosts from "@/components/AllPosts";
+import AllAudios from "@/components/AllAudios";
+import AllReplies from "@/components/AllReplies";
 
 interface ProfileProps {
   username: string;
@@ -28,7 +26,6 @@ const Profile: React.FC<ProfileProps> = ({
   avatarSrc,
   isCurrentUser = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<"posts" | "audio" | "replies">("posts");
   const navigate = useNavigate();
 
   // Mock data for demonstration
@@ -66,33 +63,23 @@ const Profile: React.FC<ProfileProps> = ({
             <Switch />
           </div>
         ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Flag className="w-4 h-4 mr-2" /> Report
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ThreeDotsMenu
+            showDelete={false}
+            onShare={() => {/* handle share */}}
+            onReport={() => {/* handle report */}}
+          />
         )}
       </div>
 
       {/* Profile Info */}
       <div className="flex flex-col items-center pt-6 pb-4">
-        <div className="w-24 h-24 rounded-full overflow-hidden mb-3">
+        <div className="w-24 h-24 rounded-full overflow-hidden space-y-3">
           <img src={avatarSrc || "avatar.png"} alt={username} className="w-full h-full object-cover" />
         </div>
         <h1 className="text-xl font-semibold">{username}</h1>
-        <p className="text-muted-foreground text-sm mb-4">{email}</p>
+        <p className="text-muted-foreground text-sm space-y-4">{email}</p>
         
-        <div className="flex gap-8 mb-4">
+        <div className="flex gap-8 space-y-4 py-3">
           <div className="text-center">
             <div className="font-semibold">{followers.toLocaleString()}</div>
             <div className="text-sm text-muted-foreground">followers</div>
@@ -101,13 +88,14 @@ const Profile: React.FC<ProfileProps> = ({
             <div className="font-semibold">{following.toLocaleString()}</div>
             <div className="text-sm text-muted-foreground">following</div>
           </div>
+          {isCurrentUser && (
+            <button className="p-2 rounded-full border h-fit">
+              <Settings size={20} />
+            </button>
+          )}
         </div>
         
-        {isCurrentUser ? (
-          <button className="p-2 rounded-full border">
-            <Settings size={20} />
-          </button>
-        ) : (
+        {!isCurrentUser && (
           <div className="flex gap-2 w-full max-w-[200px]">
             <Button variant="outline" className="flex-1">
               Message
@@ -120,78 +108,25 @@ const Profile: React.FC<ProfileProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b">
-        <button 
-          className={`flex-1 py-3 text-center ${
-            activeTab === "posts" 
-              ? "border-b-2 border-primary font-medium text-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("posts")}
-        >
-          Posts
-        </button>
-        <button 
-          className={`flex-1 py-3 text-center ${
-            activeTab === "audio" 
-              ? "border-b-2 border-primary font-medium text-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("audio")}
-        >
-          Audio
-        </button>
-        <button 
-          className={`flex-1 py-3 text-center ${
-            activeTab === "replies" 
-              ? "border-b-2 border-primary font-medium text-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("replies")}
-        >
-          replies
-        </button>
-      </div>
+      <Tabs defaultValue="posts" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="posts">Posts</TabsTrigger>
+          <TabsTrigger value="audio">Audio</TabsTrigger>
+          <TabsTrigger value="replies">Replies</TabsTrigger>
+        </TabsList>
 
-      {/* Content */}
-      <div className="p-4">
-        {activeTab === "posts" && (
-          <div className="grid grid-cols-3 gap-1">
-            {posts.map(post => (
-              <div key={post.id} className="aspect-square overflow-hidden">
-                <img src={post.imageSrc} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
+        <TabsContent value="posts" className="p-4">
+          <AllPosts posts={posts} />
+        </TabsContent>
 
-        {activeTab === "audio" && (
-          <div className="space-y-3">
-            {audios.map(audio => (
-              <div key={audio.id} className="p-3 border rounded-lg flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium">{audio.title}</h3>
-                  <span className="text-sm text-muted-foreground">{audio.duration}</span>
-                </div>
-                <button className="w-8 h-8 rounded-full bg-primary text-background flex items-center justify-center">
-                  ▶
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <TabsContent value="audio" className="p-4">
+          <AllAudios audios={audios} />
+        </TabsContent>
 
-        {activeTab === "replies" && (
-          <div className="space-y-4">
-            {replies.map(reply => (
-              <div key={reply.id} className="p-3 border rounded-lg">
-                <div className="font-medium mb-1">@{reply.author}</div>
-                <p className="text-foreground">{reply.text}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        <TabsContent value="replies" className="p-4">
+          <AllReplies replies={replies} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
