@@ -58,18 +58,18 @@ const SetupProfile: React.FC = () => {
       // Add basic profile data
       formData.append('name', name);
       formData.append('email', email);
-      formData.append('dateOfBirth', dateOfBirth);
-      formData.append('password', password);
+      // formData.append('dateOfBirth', dateOfBirth);
+      // formData.append('password', password);
       
       // Add skills array
       if (skillSelected.length > 0) {
-        formData.append('skills', JSON.stringify(skillSelected));
+        formData.append('interests', JSON.stringify(skillSelected));
       }
       
       // Add image file if exists
-      if (image instanceof File) {
-        formData.append('image', image, image.name);
-      }
+      // if (image instanceof File) {
+      //   formData.append('image', image, image.name);
+      // }
       
       // Add avatar if exists
       if (avatar) {
@@ -77,9 +77,9 @@ const SetupProfile: React.FC = () => {
       }
       
       // Add selected communities
-      if (communitiesSelected.length > 0) {
-        formData.append('communities', JSON.stringify(communitiesSelected));
-      }
+      // if (communitiesSelected.length > 0) {
+      //   formData.append('communities', JSON.stringify(communitiesSelected));
+      // }
 
       // Log formData contents for debugging
       for (const pair of formData.entries()) {
@@ -90,28 +90,26 @@ const SetupProfile: React.FC = () => {
       const headers: Record<string, string> = {
         'Content-Type': 'multipart/form-data',
         'userId': userId,
+        'token': localStorage.getItem('token') || ''
       };
       
       console.log("userId: ", userId);
+      console.log("token: ", localStorage.getItem('token'));
 
       const response = await axios.put('http://localhost:3000/api/edit-profile', formData, {
         headers,
       });
-      
-      if (response.data.success) {
+      console.log("response: ", response);
+      if (response.status === 200) {
         console.log("Profile creation successful:", response.data);
         
         // Store the user ID in Redux
         if (response.data.userId) {
           dispatch(setUserId(response.data.userId));
         }
-        
-        // Store the token in localStorage if it exists in the response
-        if (response.data.token) {
-          localStorage.setItem('authToken', response.data.token);
-        }
-        
+        navigate('/');
         setSubmitSuccess(true);
+        // Redirect to home page after successful profile creation
       } else {
         throw new Error(response.data.message || 'Failed to create profile');
       }
