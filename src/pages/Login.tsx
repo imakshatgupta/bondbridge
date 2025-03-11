@@ -171,15 +171,29 @@ const Login: React.FC = () => {
                     Log In
                 </button>
 
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300"></div>
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-border"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-background text-muted-foreground">or</span>
+                        </div>
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-2 bg-white text-gray-500">or</span>
-                    </div>
-                </div>
-            </form>
+                </form>
+            ) : (
+                <>
+                    <OTPForm onVerify={handleVerifyOTP} />
+                    <Button
+                        onClick={handleBack}
+                        className="mt-4 text-primary hover:underline"
+                    >
+                        Back
+                    </Button>
+                </>
+            )}
+            <p className="text-sm text-muted-foreground text-center mt-4">
+                Don't have an account? <Link to="/signup" className="text-primary">Sign up</Link>
+            </p>
         </AuthLayout>
     );
 };
