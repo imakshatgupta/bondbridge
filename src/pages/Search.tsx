@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/popover";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
 import SearchResults from "@/components/SearchResults";
-import axios from "axios";
 
 export interface Person {
   id: string;
@@ -20,6 +19,39 @@ export interface Person {
 const searchPeople = async (query: string): Promise<Person[]> => {
   if (!query.trim()) return [];
 
+  // Mock data
+  const mockUsers: Person[] = [
+    {
+      id: "1",
+      name: "John Doe",
+      bio: "Software Engineer @ Google",
+      avatar: "/profile/user.png",
+    },
+    {
+      id: "2",
+      name: "Jane Smith",
+      bio: "Product Manager @ Microsoft",
+      avatar: "/profile/user.png",
+    },
+    {
+      id: "3",
+      name: "Mike Johnson",
+      bio: "UI Designer @ Apple",
+      avatar: "/profile/user.png",
+    },
+  ];
+
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  // Filter mock data based on query
+  return mockUsers.filter(
+    (user) =>
+      user.name.toLowerCase().includes(query.toLowerCase()) ||
+      user.bio.toLowerCase().includes(query.toLowerCase())
+  );
+
+  /* Commented out actual API call
   try {
     const response = await axios.post(
       "http://localhost:3000/api/search",
@@ -40,6 +72,7 @@ const searchPeople = async (query: string): Promise<Person[]> => {
     console.error("Error fetching search results:", error);
     return [];
   }
+  */
 };
 
 export default function Search() {
