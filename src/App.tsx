@@ -8,6 +8,8 @@ import HomePage from './pages/HomePage';
 import Notifications from './pages/Notifications';
 import Search from './pages/Search';
 import CommentsPage from '@/pages/CommentsPage';
+import Groups from './pages/Groups';
+import CreateGroup from './pages/CreateGroup';
 
 function App() {
   
@@ -22,6 +24,8 @@ function App() {
         <Route path="/notifications" element={<Layout showSidebars={true}><Notifications /></Layout>} />
         <Route path="/search" element={<Layout showSidebars={true}><Search /></Layout>} />
         <Route path="/comments/:postId" element={<Layout showSidebars={true}><CommentsPage /></Layout>} />
+        <Route path="/groups" element={<Layout showSidebars={true}><Groups /></Layout>} />
+        <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
       </Routes>
     </Router>
   );

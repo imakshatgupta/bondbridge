@@ -1,24 +1,20 @@
 import React from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
-import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
-import SelectAvatarTab from "@/components/profile/SelectAvatarTab";
-import CoverProfilePhotosTab from "@/components/profile/CoverProfilePhotosTab";
-import SelectCommunitiesTab from "@/components/profile/SelectCommunitiesTab";
+import GroupInfoTab from "@/components/groups/GroupInfoTab";
+import SkillsInterestsTab from "@/components/groups/SkillsInterestsTab";
+import SelectFriendsTab from "@/components/groups/SelectFriendsTab";
 import Grid, { GridContentPanel } from "@/components/grid";
 
 const tabs = [
-  { id: "personal", label: "Personal Information" },
+  { id: "info", label: "Group Information" },
   { id: "skills", label: "Skills/Interests" },
-  { id: "avatar", label: "Select Avatar" },
-  { id: "photos", label: "Cover & Profile Photos" },
-  { id: "communities", label: "Select Communities" },
+  { id: "friends", label: "Select friends" },
 ];
 
-const SetupProfile: React.FC = () => {
+const CreateGroup: React.FC = () => {
   const location = useLocation();
-  const currentTab = location.hash.replace("#", "") || "personal";
+  const currentTab = location.hash.replace("#", "") || "info";
   const navigate = useNavigate();
 
   const handleNext = () => {
@@ -42,7 +38,7 @@ const SetupProfile: React.FC = () => {
       {/* Left Section: Heading + Nav */}
       <div className="">
         <h1 className="text-5xl font-medium mb-6">
-          Complete Your Profile
+          Create Group
         </h1>
 
         <nav className="space-y-4">
@@ -67,11 +63,9 @@ const SetupProfile: React.FC = () => {
       <div className="relative col-span-2">
         <GridContentPanel>
           {/* Render tab content */}
-          {currentTab === "personal" && <PersonalInfoTab />}
+          {currentTab === "info" && <GroupInfoTab />}
           {currentTab === "skills" && <SkillsInterestsTab />}
-          {currentTab === "avatar" && <SelectAvatarTab />}
-          {currentTab === "photos" && <CoverProfilePhotosTab />}
-          {currentTab === "communities" && <SelectCommunitiesTab />}
+          {currentTab === "friends" && <SelectFriendsTab />}
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-8">
@@ -114,19 +108,19 @@ const SetupProfile: React.FC = () => {
           </div>
         </GridContentPanel>
 
-        {/* 3D Illustration (Clipboard & Tick) */}
-        {/* Position this absolutely so it appears to the right, like in your screenshot */}
+        {/* Clipboard illustration */}
         <div className="absolute top-5 -right-20 transform -translate-y-1/2 pointer-events-none hidden lg:block">
           <img
-            src="/profile/clipboard.png"
+            src="/groups/clipboard.png"
             alt="Clipboard Check"
             className="w-36"
           />
         </div>
 
-        <div className="absolute bottom-0 -right-20  pointer-events-none hidden lg:block">
+        {/* Decorative elements */}
+        <div className="absolute bottom-0 -right-20 pointer-events-none hidden lg:block">
           <img
-            src="/profile/deco1.png"
+            src="/groups/deco1.png"
             alt="decorative 1"
             className="w-36"
           />
@@ -134,16 +128,15 @@ const SetupProfile: React.FC = () => {
 
         <div className="absolute bottom-0 -left-16 pointer-events-none hidden lg:block">
           <img
-            src="/profile/deco2.png"
+            src="/groups/deco2.png"
             alt="decorative 2"
             className="w-36"
           />
         </div>
-
       </div>
       <div />
     </Grid>
   );
 };
 
-export default SetupProfile;
+export default CreateGroup; 
