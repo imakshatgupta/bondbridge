@@ -13,6 +13,7 @@ interface LayoutProps {
     showSidebars?: boolean; // Flag to control sidebar visibility
     className?: string;
 }
+
 const LeftSidebar: React.FC = () => {
     const pathname = window.location.pathname;
 
@@ -81,13 +82,14 @@ const LeftSidebar: React.FC = () => {
 }
 
 
-const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false, className  ="" }) => {
-    const activeChat = useAppSelector((state) => state.chat.activeChat);
-    // const activeChat = useAppSelector((state) => state.);
+const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,className}) => {
     const dispatch = useAppDispatch();
+    const activeChat = useAppSelector((state) => state.chat.activeChat);
+    
     const handleCloseChat = () => {
         dispatch(setActiveChat(null));
     };
+
     return (
         <div className=" flex flex-col h-screen w-screen overflow-hidden">
             {/* Navbar */}
