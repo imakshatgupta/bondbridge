@@ -12,31 +12,40 @@ import Groups from './pages/Groups';
 import CreateGroup from './pages/CreateGroup';
 import ProfilePage from "@/pages/ProfilePage";
 import OthersProfilePage from "./pages/OthersProfilePage";
+import StoryPage from "@/pages/StoryPage";
+import { ThemeProvider } from "@/components/theme-provider";
 
 function App() {
   
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Layout><Login /></Layout>} />
-        <Route path="/signup" element={<Layout><Signup /></Layout>} />
-        <Route path="/setup-profile" element={<Layout><SetupProfile /></Layout>} />
-        <Route path="/" element={<Layout showSidebars={true}><HomePage /></Layout>} />
-        <Route path="/notifications" element={<Layout showSidebars={true}><Notifications /></Layout>} />
-        <Route path="/search" element={<Layout showSidebars={true}><Search /></Layout>} />
-        <Route path="/comments/:postId" element={<Layout showSidebars={true}><CommentsPage /></Layout>} />
-        <Route path="/groups" element={<Layout showSidebars={true}><Groups /></Layout>} />
-        <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
-        <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
-        <Route path="/profile" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
-        <Route path="/others-profile" element={
-          <Layout showSidebars={true}>
-            <OthersProfilePage />
-          </Layout>
-        } />
-      </Routes>
-    </Router>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Layout><Login /></Layout>} />
+          <Route path="/signup" element={<Layout><Signup /></Layout>} />
+          <Route path="/setup-profile" element={<Layout><SetupProfile /></Layout>} />
+          <Route path="/" element={<Layout showSidebars={true}><HomePage /></Layout>} />
+          <Route path="/notifications" element={<Layout showSidebars={true}><Notifications /></Layout>} />
+          <Route path="/search" element={<Layout showSidebars={true}><Search /></Layout>} />
+          <Route path="/comments/:postId" element={<Layout showSidebars={true}><CommentsPage /></Layout>} />
+          <Route path="/groups" element={<Layout showSidebars={true}><Groups /></Layout>} />
+          <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
+          <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
+          <Route path="/profile" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
+          <Route path="/others-profile" element={
+            <Layout showSidebars={true}>
+              <OthersProfilePage />
+            </Layout>
+          } />
+          <Route path="/story" element={
+            <Layout showSidebars={true} className="!p-0">
+              <StoryPage />
+            </Layout>
+          } />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

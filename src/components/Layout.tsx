@@ -6,10 +6,11 @@ import Navbar from './Navbar';
 interface LayoutProps {
     children: React.ReactNode;
     showSidebars?: boolean; // Flag to control sidebar visibility
+    className?: string;
 }
 const LeftSidebar: React.FC = () => {
     return (
-        <div className="col-span-2 border-r border-border  text-xl flex flex-col">
+        <div className="col-span-2 h-[calc(100vh-64px)] border-r border-border  text-xl flex flex-col">
                         {/* Left Sidebar Menu */}
                         <div className=" p-4 w-fit mx-auto flex flex-col justify-between h-full">
                             <ul className="space-y-4">
@@ -75,14 +76,14 @@ const LeftSidebar: React.FC = () => {
 }
 
 
-const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
+const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,className}) => {
     return (
         <div className=" flex flex-col h-screen w-screen overflow-hidden">
             {/* Navbar */}
             <Navbar />
 
             {showSidebars ? (
-                <div className="grid lg:grid-cols-12 w-full ">
+                <div className="grid lg:grid-cols-12 w-full  ">
                     {/* Left Sidebar */}
                     <LeftSidebar />
                     <div className='flex col-span-10'>
@@ -90,7 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
                     
 
                     {/* Main Content */}
-                    <div className="border-r w-full border-border p-10 h-[calc(100vh-64px)] overflow-y-auto app-scrollbar bg-background">
+                    <div className={`border-r w-full p-10 border-border h-[calc(100vh-64px)] overflow-y-auto app-scrollbar bg-background ${className}`}>
                         {children}
                     </div>
 

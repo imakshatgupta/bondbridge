@@ -1,4 +1,5 @@
 import { FC } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface StoryProps {
   user: string;
@@ -15,8 +16,15 @@ export const Story: FC<StoryProps> = ({
   liveRingColor = 'ring-primary ',
   defaultRingColor = 'ring-muted'
 }) => {
+  const navigate = useNavigate();
+
   return (
-    <div className="flex flex-col items-center space-y-1 mx-2 my-1">
+    <div 
+      className="flex flex-col items-center space-y-1 mx-2 my-1"
+      onClick={() => navigate('/story')}
+      role="button"
+      tabIndex={0}
+    >
       <div className={`relative w-16 h-16 rounded-full ${
         isLive 
           ? `ring-2 ${liveRingColor}` 
