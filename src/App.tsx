@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import Notifications from './pages/Notifications';
 import Search from './pages/Search';
 import CommentsPage from '@/pages/CommentsPage';
+import CreateGroup from './pages/CreateGroup';
 import Activity from '@/pages/Activity';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
           <Route path="/search" element={<Layout showSidebars={true}><Search /></Layout>} />
           <Route path="/comments/:postId" element={<Layout showSidebars={true}><CommentsPage /></Layout>} />
           <Route path="/activity" element={<Layout showSidebars={true}><Activity /></Layout>} />
+        <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
         </Routes>
       </Router>
     </Provider>
