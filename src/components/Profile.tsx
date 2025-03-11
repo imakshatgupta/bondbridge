@@ -72,14 +72,14 @@ const Profile: React.FC<ProfileProps> = ({
       </div>
 
       {/* Profile Info */}
-      <div className="flex flex-col items-center pt-6 pb-4">
-        <div className="w-24 h-24 rounded-full overflow-hidden space-y-3">
+      <div className="flex flex-col items-center pb-4 space-y-1">
+        <div className="w-24 h-24 rounded-full overflow-hidden">
           <img src={avatarSrc || "avatar.png"} alt={username} className="w-full h-full object-cover" />
         </div>
         <h1 className="text-xl font-semibold">{username}</h1>
         <p className="text-muted-foreground text-sm space-y-4">{email}</p>
         
-        <div className="flex gap-8 space-y-4 py-3">
+        <div className="flex gap-8 py-3 mt-4">
           <div className="text-center">
             <div className="font-semibold">{followers.toLocaleString()}</div>
             <div className="text-sm text-muted-foreground">followers</div>
@@ -109,10 +109,17 @@ const Profile: React.FC<ProfileProps> = ({
 
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="audio">Audio</TabsTrigger>
-          <TabsTrigger value="replies">Replies</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+        *:data-[state=active]:text-primary">
+          <TabsTrigger value="posts" className="group">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">Posts</span>
+          </TabsTrigger>
+          <TabsTrigger value="audio" className="group">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">Audio</span>
+          </TabsTrigger>
+          <TabsTrigger value="replies" className="group">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">Replies</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="posts" className="p-4">
