@@ -1,23 +1,19 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
-import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
-import SelectAvatarTab from "@/components/profile/SelectAvatarTab";
-import CoverProfilePhotosTab from "@/components/profile/CoverProfilePhotosTab";
-import SelectCommunitiesTab from "@/components/profile/SelectCommunitiesTab";
+import GroupInfoTab from "@/components/groups/GroupInfoTab";
+import SelectFriendsTab from "@/components/groups/SelectFriendsTab";
 import TabPageLayout from "@/components/layouts/TabPageLayout";
+import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
 
 const tabs = [
-  { id: "personal", label: "Personal Information" },
+  { id: "info", label: "Group Information" },
   { id: "skills", label: "Skills/Interests" },
-  { id: "avatar", label: "Select Avatar" },
-  { id: "photos", label: "Cover & Profile Photos" },
-  { id: "communities", label: "Select Communities" },
+  { id: "friends", label: "Select friends" },
 ];
 
-const SetupProfile: React.FC = () => {
+const CreateGroup: React.FC = () => {
   const location = useLocation();
-  const currentTab = location.hash.replace("#", "") || "personal";
+  const currentTab = location.hash.replace("#", "") || "info";
   const navigate = useNavigate();
 
   const handleNext = () => {
@@ -38,7 +34,7 @@ const SetupProfile: React.FC = () => {
 
   return (
     <TabPageLayout
-      title="Complete Your Profile"
+      title="Create Group"
       tabs={tabs}
       currentTab={currentTab}
       onNext={handleNext}
@@ -49,13 +45,11 @@ const SetupProfile: React.FC = () => {
         deco2: "/profile/deco2.png",
       }}
     >
-      {currentTab === "personal" && <PersonalInfoTab />}
+      {currentTab === "info" && <GroupInfoTab />}
       {currentTab === "skills" && <SkillsInterestsTab />}
-      {currentTab === "avatar" && <SelectAvatarTab />}
-      {currentTab === "photos" && <CoverProfilePhotosTab />}
-      {currentTab === "communities" && <SelectCommunitiesTab />}
+      {currentTab === "friends" && <SelectFriendsTab />}
     </TabPageLayout>
   );
 };
 
-export default SetupProfile;
+export default CreateGroup; 

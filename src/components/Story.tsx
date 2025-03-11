@@ -12,7 +12,7 @@ export const Story: FC<StoryProps> = ({
   user, 
   avatar, 
   isLive, 
-  liveRingColor = 'ring-primary ',
+  liveRingColor = 'ring-primary',
   defaultRingColor = 'ring-muted'
 }) => {
   return (

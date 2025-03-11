@@ -4,6 +4,8 @@ import AuthLayout from '../components/auth/AuthLayout';
 import OTPForm from '../components/auth/OTPForm';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
@@ -99,36 +101,34 @@ const Signup: React.FC = () => {
       showOTP={showOTP}
       otpMessage="Welcome, We are glad to see you!"
     >
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-destructive text-sm">{error}</p>}
 
       {!showOTP ? (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone</label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone</Label>
+            <Input
               type="tel"
               id="phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               required
             />
           </div>
           
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
             <div className="relative">
-              <input
+              <Input
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full pr-7 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 required
               />
               <Button
                 variant="ghost"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground"
                 style={{ top: '4px' }}
                 onClick={() => {
                   const passwordInput = document.getElementById('password') as HTMLInputElement;
@@ -146,35 +146,33 @@ const Signup: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" required />
-              <label htmlFor="terms" className="text-xs text-gray-700">
-                I agree to Bond's <Link to="/terms" className="text-blue-500">Terms of Conditions</Link> and <Link to="/privacy" className="text-blue-500">Privacy Policy</Link>
+              <label htmlFor="terms" className="text-xs text-muted-foreground">
+                I agree to Bond's <Link to="/terms" className="text-primary hover:underline">Terms of Conditions</Link> and <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
               </label>
             </div>
             
             <div className="flex items-center space-x-2">
               <Checkbox id="newsletter" />
-              <label htmlFor="newsletter" className="text-xs text-gray-700">
+              <label htmlFor="newsletter" className="text-xs text-muted-foreground">
                 I would like to receive updates about products, services, and promotions
               </label>
             </div>
           </div>
           
-          <button
-            type="submit"
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
+          <Button type="submit" className="w-full">
             Sign Up
-          </button>
+          </Button>
         </form>
       ) : (
         <>
           <OTPForm onVerify={handleVerifyOTP} />
-          <button
+          <Button
+            variant="link"
             onClick={() => setShowOTP(false)}
-            className="mt-4 text-blue-500 hover:underline"
+            className="mt-4"
           >
             Back
-          </button>
+          </Button>
         </>
       )}
     </AuthLayout>
