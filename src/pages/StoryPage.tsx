@@ -3,7 +3,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import avatarImage from '@/assets/avatar.png';
+import avatarImage from "/activity/cat.png";
 
 const users = [
     {

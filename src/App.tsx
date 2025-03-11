@@ -4,8 +4,7 @@ import { store } from './store';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import SetupProfile from './pages/SetupProfile';
-import './App.css'
-import { Layout } from './components/Layout';
+import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import Notifications from './pages/Notifications';
 import Search from './pages/Search';
