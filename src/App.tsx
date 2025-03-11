@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import SetupProfile from './pages/SetupProfile';
 import './App.css'
-import Layout from './components/Layout';
+import { Layout } from './components/Layout';
 import HomePage from './pages/HomePage';
 import Notifications from './pages/Notifications';
 import Search from './pages/Search';
@@ -22,7 +22,7 @@ function App() {
   return (
     <Provider store={store}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
+        <Router>
           <Routes>
             <Route path="/login" element={<Layout><Login /></Layout>} />
             <Route path="/signup" element={<Layout><Signup /></Layout>} />
@@ -40,16 +40,16 @@ function App() {
                 <OthersProfilePage />
               </Layout>
             } />
-          <Route path="/bondchat" element={<Layout showSidebars={true} className='py-0'><BondChat /></Layout>} />
+            <Route path="/bondchat" element={<Layout showSidebars={true} className='py-0'><BondChat /></Layout>} />
             <Route path="/story" element={
-            <Layout showSidebars={true} className="!p-0">
-              <StoryPage />
-            </Layout>
-          } />
-        </Routes>
+              <Layout showSidebars={true} className="!p-0">
+                <StoryPage />
+              </Layout>
+            } />
+          </Routes>
         </Router>
+      </ThemeProvider>
     </Provider>
-    </ThemeProvider>
   );
 }
 

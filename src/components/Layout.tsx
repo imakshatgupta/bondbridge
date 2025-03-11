@@ -12,6 +12,7 @@ interface LayoutProps {
     showSidebars?: boolean; // Flag to control sidebar visibility
     className?: string;
 }
+
 const LeftSidebar: React.FC = () => {
     const pathname = window.location.pathname;
 
