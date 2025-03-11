@@ -1,15 +1,10 @@
 import { useState } from "react";
-import { MoreVertical, ArrowRight, Heart } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Comment } from "@/components/Comment";
 import { Input } from "@/components/ui/input";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 
 interface CommentsProps {
   postAuthor: string;
@@ -32,17 +27,17 @@ interface CommentData {
   hasReplies?: boolean;
 }
 
-export function Comments({ 
-  postAuthor, 
-  postAvatar, 
-  postCaption, 
-  postLikes, 
-  postComments, 
+export function Comments({
+  postAuthor,
+  postAvatar,
+  postCaption,
+  postLikes,
+  postComments,
   postDate,
-  comments 
+  comments
 }: CommentsProps) {
   const [newComment, setNewComment] = useState("");
-  
+
   return (
     <div className="flex-1 flex flex-col">
       {/* Post Summary */}
@@ -56,17 +51,12 @@ export function Comments({
               </Avatar>
               <span className="font-medium">{postAuthor}</span>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Report</DropdownMenuItem>
-                <DropdownMenuItem>Block</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ThreeDotsMenu
+              showDelete={false}
+              onShare={() => console.log('Share clicked')}    
+              onReport={() => console.log('Report clicked')}
+              onDelete={() => console.log('Delete clicked')}
+            />
           </div>
           <p className="text-sm mb-3">{postCaption}</p>
           <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -96,9 +86,9 @@ export function Comments({
               onChange={(e) => setNewComment(e.target.value)}
               className="pr-12 rounded-full bg-muted"
             />
-            <Button 
-              size="icon" 
-              variant="ghost" 
+            <Button
+              size="icon"
+              variant="ghost"
               className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
               disabled={!newComment.trim()}
             >
@@ -111,7 +101,7 @@ export function Comments({
       {/* Comments List */}
       <div className="flex-1 overflow-y-auto">
         {comments.map((comment) => (
-          <Comment 
+          <Comment
             key={comment.id}
             comment={comment}
           />
