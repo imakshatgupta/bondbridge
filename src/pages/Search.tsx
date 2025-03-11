@@ -1,8 +1,14 @@
-import { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search as SearchIcon } from 'lucide-react';
-import SearchResults from '@/components/SearchResults';
+import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Search as SearchIcon, Loader2 } from "lucide-react";
+import SearchResults from "@/components/SearchResults";
+import axios from "axios";
+
 export interface Person {
   id: string;
   name: string;
@@ -10,31 +16,68 @@ export interface Person {
   avatar: string;
 }
 
+// API call
+const searchPeople = async (query: string): Promise<Person[]> => {
+  if (!query.trim()) return [];
+
+  try {
+    const response = await axios.post(
+      "http://localhost:3000/api/search",
+      {
+        searchString: query,
+      },
+      {
+        headers: {
+          token:
+            "8Wg9B601p7BFwWCsl6sUmGhtpnRjYAXEgfnrUA78umKfbOcft5rsCfZ5QYnRlGB1",
+          userid: "67d02bbc61192a1a4e8b99fc",
+        },
+      }
+    );
+
+    return response.data.users;
+  } catch (error) {
+    console.error("Error fetching search results:", error);
+    return [];
+  }
+};
+
 export default function Search() {
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  // Mock data - replace with your actual data
-  const people: Person[] = [
-    {
-      id: '1',
-      name: 'Michel Smithwick',
-      bio: 'SDE @ Paytm',
-      avatar: '/profile/user.png',
-    },
-    {
-      id: '2',
-      name: 'Sena Foore',
-      bio: 'SDE-II @ Paytm',
-      avatar: '/profile/user.png',
-    },
-    // Add more people...
-  ];
+  const [searchQuery, setSearchQuery] = useState("");
+  const [people, setPeople] = useState<Person[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPeople = async () => {
+      if (!searchQuery.trim()) {
+        setPeople([]);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const results = await searchPeople(searchQuery);
+        setPeople(results);
+      } catch (error) {
+        console.error("Error fetching people:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Add debounce to avoid too many API calls
+    const timeoutId = setTimeout(() => {
+      fetchPeople();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const history = [
-    'Software Engineers',
-    'Product Managers',
-    'UI Designers',
-    'Data Scientists',
+    "Software Engineers",
+    "Product Managers",
+    "UI Designers",
+    "Data Scientists",
   ];
 
   return (
@@ -45,13 +88,16 @@ export default function Search() {
           <PopoverTrigger asChild>
             <div className="relative">
               <Input
-                // type="search"
                 placeholder="Search"
                 className="w-full bg-muted border-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              {isLoading ? (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+              ) : (
+                <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              )}
             </div>
           </PopoverTrigger>
           <PopoverContent className="w-[calc(100vw-2rem)] max-w-2xl bg-muted border-none">
