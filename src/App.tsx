@@ -15,12 +15,10 @@ import OthersProfilePage from "./pages/OthersProfilePage";
 import Activity from '@/pages/Activity';
 import BondChat from './pages/BondChat';
 import StoryPage from "@/pages/StoryPage";
-import { ThemeProvider } from "@/components/ThemeProvider";
 
 function App() {
   return (
     <Provider store={store}>
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <Router>
           <Routes>
             <Route path="/login" element={<Layout><Login /></Layout>} />
@@ -47,7 +45,6 @@ function App() {
             } />
           </Routes>
         </Router>
-      </ThemeProvider>
     </Provider>
   );
 }
