@@ -114,8 +114,8 @@ export default function Search() {
   ];
 
   return (
-    <div className="bg-background text-foreground p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto bg-background min-h-screen p-4">
+      <div className="sticky top-0 bg-background pb-4">
         {/* Search Bar with Popover */}
         <Popover>
           <PopoverTrigger asChild>
@@ -148,13 +148,15 @@ export default function Search() {
             </div>
           </PopoverContent>
         </Popover>
-
-        {/* People List */}
-        <div className="space-y-4">
-          {people.map((person) => (
-            <SearchResults key={person.id} person={person} />
-          ))}
-        </div>
+      </div>
+      <div className="text-sm text-muted-foreground mb-4">
+        Recent Searches
+      </div>
+      {/* People List */}
+      <div className="space-y-4">
+        {people.map((person) => (
+          <SearchResults key={person.id} person={person} />
+        ))}
       </div>
     </div>
   );
