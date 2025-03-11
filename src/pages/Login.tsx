@@ -1,59 +1,85 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
-import OTPForm from '../components/auth/OTPForm';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import IntlTelInput from 'react-intl-tel-input';
 import 'react-intl-tel-input/dist/main.css';
-import { log } from 'console';
+import { useAppDispatch } from '../store';
+import { setUserId } from '../store/createProfileSlice';
 
 const Login: React.FC = () => {
-    const [showOTP, setShowOTP] = useState(false);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [countryCode, setCountryCode] = useState('91'); // Default to India (+91)
-    const [isValidPhone, setIsValidPhone] = useState(false);
+    const [, setIsValidPhone] = useState(false);
     const [password, setPassword] = useState('');
-    const [otpMessage, setOtpMessage] = useState('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
-
+    // Add effect to apply styles to the phone input after it's rendered
+    useEffect(() => {
+        const fixPhoneInputStyles = () => {
+            const container = document.querySelector('.intl-tel-input');
+            if (container) {
+                // Make width consistent
+                container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
+                
+                // Fix flag container height
+                const flagContainer = container.querySelector('.flag-container');
+                if (flagContainer) {
+                    flagContainer.setAttribute('style', 'height: 100% !important;');
+                }
+                
+                // Fix selected flag height
+                const selectedFlag = container.querySelector('.selected-flag');
+                if (selectedFlag) {
+                    selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
+                }
+                
+                // Fix input height
+                const input = container.querySelector('input');
+                if (input) {
+                    input.setAttribute('style', 'height: 40px !important;');
+                }
+            }
+        };
+        
+        // Run initially and after a small delay to ensure component is rendered
+        fixPhoneInputStyles();
+        const timeoutId = setTimeout(fixPhoneInputStyles, 100);
+        
+        return () => clearTimeout(timeoutId);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // if (!isValidPhone) {
-        //     alert('Please enter a valid phone number');
-        //     return;
-        // }
-
-        let validCountryCode = "+" + countryCode;
+        const validCountryCode = "+" + countryCode;
 
         try {
-            console.log("phone no ", phoneNumber);
-            console.log("countryCode ", validCountryCode);
-            console.log("password ", password);
-
             const { data } = await axios.post('http://localhost:3000/api/login', {
                 phoneNumber,
                 countryCode: validCountryCode,
                 password
             });
-            // console.log("data ", data);
+            console.log("data ", data);
             if (data.userDetails.statusCode == 1) {
+                localStorage.setItem('token', data.token);
+                dispatch(setUserId(data.userDetails._id));
                 navigate('/');
             }
             else {
                 console.error("cannot find user");
             }
-        } catch (error: any) {
-            alert(error.response?.data?.message || 'Invalid credentials');
+        } catch (error: unknown) {
+            const axiosError = error as AxiosError<{ message: string }>;
+            alert(axiosError.response?.data?.message || 'Invalid credentials');
         }
     };
 
-    const handlePhoneChange = (isValid, value, selectedCountryData, fullNumber, extension) => {
+    const handlePhoneChange = (isValid: boolean, value: string, selectedCountryData: { dialCode?: string }) => {
         setIsValidPhone(isValid);
         if (selectedCountryData && selectedCountryData.dialCode) {
             setCountryCode(selectedCountryData.dialCode);
@@ -61,7 +87,7 @@ const Login: React.FC = () => {
 
         // Remove the country code from the phone number
         if (selectedCountryData && selectedCountryData.dialCode) {
-            const dialCode = selectedCountryData.dialCode;
+            const dialCode = String(selectedCountryData.dialCode);
             let cleanNumber = value.replace(/\D/g, '');
 
             // If number starts with the dial code, remove it
@@ -82,15 +108,14 @@ const Login: React.FC = () => {
             image="/auth/login.png"
             isLogin
         >
-
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone</label>
-                    <div className="mt-1">
+                    <div className="mt-1 relative" style={{ height: '40px' }}>
                         <IntlTelInput
                             ref={phoneInputRef}
                             containerClassName="intl-tel-input"
-                            inputClassName="form-control w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            inputClassName="form-control w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             defaultCountry={'in'}
                             preferredCountries={['in']}
                             onPhoneNumberChange={handlePhoneChange}
@@ -100,7 +125,6 @@ const Login: React.FC = () => {
                             autoPlaceholder={true}
                             nationalMode={false}
                             separateDialCode={true}
-                            required
                         />
                     </div>
                 </div>
@@ -112,7 +136,7 @@ const Login: React.FC = () => {
                             id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 block w-full pr-7 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            className="mt-1 block w-full h-10 pr-7 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
                         <Button
@@ -140,7 +164,7 @@ const Login: React.FC = () => {
 
                 <button
                     type="submit"
-                    className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
                 >
                     Log In
                 </button>

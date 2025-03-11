@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
@@ -6,6 +6,9 @@ import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
 import SelectAvatarTab from "@/components/profile/SelectAvatarTab";
 import CoverProfilePhotosTab from "@/components/profile/CoverProfilePhotosTab";
 import SelectCommunitiesTab from "@/components/profile/SelectCommunitiesTab";
+import { useAppSelector, useAppDispatch } from "../store";
+import { setUserId } from "../store/createProfileSlice";
+import axios from "axios";
 
 const tabs = [
   { id: "personal", label: "Personal Information" },
@@ -19,10 +22,120 @@ const SetupProfile: React.FC = () => {
   const location = useLocation();
   const currentTab = location.hash.replace("#", "") || "personal";
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
+  // Import the necessary hooks and functions from the store
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  
+  // Get profile data from Redux store including userId
+  const {
+    userId,
+    name,
+    email,
+    dateOfBirth,
+    password,
+    skillSelected,
+    image,
+    avatar,
+    communitiesSelected
+  } = useAppSelector(state => state.createProfile);
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const formData = new FormData();
+      
+      // Validate required fields
+      if (!name || !email || !dateOfBirth || !password) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Add basic profile data
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('dateOfBirth', dateOfBirth);
+      formData.append('password', password);
+      
+      // Add skills array
+      if (skillSelected.length > 0) {
+        formData.append('skills', JSON.stringify(skillSelected));
+      }
+      
+      // Add image file if exists
+      if (image instanceof File) {
+        formData.append('image', image, image.name);
+      }
+      
+      // Add avatar if exists
+      if (avatar) {
+        formData.append('avatar', avatar);
+      }
+      
+      // Add selected communities
+      if (communitiesSelected.length > 0) {
+        formData.append('communities', JSON.stringify(communitiesSelected));
+      }
+
+      // Log formData contents for debugging
+      for (const pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
+      // Use userId from Redux if available, otherwise don't include it
+      const headers: Record<string, string> = {
+        'Content-Type': 'multipart/form-data',
+        'userId': userId,
+      };
+      
+      console.log("userId: ", userId);
+
+      const response = await axios.put('http://localhost:3000/api/edit-profile', formData, {
+        headers,
+      });
+      
+      if (response.data.success) {
+        console.log("Profile creation successful:", response.data);
+        
+        // Store the user ID in Redux
+        if (response.data.userId) {
+          dispatch(setUserId(response.data.userId));
+        }
+        
+        // Store the token in localStorage if it exists in the response
+        if (response.data.token) {
+          localStorage.setItem('authToken', response.data.token);
+        }
+        
+        setSubmitSuccess(true);
+      } else {
+        throw new Error(response.data.message || 'Failed to create profile');
+      }
+      
+    } catch (error) {
+      console.error("Profile creation failed:", error);
+      if (axios.isAxiosError(error)) {
+        setSubmitError(error.response?.data?.message || error.message);
+      } else {
+        setSubmitError((error as Error).message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleNext = () => {
     const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
-    if (currentIndex < tabs.length - 1) {
+    
+    // If on the last tab (communities), submit the form instead of navigating
+    if (currentIndex === tabs.length - 1) {
+      handleSubmit();
+    } else if (currentIndex < tabs.length - 1) {
+      // Otherwise, navigate to the next tab
       navigate(`#${tabs[currentIndex + 1].id}`);
     }
   };
@@ -35,6 +148,9 @@ const SetupProfile: React.FC = () => {
       navigate(-1);
     }
   };
+
+  // Check if we're on the last tab
+  const isLastTab = currentTab === tabs[tabs.length - 1].id;
 
   return (
         <div className="grid ml-20 py-24 grid-cols-4 gap-5">
@@ -94,23 +210,42 @@ const SetupProfile: React.FC = () => {
 
                 <button
                   onClick={handleNext}
-                  className="flex items-center justify-center space-x-1 rounded-full px-5 py-2 bg-gray-900 text-white hover:bg-gray-800"
+                  disabled={isLastTab && isSubmitting}
+                  className={`flex items-center justify-center space-x-1 rounded-full px-5 py-2 ${
+                    isLastTab && isSubmitting
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gray-900 hover:bg-gray-800"
+                  } text-white`}
                 >
-                  <span>Next</span>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <span>{isLastTab ? (isSubmitting ? "Submitting..." : "Submit") : "Next"}</span>
+                  {!isLastTab && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
                 </button>
               </div>
+              
+              {/* Display submission status messages */}
+              {isLastTab && (submitError || submitSuccess) && (
+                <div className="mt-4 text-center">
+                  {submitError && (
+                    <div className="text-red-500">{submitError}</div>
+                  )}
+                  {submitSuccess && (
+                    <div className="text-green-500">Profile created successfully!</div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* 3D Illustration (Clipboard & Tick) */}
