@@ -177,6 +177,10 @@ const Signup: React.FC = () => {
           </button>
         </>
       )}
+
+      <p className="text-sm text-muted-foreground text-center mt-4">
+        Already have an account? <Link to="/login" className="text-primary">Log in</Link>
+      </p>
     </AuthLayout>
   );
 };

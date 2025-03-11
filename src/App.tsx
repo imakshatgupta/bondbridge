@@ -10,6 +10,8 @@ import Search from './pages/Search';
 import CommentsPage from '@/pages/CommentsPage';
 import Groups from './pages/Groups';
 import CreateGroup from './pages/CreateGroup';
+import ProfilePage from "@/pages/ProfilePage";
+import OthersProfilePage from "./pages/OthersProfilePage";
 
 function App() {
   
@@ -26,6 +28,13 @@ function App() {
         <Route path="/comments/:postId" element={<Layout showSidebars={true}><CommentsPage /></Layout>} />
         <Route path="/groups" element={<Layout showSidebars={true}><Groups /></Layout>} />
         <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
+        <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
+        <Route path="/profile" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
+        <Route path="/others-profile" element={
+          <Layout showSidebars={true}>
+            <OthersProfilePage />
+          </Layout>
+        } />
       </Routes>
     </Router>
   );

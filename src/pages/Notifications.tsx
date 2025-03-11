@@ -67,8 +67,10 @@ const Notifications = () => {
         },
     ]
   return (
-    <div className="w-full">
-        <h1 className="text-4xl font-semibold mb-5">Notifications</h1>
+    <div className="max-w-2xl mx-auto bg-background min-h-screen">
+      <div className="border-b p-4">
+        <h1 className="text-lg font-semibold text-foreground">Notifications</h1>
+      </div>
       <Tabs defaultValue="notifications" className="">
         <TabsList className="grid grid-cols-2">
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -95,6 +97,9 @@ const Notifications = () => {
           </div>
         </TabsContent>
       </Tabs>
+      <div className="text-sm text-muted-foreground">
+        {/* notification time */}
+      </div>
     </div>
   )
 }

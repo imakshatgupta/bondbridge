@@ -38,111 +38,117 @@ const SetupProfile: React.FC = () => {
   };
 
   return (
-    <Grid>
-      {/* Left Section: Heading + Nav */}
-      <div className="">
-        <h1 className="text-5xl font-medium mb-6">
-          Complete Your Profile
-        </h1>
+    <div className="max-w-md mx-auto min-h-screen bg-background p-4">
+      <h1 className="text-xl font-semibold text-foreground mb-6">Set up your profile</h1>
+      <p className="text-sm text-muted-foreground mb-6">
+        Help people discover your account by using the name...
+      </p>
+      <Grid>
+        {/* Left Section: Heading + Nav */}
+        <div className="">
+          <h1 className="text-5xl font-medium mb-6">
+            Complete Your Profile
+          </h1>
 
-        <nav className="space-y-4">
-          {tabs.map((tab) => (
-            <Link
-              key={tab.id}
-              to={`#${tab.id}`}
-              className={cn(
-                "block py-2 text-lg",
-                currentTab === tab.id
-                  ? "font-semibold text-xl"
-                  : ""
-              )}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      {/* Right Section: Form + Illustration */}
-      <div className="relative col-span-2">
-        <GridContentPanel>
-          {/* Render tab content */}
-          {currentTab === "personal" && <PersonalInfoTab />}
-          {currentTab === "skills" && <SkillsInterestsTab />}
-          {currentTab === "avatar" && <SelectAvatarTab />}
-          {currentTab === "photos" && <CoverProfilePhotosTab />}
-          {currentTab === "communities" && <SelectCommunitiesTab />}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={handleBack}
-              className="flex items-center justify-center rounded-full w-10 h-10 border border-gray-300 text-gray-500 hover:bg-gray-50"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+          <nav className="space-y-4">
+            {tabs.map((tab) => (
+              <Link
+                key={tab.id}
+                to={`#${tab.id}`}
+                className={cn(
+                  "block py-2 text-lg",
+                  currentTab === tab.id
+                    ? "font-semibold text-xl"
+                    : ""
+                )}
               >
-                <path
-                  fillRule="evenodd"
-                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+                {tab.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-            <button
-              onClick={handleNext}
-              className="flex items-center justify-center space-x-1 rounded-full px-5 py-2 bg-gray-900 text-white hover:bg-gray-800"
-            >
-              <span>Next</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+        {/* Right Section: Form + Illustration */}
+        <div className="relative col-span-2">
+          <GridContentPanel>
+            {/* Render tab content */}
+            {currentTab === "personal" && <PersonalInfoTab />}
+            {currentTab === "skills" && <SkillsInterestsTab />}
+            {currentTab === "avatar" && <SelectAvatarTab />}
+            {currentTab === "photos" && <CoverProfilePhotosTab />}
+            {currentTab === "communities" && <SelectCommunitiesTab />}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
+              <button
+                onClick={handleBack}
+                className="flex items-center justify-center rounded-full w-10 h-10 border border-gray-300 text-gray-500 hover:bg-gray-50"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              <button
+                onClick={handleNext}
+                className="flex items-center justify-center space-x-1 rounded-full px-5 py-2 bg-gray-900 text-white hover:bg-gray-800"
+              >
+                <span>Next</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
+          </GridContentPanel>
+
+          {/* 3D Illustration (Clipboard & Tick) */}
+          {/* Position this absolutely so it appears to the right, like in your screenshot */}
+          <div className="absolute top-5 -right-20 transform -translate-y-1/2 pointer-events-none hidden lg:block">
+            <img
+              src="/profile/clipboard.png"
+              alt="Clipboard Check"
+              className="w-36"
+            />
           </div>
-        </GridContentPanel>
 
-        {/* 3D Illustration (Clipboard & Tick) */}
-        {/* Position this absolutely so it appears to the right, like in your screenshot */}
-        <div className="absolute top-5 -right-20 transform -translate-y-1/2 pointer-events-none hidden lg:block">
-          <img
-            src="/profile/clipboard.png"
-            alt="Clipboard Check"
-            className="w-36"
-          />
+          <div className="absolute bottom-0 -right-20  pointer-events-none hidden lg:block">
+            <img
+              src="/profile/deco1.png"
+              alt="decorative 1"
+              className="w-36"
+            />
+          </div>
+
+          <div className="absolute bottom-0 -left-16 pointer-events-none hidden lg:block">
+            <img
+              src="/profile/deco2.png"
+              alt="decorative 2"
+              className="w-36"
+            />
+          </div>
+
         </div>
-
-        <div className="absolute bottom-0 -right-20  pointer-events-none hidden lg:block">
-          <img
-            src="/profile/deco1.png"
-            alt="decorative 1"
-            className="w-36"
-          />
-        </div>
-
-        <div className="absolute bottom-0 -left-16 pointer-events-none hidden lg:block">
-          <img
-            src="/profile/deco2.png"
-            alt="decorative 2"
-            className="w-36"
-          />
-        </div>
-
-      </div>
-      <div />
-    </Grid>
+        <div />
+      </Grid>
+    </div>
   );
 };
 

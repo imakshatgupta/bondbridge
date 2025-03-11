@@ -152,6 +152,9 @@ const Login: React.FC = () => {
                     </button>
                 </>
             )}
+            <p className="text-sm text-muted-foreground text-center mt-4">
+                Don't have an account? <Link to="/signup" className="text-primary">Sign up</Link>
+            </p>
         </AuthLayout>
     );
 };
