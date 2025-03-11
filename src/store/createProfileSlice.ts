@@ -1,5 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+interface Community {
+  id: number;
+  name: string;
+  members: number;
+  pfp: string;
+}
+
 const initialState = {
   name: "",
   email: "",
@@ -11,10 +18,12 @@ const initialState = {
     "Sports",
     "Racing cars",
     "Marketing",
-    "Science",
+    "Science",  
     "Chess",
   ],
   skillSelected: [] as string[],
+  image: null as File | null,
+  avatar: null as string | null,
   communitiesAvailable: [
     {
       id: 1,
@@ -52,13 +61,8 @@ const initialState = {
       members: 1560,
       pfp: "/profile/community/pubg.png",
     },
-  ],
-  communitiesSelected: [] as {
-    id: number;
-    name: string;
-    members: number;
-    pfp: string;
-  }[],
+  ] as Community[],
+  communitiesSelected: [] as Community[],
 };
 
 export const createProfile = createSlice({
@@ -87,6 +91,12 @@ export const createProfile = createSlice({
       state.skillsAvailable.push(skill);
       state.skillSelected = state.skillSelected.filter((s) => s !== skill);
     },
+    setAvatar: (state, action) => {
+      state.avatar = action.payload;
+    },
+    setImage: (state, action) => {
+      state.image = action.payload;
+    },
     setCommunitiesSelected: (state, action) => {
       state.communitiesSelected = action.payload;
     },
@@ -112,6 +122,8 @@ export const {
   setPassword,
   addSkill,
   removeSkill,
+  setAvatar,
+  setImage,
   setCommunitiesSelected,
   addCommunity,
   removeCommunity,

@@ -4,10 +4,10 @@ import axios from "axios";
 import { 
   setName, 
   setEmail, 
-  setDateOfBirth, 
+  setDateOfBirth,
   setPassword 
-} from "../../features/createProfileSlice/createProfile";
-import { RootState } from "../../app/store";
+} from "../../store/createProfileSlice";
+import { RootState } from "../../store";
 
 const PersonalInfoTab: React.FC = () => {
   const dispatch = useDispatch();

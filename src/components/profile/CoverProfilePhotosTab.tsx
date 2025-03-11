@@ -1,148 +1,172 @@
-import { Trash2 } from 'lucide-react';
-import React, { useState, useRef } from 'react';
+import { Trash2, Upload } from 'lucide-react';
+import React, { useState, useRef, useEffect, DragEvent } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { setImage } from '../../store/createProfileSlice';
 
 const CoverProfilePhotosTab: React.FC = () => {
-  const [coverPhoto, setCoverPhoto] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  // Get the existing image from Redux store
+  const existingImage = useAppSelector(state => state.createProfile.image);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const profileInputRef = useRef<HTMLInputElement>(null);
 
-  // Function to handle file selection
-  const handleFileChange = (type: 'cover' | 'profile', event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        if (e.target && e.target.result) {
-          if (type === 'cover') {
-            setCoverPhoto(e.target.result as string);
-          } else {
+  // Check for existing image in Redux store when component mounts
+  useEffect(() => {
+    if (existingImage) {
+      // If we have a file object in Redux
+      if (existingImage instanceof File) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target && e.target.result) {
             setProfilePhoto(e.target.result as string);
           }
-        }
-      };
-      
-      reader.readAsDataURL(file);
+        };
+        reader.readAsDataURL(existingImage);
+      } 
+      // If we already have a string URL in Redux
+      else if (typeof existingImage === 'string') {
+        setProfilePhoto(existingImage);
+      }
+    }
+  }, [existingImage]);
+
+  const processFile = (file: File) => {
+    // Store the file in Redux
+    dispatch(setImage(file));
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && e.target.result) {
+        setProfilePhoto(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      processFile(event.target.files[0]);
     }
   };
 
-  // Function to handle delete
-  const handleDelete = (type: 'cover' | 'profile') => {
-    if (type === 'cover') {
-      setCoverPhoto(null);
-      if (coverInputRef.current) {
-        coverInputRef.current.value = '';
-      }
-    } else {
-      setProfilePhoto(null);
-      if (profileInputRef.current) {
-        profileInputRef.current.value = '';
+  const handleDelete = () => {
+    setProfilePhoto(null);
+    dispatch(setImage(null)); // Clear the image in Redux
+    if (profileInputRef.current) {
+      profileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (profileInputRef.current) {
+      profileInputRef.current.click();
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Set dropEffect to copy to show the user can drop
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      
+      // Check if file is an image
+      if (file.type.startsWith('image/')) {
+        processFile(file);
       }
     }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gray-900">Cover Photo</h3>
-        <div className="relative h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden">
-          {coverPhoto ? (
-            <>
-              <img 
-                src={coverPhoto} 
-                alt="Cover photo" 
-                className="w-full h-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => handleDelete('cover')}
-                className="absolute top-2 right-2 p-1 bg-red-500 rounded-full shadow-md text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
-              >
-                <Trash2 className="h-5 w-5" />
-              </button>
-            </>
-          ) : (
-            <div className="p-6 flex flex-col items-center justify-center h-full">
-              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div className="mt-4 flex flex-col text-center">
-                <p className="text-sm text-gray-600">Drag and drop a file here, or click to select a file</p>
-                <p className="text-xs text-gray-500">Recommended size: 1500x500px</p>
-              </div>
-              <label htmlFor="cover-photo">
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('cover-photo')?.click()}
-                  className="mt-2 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Upload Cover Photo
-                </button>
-              </label>
-            </div>
-          )}
-          <input
-            ref={coverInputRef}
-            id="cover-photo"
-            name="cover-photo"
-            type="file"
-            accept="image/*"
-            className="sr-only"
-            onChange={(e) => handleFileChange('cover', e)}
-          />
-        </div>
-      </div>
-      
+    <div className="space-y-8 p-6 max-w-2xl mx-auto">
       <div className="space-y-4">
         <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
-        <div className="flex items-center space-x-6">
-          <div className="flex-shrink-0">
-            <div className="relative h-24 w-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300">
-              {profilePhoto ? (
-                <>
-                  <img 
-                    src={profilePhoto} 
-                    alt="Profile photo" 
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleDelete('profile')}
-                    className="absolute top-0 right-0 p-1 bg-red-500 rounded-full shadow-md text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <svg className="h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                    <path d="M24 8C15.163 8 8 15.163 8 24s7.163 16 16 16 16-7.163 16-16S32.837 8 24 8zm0 4a3 3 0 110 6 3 3 0 010-6zm0 32c-4.964 0-9.412-2.2-12.456-5.672C13.524 35.143 18.273 32 24 32c5.727 0 10.476 3.143 12.456 6.328C33.412 41.8 28.964 44 24 44z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              )}
-            </div>
+        
+        <div 
+          className="flex flex-col items-center justify-center bg-white p-8 rounded-lg border border-gray-200 shadow-sm"
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div 
+            className={`relative w-36 h-36 mb-4 ${isDragging ? 'ring-2 ring-blue-500' : ''}`}
+          >
+            {profilePhoto ? (
+              <>
+                <img 
+                  src={profilePhoto} 
+                  alt="Profile photo" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  className="absolute top-0 right-0 p-1 bg-red-500 rounded-full shadow-md text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <div className={`w-full h-full rounded-full bg-gray-100 flex flex-col items-center justify-center border-2 ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                {isDragging && <p className="text-xs text-blue-500 mt-2">Drop image here</p>}
+              </div>
+            )}
           </div>
-          <div>
-            <label htmlFor="profile-photo">
-              <button
-                type="button"
-                onClick={() => document.getElementById('profile-photo')?.click()}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Upload Profile Photo
-              </button>
-            </label>
+          
+          <div className="w-full text-center">
+            <button
+              type="button"
+              onClick={handleUploadClick}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              UPLOAD
+            </button>
             <input
               ref={profileInputRef}
               id="profile-photo"
               name="profile-photo"
               type="file"
               accept="image/*"
-              className="sr-only"
-              onChange={(e) => handleFileChange('profile', e)}
+              className="hidden"
+              onChange={handleFileChange}
             />
           </div>
+          
+          <p className="mt-4 text-sm text-gray-500">
+            Recommended Size: 500px (square)
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            Drag and drop an image file here or click upload
+          </p>
         </div>
       </div>
     </div>

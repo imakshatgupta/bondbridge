@@ -3,8 +3,8 @@ import axios from 'axios';
 import {
   addSkill,
   removeSkill
-} from '../../features/createProfileSlice/createProfile';
-import { useAppDispatch, useAppSelector } from '../../app/store';
+} from '../../store/createProfileSlice';
+import { useAppDispatch, useAppSelector } from '../../store';
 
 const SkillsInterestsTab: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -18,23 +18,6 @@ const SkillsInterestsTab: React.FC = () => {
 
   const handleRemoveSkill = (skill: string) => {
     dispatch(removeSkill(skill));
-  };
-
-  const saveSkills = async () => {
-    try {
-      console.log("Saving skills:", skillSelected);
-      const response = await axios.post("https://api.example.com/save-skills", {
-        skills: skillSelected
-      }, {
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
-      
-      console.log("Skills saved successfully:", response.data);
-    } catch (error) {
-      console.error("Error saving skills:", error);
-    }
   };
 
   // useEffect(() => {
@@ -65,16 +48,6 @@ const SkillsInterestsTab: React.FC = () => {
             + {skill}
           </button>
         ))}
-      </div>
-
-      <div className="flex justify-between items-center mt-4">
-        <button className="text-blue-500">Explore More</button>
-        <button 
-          className="bg-green-500 text-white px-4 py-2 rounded-md" 
-          onClick={saveSkills}
-        >
-          Save Skills
-        </button>
       </div>
     </div>
   );
