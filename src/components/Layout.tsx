@@ -5,6 +5,7 @@ import Navbar from './Navbar';
 import { useAppDispatch, useAppSelector } from '@/store';
 import ChatInterface from './activity/ChatInterface';
 import { setActiveChat } from '@/store/chatSlice';
+import { Link } from 'react-router-dom';
 // import { useAppSelector } from '@/app/store';
 
 interface LayoutProps {
@@ -122,9 +123,11 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false, classNa
                                         <img src="/profile/avatars/2.png" alt="Profile" className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border" />
                                         <h3 className="font-semibold text-xl text-sidebar-foreground">France Leaphart</h3>
                                         <p className="text-sidebar-foreground/60">UI/UX Designer</p>
+                                        <Link to={`/profile/chaitanya`}>
                                         <Button variant={'outline'} className='mt-2 text-sidebar-primary text-sm font-medium border-primary w-full'>
                                             View Profile
                                         </Button>
+                                        </Link>
                                     </div>
                                 </div>
 
