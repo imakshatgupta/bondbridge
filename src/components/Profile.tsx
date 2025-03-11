@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Settings, MoreVertical, Share2, Flag } from "lucide-react";
-import avatar from "@/assets/avatar.png";
+import avatar from "/activity/cat.png";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -54,9 +54,9 @@ const Profile: React.FC<ProfileProps> = ({
   ];
 
   return (
-    <div className="max-w-md mx-auto bg-background min-h-screen">
+    <div className="mx-auto bg-background">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 pt-0">
         <button onClick={() => navigate(-1)} className="p-1">
           <ArrowLeft size={24} />
         </button>

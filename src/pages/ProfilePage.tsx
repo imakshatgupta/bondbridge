@@ -1,7 +1,7 @@
 import React from "react";
 import Profile from "@/components/Profile";
 import { useParams } from "react-router-dom";
-import avatar from "@/assets/avatar.png";
+import avatar from "/profile/user.png";
 
 interface ProfilePageProps {
   isOthersProfile?: boolean;
