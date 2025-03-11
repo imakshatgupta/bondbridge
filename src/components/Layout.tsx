@@ -159,38 +159,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false, classNa
                 </main>
             )}
 
-            {!showSidebars && (
-                /* Footer - only show when sidebars are hidden */
-                <footer className="bg-secondary text-secondary-foreground">
-                    <div className="mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div>
-                                <h3 className="text-lg font-semibold mb-4">About Bond</h3>
-                                <p className="text-muted-foreground">Connecting dreams and fostering growth in communities worldwide.</p>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-                                <ul className="space-y-2">
-                                    <li><a href="/about" className="text-muted-foreground hover:text-secondary-foreground">About Us</a></li>
-                                    <li><a href="/services" className="text-muted-foreground hover:text-secondary-foreground">Services</a></li>
-                                    <li><a href="/contact" className="text-muted-foreground hover:text-secondary-foreground">Contact</a></li>
-                                </ul>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-                                <ul className="space-y-2 text-muted-foreground">
-                                    <li>Email: info@bond.com</li>
-                                    <li>Phone: (123) 456-7890</li>
-                                    <li>Address: 123 Bond Street</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div className="mt-8 pt-8 border-t border-border text-center text-muted-foreground">
-                            <p>&copy; {new Date().getFullYear()} Bond. All rights reserved.</p>
-                        </div>
-                    </div>
-                </footer>
-            )}
+
         </div>
     );
 };
