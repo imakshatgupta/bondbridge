@@ -1,21 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowLeft } from "lucide-react";
 import { Chat } from '../chat/Chat';
 import { Message } from '@/types/chat';
-import { useState } from 'react';
 import { useSocket } from '../../context/SocketContext';
 import axios from 'axios';
 import { useAppSelector } from "../../store";
 
-interface Message {
-  id: number;
-  text: string;
-  timestamp: string;
-  isUser: boolean;
-}
 
 interface ChatInterfaceProps {
   chatId: number;
@@ -55,6 +44,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
             'token': token,
           }
         });
+        
         const messageHistory = response.data.messages.map((msg: any) => ({
           id: msg._id,
           text: msg.content,

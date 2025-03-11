@@ -9,7 +9,6 @@ import SelectCommunitiesTab from "@/components/profile/SelectCommunitiesTab";
 import { useAppSelector, useAppDispatch } from "../store";
 import { setUserId } from "../store/createProfileSlice";
 import axios from "axios";
-import { log } from "console";
 
 const tabs = [
   { id: "personal", label: "Personal Information" },
