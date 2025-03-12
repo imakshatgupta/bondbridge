@@ -20,8 +20,12 @@ const CreateStory = () => {
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   const handleAddPage = () => {
-    setStories([...stories, { type: 'text', content: '' }]);
-    setCurrentPage(stories.length);
+    if (stories.length < 10) { // Limit to 10 stories
+      const newStories: Story[] = [...stories, { type: 'text' as const, content: '', theme: themeColor }];
+      setStories(newStories);
+      setCurrentPage(newStories.length - 1);
+      setText(''); // Reset text for new page
+    }
   };
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'video') => {
@@ -166,7 +170,7 @@ const CreateStory = () => {
             </Button>
             <span className="text-xs">Emoji</span>
             {showEmojiPicker && (
-              <div className="absolute left-full ml-2 z-50">
+              <div className="absolute left-20 top-1/2 -translate-y-1/2 z-50">
                 <EmojiPicker
                   onEmojiClick={(emojiObject) => {
                     setText(prev => prev + emojiObject.emoji);
@@ -189,25 +193,36 @@ const CreateStory = () => {
             {currentTheme.startsWith('bg-') && <div className={`absolute inset-0 ${currentTheme} rounded-lg`}></div>}
             
             {/* Delete and Add Page Buttons */}
-            <button 
-              onClick={() => {
-                if (stories.length > 1) {
-                  const newStories = stories.filter((_, index) => index !== currentPage);
+            {stories.length > 1 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-12 left-4 rounded-full bg-accent/10 hover:bg-accent/20 z-20"
+                onClick={() => {
+                  const newStories = stories.filter((_, i) => i !== currentPage);
                   setStories(newStories);
-                  setCurrentPage(Math.min(currentPage, newStories.length - 1));
-                }
-              }}
-              className="absolute left-4 top-8 bg-accent/10 p-2 rounded-full z-10"
-            >
-              <Trash2 className="w-5 h-5 text-foreground" />
-            </button>
+                  setCurrentPage(prev => prev >= newStories.length ? newStories.length - 1 : prev);
+                }}
+              >
+                <Trash2 className="w-5 h-5" />
+              </Button>
+            )}
 
-            <button 
-              onClick={handleAddPage}
-              className="absolute right-4 top-8 bg-accent/10 p-2 rounded-full z-10"
-            >
-              <Plus className="w-5 h-5 text-foreground" />
-            </button>
+            {stories.length < 10 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-12 right-4 rounded-full bg-accent/10 hover:bg-accent/20 z-20"
+                onClick={() => {
+                  const newStories = [...stories, { type: 'text' as const, content: '', theme: themeColor }];
+                  setStories(newStories);
+                  setCurrentPage(newStories.length - 1);
+                  setText('');
+                }}
+              >
+                <Plus className="w-5 h-5" />
+              </Button>
+            )}
 
             {/* Navigation Arrows */}
             {currentPage > 0 && (
