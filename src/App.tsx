@@ -15,6 +15,9 @@ import OthersProfilePage from "./pages/OthersProfilePage";
 import Activity from '@/pages/Activity';
 import BondChat from './pages/BondChat';
 import StoryPage from "@/pages/StoryPage";
+import CreatePost from './pages/CreatePost';
+
+
 
 function App() {
   return (
@@ -42,6 +45,7 @@ function App() {
                 <StoryPage />
               </Layout>
             } />
+            <Route path="/create-post" element={<Layout showSidebars={true}><CreatePost /></Layout>} />
           </Routes>
         </Router>
     </Provider>
