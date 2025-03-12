@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store';
-import axios from 'axios';
 import { setAvatar } from '@/store/createProfileSlice';
+import { useApiCall } from '@/apis/globalCatchError';
+import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
 
 interface AvatarData {
   url: string;
@@ -9,73 +10,57 @@ interface AvatarData {
 }
 
 const SelectAvatarTab: React.FC = () => {
-  const [selectedAvatar, setSelectedAvatar] = useState<string>('');
+  const [, setLoading] = useState<boolean>(true);
   const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);
   const [femaleAvatars, setFemaleAvatars] = useState<AvatarData[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const { userId, avatar } = useAppSelector(state => state.createProfile);
   const dispatch = useAppDispatch();
 
+  // Use our custom hook for API calls
+  const [executeFetchAvatars, isLoadingAvatars] = useApiCall(fetchAvatars);
+
   // Update Redux store when avatar is selected
   const handleAvatarSelect = (avatarUrl: string) => {
-    setSelectedAvatar(avatarUrl);
     dispatch(setAvatar(avatarUrl));
   };
 
-  // Initialize selected avatar from Redux state if available
   useEffect(() => {
-    if (avatar) {
-      setSelectedAvatar(avatar);
-    }
-  }, [avatar]);
-
-  useEffect(() => {
-    const fetchAvatars = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get('http://localhost:3000/api/get-avatars', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'token': localStorage.getItem('token'),
-            'userId': userId || ''
-          }
-        });
+    const getAvatars = async () => {
+      console.log('Fetching avatars with userId:', userId);
+      
+      const result = await executeFetchAvatars(userId);
+      
+      if (result.success && result.data) {
+        const { maleAvatars: male, femaleAvatars: female } = result.data;
         
-        // Process the response data
-        if (response.data && response.data.success) {
-          if (response.data.URLS.male) {
-            setMaleAvatars(response.data.URLS.male);
-          }
-          if (response.data.URLS.female) {
-            setFemaleAvatars(response.data.URLS.female);
-          }
-          
-          // If no avatar is selected yet but we have avatars, select the first one
-          if (!selectedAvatar && !avatar) {
-            const firstAvatar = response.data.URLS.male?.[0]?.url || response.data.URLS.female?.[0]?.url;
-            if (firstAvatar) {
-              handleAvatarSelect(firstAvatar);
-            }
+        if (male && male.length > 0) {
+          setMaleAvatars(male);
+        }
+        
+        if (female && female.length > 0) {
+          setFemaleAvatars(female);
+        }
+        
+        // If no avatar is selected yet but we have avatars, select the first one
+        if (!avatar) {
+          const firstAvatar = male[0]?.url || female[0]?.url;
+          if (firstAvatar) {
+            handleAvatarSelect(firstAvatar);
           }
         }
-
-      } catch (error) {
-        console.error('Error fetching avatars:', error);
-        // Fallback to default avatars if API fails
-      } finally {
-        setLoading(false);
       }
+      
+      setLoading(false);
     };
 
+    // Only try to fetch avatars if userId exists
     if (userId) {
-      fetchAvatars();
-    } else {
-      // Fallback to default avatars if no userId
-      setMaleAvatars([1,2,3,4].map(id => ({ url: `/profile/avatars/male${id}.png`, type: 'image' })));
-      setFemaleAvatars([1,2,3,4].map(id => ({ url: `/profile/avatars/female${id}.png`, type: 'image' })));
-      setLoading(false);
+      getAvatars();
     }
   }, []);
+
+  // Use isLoadingAvatars instead of the local loading state
+  const loading = isLoadingAvatars;
 
   return (
     <div className="space-y-6">
@@ -92,23 +77,23 @@ const SelectAvatarTab: React.FC = () => {
             <div className="space-y-3">
               <h3 className="text-sm font-medium">Female Avatars</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {femaleAvatars.map((avatar, index) => (
+                {femaleAvatars.map((avatarItem, index) => (
                   <div 
                     key={`female-${index}`}
                     className={`relative cursor-pointer rounded-lg border-2 ${
-                      selectedAvatar === avatar.url 
+                      avatar === avatarItem.url 
                         ? 'border-primary bg-blue-100' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
-                    onClick={() => handleAvatarSelect(avatar.url)}
+                    onClick={() => handleAvatarSelect(avatarItem.url)}
                   >
                     <img 
-                      src={avatar.url} 
+                      src={avatarItem.url} 
                       alt={`Female Avatar ${index + 1}`}
                       className="h-full w-full mx-auto object-cover rounded-lg"
                     />
-                    {selectedAvatar === avatar.url && (
-                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
+                    {avatar === avatarItem.url && (
+                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
@@ -125,22 +110,22 @@ const SelectAvatarTab: React.FC = () => {
             <div className="space-y-3">
               <h3 className="text-sm font-medium">Male Avatars</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {maleAvatars.map((avatar, index) => (
+                {maleAvatars.map((avatarItem, index) => (
                   <div 
                     key={`male-${index}`}
                     className={`relative cursor-pointer rounded-lg border-2 ${
-                      selectedAvatar === avatar.url 
+                      avatar === avatarItem.url 
                         ? 'border-primary bg-blue-100' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
-                    onClick={() => handleAvatarSelect(avatar.url)}
+                    onClick={() => handleAvatarSelect(avatarItem.url)}
                   >
                     <img 
-                      src={avatar.url} 
+                      src={avatarItem.url} 
                       alt={`Male Avatar ${index + 1}`}
                       className="h-full w-full mx-auto object-cover rounded-lg"
                     />
-                    {selectedAvatar === avatar.url && (
+                    {avatar === avatarItem.url && (
                       <div className="absolute -top-2 -right-2 h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

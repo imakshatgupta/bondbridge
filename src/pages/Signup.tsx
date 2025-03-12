@@ -1,26 +1,67 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import OTPForm from "../components/auth/OTPForm";
 import { Checkbox } from "@/components/ui/checkbox";
-import axios from "axios";
 import IntlTelInput from "react-intl-tel-input";
 import "react-intl-tel-input/dist/main.css";
 import { setUserId } from "@/store/createProfileSlice";
 import { useAppDispatch } from "../store";
+import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticaionApi";
+import { useApiCall } from "../apis/globalCatchError";
+import { Toaster } from "@/components/ui/sonner";
+
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("91"); // Default to India (+91)
   const [, setIsValidPhone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const phoneInputRef = useRef(null);
   const dispatch = useAppDispatch();
 
+  // Use our custom hooks for API calls
+  const [executeSendOTP, isSendingOTP] = useApiCall(sendOTP);
+  const [executeVerifyOTP, isVerifyingOTP] = useApiCall(verifyOTP);
+
+  // Add effect to apply styles to the phone input after it's rendered
+  useEffect(() => {
+    const fixPhoneInputStyles = () => {
+      const container = document.querySelector('.intl-tel-input');
+      if (container) {
+        // Make width consistent
+        container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
+        
+        // Fix flag container height
+        const flagContainer = container.querySelector('.flag-container');
+        if (flagContainer) {
+          flagContainer.setAttribute('style', 'height: 100% !important;');
+        }
+        
+        // Fix selected flag height
+        const selectedFlag = container.querySelector('.selected-flag');
+        if (selectedFlag) {
+          selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
+        }
+        
+        // Fix input height
+        const input = container.querySelector('input');
+        if (input) {
+          input.setAttribute('style', 'height: 40px !important;');
+        }
+      }
+    };
+    
+    // Run initially and after a small delay to ensure component is rendered
+    fixPhoneInputStyles();
+    const timeoutId = setTimeout(fixPhoneInputStyles, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, [showOTP]);
+
   interface CountryData {
     dialCode?: string;
-    [key: string]: any; 
+    [key: string]: any;
   }
 
   const handlePhoneChange = (
@@ -52,108 +93,38 @@ const Signup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
+    
     const validCountryCode = "+" + countryCode;
 
-    try {
-      const response = await axios.post(
-        `http://localhost:3000/api/send-otp`,
-        {
-          phoneNumber: phone,
-          countryCode: validCountryCode,
-        }
-      );
+    const result = await executeSendOTP({
+      phoneNumber: phone,
+      countryCode: validCountryCode,
+    });
 
-      console.log("response ", response);
-      if (response.request.status === 200) {
-        setShowOTP(true);
-      } else {
-        setError(response.data.message || "Failed to send OTP");
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.code === "ERR_NETWORK") {
-        setError(
-          "Unable to connect to server. Please check if the server is running."
-        );
-      } else if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.message || "Server error occurred");
-      } else {
-        setError("Failed to send OTP. Please try again.");
-      }
-      console.error("Error details:", error);
+    if (result.success && result.data) {
+      setShowOTP(true);
     }
   };
 
   const handleVerifyOTP = async (otp: string) => {
-    setError(null);
     const validCountryCode = "+" + countryCode;
-    console.log("phone ", phone);
-    console.log("otp ", otp);
-    console.log("countryCode ", validCountryCode);
-    try {
-      const response = await axios.post(
-        "http://localhost:3000/api/verify-otp",
-        { phoneNumber: phone, otp, countryCode: validCountryCode }, {
-          headers: {
-            "Content-Type": "application/json",
-          }
-        });
-      console.log("response ", response);
-      if (response.status === 200) {
-        // Store token and user ID in localStorage
-        localStorage.setItem('token', response.data.token);
-        dispatch(setUserId(response.data.userDetails._id));
 
-        navigate("/setup-profile");
-      } else {
-        setError(response.data.message || "Invalid OTP. Please try again.");
-      }
-    } catch (error: unknown) {
-      setError("Network error. Please try again.");
-      console.error("Error verifying OTP:", error);
+    const result = await executeVerifyOTP({
+      phoneNumber: phone,
+      otp,
+      countryCode: validCountryCode
+    });
+    
+    if (result.success && result.data) {
+      // Store token and user ID in localStorage
+      localStorage.setItem('token', result.data.token);
+      dispatch(setUserId(result.data.userDetails._id));
+      navigate("/setup-profile");
     }
   };
 
   return (
     <>
-      <style>{`
-        /* Make phone input full width */
-        .intl-tel-input {
-          width: 100% !important;
-          display: block !important;
-        }
-        .intl-tel-input .form-control {
-          width: 100% !important;
-        }
-        
-        /* Ensure dropdown works and flag is visible */
-        .intl-tel-input .selected-flag {
-          z-index: 10;
-          padding: 0 6px 0 8px;
-        }
-        
-        /* Make sure the dropdown appears above other elements */
-        .intl-tel-input .country-list {
-          z-index: 20;
-        }
-        
-        /* Make dial code clickable */
-        .intl-tel-input .selected-dial-code {
-          cursor: pointer;
-        }
-        
-        /* Ensure proper vertical alignment */
-        .intl-tel-input .flag-container {
-          height: 100%;
-        }
-        .intl-tel-input .selected-flag {
-          height: 100%;
-          display: flex;
-          align-items: center;
-        }
-      `}</style>
-      
       <AuthLayout
         title="Connecting Dreams, Fostering Growth"
         subtitle="Sign up for your Bond Bridge journey today!"
@@ -161,8 +132,6 @@ const Signup: React.FC = () => {
         showOTP={showOTP}
         otpMessage="Welcome, We are glad to see you!"
       >
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-
         {!showOTP ? (
           <form onSubmit={handleSubmit} className="space-y-4 w-full">
             <div className="w-full">
@@ -172,26 +141,25 @@ const Signup: React.FC = () => {
               >
                 Phone
               </label>
-              <div className="mt-1 w-full">
-                <div className="w-full relative">
-                  <IntlTelInput
-                    ref={phoneInputRef}
-                    containerClassName="intl-tel-input"
-                    inputClassName="form-control w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    defaultCountry={"in"}
-                    preferredCountries={["in"]}
-                    onPhoneNumberChange={handlePhoneChange}
-                    onPhoneNumberBlur={handlePhoneChange}
-                    format={true}
-                    formatOnInit={true}
-                    autoPlaceholder={true}
-                    nationalMode={false}
-                    separateDialCode={true}
-                    telInputProps={{
-                      className: "w-full"
-                    }}
-                  />
-                </div>
+              <div className="mt-1 relative" style={{ height: '40px' }}>
+                <IntlTelInput
+                  ref={phoneInputRef}
+                  containerClassName="intl-tel-input"
+                  inputClassName="form-control w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  defaultCountry={"in"}
+                  preferredCountries={["in"]}
+                  onPhoneNumberChange={handlePhoneChange}
+                  onPhoneNumberBlur={handlePhoneChange}
+                  format={true}
+                  formatOnInit={true}
+                  autoPlaceholder={true}
+                  nationalMode={false}
+                  separateDialCode={true}
+                  telInputProps={{
+                    className: "w-full",
+                    placeholder: "Enter phone number"
+                  }}
+                />
               </div>
             </div>
 
@@ -222,22 +190,32 @@ const Signup: React.FC = () => {
             <button
               type="submit"
               className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={isSendingOTP}
             >
-              Sign Up
+              {isSendingOTP ? "Sending OTP..." : "Sign Up"}
             </button>
           </form>
         ) : (
-          <>
+          <div className="space-y-4">
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-500">
+                We've sent a verification code to your phone
+              </p>
+            </div>
             <OTPForm onVerify={handleVerifyOTP} />
             <button
               onClick={() => setShowOTP(false)}
-              className="mt-4 text-blue-500 hover:underline"
+              className="mt-4 text-blue-500 hover:underline w-full text-center"
             >
               Back
             </button>
-          </>
+            {isVerifyingOTP && (
+              <p className="text-center text-sm text-gray-500">Verifying...</p>
+            )}
+          </div>
         )}
       </AuthLayout>
+      <Toaster />
     </>
   );
 };

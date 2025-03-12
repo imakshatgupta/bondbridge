@@ -31,7 +31,7 @@ const SelectCommunitiesTab: React.FC = () => {
 
   return (
     <div className="">
-      <h1 className="text-3xl font-medium mb-1 text-muted-foreground">Let's Join Exciting Communities</h1>
+      <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
       <p className="text-muted-foreground mb-8">select communities you want to join</p>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -40,8 +40,8 @@ const SelectCommunitiesTab: React.FC = () => {
             key={community.id}
             className={`relative rounded-xl cursor-pointer transition-all ${
               isCommunitySelected(community.id) 
-                ? 'bg-purple-50' 
-                : 'bg-gray-50'
+                ? 'bg-accent' 
+                : 'bg-muted'
             }`}
             onClick={() => toggleCommunity(community)}
           >
@@ -77,11 +77,11 @@ const SelectCommunitiesTab: React.FC = () => {
             {/* Content */}
             <div className="pt-6 pb-2 px-4 text-center">
               <h3 className={`text-base font-medium ${
-                isCommunitySelected(community.id) ? 'text-purple-500' : 'text-gray-900'
+                isCommunitySelected(community.id) ? 'text-primary' : 'text-foreground'
               }`}>
                 {community.name}
               </h3>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 members: {community.members.toLocaleString()}
               </p>
             </div>
