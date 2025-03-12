@@ -15,6 +15,9 @@ import OthersProfilePage from "./pages/OthersProfilePage";
 import Activity from '@/pages/Activity';
 import BondChat from './pages/BondChat';
 import StoryPage from "@/pages/StoryPage";
+import CreatePost from './pages/CreatePost';
+
+
 
 function App() {
   return (
@@ -31,7 +34,6 @@ function App() {
             <Route path="/activity" element={<Layout showSidebars={true}><Activity /></Layout>} />
             <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
             <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
-            <Route path="/profile" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
             <Route path="/others-profile" element={
               <Layout showSidebars={true}>
                 <OthersProfilePage />
@@ -43,6 +45,7 @@ function App() {
                 <StoryPage />
               </Layout>
             } />
+            <Route path="/create-post" element={<Layout showSidebars={true}><CreatePost /></Layout>} />
           </Routes>
         </Router>
     </Provider>
