@@ -57,7 +57,7 @@ const CreateStory = () => {
     const newStories = [...stories];
     newStories[currentPage] = { type: 'text', content: text };
     setStories(newStories);
-    
+
     // Hide other pickers
     setShowEmojiPicker(false);
     setShowColorPicker(false);
@@ -144,7 +144,7 @@ const CreateStory = () => {
               <Palette className="w-5 h-5" />
             </Button>
             <span className="text-xs">Theme</span>
-            <input 
+            <input
               type="color"
               id="color-picker"
               className="hidden"
@@ -181,15 +181,15 @@ const CreateStory = () => {
         </div>
 
         {/* Story Content Area */}
-        <div className="flex-1 p-4 relative">
-          <div 
+        <div className="flex-1 p-4 relative z-50">
+          <div
             className={`max-w-xs mx-auto rounded-lg h-full relative`}
             style={{ backgroundColor: currentTheme.startsWith('bg-') ? '' : currentTheme }}
           >
             {currentTheme.startsWith('bg-') && <div className={`absolute inset-0 ${currentTheme} rounded-lg`}></div>}
-            
+
             {/* Delete and Add Page Buttons */}
-            <button 
+            <button
               onClick={() => {
                 if (stories.length > 1) {
                   const newStories = stories.filter((_, index) => index !== currentPage);
@@ -202,31 +202,14 @@ const CreateStory = () => {
               <Trash2 className="w-5 h-5 text-foreground" />
             </button>
 
-            <button 
+            <button
               onClick={handleAddPage}
-              className="absolute right-4 top-8 bg-accent/10 p-2 rounded-full z-10"
+              className="absolute right-4 top-8 bg-accent/10 p-2 rounded-full z-20"
             >
               <Plus className="w-5 h-5 text-foreground" />
             </button>
 
-            {/* Navigation Arrows */}
-            {currentPage > 0 && (
-              <button 
-                onClick={() => setCurrentPage(currentPage - 1)}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-accent/10 p-2 rounded-full z-10 hover:bg-accent/20"
-              >
-                <ChevronLeft className="w-6 h-6 text-foreground" />
-              </button>
-            )}
-            
-            {currentPage < stories.length - 1 && (
-              <button 
-                onClick={() => setCurrentPage(currentPage + 1)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-accent/10 p-2 rounded-full z-10 hover:bg-accent/20"
-              >
-                <ChevronRight className="w-6 h-6 text-foreground" />
-              </button>
-            )}
+
 
             {/* Progress Indicators */}
             <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
@@ -236,9 +219,8 @@ const CreateStory = () => {
                   className="h-1 flex-1 rounded-full overflow-hidden bg-muted/30"
                 >
                   <div
-                    className={`h-full bg-foreground transition-all duration-300 ${
-                      index === currentPage ? 'w-full' : 'w-0'
-                    }`}
+                    className={`h-full bg-foreground  ${index === currentPage ? 'w-full' : 'w-0'
+                      }`}
                   />
                 </div>
               ))}
@@ -272,7 +254,7 @@ const CreateStory = () => {
                   controls
                 />
               )}
-              
+
               {/* Show color picker only for text type */}
               {showColorPicker && stories[currentPage]?.type === 'text' && (
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-background/50 rounded-full animate-in fade-in duration-200">
@@ -297,8 +279,27 @@ const CreateStory = () => {
                   </button>
                 </div>
               )}
+               {/* Navigation Arrows */}
+          {currentPage > 0 && (
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className="absolute left-0 top-1/2  -translate-y-1/2 -translate-x-[calc(100%+10px)] bg-accent/60 p-2 rounded-full z-20 hover:bg-accent/20"
+            >
+              <ChevronLeft className="w-6 h-6 text-foreground" />
+            </button>
+          )}
+
+          {currentPage < stories.length - 1 && (
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+10px)] bg-accent/60 p-2 rounded-full z-20 hover:bg-accent/20"
+            >
+              <ChevronRight className="w-6 h-6 text-foreground" />
+            </button>
+          )}
             </div>
           </div>
+         
         </div>
       </div>
     </div>
