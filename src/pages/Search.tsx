@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/popover";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
 import SearchResults from "@/components/SearchResults";
+import mockUserData from "@/constants/users";
+import { useNavigate } from "react-router-dom";
 
 export interface Person {
   id: string;
@@ -19,53 +21,41 @@ export interface Person {
 const searchPeople = async (query: string): Promise<Person[]> => {
   if (!query.trim()) return [];
 
-  // Mock data
-  const mockUsers: Person[] = [
-    {
-      id: "1",
-      name: "John Doe",
-      bio: "Software Engineer @ Google",
-      avatar: "/profile/user.png",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      bio: "Product Manager @ Microsoft",
-      avatar: "/profile/user.png",
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      bio: "UI Designer @ Apple",
-      avatar: "/profile/user.png",
-    },
-  ];
-
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  // Filter mock data based on query
-  return mockUsers.filter(
-    (user) =>
-      user.name.toLowerCase().includes(query.toLowerCase()) ||
-      user.bio.toLowerCase().includes(query.toLowerCase())
-  );
+  // Convert mockUserData to Person[] format and filter
+  const results = Object.entries(mockUserData)
+    .map(([id, user]) => ({
+      id,
+      name: user.username,
+      bio: user.bio,
+      avatar: user.avatarSrc,
+    }))
+    .filter(
+      (person) =>
+        person.name.toLowerCase().includes(query.toLowerCase()) ||
+        person.bio.toLowerCase().includes(query.toLowerCase())
+    );
+
+  return results;
 
   /* Commented out actual API call
   try {
-    const response = await axios.post(
-      "http://localhost:3000/api/search",
-      {
-        searchString: query,
+    const response = await fetch("http://localhost:3000/api/search", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
       },
-      {
-        headers: {
-          token:
-            "8Wg9B601p7BFwWCsl6sUmGhtpnRjYAXEgfnrUA78umKfbOcft5rsCfZ5QYnRlGB1",
-          userid: "67d02bbc61192a1a4e8b99fc",
-        },
-      }
-    );
+      body: JSON.stringify({
+        searchString: query
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
 
     return response.data.users;
   } catch (error) {
@@ -79,6 +69,7 @@ export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPeople = async () => {
@@ -106,6 +97,10 @@ export default function Search() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
+  const handleProfileClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
+
   const history = [
     "Software Engineers",
     "Product Managers",
@@ -114,50 +109,67 @@ export default function Search() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto bg-background min-h-screen p-4">
-      <div className="sticky top-0 bg-background pb-4">
-        {/* Search Bar with Popover */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <div className="relative">
-              <Input
-                placeholder="Search"
-                className="w-full bg-muted border-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {isLoading ? (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
-              ) : (
-                <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              )}
+    <>
+      <div className="max-w-2xl mx-auto bg-background px-4 pb-4">
+        <div className="sticky top-0 bg-background py-4 z-10">
+          {/* Search Bar */}
+          <div className="relative">
+            <Input
+              placeholder="Search"
+              className="w-full bg-muted border-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {isLoading ? (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+            ) : (
+              <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            )}
+          </div>
+          {/* 
+          <Popover>
+            <PopoverTrigger asChild>
+              <div className="relative">
+                <Input
+                  placeholder="Search"
+                  className="w-full bg-muted border-none"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {isLoading ? (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground animate-spin" />
+                ) : (
+                  <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                )}
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-[calc(100vw-2rem)] max-w-2xl bg-muted border-none">
+              <div className="space-y-2">
+                <h3 className="text-sm text-muted-foreground">History</h3>
+                {history.map((search) => (
+                  <div
+                    key={search}
+                    className="p-2 hover:bg-accent rounded cursor-pointer"
+                    onClick={() => setSearchQuery(search)}
+                  >
+                    {search}
+                  </div>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          */}
+        </div>
+        {searchQuery==="" && <div className="text-sm text-muted-foreground mb-4">Recent Searches</div>}
+        {/* People List */}
+        <div className="space-y-4">
+          {people.map((person) => (
+            <div key={person.id} onClick={() => handleProfileClick(person.id)}>
+              <SearchResults person={person} />
             </div>
-          </PopoverTrigger>
-          <PopoverContent className="w-[calc(100vw-2rem)] max-w-2xl bg-muted border-none">
-            <div className="space-y-2">
-              <h3 className="text-sm text-muted-foreground">History</h3>
-              {history.map((search) => (
-                <div
-                  key={search}
-                  className="p-2 hover:bg-accent rounded cursor-pointer"
-                  onClick={() => setSearchQuery(search)}
-                >
-                  {search}
-                </div>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+          ))}
+        </div>
       </div>
-      <div className="text-sm text-muted-foreground mb-4">
-        Recent Searches
-      </div>
-      {/* People List */}
-      <div className="space-y-4">
-        {people.map((person) => (
-          <SearchResults key={person.id} person={person} />
-        ))}
-      </div>
-    </div>
+    </>
   );
 }
