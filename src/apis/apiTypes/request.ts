@@ -33,7 +33,7 @@ export interface Community {
 }
 
 export interface CreateProfileRequest {
-  userId: string;
+  userId?: string;
   name: string;
   email: string;
   dateOfBirth: string;
@@ -46,4 +46,10 @@ export interface CreateProfileRequest {
 
 export interface FetchAvatarsRequest {
   userId?: string;
+}
+
+export interface SetPasswordRequest {
+  userId?: string;
+  password: string;
+  token?: string;
 } 
