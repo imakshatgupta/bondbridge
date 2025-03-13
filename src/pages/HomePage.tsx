@@ -44,7 +44,7 @@ export default function HomePage() {
   };
   
   return (
-    <div className="max-w-2xl mx-auto bg-background">
+    <div className="w-full mx-auto bg-background">
       {/* Stories Section */}
       <div className="mb-2 overflow-x-auto">
         <div className="flex gap-4 pb-2">

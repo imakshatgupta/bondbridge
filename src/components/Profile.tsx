@@ -1,15 +1,18 @@
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings} from "lucide-react";
-import avatar from "/activity/cat.png";
+import { ArrowLeft, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AllPosts from "@/components/AllPosts";
 import AllAudios from "@/components/AllAudios";
 import AllReplies from "@/components/AllReplies";
+import { useEffect, useState } from "react";
+import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
+import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 
 interface ProfileProps {
+  userId: string;
   username: string;
   email: string;
   followers: number;
@@ -19,6 +22,7 @@ interface ProfileProps {
 }
 
 const Profile: React.FC<ProfileProps> = ({
+  userId,
   username,
   email,
   followers,
@@ -27,16 +31,24 @@ const Profile: React.FC<ProfileProps> = ({
   isCurrentUser = false,
 }) => {
   const navigate = useNavigate();
+  const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
-  // Mock data for demonstration
-  const posts = [
-    { id: 1, imageSrc: avatar },
-    { id: 2, imageSrc: avatar },
-    { id: 3, imageSrc: avatar },
-    { id: 4, imageSrc: avatar },
-    { id: 5, imageSrc: avatar },
-    { id: 6, imageSrc: avatar },
-  ];
+  useEffect(() => {
+    const loadPosts = async () => {
+      setIsLoadingPosts(true);
+      try {
+        const response = await fetchUserPosts(userId);
+        setPosts(response.posts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      } finally {
+        setIsLoadingPosts(false);
+      }
+    };
+
+    loadPosts();
+  }, [userId]);
 
   const audios = [
     { id: 1, title: "Nature sounds", duration: "2:34" },
@@ -65,8 +77,12 @@ const Profile: React.FC<ProfileProps> = ({
         ) : (
           <ThreeDotsMenu
             showDelete={false}
-            onShare={() => {/* handle share */}}
-            onReport={() => {/* handle report */}}
+            onShare={() => {
+              /* handle share */
+            }}
+            onReport={() => {
+              /* handle report */
+            }}
           />
         )}
       </div>
@@ -74,11 +90,15 @@ const Profile: React.FC<ProfileProps> = ({
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div className="w-24 h-24 rounded-full overflow-hidden">
-          <img src={avatarSrc || "avatar.png"} alt={username} className="w-full h-full object-cover" />
+          <img
+            src={avatarSrc || "avatar.png"}
+            alt={username}
+            className="w-full h-full object-cover"
+          />
         </div>
         <h1 className="text-xl font-semibold">{username}</h1>
         <p className="text-muted-foreground text-sm space-y-4">{email}</p>
-        
+
         <div className="flex gap-8 py-3 mt-4">
           <div className="text-center">
             <div className="font-semibold">{followers.toLocaleString()}</div>
@@ -94,36 +114,48 @@ const Profile: React.FC<ProfileProps> = ({
             </button>
           )}
         </div>
-        
+
         {!isCurrentUser && (
           <div className="flex gap-2 w-full max-w-[200px]">
             <Button variant="outline" className="flex-1">
               Message
             </Button>
-            <Button className="flex-1">
-              Add Friend
-            </Button>
+            <Button className="flex-1">Add Friend</Button>
           </div>
         )}
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
-        *:data-[state=active]:text-primary">
+        <TabsList
+          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+        *:data-[state=active]:text-primary"
+        >
           <TabsTrigger value="posts" className="group">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">Posts</span>
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Posts
+            </span>
           </TabsTrigger>
           <TabsTrigger value="audio" className="group">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">Audio</span>
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Audio
+            </span>
           </TabsTrigger>
           <TabsTrigger value="replies" className="group">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">Replies</span>
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Replies
+            </span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="posts" className="p-4">
-          <AllPosts posts={posts} />
+          {isLoadingPosts ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <AllPosts posts={posts} />
+          )}
         </TabsContent>
 
         <TabsContent value="audio" className="p-4">
@@ -138,4 +170,4 @@ const Profile: React.FC<ProfileProps> = ({
   );
 };
 
-export default Profile; 
+export default Profile;
