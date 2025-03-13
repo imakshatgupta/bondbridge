@@ -10,6 +10,8 @@ import { setUserId } from '../store/createProfileSlice';
 import { loginUser } from '../apis/commonApiCalls/authenticaionApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { Toaster } from "@/components/ui/sonner";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -112,12 +114,12 @@ const Login: React.FC = () => {
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone</label>
+                        <Label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">Phone</Label>
                         <div className="mt-1 relative" style={{ height: '40px' }}>
                             <IntlTelInput
                                 ref={phoneInputRef}
                                 containerClassName="intl-tel-input"
-                                inputClassName="form-control w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                inputClassName="form-control w-full h-10 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
                                 defaultCountry={'in'}
                                 preferredCountries={['in']}
                                 onPhoneNumberChange={handlePhoneChange}
@@ -131,20 +133,20 @@ const Login: React.FC = () => {
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                        <Label htmlFor="password" className="block text-sm font-medium text-foreground">Password</Label>
                         <div className="relative">
-                            <input
+                            <Input
                                 type="password"
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="mt-1 block w-full h-10 pr-7 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                className="mt-1 block w-full h-10 pr-7 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
                                 required
                             />
                             <Button
                                 type="button"
                                 variant={"ghost"}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground"
                                 style={{ top: '4px' }}
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -161,23 +163,23 @@ const Login: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex justify-end">
-                        <Link to="/forgot-password" className="text-sm text-blue-500">Forgot Password?</Link>
+                        <Link to="/forgot-password" className="text-sm text-primary">Forgot Password?</Link>
                     </div>
 
-                    <button
+                    <Button
                         type="submit"
-                        className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+                        className="w-full"
                         disabled={isLoggingIn}
                     >
                         {isLoggingIn ? "Logging In..." : "Log In"}
-                    </button>
+                    </Button>
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
+                            <div className="w-full border-t border-border"></div>
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">or</span>
+                            <span className="px-2 bg-background text-muted-foreground">or</span>
                         </div>
                     </div>
                 </form>

@@ -1,16 +1,7 @@
 import axios from 'axios';
+import { GET_AUTH_HEADERS } from '@/lib/constants';
 // Use import.meta.env for Vite or directly use the URL
 const API_BASE_URL = 'http://localhost:3000/api';
-
-// Helper function to get auth headers
-const getAuthHeaders = (userId?: string) => {
-  return {
-    'Content-Type': 'multipart/form-data',
-    'token': localStorage.getItem('token') || '',
-    'userId': userId || '',
-    'Authorization': `Bearer ${localStorage.getItem('token')}`
-  };
-};
 
 // Interface for profile data matching our Redux store
 interface ProfileData {
@@ -87,7 +78,7 @@ export const submitProfile = async (profileData: ProfileData) => {
   //   console.log(pair[0] + ': ' + pair[1]);
   // }
   
-  const headers = getAuthHeaders(userId);
+  const headers = GET_AUTH_HEADERS(userId);
   
   const response = await axios.put(`${API_BASE_URL}/edit-profile`, formData, {
     headers,
@@ -104,7 +95,7 @@ export const submitProfile = async (profileData: ProfileData) => {
 
 // Function to fetch avatars
 export const fetchAvatars = async (userId?: string) => {
-  const headers = getAuthHeaders(userId);
+  const headers = GET_AUTH_HEADERS(userId);
   
   const response = await axios.get(`${API_BASE_URL}/get-avatars`, {
     headers

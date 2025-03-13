@@ -87,7 +87,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false }) => {
         dispatch(setActiveChat(null));
     };
     return (
-        <div className=" flex flex-col">
+        <div className=" flex flex-col overflow-hidden">
             {/* Navbar */}
             <Navbar />
 

@@ -10,7 +10,6 @@ interface AvatarData {
 }
 
 const SelectAvatarTab: React.FC = () => {
-  const [, setLoading] = useState<boolean>(true);
   const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);
   const [femaleAvatars, setFemaleAvatars] = useState<AvatarData[]>([]);
   const { userId, avatar } = useAppSelector(state => state.createProfile);
@@ -49,8 +48,6 @@ const SelectAvatarTab: React.FC = () => {
           }
         }
       }
-      
-      setLoading(false);
     };
 
     // Only try to fetch avatars if userId exists
@@ -64,11 +61,11 @@ const SelectAvatarTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-gray-700">Choose an avatar that represents you</p>
+      <p className="text-sm text-muted-foreground">Choose an avatar that represents you</p>
       
       {loading ? (
         <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
         </div>
       ) : (
         <>
@@ -82,8 +79,8 @@ const SelectAvatarTab: React.FC = () => {
                     key={`female-${index}`}
                     className={`relative cursor-pointer rounded-lg border-2 ${
                       avatar === avatarItem.url 
-                        ? 'border-primary bg-blue-100' 
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-primary bg-muted' 
+                        : 'border-input hover:border-ring'
                     }`}
                     onClick={() => handleAvatarSelect(avatarItem.url)}
                   >
@@ -93,8 +90,8 @@ const SelectAvatarTab: React.FC = () => {
                       className="h-full w-full mx-auto object-cover rounded-lg"
                     />
                     {avatar === avatarItem.url && (
-                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -115,8 +112,8 @@ const SelectAvatarTab: React.FC = () => {
                     key={`male-${index}`}
                     className={`relative cursor-pointer rounded-lg border-2 ${
                       avatar === avatarItem.url 
-                        ? 'border-primary bg-blue-100' 
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-primary bg-muted' 
+                        : 'border-input hover:border-ring'
                     }`}
                     onClick={() => handleAvatarSelect(avatarItem.url)}
                   >
@@ -126,8 +123,8 @@ const SelectAvatarTab: React.FC = () => {
                       className="h-full w-full mx-auto object-cover rounded-lg"
                     />
                     {avatar === avatarItem.url && (
-                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -140,7 +137,7 @@ const SelectAvatarTab: React.FC = () => {
 
           {/* No avatars message */}
           {maleAvatars.length === 0 && femaleAvatars.length === 0 && (
-            <p className="text-center text-gray-500">No avatars available</p>
+            <p className="text-center text-muted-foreground">No avatars available</p>
           )}
         </>
       )}

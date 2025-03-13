@@ -137,7 +137,7 @@ const Signup: React.FC = () => {
             <div className="w-full">
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-foreground"
               >
                 Phone
               </label>
@@ -145,7 +145,7 @@ const Signup: React.FC = () => {
                 <IntlTelInput
                   ref={phoneInputRef}
                   containerClassName="intl-tel-input"
-                  inputClassName="form-control w-full h-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  inputClassName="form-control w-full h-10 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                   defaultCountry={"in"}
                   preferredCountries={["in"]}
                   onPhoneNumberChange={handlePhoneChange}
@@ -166,13 +166,13 @@ const Signup: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox id="terms" required />
-                <label htmlFor="terms" className="text-xs text-gray-700">
+                <label htmlFor="terms" className="text-xs text-muted-foreground">
                   I agree to Bond's{" "}
-                  <Link to="/terms" className="text-blue-500">
+                  <Link to="/terms" className="text-primary hover:underline">
                     Terms of Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link to="/privacy" className="text-blue-500">
+                  <Link to="/privacy" className="text-primary hover:underline">
                     Privacy Policy
                   </Link>
                 </label>
@@ -180,7 +180,7 @@ const Signup: React.FC = () => {
 
               <div className="flex items-center space-x-2">
                 <Checkbox id="newsletter" />
-                <label htmlFor="newsletter" className="text-xs text-gray-700">
+                <label htmlFor="newsletter" className="text-xs text-muted-foreground">
                   I would like to receive updates about products, services, and
                   promotions
                 </label>
@@ -189,7 +189,7 @@ const Signup: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
               disabled={isSendingOTP}
             >
               {isSendingOTP ? "Sending OTP..." : "Sign Up"}
@@ -198,19 +198,19 @@ const Signup: React.FC = () => {
         ) : (
           <div className="space-y-4">
             <div className="text-center mb-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 We've sent a verification code to your phone
               </p>
             </div>
             <OTPForm onVerify={handleVerifyOTP} />
             <button
               onClick={() => setShowOTP(false)}
-              className="mt-4 text-blue-500 hover:underline w-full text-center"
+              className="mt-4 text-primary hover:underline w-full text-center"
             >
               Back
             </button>
             {isVerifyingOTP && (
-              <p className="text-center text-sm text-gray-500">Verifying...</p>
+              <p className="text-center text-sm text-muted-foreground">Verifying...</p>
             )}
           </div>
         )}
