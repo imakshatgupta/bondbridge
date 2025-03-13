@@ -5,27 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Comment } from "@/components/Comment";
 import { Input } from "@/components/ui/input";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
-
-interface CommentsProps {
-  postAuthor: string;
-  postAvatar: string;
-  postCaption: string;
-  postLikes: number;
-  postComments: number;
-  postDate: string;
-  comments: CommentData[];
-}
-
-interface CommentData {
-  id: number;
-  user: string;
-  avatar: string;
-  content: string;
-  likes: number;
-  timeAgo: string;
-  replies?: CommentData[];
-  hasReplies?: boolean;
-}
+import { CommentsProps } from "@/types/home";
 
 export function Comments({
   postAuthor,

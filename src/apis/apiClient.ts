@@ -4,8 +4,8 @@ import { store } from '@/store'; // Import your Redux store
 
 // Create an Axios instance
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-  timeout: 10000, // Adjust timeout as needed
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://54.153.18.177/api',
+  timeout: 5000, // Adjust timeout as needed
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -34,7 +34,7 @@ apiClient.interceptors.request.use(
 
 // For multipart form data requests
 export const formDataApiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://54.153.18.177/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'multipart/form-data',

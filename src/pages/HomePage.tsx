@@ -1,108 +1,75 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
-import avatarImage from "/activity/cat.png";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-const apiUrl = import.meta.env.VITE_API_URL;
-
-// Fallback story data in case the API fails
-const fallbackStoryData = [
-  { id: 1, user: "name one", avatar: avatarImage, isLive: true },
-  { id: 2, user: "name two", avatar: avatarImage, isLive: false },
-  { id: 3, user: "name three", avatar: avatarImage, isLive: false },
-  { id: 4, user: "name four", avatar: avatarImage, isLive: false },
-];
-
-// Fallback data in case the API fails
-const fallbackPostsData = [
-  {
-    id: 1,
-    user: "John Doe",
-    avatar: avatarImage,
-    postDate: "2024-03-21",
-    caption: "Hello world!",
-    image: avatarImage,
-    likes: 210,
-    comments: 32,
-    datePosted: "2 days ago"
-  },
-  {
-    id: 2,
-    user: "Jane Smith",
-    avatar: avatarImage,
-    postDate: "2024-03-22",
-    caption: "Beautiful day outside!",
-    image: avatarImage,
-    likes: 145,
-    comments: 18,
-    datePosted: "1 day ago"
-  }
-];
+import { useState, useEffect, useRef, useCallback } from "react";
+import { fetchHomepageData, fallbackPostsData, fallbackStoryData } from "@/apis/commonApiCalls/homepageApi";
+import { HomePostData, StoryData } from "@/apis/apiTypes/response";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [posts, setPosts] = useState(fallbackPostsData);
-  const [stories, setStories] = useState(fallbackStoryData);
+  const [posts, setPosts] = useState<HomePostData[]>(fallbackPostsData);
+  const [stories, setStories] = useState<StoryData[]>(fallbackStoryData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
   
+  // Load initial data
   useEffect(() => {
-    const fetchData = async () => {
+    const loadHomepageData = async () => {
       try {
-        // Get userId and token from localStorage
-        // const userId = localStorage.getItem('userId');
-        // const token = localStorage.getItem('token');
-        const userId = '67d00b147b762b88b1e49496';
-        const token = '6a0RdRmErNgSQzDN7H69oLTIrMBKoIwy0fVcyKA9Jdp1Ysdw2FNk82fPFU3tP7YA';
+        const { postsData, storiesData } = await fetchHomepageData(1);
         
-        if (!userId || !token) {
-          throw new Error('Authentication data not found. Please login again.');
-        }
-
-        const headers = {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${token}`,
-          'userId': userId,
-          'token': token
-        };
-        
-        // Fetch posts and stories in parallel
-        const [postsResponse, storiesResponse] = await Promise.all([
-          fetch(`${apiUrl}/api/get-home-posts`, {
-            method: 'GET',
-            headers
-          }),
-          fetch(`${apiUrl}/api/get-stories`, {
-            method: 'GET',
-            headers
-          })
-        ]);
-        
-        if (!postsResponse.ok) {
-          throw new Error('Failed to fetch posts');
-        }
-        
-        if (!storiesResponse.ok) {
-          throw new Error('Failed to fetch stories');
-        }
-        
-        const postsData = await postsResponse.json();
-        const storiesData = await storiesResponse.json();
-        
-        setPosts(postsData.posts?.length ? postsData.posts : fallbackPostsData);
-        setStories(storiesData.stories?.length ? storiesData.stories : fallbackStoryData);
+        setPosts(postsData.posts);
+        setStories(storiesData.stories);
+        setHasMore(postsData.hasMore || false);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('Error loading homepage data:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setLoading(false);
       }
     };
     
-    fetchData();
+    loadHomepageData();
   }, []);
   
-  const handleCommentClick = (postId: number) => {
+  // Function to load more posts
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const { postsData } = await fetchHomepageData(nextPage);
+      
+      setPosts(prev => [...prev, ...postsData.posts]);
+      setHasMore(postsData.hasMore || false);
+      setPage(nextPage);
+    } catch (err) {
+      console.error('Error loading more posts:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+  
+  // Setup intersection observer for infinite scroll
+  const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading || loadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMorePosts();
+      }
+    }, { threshold: 0.8 });
+    
+    if (node) observer.current.observe(node);
+  }, [loading, loadingMore, hasMore]);
+  
+  const handleCommentClick = (postId: number | string) => {
     navigate(`/comments/${postId}`);
   };
   
@@ -132,22 +99,36 @@ export default function HomePage() {
 
       {/* Posts Section */}
       {posts.length > 0 ? (
-        posts.map((post) => (
-          <Post 
+        posts.map((post, index) => (
+          <div
             key={post.id}
-            user={post.user}
-            avatar={post.avatar}
-            postDate={post.postDate}
-            caption={post.caption}
-            image={post.image}
-            likes={post.likes}
-            comments={post.comments}
-            datePosted={post.datePosted}
-            onCommentClick={() => handleCommentClick(post.id)}
-          />
+            ref={index === posts.length - 1 ? lastPostElementRef : undefined}
+          >
+            <Post 
+              user={post.user}
+              avatar={post.avatar}
+              postDate={post.postDate}
+              caption={post.caption}
+              image={post.image}
+              likes={post.likes}
+              comments={post.comments}
+              datePosted={post.datePosted}
+              onCommentClick={() => handleCommentClick(post.id)}
+            />
+          </div>
         ))
       ) : (
         <div className="text-center py-4">No posts available</div>
+      )}
+      
+      {/* Loading indicator for more posts */}
+      {loadingMore && (
+        <div className="text-center py-4">Loading more posts...</div>
+      )}
+      
+      {/* End of content message */}
+      {!hasMore && posts.length > 0 && (
+        <div className="text-center py-4 text-gray-500">No more posts to load</div>
       )}
     </div>
   );

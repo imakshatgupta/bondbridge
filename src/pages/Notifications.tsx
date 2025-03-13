@@ -1,76 +1,106 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import FriendRequest from "@/components/notifications/FriendRequest";
 import Notification from "@/components/notifications/Notification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-const apiUrl = import.meta.env.VITE_API_URL;
-
-type NotificationType = {
-  id: number;
-  title: string;
-  description: string;
-  avatar: string;
-  timestamp: Date;
-  seen: boolean;
-};
-
-type FriendRequestType = {
-  requestId: number;
-  name: string;
-  bio: string;
-  avatar: string;
-};
+import { NotificationType, FriendRequestType } from "@/types/notification";
+import { fetchNotifications, markNotificationAsSeen } from "@/apis/commonApiCalls/notificationApi";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequestType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [activeTab, setActiveTab] = useState("notifications");
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoading || isFetchingMore) return;
+    
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreItems();
+      }
+    });
+    
+    if (node) observerRef.current.observe(node);
+  }, [isLoading, isFetchingMore, hasMore]);
 
-  const handleMarkAsSeen = (notificationId: number) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, seen: true }
-          : notification
-      )
-    );
+  const handleMarkAsSeen = async (notificationId: number) => {
+    try {
+      await markNotificationAsSeen(notificationId);
+      
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, seen: true }
+            : notification
+        )
+      );
+    } catch (err) {
+      console.error("Error marking notification as seen:", err);
+    }
+  };
+
+  const loadMoreItems = async () => {
+    if (!hasMore || isFetchingMore) return;
+    
+    try {
+      setIsFetchingMore(true);
+      const nextPage = page + 1;
+      
+      // Fetch next page of data
+      const data = await fetchNotifications(nextPage);
+      
+      if (activeTab === "notifications") {
+          if (data.notifications && data.notifications.length > 0) {
+          setNotifications(prev => [...prev, ...(data.notifications ?? [])]);
+          setPage(nextPage);
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        if (data.friendRequests && data.friendRequests.length > 0) {
+          setFriendRequests(prev => [...prev, ...(data.friendRequests ?? [])]);
+          setPage(nextPage);
+        } else {
+          setHasMore(false);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching more items:", err);
+    } finally {
+      setIsFetchingMore(false);
+    }
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setPage(1);
+    setHasMore(true);
   };
 
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const getNotifications = async () => {
       try {
         setIsLoading(true);
         
-        // Get user authentication info from local storage or context
-        const userId = localStorage.getItem('userId');
-        const token = localStorage.getItem('authToken');
-        
-        // Check if authentication info exists
-        if (!userId || !token) {
-          throw new Error("Authentication information missing");
-        }
+        const data = await fetchNotifications(1);
 
-        const response = await fetch(
-          `${apiUrl}/get-notifications`, 
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'userid': userId,
-              'token': token
-            }
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch notifications");
-        }
-
-        const data = await response.json();
-
-        // Assuming the API returns an object with notifications and friendRequests arrays
         if (data.notifications) setNotifications(data.notifications);
         if (data.friendRequests) setFriendRequests(data.friendRequests);
+        
+        // Check if there might be more pages
+        if ((activeTab === "notifications" && (!data.notifications || data.notifications.length < 10)) ||
+            (activeTab === "friend-requests" && (!data.friendRequests || data.friendRequests.length < 10))) {
+          setHasMore(false);
+        } else {
+          setHasMore(true);
+        }
 
         setError(null);
       } catch (err) {
@@ -85,7 +115,7 @@ const Notifications = () => {
       }
     };
 
-    fetchNotifications();
+    getNotifications();
   }, []);
 
   // Dummy data as fallback
@@ -130,30 +160,42 @@ const Notifications = () => {
       avatar: "/profile/user.png",
     },
     {
-      requestId: 2,
+      requestId: 3,
       name: "Jane Smith",
       bio: "I am a software engineer",
       avatar: "/profile/user.png",
     },
     {
-      requestId: 2,
+      requestId: 4,
       name: "Jane Smith",
       bio: "I am a software engineer",
       avatar: "/profile/user.png",
     },
     {
-      requestId: 2,
+      requestId: 5,
       name: "Jane Smith",
       bio: "I am a software engineer",
       avatar: "/profile/user.png",
     },
     {
-      requestId: 2,
+      requestId: 6,
       name: "Jane Smith",
       bio: "I am a software engineer",
       avatar: "/profile/user.png",
     },
   ];
+
+  const handleAcceptSuccess = (requestId: number) => {
+    setFriendRequests(prevRequests => 
+      prevRequests.filter(request => request.requestId !== requestId)
+    );
+  }
+
+  const handleRejectSuccess = (requestId: number) => {
+    setFriendRequests(prevRequests => 
+      prevRequests.filter(request => request.requestId !== requestId)
+    );
+  }
 
   return (
     <div className="w-full">
@@ -166,7 +208,7 @@ const Notifications = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
       ) : (
-        <Tabs defaultValue="notifications" className="">
+        <Tabs defaultValue="notifications" className="" onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-2">
             <TabsTrigger value="notifications">
               Notifications{" "}
@@ -181,13 +223,24 @@ const Notifications = () => {
           <TabsContent value="notifications" className="mt-4">
             <div className="space-y-4">
               {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <Notification
-                    key={notification.id}
-                    {...notification}
-                    onMarkAsSeen={handleMarkAsSeen}
-                  />
-                ))
+                <>
+                  {notifications.map((notification, index) => (
+                    <div 
+                      key={notification.id}
+                      ref={index === notifications.length - 1 ? lastElementRef : undefined}
+                    >
+                      <Notification
+                        {...notification}
+                        onMarkAsSeen={handleMarkAsSeen}
+                      />
+                    </div>
+                  ))}
+                  {isFetchingMore && (
+                    <div className="flex justify-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className="text-center text-gray-500 py-4">
                   No notifications to show
@@ -199,12 +252,25 @@ const Notifications = () => {
           <TabsContent value="friend-requests" className="mt-4">
             <div className="space-y-4">
               {friendRequests.length > 0 ? (
-                friendRequests.map((friendRequest, index) => (
-                  <FriendRequest
-                    key={`${friendRequest.requestId}-${index}`}
-                    {...friendRequest}
-                  />
-                ))
+                <>
+                  {friendRequests.map((friendRequest, index) => (
+                    <div 
+                      key={`${friendRequest.requestId}-${index}`}
+                      ref={index === friendRequests.length - 1 ? lastElementRef : undefined}
+                    >
+                      <FriendRequest 
+                        {...friendRequest} 
+                        onAcceptSuccess={handleAcceptSuccess}
+                        onRejectSuccess={handleRejectSuccess}
+                      />
+                    </div>
+                  ))}
+                  {isFetchingMore && (
+                    <div className="flex justify-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <p className="text-center text-gray-500 py-4">
                   No friend requests to show

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -7,11 +7,11 @@ import { Comment } from "@/components/Comment";
 import { Post } from "@/components/Post";
 import { Input } from "@/components/ui/input";
 import avatarImage from "/profile/user.png";
-const apiUrl = import.meta.env.VITE_API_URL;
+import { fetchComments, postComment } from "@/apis/commonApiCalls/commentsApi";
 
 const dummyCommentsData = [
   {
-    id: 1,
+    id: '1',
     user: "Anonymous one",
     avatar: avatarImage,
     content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temp.",
@@ -20,7 +20,7 @@ const dummyCommentsData = [
     hasReplies: false
   },
   {
-    id: 2,
+    id: '2',
     user: "Anonymous one",
     avatar: avatarImage,
     content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod temp.",
@@ -30,7 +30,7 @@ const dummyCommentsData = [
     replies: []
   },
   {
-    id: 3,
+    id: '3',
     user: "Anonymous one",
     avatar: avatarImage,
     content: "Lorem ipsum dolor sit.",
@@ -39,7 +39,7 @@ const dummyCommentsData = [
     hasReplies: false
   },
   {
-    id: 4,
+    id: '4',
     user: "Anonymous one",
     avatar: avatarImage,
     content: "Lorem ipsum dolor sit.",
@@ -49,7 +49,7 @@ const dummyCommentsData = [
     replies: []
   },
   {
-    id: 5,
+    id: '5',
     user: "Anonymous one",
     avatar: avatarImage,
     content: "Lorem ipsum dolor sit.",
@@ -66,6 +66,23 @@ export default function CommentsPage() {
   const [commentsData, setCommentsData] = useState<Array<any>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastCommentRef = useCallback((node: HTMLDivElement) => {
+    if (isLoadingMore) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreComments();
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, hasMore]);
+  
   const [postData, setPostData] = useState({
     user: "Post Author",
     avatar: avatarImage,
@@ -78,7 +95,7 @@ export default function CommentsPage() {
   });
   
   useEffect(() => {
-    const fetchComments = async () => {
+    const fetchCommentsData = async () => {
       if (!postId) {
         setError("No post ID provided");
         setIsLoading(false);
@@ -87,41 +104,15 @@ export default function CommentsPage() {
       
       try {
         setIsLoading(true);
-        
-        // Get user credentials from local storage or context
-        // const userId = localStorage.getItem('userId');
-        // const token = localStorage.getItem('token');
-        const userId = '67d00b147b762b88b1e49496';
-        const token = '6a0RdRmErNgSQzDN7H69oLTIrMBKoIwy0fVcyKA9Jdp1Ysdw2FNk82fPFU3tP7YA';
-        
-        if (!userId || !token) {
-          setError("Authentication required");
-          setIsLoading(false);
-          return;
-        }
-        
-        const response = await fetch(`${apiUrl}/api/getCommentsForPostId`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "userId": userId,
-            "token": token
-          },
-          body: JSON.stringify({ feedId: postId })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setCommentsData(data.comments.length>0 ? data.comments : dummyCommentsData);
+        const data = await fetchComments({ feedId: postId, page: 1, limit: 10 });
+        console.log("Comments data:", data);
+        setCommentsData(data.comments.length > 0 ? data.comments : dummyCommentsData);
+        setHasMore(data.hasMoreComments || false);
         
         // If API returns post details, update postData
         if (data.post) {
           setPostData(data.post);
         }
-        
       } catch (err: unknown) {
         const error = err as Error;
         setError(error.message || "Failed to fetch comments");
@@ -131,49 +122,50 @@ export default function CommentsPage() {
       }
     };
     
-    fetchComments();
+    fetchCommentsData();
   }, [postId]);
+
+  const loadMoreComments = async () => {
+    if (isLoadingMore || !hasMore) return;
+    
+    try {
+      setIsLoadingMore(true);
+      const nextPage = page + 1;
+      const data = await fetchComments({ 
+        feedId: postId || '', 
+        page: nextPage, 
+        limit: 10 
+      });
+      
+      if (data.comments && data.comments.length > 0) {
+        setCommentsData(prev => [...prev, ...data.comments]);
+        setPage(nextPage);
+        setHasMore(data.hasMoreComments || false);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error("Error loading more comments:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
   
   const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
     
     try {
       setIsLoading(true);
-      
-      // Get user credentials from local storage or context
-      // const userId = localStorage.getItem('userId');
-      // const token = localStorage.getItem('token');
-      const userId = '67d00b147b762b88b1e49496';
-      const token = '6a0RdRmErNgSQzDN7H69oLTIrMBKoIwy0fVcyKA9Jdp1Ysdw2FNk82fPFU3tP7YA';
-      
-      if (!userId || !token) {
-        setError("Authentication required");
-        return;
-      }
-      
-      const response = await fetch(`${apiUrl}/comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "userId": userId,
-          "token": token
-        },
-        body: JSON.stringify({
-          postId: postId,
-          comment: newComment.trim()
-        })
+      const data = await postComment({
+        postId: postId || '',
+        comment: newComment.trim()
       });
-      
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-      
-      const data = await response.json();
       
       // If comment was added successfully, update the local state
       if (data.success && data.newComment) {
         // Add the new comment to the state
-        setCommentsData(prevComments => [data.newComment, ...prevComments]);
+        setCommentsData(prevComments => [data.newComment!, ...prevComments]);
         
         // Update post comment count if needed
         setPostData(prevPost => ({
@@ -183,11 +175,10 @@ export default function CommentsPage() {
       }
       
       setNewComment(""); // Clear input after submission
-      
     } catch (err: unknown) {
       const error = err as Error;
-      setError(error.message || "Failed to fetch comments");
-      console.error("Error fetching comments:", error);
+      setError(error.message || "Failed to post comment");
+      console.error("Error posting comment:", error);
     } finally {
       setIsLoading(false);
     }
@@ -278,12 +269,24 @@ export default function CommentsPage() {
               No comments yet. Be the first to comment!
             </div>
           ) : (
-            commentsData.map((comment) => (
-              <Comment 
-                key={comment.id}
-                comment={comment}
-              />
-            ))
+            commentsData.map((comment, index) => {
+              if (commentsData.length === index + 1) {
+                return (
+                  <div ref={lastCommentRef} key={comment.id}>
+                    <Comment 
+                      comment={comment}
+                    />
+                  </div>
+                );
+              } else {
+                return (
+                  <Comment 
+                    key={comment.id}
+                    comment={comment}
+                  />
+                );
+              }
+            })
           )}
         </div>
       </div>
