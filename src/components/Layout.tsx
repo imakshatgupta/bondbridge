@@ -91,7 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,classNa
     };
 
     return (
-        <div className=" flex flex-col h-screen w-screen overflow-hidden">
+        <div className=" flex flex-col overflow-hidden">
             {/* Navbar */}
             <Navbar />
 
