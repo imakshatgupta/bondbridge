@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageSquare, Reply, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
+import toast from 'react-hot-toast';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 interface CommentData {
   id: number;
@@ -14,25 +16,39 @@ interface CommentData {
   timeAgo: string;
   replies?: CommentData[];
   hasReplies?: boolean;
+  userId?: string; // Add userId to identify comment owner
 }
 
 interface CommentProps {
   comment: CommentData;
   isReply?: boolean;
+  postId?: number; // Add postId for API calls
+  currentUserId?: string; // Add current user ID to check ownership
+  onCommentDeleted?: (commentId: number) => void; // Callback for parent components
 }
 
 // Memoized reply component to prevent unnecessary re-renders
-const ReplyComment = memo(({ comment }: { comment: CommentData }) => (
-  <Comment comment={comment} isReply={true} />
+const ReplyComment = memo(({ comment, postId, currentUserId, onCommentDeleted }: 
+  { comment: CommentData; postId?: number; currentUserId?: string; onCommentDeleted?: (commentId: number) => void }) => (
+  <Comment 
+    comment={comment} 
+    isReply={true} 
+    postId={postId} 
+    currentUserId={currentUserId}
+    onCommentDeleted={onCommentDeleted}
+  />
 ));
 ReplyComment.displayName = 'ReplyComment';
 
-export function Comment({ comment, isReply = false }: CommentProps) {
+export function Comment({ comment, isReply = false, postId, currentUserId, onCommentDeleted }: CommentProps) {
   const [showReplies, setShowReplies] = useState(false);
   const [liked, setLiked] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState(comment.replies || []);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isCommentOwner = currentUserId && comment.userId === currentUserId;
 
   const formattedLikes = comment.likes >= 1000
     ? `${(comment.likes / 1000).toFixed(1)}k`
@@ -65,6 +81,53 @@ export function Comment({ comment, isReply = false }: CommentProps) {
       setShowReplies(true);
     }
   }, [replyText]);
+
+  const handleDeleteComment = useCallback(async () => {
+    if (!postId) {
+      toast.error("Cannot delete comment: missing post ID");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+
+      const response = await fetch(`${apiUrl}/comment`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'userId': currentUserId || '',
+          'token': localStorage.getItem('token') || '',
+        },
+        body: JSON.stringify({
+          commentId: comment.id,
+          postId: postId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete comment');
+      }
+
+      toast.success("Comment deleted successfully");
+
+      // Notify parent component about deletion
+      if (onCommentDeleted) {
+        onCommentDeleted(comment.id);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete comment");
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [comment.id, postId, currentUserId, onCommentDeleted]);
+
+  const handleDeleteCommentDummy = () => {
+    if (onCommentDeleted) {
+      onCommentDeleted(comment.id);
+    }
+    toast.success("Comment deleted successfully");
+  }
 
   // Early return for empty content
   if (!comment.content) return null;
@@ -169,7 +232,15 @@ export function Comment({ comment, isReply = false }: CommentProps) {
           {showReplies && replies.length > 0 && (
             <div className="mt-2">
               {replies.map(reply => (
-                <ReplyComment key={reply.id} comment={reply} />
+                <ReplyComment 
+                  key={reply.id} 
+                  comment={reply}
+                  postId={postId}
+                  currentUserId={currentUserId}
+                  onCommentDeleted={(replyId) => {
+                    setReplies(prev => prev.filter(r => r.id !== replyId));
+                  }}
+                />
               ))}
             </div>
           )}
@@ -180,4 +251,4 @@ export function Comment({ comment, isReply = false }: CommentProps) {
 }
 
 // Export a memoized version of the component
-export default memo(Comment); 
+export default memo(Comment);

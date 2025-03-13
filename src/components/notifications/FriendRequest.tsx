@@ -1,5 +1,6 @@
 import { Button } from "../ui/button";
 import { useState } from "react";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 type Props = {
   avatar: string;
@@ -28,7 +29,7 @@ const FriendRequest = ({ avatar, name, bio, requestId, userId }: Props) => {
       const token = localStorage.getItem('token') || '';
       const currentUserId = userId || localStorage.getItem('userId') || '';
       
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/acceptRequest`, {
+      const response = await fetch(`${apiUrl}/acceptRequest`, {
         method: 'POST',
         headers: {
           'Cache-Control': 'no-cache',
@@ -63,7 +64,7 @@ const FriendRequest = ({ avatar, name, bio, requestId, userId }: Props) => {
       const token = localStorage.getItem('token') || '';
       const currentUserId = userId || localStorage.getItem('userId') || '';
       
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/rejectRequest`, {
+      const response = await fetch(`${apiUrl}/rejectRequest`, {
         method: 'POST',
         headers: {
           'Cache-Control': 'no-cache',

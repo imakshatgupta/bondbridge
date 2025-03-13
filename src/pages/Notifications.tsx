@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import FriendRequest from "@/components/notifications/FriendRequest";
 import Notification from "@/components/notifications/Notification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+const apiUrl = import.meta.env.VITE_API_URL;
 
 type NotificationType = {
   id: number;
@@ -50,7 +51,7 @@ const Notifications = () => {
         }
 
         const response = await fetch(
-          process.env.REACT_APP_BACKEND_URL + "/get-notifications", 
+          `${apiUrl}/get-notifications`, 
           {
             method: 'GET',
             headers: {

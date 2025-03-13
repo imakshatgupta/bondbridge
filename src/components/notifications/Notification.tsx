@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getRelativeTime } from '../../lib/utils';
+const apiUrl = import.meta.env.VITE_API_URL;
 
 interface NotificationProps {
   id: number
@@ -21,7 +22,7 @@ const Notification = ({ id, title, description, avatar, timestamp, seen, onMarkA
     
     // setIsLoading(true);
     // try {
-    //   const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/mark-as-seen`, {
+    //   const response = await fetch(`${apiUrl}/mark-as-seen`, {
     //     method: 'POST',
     //     headers: {
     //       'Content-Type': 'application/json',
