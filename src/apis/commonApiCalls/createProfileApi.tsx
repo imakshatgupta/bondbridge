@@ -1,38 +1,19 @@
-import axios from 'axios';
-import { GET_AUTH_HEADERS } from '@/lib/constants';
-// Use import.meta.env for Vite or directly use the URL
-const API_BASE_URL = 'http://localhost:3000/api';
-
-// Interface for profile data matching our Redux store
-interface ProfileData {
-  userId?: string;
-  name: string;
-  email: string;
-  dateOfBirth: string;
-  password: string;
-  skillSelected: string[];
-  image?: File;
-  avatar?: string;
-  communitiesSelected?: {
-    id: number;
-    name: string;
-    members: number;
-    pfp: string;
-  }[];
-}
+import apiClient, { formDataApiClient } from '@/apis/apiClient';
+import { CreateProfileRequest } from '@/apis/apiTypes/request';
+import { CreateProfileResponse, FetchAvatarsResponse } from '@/apis/apiTypes/response';
+import { AvatarUrls } from '@/apis/apiTypes/response';
 
 // Function to submit the complete profile
-export const submitProfile = async (profileData: ProfileData) => {
+export const submitProfile = async (profileData: CreateProfileRequest): Promise<CreateProfileResponse> => {
   const { 
-    userId, 
     name, 
     email, 
     dateOfBirth, 
     password, 
     skillSelected, 
-    //image,  // uncomment when image is added
-    avatar, 
-    //communitiesSelected  // uncomment when communities are added
+    avatar,
+    // image,
+    // communities
   } = profileData;
   
   // Validate required fields
@@ -40,71 +21,56 @@ export const submitProfile = async (profileData: ProfileData) => {
     throw new Error('Please fill in all required fields');
   }
   
-  // Create FormData object
   const formData = new FormData();
   
-  // Add basic profile data
   formData.append('name', name);
   formData.append('email', email);
-  
-  // commented out for now as we are not using dateOfBirth and password
+
+  // commented out as not being uploaded currently
   // formData.append('dateOfBirth', dateOfBirth);
   // formData.append('password', password);
-  
-  // Add skills array
+
   if (skillSelected && skillSelected.length > 0) {
     formData.append('interests', JSON.stringify(skillSelected));
   }
   
-  // commented out for now as we are not using image
-  // Add image file if exists
-  // if (image instanceof File) {
-  //   formData.append('image', image, image.name);
+  // acommentend out as not being uploaded currently
+  // if (image) {
+  //   formData.append('image', image);
   // }
-  
-  // Add avatar if exists
+
   if (avatar) {
     formData.append('avatar', avatar);
   }
   
-  // commented out for now as we are not using communities
-  // Add selected communities
-  // if (communitiesSelected && communitiesSelected.length > 0) {
-  //   formData.append('communities', JSON.stringify(communitiesSelected.map(c => c.id)));
+  // commented out as not being uploaded currently
+  // if (communities && communities.length > 0) {
+  //   formData.append('communities', JSON.stringify(communities));
   // }
-  
-  // Log formData contents for debugging
-  // for (const pair of formData.entries()) {
-  //   console.log(pair[0] + ': ' + pair[1]);
-  // }
-  
-  const headers = GET_AUTH_HEADERS(userId);
-  
-  const response = await axios.put(`${API_BASE_URL}/edit-profile`, formData, {
-    headers,
-  });
+
+  const response = await formDataApiClient.put<CreateProfileResponse>(
+    `/edit-profile`,
+    formData
+  );
   
   if (response.status === 200) {
     console.log("Profile creation successful:", response.data);
     return response.data;
   } else {
-    // console.log(response.data.message);
     throw new Error(response.data.message || 'Failed to create profile');
   }
 };
 
 // Function to fetch avatars
-export const fetchAvatars = async (userId?: string) => {
-  const headers = GET_AUTH_HEADERS(userId);
-  
-  const response = await axios.get(`${API_BASE_URL}/get-avatars`, {
-    headers
-  });
+export const fetchAvatars = async (): Promise<AvatarUrls> => {
+  const response = await apiClient.get<FetchAvatarsResponse>(
+    `/get-avatars`
+  );
   
   if (response.data && response.data.success) {
     return {
-      maleAvatars: response.data.URLS.male || [],
-      femaleAvatars: response.data.URLS.female || []
+      male: response.data?.URLS.male || [],
+      female: response.data?.URLS.female || []
     };
   } else {
     throw new Error(response.data.message || 'Failed to fetch avatars');

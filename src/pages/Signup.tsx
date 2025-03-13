@@ -7,9 +7,10 @@ import IntlTelInput from "react-intl-tel-input";
 import "react-intl-tel-input/dist/main.css";
 import { setUserId } from "@/store/createProfileSlice";
 import { useAppDispatch } from "../store";
-import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticaionApi";
+import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
+import { VerifyOTPResponse } from "../apis/apiTypes/response";
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
@@ -116,9 +117,11 @@ const Signup: React.FC = () => {
     });
     
     if (result.success && result.data) {
-      // Store token and user ID in localStorage
-      localStorage.setItem('token', result.data.token);
-      dispatch(setUserId(result.data.userDetails._id));
+      // Use the existing type instead of type assertion
+      const data = result.data as VerifyOTPResponse;
+      console.log(data);
+      localStorage.setItem('token', data.token);
+      dispatch(setUserId(data.userDetails._id));
       navigate("/setup-profile");
     }
   };

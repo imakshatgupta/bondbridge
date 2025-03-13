@@ -7,11 +7,12 @@ import IntlTelInput from 'react-intl-tel-input';
 import 'react-intl-tel-input/dist/main.css';
 import { useAppDispatch } from '../store';
 import { setUserId } from '../store/createProfileSlice';
-import { loginUser } from '../apis/commonApiCalls/authenticaionApi';
+import { loginUser } from '../apis/commonApiCalls/authenticationApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { Toaster } from "@/components/ui/sonner";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { LoginResponse } from '../apis/apiTypes/response';
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -72,7 +73,7 @@ const Login: React.FC = () => {
         });
 
         if (result.success && result.data) {
-            const { data } = result;
+            const  data  = result.data as LoginResponse;
             
             if (data.userDetails.statusCode == 1) {
                 localStorage.setItem('token', data.token);

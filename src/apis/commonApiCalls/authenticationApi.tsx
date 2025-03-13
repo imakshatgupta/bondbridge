@@ -1,20 +1,17 @@
-import axios from 'axios';
-// Use import.meta.env for Vite or directly use the URL
-const API_BASE_URL = 'http://localhost:3000/api';
-
-// commented out for now as we are not using auth headers
-// Helper function to get auth headers
-// const getAuthHeaders = (userId?: string) => {
-//   return {
-//     'Content-Type': 'application/json',
-//     'token': localStorage.getItem('token') || '',
-//     'userId': userId || '',
-//     'Authorization': `Bearer ${localStorage.getItem('token')}`
-//   };
-// };
+import apiClient from '@/apis/apiClient';
+import {
+  SendOTPRequest,
+  VerifyOTPRequest,
+  LoginRequest,
+} from '../apiTypes/request';
+import {
+  SendOTPResponse,
+  VerifyOTPResponse,
+  LoginResponse,
+} from '../apiTypes/response';
 
 // Function to send OTP for signup
-export const sendOTP = async (phoneData: { phoneNumber: string; countryCode: string }) => {
+export const sendOTP = async (phoneData: SendOTPRequest): Promise<SendOTPResponse> => {
   const { phoneNumber, countryCode } = phoneData;
   
   // Validate required fields
@@ -22,7 +19,7 @@ export const sendOTP = async (phoneData: { phoneNumber: string; countryCode: str
     throw new Error('Phone number and country code are required');
   }
   
-  const response = await axios.post(`${API_BASE_URL}/send-otp`, {
+  const response = await apiClient.post<SendOTPResponse>(`/send-otp`, {
     phoneNumber,
     countryCode,
   });
@@ -36,7 +33,7 @@ export const sendOTP = async (phoneData: { phoneNumber: string; countryCode: str
 };
 
 // Function to verify OTP
-export const verifyOTP = async (otpData: { phoneNumber: string; countryCode: string; otp: string }) => {
+export const verifyOTP = async (otpData: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
   const { phoneNumber, countryCode, otp } = otpData;
   
   // Validate required fields
@@ -44,14 +41,10 @@ export const verifyOTP = async (otpData: { phoneNumber: string; countryCode: str
     throw new Error('Phone number, country code, and OTP are required');
   }
   
-  const response = await axios.post(`${API_BASE_URL}/verify-otp`, {
+  const response = await apiClient.post<VerifyOTPResponse>(`/verify-otp`, {
     phoneNumber,
     countryCode,
     otp
-  }, {
-    headers: {
-      "Content-Type": "application/json",
-    }
   });
   
   if (response.status === 200) {
@@ -63,7 +56,7 @@ export const verifyOTP = async (otpData: { phoneNumber: string; countryCode: str
 };
 
 // Function to login with phone and password
-export const loginUser = async (loginData: { phoneNumber: string; countryCode: string; password: string }) => {
+export const loginUser = async (loginData: LoginRequest): Promise<LoginResponse> => {
   const { phoneNumber, countryCode, password } = loginData;
   
   // Validate required fields
@@ -71,13 +64,14 @@ export const loginUser = async (loginData: { phoneNumber: string; countryCode: s
     throw new Error('Phone number, country code, and password are required');
   }
   
-  const response = await axios.post(`${API_BASE_URL}/login`, {
+  const response = await apiClient.post<LoginResponse>(`/login`, {
     phoneNumber,
     countryCode,
     password
   });
   
   if (response.status === 200) {
+    console.log(response.data);
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to login');
@@ -95,7 +89,7 @@ export const loginUser = async (loginData: { phoneNumber: string; countryCode: s
 //     throw new Error('Phone number and country code are required');
 //   }
   
-//   const response = await axios.post(`${API_BASE_URL}/request-password-reset`, {
+//   const response = await apiClient.post(`/request-password-reset`, {
 //     phoneNumber,
 //     countryCode
 //   });
@@ -118,7 +112,7 @@ export const loginUser = async (loginData: { phoneNumber: string; countryCode: s
 //     throw new Error('All fields are required');
 //   }
   
-//   const response = await axios.post(`${API_BASE_URL}/reset-password`, {
+//   const response = await apiClient.post(`/reset-password`, {
 //     phoneNumber,
 //     countryCode,
 //     otp,

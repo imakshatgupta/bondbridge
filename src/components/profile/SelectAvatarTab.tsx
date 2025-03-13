@@ -24,13 +24,11 @@ const SelectAvatarTab: React.FC = () => {
   };
 
   useEffect(() => {
-    const getAvatars = async () => {
-      console.log('Fetching avatars with userId:', userId);
-      
-      const result = await executeFetchAvatars(userId);
+    const getAvatars = async () => {      
+      const result = await executeFetchAvatars();
       
       if (result.success && result.data) {
-        const { maleAvatars: male, femaleAvatars: female } = result.data;
+        const { male, female } = result.data;
         
         if (male && male.length > 0) {
           setMaleAvatars(male);
@@ -42,7 +40,7 @@ const SelectAvatarTab: React.FC = () => {
         
         // If no avatar is selected yet but we have avatars, select the first one
         if (!avatar) {
-          const firstAvatar = male[0]?.url || female[0]?.url;
+          const firstAvatar = male?.[0]?.url || female?.[0]?.url;
           if (firstAvatar) {
             handleAvatarSelect(firstAvatar);
           }
