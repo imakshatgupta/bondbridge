@@ -12,7 +12,7 @@ interface AvatarData {
 const SelectAvatarTab: React.FC = () => {
   const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);
   const [femaleAvatars, setFemaleAvatars] = useState<AvatarData[]>([]);
-  const { userId, avatar } = useAppSelector(state => state.createProfile);
+  const { avatar } = useAppSelector(state => state.createProfile);
   const dispatch = useAppDispatch();
 
   // Use our custom hook for API calls
@@ -48,6 +48,9 @@ const SelectAvatarTab: React.FC = () => {
       }
     };
 
+    // Get userId from localStorage
+    const userId = localStorage.getItem('userId');
+    
     // Only try to fetch avatars if userId exists
     if (userId) {
       getAvatars();

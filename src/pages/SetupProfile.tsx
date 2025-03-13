@@ -6,9 +6,9 @@ import SelectAvatarTab from "@/components/profile/SelectAvatarTab";
 import CoverProfilePhotosTab from "@/components/profile/CoverProfilePhotosTab";
 import SelectCommunitiesTab from "@/components/profile/SelectCommunitiesTab";
 import TabPageLayout from "@/components/layouts/TabPageLayout";
-import { useAppSelector, useAppDispatch } from "../store";
-import { setUserId } from "../store/createProfileSlice";
+import { useAppSelector } from "../store";
 import { submitProfile } from "../apis/commonApiCalls/createProfileApi";
+import { setPassword } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -24,27 +24,33 @@ const SetupProfile: React.FC = () => {
   const location = useLocation();
   const currentTab = location.hash.replace("#", "") || "personal";
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   // Get profile data from Redux store
   const {
-    userId,
     name,
     email,
     dateOfBirth,
     password,
     skillSelected,
-    // image, // Uncomment if you have this in your state
     avatar,
     // communitiesSelected
   } = useAppSelector(state => state.createProfile);
 
-  // Use our custom hook for API calls
+  // Use our custom hooks for API calls
   const [executeSubmit] = useApiCall(submitProfile);
+  const [executeSetPassword] = useApiCall(setPassword);
 
   // Handle form submission
   const handleSubmit = async () => {
-    // Pass all profile data to the API function
+    // Get userId from localStorage
+    const userId = localStorage.getItem('userId');
+    
+    if (!userId) {
+      console.error('User ID not found in localStorage');
+      return;
+    }
+    
+    // First submit the profile
     const result = await executeSubmit({
       userId,
       name,
@@ -58,11 +64,26 @@ const SetupProfile: React.FC = () => {
     });
     
     if (result.success && result.data) {
-      // Store the user ID in Redux if returned
-      if (result.data.userId) {
-        dispatch(setUserId(result.data.userId));
+      console.log(result.data);
+      
+      // Get token from local storage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('Authentication token not found in local storage');
+        return;
       }
-      navigate('/');
+      
+      // Now set the password with token from local storage
+      const passwordResult = await executeSetPassword({
+        userId,
+        password,
+        token
+      });
+      
+      if (passwordResult.success) {
+        navigate('/');
+      }
     }
   };
 

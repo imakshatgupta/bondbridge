@@ -45,6 +45,11 @@ export type ResetPasswordResponse = ApiResponse<{
   message: string;
 }>
 
+export type SetPasswordResponse = {
+  success: boolean;
+  message: string;
+}
+
 export interface AvatarItem {
   url: string;
   type: string;
@@ -55,7 +60,7 @@ export interface AvatarUrls {
   female: AvatarItem[];
 }
 
-export type CreateProfileResponse = ApiResponse<{
+export type CreateProfileResponse = {
   user: {
     statusCode: number;
     userId: string;
@@ -65,7 +70,7 @@ export type CreateProfileResponse = ApiResponse<{
     avatar: string;
     interests: string[];
   }
-}>
+}
 
 export type FetchAvatarsResponse = {
   success: boolean;

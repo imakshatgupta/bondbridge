@@ -3,11 +3,13 @@ import {
   SendOTPRequest,
   VerifyOTPRequest,
   LoginRequest,
+  SetPasswordRequest,
 } from '../apiTypes/request';
 import {
   SendOTPResponse,
   VerifyOTPResponse,
   LoginResponse,
+  SetPasswordResponse,
 } from '../apiTypes/response';
 
 // Function to send OTP for signup
@@ -75,6 +77,29 @@ export const loginUser = async (loginData: LoginRequest): Promise<LoginResponse>
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to login');
+  }
+};
+
+// Function to set user password
+export const setPassword = async (data: SetPasswordRequest): Promise<SetPasswordResponse> => {
+  const { userId, password, token } = data;
+  
+  // Validate required fields
+  if (!userId || !password || !token) {
+    throw new Error('User ID, password, and token are required');
+  }
+  
+  const response = await apiClient.put<SetPasswordResponse>(`/set-password`, {
+    userId,
+    password,
+    token
+  });
+  
+  if (response.status === 200) {
+    console.log("Password set successfully:", response.data);
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to set password');
   }
 };
 

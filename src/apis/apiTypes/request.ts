@@ -46,4 +46,10 @@ export interface CreateProfileRequest {
 
 export interface FetchAvatarsRequest {
   userId?: string;
+}
+
+export interface SetPasswordRequest {
+  userId: string;
+  password: string;
+  token: string;
 } 

@@ -5,8 +5,6 @@ import OTPForm from "../components/auth/OTPForm";
 import { Checkbox } from "@/components/ui/checkbox";
 import IntlTelInput from "react-intl-tel-input";
 import "react-intl-tel-input/dist/main.css";
-import { setUserId } from "@/store/createProfileSlice";
-import { useAppDispatch } from "../store";
 import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
@@ -15,11 +13,10 @@ import { VerifyOTPResponse } from "../apis/apiTypes/response";
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("91"); // Default to India (+91)
+  const [countryCode, setCountryCode] = useState("1"); // Default to USA (+1)
   const [, setIsValidPhone] = useState(false);
   const navigate = useNavigate();
   const phoneInputRef = useRef(null);
-  const dispatch = useAppDispatch();
 
   // Use our custom hooks for API calls
   const [executeSendOTP, isSendingOTP] = useApiCall(sendOTP);
@@ -121,7 +118,7 @@ const Signup: React.FC = () => {
       const data = result.data as VerifyOTPResponse;
       console.log(data);
       localStorage.setItem('token', data.token);
-      dispatch(setUserId(data.userDetails._id));
+      localStorage.setItem('userId', data.userDetails._id);
       navigate("/setup-profile");
     }
   };
@@ -149,8 +146,8 @@ const Signup: React.FC = () => {
                   ref={phoneInputRef}
                   containerClassName="intl-tel-input"
                   inputClassName="form-control w-full h-10 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
-                  defaultCountry={"in"}
-                  preferredCountries={["in"]}
+                  defaultCountry={"us"}
+                  preferredCountries={["us"]}
                   onPhoneNumberChange={handlePhoneChange}
                   onPhoneNumberBlur={handlePhoneChange}
                   format={true}
