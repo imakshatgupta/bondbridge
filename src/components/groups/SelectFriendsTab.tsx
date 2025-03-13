@@ -11,7 +11,7 @@ const SelectFriendsTab: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[50vh] overflow-y-auto">
       <h2 className="text-xl font-medium mb-4">Invite Friends to Your Group</h2>
       <div className="mb-4">
         <input
@@ -21,8 +21,7 @@ const SelectFriendsTab: React.FC = () => {
         />
       </div>
 
-      <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-        {/* impleement infinite scroll here */}
+      <div className="space-y-3">
         {friends.map((friend) => (
           <div 
             key={friend.id}
