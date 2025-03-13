@@ -1,31 +1,37 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { 
+  setName, 
+  setEmail, 
+  setDateOfBirth,
+  setPassword 
+} from "../../store/createProfileSlice";
+import { RootState } from "../../store";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 const PersonalInfoTab: React.FC = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    dob: "",
-    password: "",
-  });
+  const dispatch = useDispatch();
+  const { name, email, dateOfBirth, password } = useSelector(
+    (state: RootState) => state.createProfile
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const response = await axios.post("https://your-api-endpoint.com/personal-info", formData);
-      console.log("Response:", response.data);
-      alert("Data submitted successfully!");
-    } catch (error) {
-      console.error("Error submitting data:", error);
-      alert("Failed to submit data.");
+    const { id, value } = e.target;
+    
+    switch (id) {
+      case "name":
+        dispatch(setName(value));
+        break;
+      case "email":
+        dispatch(setEmail(value));
+        break;
+      case "dob":
+        dispatch(setDateOfBirth(value));
+        break;
+      case "password":
+        dispatch(setPassword(value));
+        break;
     }
   };
 
@@ -36,7 +42,7 @@ const PersonalInfoTab: React.FC = () => {
         <Input
           type="text"
           id="name"
-          value={formData.name}
+          value={name}
           onChange={handleChange}
         />
       </div>
@@ -46,7 +52,7 @@ const PersonalInfoTab: React.FC = () => {
         <Input
           type="email"
           id="email"
-          value={formData.email}
+          value={email}
           onChange={handleChange}
         />
       </div>
@@ -56,7 +62,7 @@ const PersonalInfoTab: React.FC = () => {
         <Input
           type="date"
           id="dob"
-          value={formData.dob}
+          value={dateOfBirth}
           onChange={handleChange}
         />
       </div>
@@ -66,11 +72,10 @@ const PersonalInfoTab: React.FC = () => {
         <Input
           type="password"
           id="password"
-          value={formData.password}
+          value={password}
           onChange={handleChange}
         />
       </div>
-
     </div>
   );
 };

@@ -1,115 +1,157 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
-import OTPForm from '../components/auth/OTPForm';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import IntlTelInput from 'react-intl-tel-input';
+import 'react-intl-tel-input/dist/main.css';
+import { useAppDispatch } from '../store';
+import { setUserId } from '../store/createProfileSlice';
+import { loginUser } from '../apis/commonApiCalls/authenticationApi';
+import { useApiCall } from '../apis/globalCatchError';
+import { Toaster } from "@/components/ui/sonner";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { LoginResponse } from '../apis/apiTypes/response';
 
 const Login: React.FC = () => {
-    const [showOTP, setShowOTP] = useState(false);
-    const [email, setEmail] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [countryCode, setCountryCode] = useState('91'); // Default to India (+91)
+    const [, setIsValidPhone] = useState(false);
     const [password, setPassword] = useState('');
-    const [otpMessage, setOtpMessage] = useState('');
+    const phoneInputRef = useRef(null);
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
-    
+    // Use our custom hook for API calls
+    const [executeLogin, isLoggingIn] = useApiCall(loginUser);
+
+    // Add effect to apply styles to the phone input after it's rendered
+    useEffect(() => {
+        const fixPhoneInputStyles = () => {
+            const container = document.querySelector('.intl-tel-input');
+            if (container) {
+                // Make width consistent
+                container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
+                
+                // Fix flag container height
+                const flagContainer = container.querySelector('.flag-container');
+                if (flagContainer) {
+                    flagContainer.setAttribute('style', 'height: 100% !important;');
+                }
+                
+                // Fix selected flag height
+                const selectedFlag = container.querySelector('.selected-flag');
+                if (selectedFlag) {
+                    selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
+                }
+                
+                // Fix input height
+                const input = container.querySelector('input');
+                if (input) {
+                    input.setAttribute('style', 'height: 40px !important;');
+                }
+            }
+        };
+        
+        // Run initially and after a small delay to ensure component is rendered
+        fixPhoneInputStyles();
+        const timeoutId = setTimeout(fixPhoneInputStyles, 100);
+        
+        return () => clearTimeout(timeoutId);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
 
-            const data = await response.json();
+        const validCountryCode = "+" + countryCode;
 
-            if (response.ok) {
-                // Send OTP after successful email/password verification
-                const otpResponse = await fetch('/api/auth/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
-                });
+        const result = await executeLogin({
+            phoneNumber,
+            countryCode: validCountryCode,
+            password
+        });
 
-                if (otpResponse.ok) {
-                    setShowOTP(true);
-                    setOtpMessage('OTP sent successfully. Please enter the OTP to continue.');
-                } else {
-                    throw new Error('Failed to send OTP');
-                }
-            } else {
-                throw new Error(data.message || 'Invalid credentials');
+        if (result.success && result.data) {
+            const  data  = result.data as LoginResponse;
+            
+            if (data.userDetails.statusCode == 1) {
+                localStorage.setItem('token', data.token);
+                dispatch(setUserId(data.userDetails._id));
+                navigate('/');
             }
-        } catch (error: any) {
-            alert(error.message);
         }
     };
 
-    const handleVerifyOTP = async (otp: string) => {
-        try {
-            const response = await fetch('/api/auth/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, otp }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                navigate('/home'); // Redirect to home page after OTP verification
-            } else {
-                throw new Error(data.message || 'Invalid OTP');
-            }
-        } catch (error: any) {
-            alert(error.message);
+    const handlePhoneChange = (isValid: boolean, value: string, selectedCountryData: { dialCode?: string }) => {
+        setIsValidPhone(isValid);
+        if (selectedCountryData && selectedCountryData.dialCode) {
+            setCountryCode(selectedCountryData.dialCode);
         }
-    };
 
-    const handleBack = () => {
-        setShowOTP(false);
+        // Remove the country code from the phone number
+        if (selectedCountryData && selectedCountryData.dialCode) {
+            const dialCode = String(selectedCountryData.dialCode);
+            let cleanNumber = value.replace(/\D/g, '');
+
+            // If number starts with the dial code, remove it
+            if (cleanNumber.startsWith(dialCode)) {
+                cleanNumber = cleanNumber.substring(dialCode.length);
+            }
+
+            setPhoneNumber(cleanNumber);
+        } else {
+            setPhoneNumber(value.replace(/\D/g, ''));
+        }
     };
 
     return (
-        <AuthLayout
-            title="Empower your Journey, Welcome Back!"
-            subtitle="Log in to unlock a world of endless possibilities"
-            image="/auth/login.png"
-            isLogin
-            showOTP={showOTP}
-            otpMessage={otpMessage}
-        >
-            {!showOTP ? (
+        <>
+            <AuthLayout
+                title="Empower your Journey, Welcome Back!"
+                subtitle="Log in to unlock a world of endless possibilities"
+                image="/auth/login.png"
+                isLogin
+            >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+                    <div>
+                        <Label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">Phone</Label>
+                        <div className="mt-1 relative" style={{ height: '40px' }}>
+                            <IntlTelInput
+                                ref={phoneInputRef}
+                                containerClassName="intl-tel-input"
+                                inputClassName="form-control w-full h-10 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
+                                defaultCountry={'in'}
+                                preferredCountries={['in']}
+                                onPhoneNumberChange={handlePhoneChange}
+                                onPhoneNumberBlur={handlePhoneChange}
+                                format={true}
+                                formatOnInit={true}
+                                autoPlaceholder={true}
+                                nationalMode={false}
+                                separateDialCode={true}
+                            />
+                        </div>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="password">Password</Label>
+                    <div>
+                        <Label htmlFor="password" className="block text-sm font-medium text-foreground">Password</Label>
                         <div className="relative">
                             <Input
                                 type="password"
                                 id="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                className="mt-1 block w-full h-10 pr-7 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
                                 required
                             />
                             <Button
+                                type="button"
                                 variant={"ghost"}
                                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground"
-                                style={{ top: '0px' }}
-                                onClick={() => {
+                                style={{ top: '4px' }}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                     const passwordInput = document.getElementById('password') as HTMLInputElement;
                                     passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
                                 }}
@@ -127,9 +169,10 @@ const Login: React.FC = () => {
 
                     <Button
                         type="submit"
-                        className="w-full "
+                        className="w-full"
+                        disabled={isLoggingIn}
                     >
-                        Log In
+                        {isLoggingIn ? "Logging In..." : "Log In"}
                     </Button>
 
                     <div className="relative">
@@ -141,21 +184,9 @@ const Login: React.FC = () => {
                         </div>
                     </div>
                 </form>
-            ) : (
-                <>
-                    <OTPForm onVerify={handleVerifyOTP} />
-                    <Button
-                        onClick={handleBack}
-                        className="mt-4 text-primary hover:underline"
-                    >
-                        Back
-                    </Button>
-                </>
-            )}
-            <p className="text-sm text-muted-foreground text-center mt-4">
-                Don't have an account? <Link to="/signup" className="text-primary">Sign up</Link>
-            </p>
-        </AuthLayout>
+            </AuthLayout>
+            <Toaster />
+        </>
     );
 };
 

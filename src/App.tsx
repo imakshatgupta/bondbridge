@@ -16,7 +16,7 @@ import Activity from '@/pages/Activity';
 import BondChat from './pages/BondChat';
 import StoryPage from "@/pages/StoryPage";
 import CreatePost from './pages/CreatePost';
-
+import CreateStory from './pages/CreateStory';
 
 
 function App() {
@@ -46,6 +46,7 @@ function App() {
               </Layout>
             } />
             <Route path="/create-post" element={<Layout showSidebars={true}><CreatePost /></Layout>} />
+            <Route path="/create-story" element={<Layout showSidebars={true} className="!p-0"><CreateStory /></Layout>} />
           </Routes>
         </Router>
     </Provider>

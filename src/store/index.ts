@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import chatReducer from './chatSlice';
+import createProfileReducer from './createProfileSlice';
 import { TypedUseSelectorHook } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
@@ -7,6 +8,7 @@ import { useSelector } from 'react-redux';
 export const store = configureStore({
   reducer: {
     chat: chatReducer,
+    createProfile: createProfileReducer,
     // Add other reducers here
   },
 });
