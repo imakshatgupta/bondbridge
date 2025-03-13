@@ -21,7 +21,13 @@ export const fetchNotifications = async (
     "/get-notifications",
     { params }
   );
-  return response.data;
+
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to fetch notifications");
+  }
 };
 
 export const fetchFollowRequests = async (
@@ -31,7 +37,13 @@ export const fetchFollowRequests = async (
     "/followRequests",
     { params }
   );
-  return response.data;
+
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to fetch follow requests");
+  }
 };
 
 export const acceptFriendRequest = async (
@@ -44,7 +56,13 @@ export const acceptFriendRequest = async (
     "/acceptRequest",
     formData
   );
-  return response.data;
+
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to fetch follow requests");
+  }
 };
 
 export const rejectFriendRequest = async (
@@ -57,5 +75,10 @@ export const rejectFriendRequest = async (
     "/rejectRequest",
     formData
   );
-  return response.data;
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to fetch follow requests");
+  }
 };

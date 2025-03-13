@@ -60,7 +60,7 @@ export interface AvatarUrls {
   female: AvatarItem[];
 }
 
-export type CreateProfileResponse = {
+export type CreateProfileResponse = ApiResponse<{
   user: {
     statusCode: number;
     userId: string;
@@ -70,7 +70,7 @@ export type CreateProfileResponse = {
     avatar: string;
     interests: string[];
   };
-};
+}>;
 
 export type FetchAvatarsResponse = {
   success: boolean;
