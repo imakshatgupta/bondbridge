@@ -63,7 +63,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useAppSelector, useAppDispatch } from "../../store";
+import { useAppSelector } from "../../store";
 
 interface Group {
   id: string;
@@ -77,7 +77,6 @@ const GroupList: React.FC = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const dispatch = useAppDispatch();
 
   const token = localStorage.getItem("token");
   const { userId } = useAppSelector(state => state.createProfile);

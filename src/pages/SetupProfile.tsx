@@ -7,7 +7,7 @@ import SelectAvatarTab from "@/components/profile/SelectAvatarTab";
 import CoverProfilePhotosTab from "@/components/profile/CoverProfilePhotosTab";
 import SelectCommunitiesTab from "@/components/profile/SelectCommunitiesTab";
 import { useAppSelector, useAppDispatch } from "../store";
-import { setUserId } from "../store/createProfileSlice";
+import { setUserId } from "@/store/createProfileSlice";
 import axios from "axios";
 
 const tabs = [

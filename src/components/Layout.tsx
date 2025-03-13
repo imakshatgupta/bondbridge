@@ -89,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false, classNa
         dispatch(setActiveChat(null));
     };
     return (
-        <div className=" flex flex-col">
+        <div className="flex flex-col ">
             {/* Navbar */}
             <Navbar />
 

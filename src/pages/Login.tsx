@@ -25,19 +25,19 @@ const Login: React.FC = () => {
             if (container) {
                 // Make width consistent
                 container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
-                
+
                 // Fix flag container height
                 const flagContainer = container.querySelector('.flag-container');
                 if (flagContainer) {
                     flagContainer.setAttribute('style', 'height: 100% !important;');
                 }
-                
+
                 // Fix selected flag height
                 const selectedFlag = container.querySelector('.selected-flag');
                 if (selectedFlag) {
                     selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
                 }
-                
+
                 // Fix input height
                 const input = container.querySelector('input');
                 if (input) {
@@ -45,11 +45,11 @@ const Login: React.FC = () => {
                 }
             }
         };
-        
+
         // Run initially and after a small delay to ensure component is rendered
         fixPhoneInputStyles();
         const timeoutId = setTimeout(fixPhoneInputStyles, 100);
-        
+
         return () => clearTimeout(timeoutId);
     }, []);
 
@@ -171,26 +171,16 @@ const Login: React.FC = () => {
                     Log In
                 </button>
 
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-border"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-background text-muted-foreground">or</span>
-                        </div>
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-border"></div>
                     </div>
-                </form>
-            ) : (
-                <>
-                    <OTPForm onVerify={handleVerifyOTP} />
-                    <Button
-                        onClick={handleBack}
-                        className="mt-4 text-primary hover:underline"
-                    >
-                        Back
-                    </Button>
-                </>
-            )}
+                    <div className="relative flex justify-center text-sm">
+                        <span className="px-2 bg-background text-muted-foreground">or</span>
+                    </div>
+                </div>
+            </form>
+
             <p className="text-sm text-muted-foreground text-center mt-4">
                 Don't have an account? <Link to="/signup" className="text-primary">Sign up</Link>
             </p>
