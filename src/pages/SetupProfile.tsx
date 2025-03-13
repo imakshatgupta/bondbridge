@@ -93,7 +93,7 @@ const SetupProfile: React.FC = () => {
   const isLastTab = currentTab === tabs[tabs.length - 1].id;
 
   return (
-    <>
+    <div className="max-h-screen overflow-auto">
       <TabPageLayout
         title="Complete Your Profile"
         tabs={tabs}
@@ -114,7 +114,7 @@ const SetupProfile: React.FC = () => {
         {currentTab === "communities" && <SelectCommunitiesTab />}
       </TabPageLayout>
       <Toaster />
-    </>
+    </div>
   );
 };
 
