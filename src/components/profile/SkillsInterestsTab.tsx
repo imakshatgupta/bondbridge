@@ -25,19 +25,19 @@ const SkillsInterestsTab: React.FC = () => {
         {skillSelected.map((selectedSkill) => (
           <button
             key={selectedSkill}
-            className="bg-purple-500 text-white px-3 py-1 rounded-full flex items-center"
+            className="bg-primary text-primary-foreground px-3 py-1 rounded-full flex items-center"
             onClick={() => handleRemoveSkill(selectedSkill)}
           >
             {selectedSkill} <span className="ml-2 cursor-pointer">✕</span>
           </button>
         ))}
       </div>
-
+  
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {skillsAvailable.map((skill) => (
           <button
             key={skill}
-            className="border-2 border-gray-300 text-gray-700 px-3 py-1 rounded-full flex items-center cursor-pointer hover:bg-gray-50"
+            className="border-2 border-border text-foreground px-3 py-1 rounded-full flex items-center cursor-pointer hover:bg-secondary"
             onClick={() => handleAddSkill(skill)}
           >
             + {skill}

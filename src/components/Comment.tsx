@@ -1,14 +1,9 @@
 import { useState, useCallback, memo } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageSquare, MoreHorizontal, Reply, ArrowRight, Share2, Trash, Flag } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { Heart, MessageSquare, Reply, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 
 interface CommentData {
   id: number;
@@ -106,19 +101,12 @@ export function Comment({ comment, isReply = false }: CommentProps) {
               </div>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem><Share2 className="w-4 h-4 mr-2" /> Share</DropdownMenuItem>
-                <DropdownMenuItem><Flag className="w-4 h-4 mr-2" /> Report</DropdownMenuItem>
-                {/* show only if user is the owner of the post */}
-                <DropdownMenuItem><Trash className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ThreeDotsMenu
+              showDelete={true}
+              onShare={() => console.log('Share clicked')}
+              onReport={() => console.log('Report clicked')}
+              onDelete={() => console.log('Delete clicked')}
+            />
           </div>
 
           <div className="flex items-center gap-4 mt-2">

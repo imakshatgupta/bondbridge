@@ -40,14 +40,14 @@ const SelectCommunitiesTab: React.FC = () => {
             key={community.id}
             className={`relative rounded-xl cursor-pointer transition-all ${
               isCommunitySelected(community.id) 
-                ? 'bg-purple-50' 
-                : 'bg-gray-50'
+                ? 'bg-accent' 
+                : 'bg-muted'
             }`}
             onClick={() => toggleCommunity(community)}
           >
             {/* Selection Indicator */}
             {isCommunitySelected(community.id) && (
-              <div className="absolute top-2 right-2 bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
+              <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
@@ -65,7 +65,7 @@ const SelectCommunitiesTab: React.FC = () => {
 
             {/* Profile Picture */}
             <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden">
+              <div className="w-16 h-16 rounded-full border-4 border-background overflow-hidden">
                 <img 
                   src={community.pfp} 
                   alt="" 
@@ -77,7 +77,7 @@ const SelectCommunitiesTab: React.FC = () => {
             {/* Content */}
             <div className="pt-6 pb-2 px-4 text-center">
               <h3 className={`text-base font-medium ${
-                isCommunitySelected(community.id) ? 'text-purple-500' : 'text-gray-900'
+                isCommunitySelected(community.id) ? 'text-primary' : 'text-foreground'
               }`}>
                 {community.name}
               </h3>
@@ -92,7 +92,7 @@ const SelectCommunitiesTab: React.FC = () => {
       {/* Display selected count */}
       {communitiesSelected.length > 0 && (
         <div className="mt-6 text-center">
-          <p className="text-purple-600 font-medium">
+          <p className="text-foreground font-medium">
             You've selected {communitiesSelected.length} {communitiesSelected.length === 1 ? 'community' : 'communities'}
           </p>
         </div>

@@ -1,74 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
-
-interface Community {
-  id: number;
-  name: string;
-  members: number;
-  pfp: string;
-}
-
-const initialState = {
-  userId: "",
-  name: "",
-  email: "",
-  dateOfBirth: "",
-  password: "",
-  skillsAvailable: [
-    "NEWS",
-    "Music",
-    "Sports",
-    "Racing cars",
-    "Marketing",
-    "Science",  
-    "Chess",
-  ],
-  skillSelected: [] as string[],
-  image: null as File | null,
-  avatar: null as string | null,
-  communitiesAvailable: [
-    {
-      id: 1,
-      name: "Tech Enthusiasts",
-      members: 2450,
-      pfp: "/profile/community/pubg.png",
-    },
-    {
-      id: 2,
-      name: "Creative Arts",
-      members: 1820,
-      pfp: "/profile/community/pubg.png",
-    },
-    {
-      id: 3,
-      name: "Fitness & Health",
-      members: 3100,
-      pfp: "/profile/community/pubg.png",
-    },
-    {
-      id: 4,
-      name: "Book Club",
-      members: 940,
-      pfp: "/profile/community/pubg.png",
-    },
-    {
-      id: 5,
-      name: "Travel Adventurers",
-      members: 2700,
-      pfp: "/profile/community/pubg.png",
-    },
-    {
-      id: 6,
-      name: "Food & Cooking",
-      members: 1560,
-      pfp: "/profile/community/pubg.png",
-    },
-  ] as Community[],
-  communitiesSelected: [] as Community[],
-};
+import { INITIAL_PROFILE_STATE } from "@/lib/constants";
 
 export const createProfile = createSlice({
   name: "createProfile",
-  initialState,
+  initialState: {
+    ...INITIAL_PROFILE_STATE,
+    skillsAvailable: [...INITIAL_PROFILE_STATE.skillsAvailable],
+    skillSelected: [...INITIAL_PROFILE_STATE.skillSelected],
+    communitiesSelected: [...INITIAL_PROFILE_STATE.communitiesSelected],
+    communitiesAvailable: [...INITIAL_PROFILE_STATE.communitiesAvailable],
+  },
   reducers: {
     setUserId: (state, action) => {
       state.userId = action.payload;

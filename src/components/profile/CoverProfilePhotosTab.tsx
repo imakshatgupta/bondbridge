@@ -104,17 +104,17 @@ const CoverProfilePhotosTab: React.FC = () => {
   return (
     <div className="space-y-8 p-6 max-w-2xl mx-auto">
       <div className="space-y-4">
-        <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
+        <h3 className="text-lg font-medium text-foreground">Profile Photo</h3>
         
         <div 
-          className="flex flex-col items-center justify-center bg-white p-8 rounded-lg border border-gray-200 shadow-sm"
+          className="flex flex-col items-center justify-center bg-background p-8 rounded-lg border border-border shadow-sm"
           onDragEnter={handleDragEnter}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
           <div 
-            className={`relative w-36 h-36 mb-4 ${isDragging ? 'ring-2 ring-blue-500' : ''}`}
+            className={`relative w-36 h-36 mb-4 ${isDragging ? 'ring-2 ring-primary' : ''}`}
           >
             {profilePhoto ? (
               <>
@@ -126,17 +126,17 @@ const CoverProfilePhotosTab: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDelete}
-                  className="absolute top-0 right-0 p-1 bg-red-500 rounded-full shadow-md text-white hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 cursor-pointer"
+                  className="absolute top-0 right-0 p-1 bg-destructive rounded-full shadow-md text-primary-foreground hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
               </>
             ) : (
-              <div className={`w-full h-full rounded-full bg-gray-100 flex flex-col items-center justify-center border-2 ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className={`w-full h-full rounded-full bg-muted flex flex-col items-center justify-center border-2 ${isDragging ? 'border-primary bg-primary/10' : 'border-dashed border-input'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                {isDragging && <p className="text-xs text-blue-500 mt-2">Drop image here</p>}
+                {isDragging && <p className="text-xs text-primary mt-2">Drop image here</p>}
               </div>
             )}
           </div>
@@ -145,7 +145,7 @@ const CoverProfilePhotosTab: React.FC = () => {
             <button
               type="button"
               onClick={handleUploadClick}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 border border-input shadow-sm text-sm font-medium rounded-md text-foreground bg-background hover:bg-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring cursor-pointer"
             >
               <Upload className="mr-2 h-4 w-4" />
               UPLOAD
@@ -161,10 +161,10 @@ const CoverProfilePhotosTab: React.FC = () => {
             />
           </div>
           
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-sm text-muted-foreground">
             Recommended Size: 500px (square)
           </p>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-muted-foreground">
             Drag and drop an image file here or click upload
           </p>
         </div>

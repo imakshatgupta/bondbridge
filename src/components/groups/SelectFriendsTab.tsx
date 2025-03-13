@@ -118,7 +118,7 @@ const SelectFriendsTab: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-h-[50vh] overflow-y-auto">
       <h2 className="text-xl font-medium mb-4">Invite Friends to Your Group</h2>
       
       <div className="mb-4">

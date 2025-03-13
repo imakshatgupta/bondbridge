@@ -7,6 +7,8 @@ import {
   setPassword 
 } from "../../store/createProfileSlice";
 import { RootState } from "../../store";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
 
 const PersonalInfoTab: React.FC = () => {
   const dispatch = useDispatch();

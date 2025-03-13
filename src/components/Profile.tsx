@@ -1,17 +1,19 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings, MoreVertical, Share2, Flag } from "lucide-react";
-import avatar from "/activity/cat.png";
+import { ArrowLeft, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import AllPosts from "@/components/AllPosts";
+import AllAudios from "@/components/AllAudios";
+import AllReplies from "@/components/AllReplies";
+import { useEffect, useState } from "react";
+import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
+import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
+import { useApiCall } from "@/apis/globalCatchError";
 
 interface ProfileProps {
+  userId: string;
   username: string;
   email: string;
   followers: number;
@@ -21,6 +23,7 @@ interface ProfileProps {
 }
 
 const Profile: React.FC<ProfileProps> = ({
+  userId,
   username,
   email,
   followers,
@@ -28,18 +31,20 @@ const Profile: React.FC<ProfileProps> = ({
   avatarSrc,
   isCurrentUser = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<"posts" | "audio" | "replies">("posts");
   const navigate = useNavigate();
+  const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
+  const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
 
-  // Mock data for demonstration
-  const posts = [
-    { id: 1, imageSrc: avatar },
-    { id: 2, imageSrc: avatar },
-    { id: 3, imageSrc: avatar },
-    { id: 4, imageSrc: avatar },
-    { id: 5, imageSrc: avatar },
-    { id: 6, imageSrc: avatar },
-  ];
+  useEffect(() => {
+    const loadPosts = async () => {
+      const result = await executePostsFetch(userId);
+      if (result.success && result.data) {
+        setPosts(result.data.posts);
+      }
+    };
+
+    loadPosts();
+  }, [userId]);
 
   const audios = [
     { id: 1, title: "Nature sounds", duration: "2:34" },
@@ -66,33 +71,31 @@ const Profile: React.FC<ProfileProps> = ({
             <Switch />
           </div>
         ) : (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Flag className="w-4 h-4 mr-2" /> Report
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ThreeDotsMenu
+            showDelete={false}
+            onShare={() => {
+              /* handle share */
+            }}
+            onReport={() => {
+              /* handle report */
+            }}
+          />
         )}
       </div>
 
       {/* Profile Info */}
-      <div className="flex flex-col items-center pt-6 pb-4">
-        <div className="w-24 h-24 rounded-full overflow-hidden mb-3">
-          <img src={avatarSrc || "avatar.png"} alt={username} className="w-full h-full object-cover" />
+      <div className="flex flex-col items-center pb-4 space-y-1">
+        <div className="w-24 h-24 rounded-full overflow-hidden">
+          <img
+            src={avatarSrc || "avatar.png"}
+            alt={username}
+            className="w-full h-full object-cover"
+          />
         </div>
         <h1 className="text-xl font-semibold">{username}</h1>
-        <p className="text-muted-foreground text-sm mb-4">{email}</p>
-        
-        <div className="flex gap-8 mb-4">
+        <p className="text-muted-foreground text-sm space-y-4">{email}</p>
+
+        <div className="flex gap-8 py-3 mt-4">
           <div className="text-center">
             <div className="font-semibold">{followers.toLocaleString()}</div>
             <div className="text-sm text-muted-foreground">followers</div>
@@ -101,99 +104,66 @@ const Profile: React.FC<ProfileProps> = ({
             <div className="font-semibold">{following.toLocaleString()}</div>
             <div className="text-sm text-muted-foreground">following</div>
           </div>
+          {isCurrentUser && (
+            <button className="p-2 rounded-full border h-fit">
+              <Settings size={20} />
+            </button>
+          )}
         </div>
-        
-        {isCurrentUser ? (
-          <button className="p-2 rounded-full border">
-            <Settings size={20} />
-          </button>
-        ) : (
+
+        {!isCurrentUser && (
           <div className="flex gap-2 w-full max-w-[200px]">
             <Button variant="outline" className="flex-1">
               Message
             </Button>
-            <Button className="flex-1">
-              Add Friend
-            </Button>
+            <Button className="flex-1">Add Friend</Button>
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b">
-        <button 
-          className={`flex-1 py-3 text-center ${
-            activeTab === "posts" 
-              ? "border-b-2 border-primary font-medium text-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("posts")}
+      <Tabs defaultValue="posts" className="w-full">
+        <TabsList
+          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+        *:data-[state=active]:text-primary"
         >
-          Posts
-        </button>
-        <button 
-          className={`flex-1 py-3 text-center ${
-            activeTab === "audio" 
-              ? "border-b-2 border-primary font-medium text-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("audio")}
-        >
-          Audio
-        </button>
-        <button 
-          className={`flex-1 py-3 text-center ${
-            activeTab === "replies" 
-              ? "border-b-2 border-primary font-medium text-primary" 
-              : "text-muted-foreground"
-          }`}
-          onClick={() => setActiveTab("replies")}
-        >
-          replies
-        </button>
-      </div>
+          <TabsTrigger value="posts" className="group">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Posts
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="audio" className="group">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Audio
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="replies" className="group">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Replies
+            </span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Content */}
-      <div className="p-4">
-        {activeTab === "posts" && (
-          <div className="grid grid-cols-3 gap-1">
-            {posts.map(post => (
-              <div key={post.id} className="aspect-square overflow-hidden">
-                <img src={post.imageSrc} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
-          </div>
-        )}
+        <TabsContent value="posts" className="p-4">
+          {isLoadingPosts ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <AllPosts posts={posts} />
+          )}
+        </TabsContent>
 
-        {activeTab === "audio" && (
-          <div className="space-y-3">
-            {audios.map(audio => (
-              <div key={audio.id} className="p-3 border rounded-lg flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium">{audio.title}</h3>
-                  <span className="text-sm text-muted-foreground">{audio.duration}</span>
-                </div>
-                <button className="w-8 h-8 rounded-full bg-primary text-background flex items-center justify-center">
-                  ▶
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+        <TabsContent value="audio" className="p-4">
+          <AllAudios audios={audios} />
+        </TabsContent>
 
-        {activeTab === "replies" && (
-          <div className="space-y-4">
-            {replies.map(reply => (
-              <div key={reply.id} className="p-3 border rounded-lg">
-                <div className="font-medium mb-1">@{reply.author}</div>
-                <p className="text-foreground">{reply.text}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        <TabsContent value="replies" className="p-4">
+          <AllReplies replies={replies} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
-export default Profile; 
+export default Profile;
