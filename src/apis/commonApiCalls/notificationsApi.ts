@@ -1,4 +1,4 @@
-import apiClient from "@/apis/apiClient";
+import apiClient, { formDataApiClient } from "@/apis/apiClient";
 import {
   NotificationsRequest,
   FollowRequestsRequest,
@@ -21,12 +21,7 @@ export const fetchNotifications = async (
     "/get-notifications",
     { params }
   );
-
-  if (response.status === 200) {
-    return response.data;
-  } else {
-    throw new Error(response.data.message || "Failed to fetch notifications");
-  }
+  return response.data;
 };
 
 export const fetchFollowRequests = async (
@@ -36,12 +31,7 @@ export const fetchFollowRequests = async (
     "/followRequests",
     { params }
   );
-
-  if (response.status === 200) {
-    return response.data;
-  } else {
-    throw new Error(response.data.message || "Failed to fetch follow requests");
-  }
+  return response.data;
 };
 
 export const acceptFriendRequest = async (
@@ -50,21 +40,11 @@ export const acceptFriendRequest = async (
   const formData = new FormData();
   formData.append("otherId", data.otherId);
 
-  const response = await apiClient.put<ApiResponse>(
+  const response = await formDataApiClient.put<ApiResponse>(
     "/acceptRequest",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+    formData
   );
-
-  if (response.status === 200) {
-    return response.data;
-  } else {
-    throw new Error(response.data.message || "Failed to accept friend request");
-  }
+  return response.data;
 };
 
 export const rejectFriendRequest = async (
@@ -73,19 +53,9 @@ export const rejectFriendRequest = async (
   const formData = new FormData();
   formData.append("otherId", data.otherId);
 
-  const response = await apiClient.put<ApiResponse>(
+  const response = await formDataApiClient.put<ApiResponse>(
     "/rejectRequest",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+    formData
   );
-
-  if (response.status === 200) {
-    return response.data;
-  } else {
-    throw new Error(response.data.message || "Failed to reject friend request");
-  }
+  return response.data;
 };

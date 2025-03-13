@@ -9,7 +9,6 @@ import {
   fetchFollowRequests,
 } from "@/apis/commonApiCalls/notificationsApi";
 import { useApiCall } from "@/apis/globalCatchError";
-import { toast } from "sonner";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
@@ -55,19 +54,16 @@ const Notifications = () => {
 
   const handleFriendRequestAction = async (
     requestId: string,
-    success: boolean,
-    action: "accept" | "reject"
+    success: boolean
   ) => {
     if (success) {
       // If the action was successful, keep the request removed
       setFriendRequests((prev) => prev.filter((req) => req._id !== requestId));
-      toast.success(`Friend request ${action}ed successfully`);
     } else {
       // If the action failed, add the request back
       const failedRequest = friendRequests.find((req) => req._id === requestId);
       if (failedRequest) {
         setFriendRequests((prev) => [...prev, failedRequest]);
-        toast.error(`Failed to ${action} friend request`);
       }
     }
   };
