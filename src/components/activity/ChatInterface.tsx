@@ -6,20 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useSocket } from '../../context/SocketContext';
 import axios from 'axios';
 import { useAppSelector } from "../../store";
-
-interface Message {
-  id: number;
-  text: string;
-  timestamp: string;
-  isUser: boolean;
-}
-
-interface ChatInterfaceProps {
-  chatId: number;
-  name: string;
-  avatar: string;
-  onClose: () => void;
-}
+import { ChatInterfaceProps, Message } from '@/types/chat';
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);

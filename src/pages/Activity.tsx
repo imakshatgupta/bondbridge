@@ -6,7 +6,7 @@ import SuggestedCommunities from '@/components/activity/SuggestedCommunities';
 import ChatList from '@/components/activity/ChatList';
 import GroupList from '@/components/activity/GroupList';
 import CommunityList from '@/components/activity/CommunityList';
-
+import { Link } from 'react-router-dom';
 
 export default function Activity() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,9 +17,12 @@ export default function Activity() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Activity</h1>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-full bg-background text-primary border-primary">
+          <Link
+            to="/create-group"
+            className="rounded-full bg-background text-primary border border-primary px-4 py-2 inline-block text-center"
+          >
             create group
-          </Button>
+          </Link>
           <Button className="rounded-full">
             Add +
           </Button>

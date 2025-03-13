@@ -1,65 +1,3 @@
-// import React from "react";
-// import { useNavigate, useLocation } from "react-router-dom";
-// import GroupInfoTab from "@/components/groups/GroupInfoTab";
-// import SelectFriendsTab from "@/components/groups/SelectFriendsTab";
-// import TabPageLayout from "@/components/layouts/TabPageLayout";
-// import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
-
-// const tabs = [
-//   { id: "info", label: "Group Information" },
-//   { id: "skills", label: "Skills/Interests" },
-//   { id: "friends", label: "Select friends" },
-// ];
-
-// const CreateGroup: React.FC = () => {
-//   const location = useLocation();
-//   const currentTab = location.hash.replace("#", "") || "info";
-//   const navigate = useNavigate();
-
-//   const handleNext = () => {
-//     const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
-//     if (currentIndex < tabs.length - 1) {
-//       navigate(`#${tabs[currentIndex + 1].id}`);
-//     }
-//   };
-
-//   const handleBack = () => {
-//     const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
-//     if (currentIndex > 0) {
-//       navigate(`#${tabs[currentIndex - 1].id}`);
-//     } else {
-//       navigate(-1);
-//     }
-//   };
-
-//   const lastPage = currentTab === tabs[tabs.length - 1].id;
-
-//   const handleSubmit = () => {
-
-//   }
-
-//   return (
-//     <TabPageLayout
-//       title="Create Group"
-//       tabs={tabs}
-//       currentTab={currentTab}
-//       onNext={lastPage ? handleSubmit : handleNext}
-//       onBack={handleBack}
-//       decorativeImages={{
-//         clipboard: "/profile/clipboard.png",
-//         deco1: "/profile/deco1.png",
-//         deco2: "/profile/deco2.png",
-//       }}
-//     >
-//       {currentTab === "info" && <GroupInfoTab />}
-//       {currentTab === "skills" && <SkillsInterestsTab />}
-//       {currentTab === "friends" && <SelectFriendsTab />}
-//     </TabPageLayout>
-//   );
-// };
-
-// export default CreateGroup; 
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -69,12 +7,9 @@ import TabPageLayout from "@/components/layouts/TabPageLayout";
 import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
 import { RootState } from "@/store";
 import axios from "axios";
+import { TYPING_TIME } from "@/lib/constants";
+import { tabs } from "@/types/create_group";
 
-const tabs = [
-  { id: "info", label: "Group Information" },
-  { id: "skills", label: "Skills/Interests" },
-  { id: "friends", label: "Select friends" },
-];
 
 const CreateGroup: React.FC = () => {
   const location = useLocation();
@@ -84,10 +19,10 @@ const CreateGroup: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+  // const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
   // Get group data from Redux store
-  const { name, description, skillSelected, image } = useSelector(
+  const { name, description, skillSelected, image, selectedFriends } = useSelector(
     (state: RootState) => state.createGroup
   );
   
@@ -142,32 +77,38 @@ const CreateGroup: React.FC = () => {
 
       // Get token from localStorage
       const token = localStorage.getItem('token') || '';
-      
-      // Log form data for debugging
-      console.log('Submitting group with:', {
-        name,
-        description,
-        skills: skillSelected,
-        hasImage: !!image
-      });
 
       // Send API request to create group
-      const response = await axios.post(`${API_BASE_URL}/create-group`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'userid': userId,
-          'token': token
+      // const response = await axios.post(`${API_BASE_URL}/create-group`, formData, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data',
+      //     'userid': userId,
+      //     'token': token
+      //   }
+      // });
+
+      const response = {
+        data:{
+          success: true,
+          message: "Group created successfully",
+          payload:{
+            id: "123",
+            name: name,
+            description: description,
+            skills: skillSelected,
+            image: image,
+            members: selectedFriends
+          }
         }
-      });
+      }
 
       if (response.data.success) {
         setSubmitSuccess(true);
         console.log("Group created successfully:", response.data);
         
-        // Optional: navigate to the group page or groups list after successful creation
         setTimeout(() => {
-          navigate('/groups');
-        }, 2000);
+          navigate('/activity');
+        }, TYPING_TIME);
       } else {
         throw new Error(response.data.message || 'Failed to create group');
       }

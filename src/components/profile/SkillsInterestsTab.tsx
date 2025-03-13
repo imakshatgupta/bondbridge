@@ -2,13 +2,13 @@ import React from 'react';
 import {
   addSkill,
   removeSkill
-} from '../../store/createProfileSlice';
+} from '../../store/createGroupSlice';
 import { useAppDispatch, useAppSelector } from '../../store';
 
 const SkillsInterestsTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const { skillSelected, skillsAvailable } = useAppSelector(
-    (state) => state.createProfile
+    (state) => state.createGroup
   );
 
   const handleAddSkill = (skill: string) => {

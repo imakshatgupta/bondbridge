@@ -1,16 +1,9 @@
 import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { CommunityL } from '@/types/activity';
 
-interface Community {
-  id: number;
-  name: string;
-  image: string;
-  members: number;
-  joined: boolean;
-}
-
-const communities: Community[] = [
+const communities: CommunityL[] = [
   {
     id: 1,
     name: 'Tech Enthusiasts',
@@ -70,17 +63,10 @@ export default CommunityList;
 // import axios from 'axios';
 // import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 // import { Button } from "@/components/ui/button";
-
-// interface Community {
-//   id: number;
-//   name: string;
-//   image: string;
-//   members: number;
-//   joined: boolean;
-// }
+// import { CommunityL } from '@/types/activity';
 
 // const CommunityList: React.FC = () => {
-//   const [communities, setCommunities] = useState<Community[]>([]);
+//   const [communities, setCommunities] = useState<CommunityL[]>([]);
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState<string | null>(null);
 
