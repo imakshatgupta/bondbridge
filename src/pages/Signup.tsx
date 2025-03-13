@@ -8,7 +8,6 @@ import "react-intl-tel-input/dist/main.css";
 import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
-import { VerifyOTPResponse } from "../apis/apiTypes/response";
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
@@ -114,11 +113,6 @@ const Signup: React.FC = () => {
     });
     
     if (result.success && result.data) {
-      // Use the existing type instead of type assertion
-      const data = result.data as VerifyOTPResponse;
-      console.log(data);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.userDetails._id);
       navigate("/setup-profile");
     }
   };

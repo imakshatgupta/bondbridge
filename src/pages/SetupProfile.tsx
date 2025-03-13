@@ -42,17 +42,8 @@ const SetupProfile: React.FC = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
-    // Get userId from localStorage
-    const userId = localStorage.getItem('userId');
-    
-    if (!userId) {
-      console.error('User ID not found in localStorage');
-      return;
-    }
-    
     // First submit the profile
     const result = await executeSubmit({
-      userId,
       name,
       email,
       dateOfBirth,
@@ -66,19 +57,9 @@ const SetupProfile: React.FC = () => {
     if (result.success && result.data) {
       console.log(result.data);
       
-      // Get token from local storage
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        console.error('Authentication token not found in local storage');
-        return;
-      }
-      
-      // Now set the password with token from local storage
+      // Now set the password
       const passwordResult = await executeSetPassword({
-        userId,
-        password,
-        token
+        password
       });
       
       if (passwordResult.success) {

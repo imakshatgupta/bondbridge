@@ -51,6 +51,13 @@ export const verifyOTP = async (otpData: VerifyOTPRequest): Promise<VerifyOTPRes
   
   if (response.status === 200) {
     console.log(response.data);
+    
+    // Store token and userId in localStorage
+    if (response.data.token && response.data.userDetails?._id) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.userDetails._id);
+    }
+    
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to verify OTP');
@@ -74,6 +81,12 @@ export const loginUser = async (loginData: LoginRequest): Promise<LoginResponse>
   
   if (response.status === 200) {
     console.log(response.data);
+    
+    if (response.data.token && response.data.userDetails?._id && response.data.userDetails.statusCode === 1) {
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('userId', response.data.userDetails._id);
+    }
+    
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to login');
@@ -82,17 +95,15 @@ export const loginUser = async (loginData: LoginRequest): Promise<LoginResponse>
 
 // Function to set user password
 export const setPassword = async (data: SetPasswordRequest): Promise<SetPasswordResponse> => {
-  const { userId, password, token } = data;
+  const { password } = data;
   
   // Validate required fields
-  if (!userId || !password || !token) {
-    throw new Error('User ID, password, and token are required');
+  if (!password) {
+    throw new Error('Password is required');
   }
   
   const response = await apiClient.put<SetPasswordResponse>(`/set-password`, {
-    userId,
     password,
-    token
   });
   
   if (response.status === 200) {

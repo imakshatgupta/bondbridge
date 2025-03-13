@@ -70,11 +70,9 @@ const Login: React.FC = () => {
         });
 
         if (result.success && result.data) {
-            const  data  = result.data as LoginResponse;
+            const data = result.data as LoginResponse;
             
             if (data.userDetails.statusCode == 1) {
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userId', data.userDetails._id);
                 navigate('/');
             }
         }
