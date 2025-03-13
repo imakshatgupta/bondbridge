@@ -52,4 +52,22 @@ export interface SetPasswordRequest {
   userId?: string;
   password: string;
   token?: string;
-} 
+}
+
+export interface SearchRequest {
+  searchString: string;
+}
+
+export interface NotificationsRequest {
+  page?: number;
+  limit?: number;
+}
+
+export interface FollowRequestsRequest {
+  page: number;
+  limit: number;
+}
+
+export interface FriendRequestActionRequest {
+  otherId: string;
+}
