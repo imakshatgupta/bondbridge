@@ -10,6 +10,7 @@ import AllReplies from "@/components/AllReplies";
 import { useEffect, useState } from "react";
 import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
+import { useApiCall } from "@/apis/globalCatchError";
 
 interface ProfileProps {
   userId: string;
@@ -32,18 +33,13 @@ const Profile: React.FC<ProfileProps> = ({
 }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
+  const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
 
   useEffect(() => {
     const loadPosts = async () => {
-      setIsLoadingPosts(true);
-      try {
-        const response = await fetchUserPosts(userId);
-        setPosts(response.posts);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-      } finally {
-        setIsLoadingPosts(false);
+      const result = await executePostsFetch(userId);
+      if (result.success && result.data) {
+        setPosts(result.data.posts);
       }
     };
 

@@ -4,28 +4,21 @@ import { useParams } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
+import { useApiCall } from "@/apis/globalCatchError";
+import { Toaster } from "@/components/ui/sonner";
 
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const [userData, setUserData] = useState<UserProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [executeProfileFetch, isLoading] = useApiCall(fetchUserProfile);
 
   useEffect(() => {
-    const currentUserId = "1"; // Mock logged-in user ID
-    setIsLoading(true); // Set loading to true when userId changes
-    setUserData(null); // Clear previous user data
-
     const loadUserData = async () => {
-      try {
-        if (!userId) return;
-        const response = await fetchUserProfile(userId, currentUserId);
-        if (response.success) {
-          setUserData(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setIsLoading(false);
+      if (!userId) return;
+      const currentUserId = "1"; // Mock logged-in user ID
+      const result = await executeProfileFetch(userId, currentUserId);
+      if (result.success && result.data) {
+        setUserData(result.data.data);
       }
     };
 
@@ -49,15 +42,18 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <Profile
-      userId={userId}
-      username={userData.username}
-      email={userData.email}
-      followers={userData.followers}
-      following={userData.following}
-      avatarSrc={userData.avatarSrc}
-      isCurrentUser={userData.isCurrentUser}
-    />
+    <>
+      <Profile
+        userId={userId}
+        username={userData.username}
+        email={userData.email}
+        followers={userData.followers}
+        following={userData.following}
+        avatarSrc={userData.avatarSrc}
+        isCurrentUser={userData.isCurrentUser}
+      />
+      <Toaster />
+    </>
   );
 };
 

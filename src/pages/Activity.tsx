@@ -15,7 +15,7 @@ export default function Activity() {
 
 
   return (
-    <div className="max-w-2xlmx-auto space-y-6 flex flex-col">
+    <div className="max-w-2xl mx-auto space-y-6 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Activity</h1>
