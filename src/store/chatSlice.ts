@@ -1,6 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ChatRoom } from "@/apis/apiTypes/response";
 
+export interface ChatParticipantInfo {
+  userId: string;
+  name: string;
+  profilePic: string;
+}
+
 export interface ChatItem {
   id: string;
   name: string;
@@ -10,6 +16,7 @@ export interface ChatItem {
   unread: boolean;
   type: "dm" | "group" | "community";
   admin?: string;
+  participants: ChatParticipantInfo[]; // Store all participants
 }
 
 export interface Message {
@@ -17,6 +24,8 @@ export interface Message {
   text: string;
   timestamp: string;
   isUser: boolean;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 // export interface GroupItem {
@@ -63,6 +72,19 @@ const initialState: ChatState = {
   // }
 };
 
+// Define a type for the possible lastMessage formats
+interface LastMessageWithText {
+  text: string;
+}
+
+interface LastMessageWithContent {
+  content: string;
+  messageId?: string;
+  timestamp?: number;
+}
+
+type LastMessageType = string | LastMessageWithText | LastMessageWithContent;
+
 const chatSlice = createSlice({
   name: "chat",
   initialState,
@@ -103,6 +125,30 @@ const chatSlice = createSlice({
 
       const transformedChats: ChatItem[] = chatRooms.map(
         (chatRoom: ChatRoom) => {
+          // Map participants to our format
+          const participants: ChatParticipantInfo[] = chatRoom.participants.map(
+            (participant) => ({
+              userId: participant.userId,
+              name: participant.name,
+              profilePic: participant.profilePic,
+            })
+          );
+
+          // Extract last message text from different possible formats
+          let lastMessageText = "No messages yet";
+          const lastMessage = chatRoom.lastMessage as LastMessageType;
+
+          if (typeof lastMessage === "string") {
+            lastMessageText = lastMessage;
+          } else if (lastMessage) {
+            // Handle different possible formats of lastMessage
+            if ("text" in lastMessage) {
+              lastMessageText = lastMessage.text;
+            } else if ("content" in lastMessage) {
+              lastMessageText = lastMessage.content;
+            }
+          }
+
           if (chatRoom.roomType === "dm") {
             const otherParticipant =
               chatRoom.participants.find(
@@ -113,26 +159,21 @@ const chatSlice = createSlice({
               id: chatRoom.chatRoomId,
               name: otherParticipant?.name || "Unknown",
               avatar: otherParticipant?.profilePic || "",
-              lastMessage:
-                typeof chatRoom.lastMessage === "string"
-                  ? chatRoom.lastMessage
-                  : chatRoom.lastMessage?.text || "No messages yet",
+              lastMessage: lastMessageText,
               timestamp: new Date(chatRoom.updatedAt).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
               unread: chatRoom.unseenCount > 0,
               type: "dm" as const,
+              participants,
             };
           } else {
             return {
               id: chatRoom.chatRoomId,
               name: chatRoom.groupName,
               avatar: chatRoom.profileUrl || "",
-              lastMessage:
-                typeof chatRoom.lastMessage === "string"
-                  ? chatRoom.lastMessage
-                  : chatRoom.lastMessage?.text || "No messages yet",
+              lastMessage: lastMessageText,
               timestamp: new Date(chatRoom.updatedAt).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -140,6 +181,7 @@ const chatSlice = createSlice({
               unread: chatRoom.unseenCount > 0,
               type: chatRoom.roomType,
               admin: chatRoom.admin,
+              participants,
             };
           }
         }

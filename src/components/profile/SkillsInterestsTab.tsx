@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../store";
 const SkillsInterestsTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const { skillSelected, skillsAvailable } = useAppSelector(
-    (state) => state.createGroup
+    (state) => state.createProfile
   );
 
   const handleAddSkill = (skill: string) => {
@@ -15,6 +15,10 @@ const SkillsInterestsTab: React.FC = () => {
   const handleRemoveSkill = (skill: string) => {
     dispatch(removeSkill(skill));
   };
+
+  // useEffect(() => {
+  //   console.log("Selected Skills:", skillSelected);
+  // }, [skillSelected]);
 
   return (
     <div className="space-y-6">

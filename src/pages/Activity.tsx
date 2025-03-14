@@ -1,30 +1,50 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import SuggestedCommunities from "@/components/activity/SuggestedCommunities";
 import ChatList from "@/components/activity/ChatList";
 import GroupList from "@/components/activity/GroupList";
 import CommunityList from "@/components/activity/CommunityList";
-import ChatInterface from "@/components/activity/ChatInterface";
 import { Link } from "react-router-dom";
 import { useApiCall } from "@/apis/globalCatchError";
 import { fetchChatRooms } from "@/apis/commonApiCalls/activityApi";
+import { useAppDispatch, useAppSelector } from "@/store";
 import {
   ChatItem,
   setActiveChat,
   setLoading,
   transformAndSetChats,
 } from "@/store/chatSlice";
-import { useAppDispatch, useAppSelector } from "@/store";
+import { Plus, Search, Loader2, UserPlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { searchPeople, Person } from "@/apis/commonApiCalls/searchApi";
+import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
+import { startMessage } from "@/apis/commonApiCalls/chatApi";
+import { ChatRoom } from "@/apis/apiTypes/response";
 
 export default function Activity() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [dialogSearchQuery, setDialogSearchQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<Person[]>([]);
+  const [followings, setFollowings] = useState<Person[]>([]);
   const dispatch = useAppDispatch();
-  const { activeChat, filteredChats, isLoading } = useAppSelector(
-    (state) => state.chat
-  );
+  const { filteredChats, isLoading } = useAppSelector((state) => state.chat);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
+  const [executeStartMessage] = useApiCall(startMessage);
+  const [executeSearch, isSearching] = useApiCall(searchPeople);
+  const [executeFetchFollowings, isLoadingFollowings] =
+    useApiCall(fetchFollowings);
 
   useEffect(() => {
     const loadChats = async () => {
@@ -34,7 +54,7 @@ export default function Activity() {
         const currentUserId = localStorage.getItem("userId") || "";
         dispatch(
           transformAndSetChats({
-            chatRooms: result.data.chatRooms,
+            chatRooms: result.data.chatRooms || [],
             currentUserId,
           })
         );
@@ -44,12 +64,108 @@ export default function Activity() {
     loadChats();
   }, [dispatch]);
 
+  useEffect(() => {
+    const loadFollowings = async () => {
+      const result = await executeFetchFollowings();
+      if (result.success && result.data?.users) {
+        const currentUserId = localStorage.getItem("userId") || "";
+        const filteredFollowings = result.data.users.filter(
+          (user) => user.id !== currentUserId
+        );
+        setFollowings(filteredFollowings);
+      }
+    };
+    loadFollowings();
+  }, []);
+
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!dialogSearchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      const result = await executeSearch(dialogSearchQuery);
+      if (result.success && result.data?.users) {
+        const currentUserId = localStorage.getItem("userId") || "";
+        const filteredResults = result.data.users.filter(
+          (user) => user.id !== currentUserId
+        );
+        setSearchResults(filteredResults);
+      }
+    };
+
+    const timeoutId = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [dialogSearchQuery]);
+
   const handleSelectChat = (chat: ChatItem) => {
     dispatch(setActiveChat(chat));
   };
 
+  const handleStartConversation = async (userId: string) => {
+    try {
+      const result = await executeStartMessage({ userId2: userId });
+      if (result.success && result.data) {
+        // Close the dialog
+        setDialogOpen(false);
+
+        // Refresh the chat list to include the new conversation
+        const refreshResult = await executeFetchChats();
+        if (refreshResult.success && refreshResult.data) {
+          const currentUserId = localStorage.getItem("userId") || "";
+          dispatch(
+            transformAndSetChats({
+              chatRooms: refreshResult.data.chatRooms || [],
+              currentUserId,
+            })
+          );
+
+          // Find the newly created chat and set it as active
+          const newChatRoomId = result.data.chatRoom?.chatRoomId;
+          if (newChatRoomId && refreshResult.data.chatRooms) {
+            const newChat = refreshResult.data.chatRooms.find(
+              (chat: ChatRoom) => chat.chatRoomId === newChatRoomId
+            );
+
+            if (newChat) {
+              // Create a ChatItem directly from the API response
+              const chatItem: ChatItem = {
+                id: newChatRoomId,
+                name:
+                  newChat.participants.find((p) => p.userId !== currentUserId)
+                    ?.name || "Chat",
+                avatar:
+                  newChat.participants.find((p) => p.userId !== currentUserId)
+                    ?.profilePic || "",
+                lastMessage: "No messages yet",
+                timestamp: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                unread: false,
+                type: "dm",
+                participants: newChat.participants.map((p) => ({
+                  userId: p.userId,
+                  name: p.name,
+                  profilePic: p.profilePic,
+                })),
+              };
+
+              dispatch(setActiveChat(chatItem));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+    }
+  };
+
+  const displayUsers = dialogSearchQuery.trim() ? searchResults : followings;
+
   return (
-    <div className="flex h-screen">
+    <div className="flex">
       {/* Main content area */}
       <div className={`p-6 overflow-y-auto border-r border-border`}>
         {/* Header */}
@@ -64,7 +180,90 @@ export default function Activity() {
                 Create Group
               </Button>
             </Link>
-            <Button className="cursor-pointer rounded-full">Add +</Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="cursor-pointer rounded-full">
+                  <Plus className="h-4 w-4 -mr-1" />
+                  Add
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Start a Conversation</DialogTitle>
+                  <DialogDescription>
+                    Search for a user to start a conversation with.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="relative mt-4">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users..."
+                    className="pl-8"
+                    value={dialogSearchQuery}
+                    onChange={(e) => setDialogSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <div className="max-h-60 overflow-y-auto mt-2">
+                  {isSearching || isLoadingFollowings ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : displayUsers.length > 0 ? (
+                    displayUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer"
+                        onClick={() => handleStartConversation(user.id)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback>
+                              {user.name.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <span className="font-medium">{user.name}</span>
+                            {user.bio && (
+                              <p className="text-xs text-muted-foreground">
+                                {user.bio}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartConversation(user.id);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-muted-foreground py-4">
+                      {dialogSearchQuery
+                        ? "No users found"
+                        : "Type to search for users"}
+                    </p>
+                  )}
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         <div className="mb-8">

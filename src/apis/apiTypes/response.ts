@@ -187,6 +187,8 @@ export interface ChatMessage {
   senderId: string;
   createdAt: string;
   updatedAt: string;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 export interface GetMessagesResponse {
@@ -195,4 +197,22 @@ export interface GetMessagesResponse {
   messages: ChatMessage[];
   totalPages: number;
   currentPage: number;
+}
+
+export interface StartMessageResponse {
+  message: string;
+  chatRoom: {
+    _id: string;
+    chatRoomId: string;
+    participants: {
+      userId: string;
+      profilePic: string;
+      name: string;
+    }[];
+    roomType: "dm" | "group" | "community";
+    profileUrl: string | null;
+    admin: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
 }

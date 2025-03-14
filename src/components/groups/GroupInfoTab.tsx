@@ -2,13 +2,6 @@ import React from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Label } from "@/components/ui/label";
-import { useDispatch, useSelector } from "react-redux";
-import { 
-  setName, 
-  setDescription, 
-  setImage
-} from "../../store/createGroupSlice";
-import { RootState } from "../../store";
 
 interface GroupInfo {
   name: string;
@@ -75,9 +68,6 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
             onChange({ ...groupInfo, description: e.target.value })
           }
           rows={4}
-          value={description}
-          onChange={handleDescriptionChange}
-          placeholder="Describe what your group is about"
         />
       </div>
     </div>

@@ -91,3 +91,7 @@ export interface CreateGroupRequest {
   groupName: string;
   participants: string[];
 }
+
+export interface StartMessageRequest {
+  userId2: string;
+}

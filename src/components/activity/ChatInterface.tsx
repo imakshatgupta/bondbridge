@@ -24,6 +24,8 @@ interface MessageResponse {
   senderId: string;
   timestamp?: number;
   chatId?: string;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 interface TypingResponse {
@@ -57,6 +59,11 @@ const ChatInterface: React.FC = () => {
     isTyping,
   } = useAppSelector((state) => state.chat);
 
+  // Find current user's info from participants
+  const currentUserInfo = chat?.participants.find((p) => p.userId === userId);
+  const userName = currentUserInfo?.name || "You";
+  const userAvatar = currentUserInfo?.profilePic || "";
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -73,6 +80,8 @@ const ChatInterface: React.FC = () => {
       }
 
       dispatch(setLoadingMessages(true));
+
+      console.log("chat.id", chat.id);
       const result = await executeGetMessages({
         roomId: chat.id,
         page: 1,
@@ -81,15 +90,25 @@ const ChatInterface: React.FC = () => {
 
       if (result.success && result.data) {
         const messageHistory = result.data.messages
-          .map((msg) => ({
-            id: msg._id,
-            text: msg.content,
-            timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            isUser: msg.senderId === userId,
-          }))
+          .map((msg) => {
+            // Find sender info from participants
+            const sender = chat.participants.find(
+              (p) => p.userId === msg.senderId
+            );
+            return {
+              id: msg._id,
+              text: msg.content,
+              timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              isUser: msg.senderId === userId,
+              senderName:
+                msg.senderId === userId ? userName : sender?.name || "Unknown",
+              senderAvatar:
+                msg.senderId === userId ? userAvatar : sender?.profilePic || "",
+            };
+          })
           .reverse(); // Reverse the order of messages
         dispatch(setMessages(messageHistory));
       }
@@ -99,9 +118,10 @@ const ChatInterface: React.FC = () => {
     // Clear messages when changing chats
     dispatch(setMessages([]));
 
+    console.log("Socket", socket);
+
     if (socket && chat && chat.id) {
       // Join the chat room
-
       console.log("Join emitted");
       socket.emit("join", chat.id);
       fetchMessageHistory();
@@ -109,6 +129,11 @@ const ChatInterface: React.FC = () => {
       // Set up socket event listeners
       const handleReceiveMessage = (data: MessageResponse) => {
         console.log("Received message:", data);
+        // Find sender info from participants
+        const sender = chat.participants.find(
+          (p) => p.userId === data.senderId
+        );
+
         const newMsg: Message = {
           id: data._id || `temp-${Date.now()}`,
           text: data.content,
@@ -119,6 +144,14 @@ const ChatInterface: React.FC = () => {
             minute: "2-digit",
           }),
           isUser: data.senderId === userId,
+          senderName:
+            data.senderId === userId
+              ? userName
+              : sender?.name || data.senderName || "Unknown",
+          senderAvatar:
+            data.senderId === userId
+              ? userAvatar
+              : sender?.profilePic || data.senderAvatar || "",
         };
         dispatch(addMessage(newMsg));
       };
@@ -150,7 +183,7 @@ const ChatInterface: React.FC = () => {
         socket.emit("leave", chat.id);
       };
     }
-  }, [socket, chat, userId, dispatch]);
+  }, [socket, chat, userId]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() && socket && chat && chat.id) {
@@ -162,6 +195,8 @@ const ChatInterface: React.FC = () => {
         media: null,
         entity: "chat",
         isBot: false,
+        senderName: userName,
+        senderAvatar: userAvatar,
       };
 
       // Add message to local state immediately for better UX
@@ -173,6 +208,8 @@ const ChatInterface: React.FC = () => {
           minute: "2-digit",
         }),
         isUser: true,
+        senderName: userName,
+        senderAvatar: userAvatar,
       };
       dispatch(addMessage(tempMessage));
 
@@ -209,8 +246,23 @@ const ChatInterface: React.FC = () => {
     );
   }
 
+  // Group messages by date
+  const groupedMessages: { [date: string]: Message[] } = {};
+  messages.forEach((message) => {
+    const date = message.timestamp.split(",")[0];
+    if (!groupedMessages[date]) {
+      groupedMessages[date] = [];
+    }
+    groupedMessages[date].push(message);
+  });
+
+  // Find the typing user
+  const typingUser = isTyping
+    ? chat.participants.find((p) => p.userId !== userId)
+    : null;
+
   return (
-    <div className="flex flex-col h-screen overflow-auto">
+    <div className="flex flex-col h-[90vh] overflow-auto">
       {/* Chat header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -224,7 +276,9 @@ const ChatInterface: React.FC = () => {
           <div>
             <h3 className="font-medium">{chat.name}</h3>
             <p className="text-xs text-muted-foreground">
-              {chat.type === "dm" ? "online" : `${chat.type}`}
+              {chat.type === "dm"
+                ? "online"
+                : `${chat.type} · ${chat.participants.length} members`}
             </p>
           </div>
         </div>
@@ -266,7 +320,7 @@ const ChatInterface: React.FC = () => {
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 p-4 overflow-y-auto space-y-6">
         {isLoadingMessages ? (
           <div className="flex justify-center items-center h-full">
             <p>Loading messages...</p>
@@ -276,31 +330,69 @@ const ChatInterface: React.FC = () => {
             <p>No messages yet. Start a conversation!</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${
-                message.isUser ? "justify-end" : "justify-start"
-              }`}
-            >
+          messages.map((message, index) => {
+            // Check if this is the first message from this user or if the previous message was from a different user
+            const isPreviousDifferentUser =
+              index === 0 || messages[index - 1].isUser !== message.isUser;
+
+            return (
               <div
-                className={`max-w-[70%] p-3 rounded-lg ${
-                  message.isUser
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-foreground"
+                key={message.id}
+                className={`flex items-start gap-2 ${
+                  message.isUser ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                <p>{message.text}</p>
-                <span className="text-xs opacity-70 block text-right mt-1">
-                  {message.timestamp}
-                </span>
+                {/* Only show avatar for the first message in a sequence from the same user */}
+                {isPreviousDifferentUser && (
+                  <Avatar className="h-6 w-6 mt-1">
+                    <AvatarImage
+                      src={message.senderAvatar || ""}
+                      alt={message.senderName || "Unknown"}
+                    />
+                    <AvatarFallback>
+                      {(message.senderName || "?")[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                {/* Add a spacer when we don't show the avatar to keep alignment */}
+                {!isPreviousDifferentUser && <div className="w-8" />}
+
+                <div
+                  className={`max-w-[70%] p-3 rounded-lg ${
+                    message.isUser
+                      ? "bg-primary text-primary-foreground rounded-tr-none"
+                      : "bg-muted text-foreground rounded-tl-none"
+                  }`}
+                >
+                  {/* Show sender name for group chats */}
+                  {!message.isUser &&
+                    chat.type !== "dm" &&
+                    isPreviousDifferentUser && (
+                      <p className="text-xs font-medium mb-1">
+                        {message.senderName || "Unknown"}
+                      </p>
+                    )}
+                  <p>{message.text}</p>
+                  <span className="text-xs opacity-70 block text-right mt-1">
+                    {message.timestamp}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         {isTyping && (
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <div className="bg-muted p-2 rounded-md text-sm">
+          <div className="flex items-start gap-2">
+            <Avatar className="h-6 w-6 mt-1">
+              <AvatarImage
+                src={typingUser?.profilePic || chat.avatar}
+                alt={typingUser?.name || chat.name}
+              />
+              <AvatarFallback>
+                {(typingUser?.name || chat.name)[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="bg-muted p-2 rounded-md text-sm rounded-tl-none">
               <span>typing...</span>
             </div>
           </div>

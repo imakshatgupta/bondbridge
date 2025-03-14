@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
 import GroupInfoTab from "@/components/groups/GroupInfoTab";
 import SelectFriendsTab from "@/components/groups/SelectFriendsTab";
 import TabPageLayout from "@/components/layouts/TabPageLayout";
@@ -19,24 +18,16 @@ interface GroupSkills {
   interests: string[];
 }
 
+const tabs = [
+  { id: "info", label: "Group Information" },
+  { id: "skills", label: "Skills/Interests" },
+  { id: "friends", label: "Select friends" },
+];
 
 const CreateGroup: React.FC = () => {
   const location = useLocation();
   const currentTab = location.hash.replace("#", "") || "info";
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-
-  // const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
-
-  // Get group data from Redux store
-  const { name, description, skillSelected, image, selectedFriends } = useSelector(
-    (state: RootState) => state.createGroup
-  );
-  
-  // Get user ID from profile state for authorization
-  const { userId } = useSelector((state: RootState) => state.createProfile);
 
   // State management for each tab
   const [groupInfo, setGroupInfo] = useState<GroupInfo>({
@@ -103,7 +94,7 @@ const CreateGroup: React.FC = () => {
       title="Create Group"
       tabs={tabs}
       currentTab={currentTab}
-      onNext={lastPage ? handleSubmit : handleNext}
+      onNext={handleNext}
       onBack={handleBack}
       nextButtonText={isLastTab ? "Create" : "Next"}
       isNextLoading={isCreatingGroup}
