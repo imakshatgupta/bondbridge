@@ -7,6 +7,7 @@ import ChatInterface from "./activity/ChatInterface";
 import { setActiveChat } from "@/store/chatSlice";
 import { Link } from "react-router-dom";
 import mockUserData from "@/constants/users";
+import SettingLayout from './settings/SettingLayout';
 // import { useAppSelector } from '@/app/store';
 
 interface LayoutProps {
@@ -119,6 +120,7 @@ const Layout: React.FC<LayoutProps> = ({
   const dispatch = useAppDispatch();
   const activeChat = useAppSelector((state) => state.chat.activeChat);
   const currentUserId = "1"; // Mock current user ID
+  const isSettingsActive = useAppSelector((state) => state.settings.isSettingsActive);
 
   // Convert mockUserData to array and filter out current user
   const sidebarUsers = Object.entries(mockUserData)
@@ -151,7 +153,11 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
 
             {/* Right Sidebar */}
-            {activeChat ? (
+            {isSettingsActive ? (
+              <div className="w-2/3">
+                <SettingLayout />
+              </div>
+            ) : activeChat ? (
               <div className="w-2/3">
                 <ChatInterface
                   chatId={activeChat.id}

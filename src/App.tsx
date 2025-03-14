@@ -18,8 +18,10 @@ import OthersProfilePage from "./pages/OthersProfilePage";
 import Activity from "@/pages/Activity";
 import BondChat from "./pages/BondChat";
 import StoryPage from "@/pages/StoryPage";
-import CreatePost from "./pages/CreatePost";
-import CreateStory from "./pages/CreateStory";
+import CreatePost from './pages/CreatePost';
+import CreateStory from './pages/CreateStory';
+import Settings from './pages/Settings';
+
 
 const App: React.FC = () => {
   return (

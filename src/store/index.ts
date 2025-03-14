@@ -5,12 +5,14 @@ import createGroupReducer from './createGroupSlice';
 import { TypedUseSelectorHook } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
+import settingsReducer from './settingsSlice';
 
 export const store = configureStore({
   reducer: {
     chat: chatReducer,
     createProfile: createProfileReducer,
     createGroup: createGroupReducer,
+    settings: settingsReducer,
     // Add other reducers here
   },
 });
