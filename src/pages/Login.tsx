@@ -30,19 +30,19 @@ const Login: React.FC = () => {
             if (container) {
                 // Make width consistent
                 container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
-                
+
                 // Fix flag container height
                 const flagContainer = container.querySelector('.flag-container');
                 if (flagContainer) {
                     flagContainer.setAttribute('style', 'height: 100% !important;');
                 }
-                
+
                 // Fix selected flag height
                 const selectedFlag = container.querySelector('.selected-flag');
                 if (selectedFlag) {
                     selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
                 }
-                
+
                 // Fix input height
                 const input = container.querySelector('input');
                 if (input) {
@@ -50,11 +50,11 @@ const Login: React.FC = () => {
                 }
             }
         };
-        
+
         // Run initially and after a small delay to ensure component is rendered
         fixPhoneInputStyles();
         const timeoutId = setTimeout(fixPhoneInputStyles, 100);
-        
+
         return () => clearTimeout(timeoutId);
     }, []);
 

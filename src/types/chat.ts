@@ -3,17 +3,11 @@ export interface Message {
   text: string;
   timestamp: string;
   isUser: boolean;
-  avatar?: string;
-  username?: string;
 }
 
-export interface ChatProps {
-  messages: Message[];
-  onSendMessage: (message: string) => void;
-  placeholder?: string;
-  avatar?: string;
-  username?: string;
-  showHeader?: boolean;
-  onClose?: () => void;
-  showAvatar?: boolean;
-} 
+export interface ChatInterfaceProps {
+  chatId: number;
+  name: string;
+  avatar: string;
+  onClose: () => void;
+}

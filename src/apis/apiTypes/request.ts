@@ -46,6 +46,28 @@ export interface CreateProfileRequest {
 
 export interface FetchAvatarsRequest {
   userId?: string;
+} 
+
+export interface FetchCommentsRequest {
+  feedId: string;
+  page: number;
+  limit: number;
+}
+
+export interface PostCommentRequest {
+  postId: string;
+  comment: string;
+}
+
+export interface AcceptFriendRequestRequest {
+  otherId: number;
+}
+
+export interface RejectFriendRequestRequest {
+  otherId: number;
+}
+
+export interface FetchFriendRequestsRequest {
 }
 
 export interface SetPasswordRequest {
@@ -63,6 +85,9 @@ export interface NotificationsRequest {
   limit?: number;
 }
 
+export interface SendFriendRequestRequest {
+  userId: number;
+}
 export interface FollowRequestsRequest {
   page: number;
   limit: number;
@@ -70,6 +95,21 @@ export interface FollowRequestsRequest {
 
 export interface FriendRequestActionRequest {
   otherId: string;
+}
+
+export interface GetMessagesRequest {
+  roomId: string;
+  page: number;
+  limit: number;
+}
+
+export interface SendMessageRequest {
+  senderId: string;
+  content: string;
+  entityId: string;
+  media: null;
+  entity: "chat";
+  isBot: boolean;
 }
 
 export interface CreateGroupRequest {
@@ -103,4 +143,7 @@ export interface StoryRequest {
   taggedUsers?: string[];
   privateTo?: string[];
   hideFrom?: string[];
+}
+export interface StartMessageRequest {
+  userId2: string;
 }
