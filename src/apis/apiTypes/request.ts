@@ -46,6 +46,28 @@ export interface CreateProfileRequest {
 
 export interface FetchAvatarsRequest {
   userId?: string;
+} 
+
+export interface FetchCommentsRequest {
+  feedId: string;
+  page: number;
+  limit: number;
+}
+
+export interface PostCommentRequest {
+  postId: string;
+  comment: string;
+}
+
+export interface AcceptFriendRequestRequest {
+  otherId: number;
+}
+
+export interface RejectFriendRequestRequest {
+  otherId: number;
+}
+
+export interface FetchFriendRequestsRequest {
 }
 
 export interface SetPasswordRequest {
@@ -63,6 +85,9 @@ export interface NotificationsRequest {
   limit?: number;
 }
 
+export interface SendFriendRequestRequest {
+  userId: number;
+}
 export interface FollowRequestsRequest {
   page: number;
   limit: number;

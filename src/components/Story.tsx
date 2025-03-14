@@ -5,6 +5,21 @@ interface StoryProps {
   user: string;
   avatar: string;
   isLive: boolean;
+  hasStory: boolean;
+  stories: Array<{
+    _id: string;
+    author: string;
+    privacy: number;
+    contentType: string;
+    taggedUsers: string[] | null;
+    hideFrom: string[];
+    createdAt: number;
+    url: string;
+    status: number;
+    ago_time: string;
+    seen: number;
+  }>;
+  latestStoryTime: number;
   liveRingColor?: string;
   defaultRingColor?: string;
 }
@@ -12,7 +27,7 @@ interface StoryProps {
 export const Story: FC<StoryProps> = ({ 
   user, 
   avatar, 
-  isLive, 
+  isLive,
   liveRingColor = 'ring-primary',
   defaultRingColor = 'ring-muted'
 }) => {
