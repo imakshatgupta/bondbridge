@@ -1,4 +1,4 @@
-import mockUserData from "@/constants/users";
+import axios from 'axios';
 import mockPosts from "@/constants/posts";
 import {
   FetchUserProfileResponse,
@@ -9,49 +9,95 @@ export const fetchUserProfile = async (
   userId: string,
   currentUserId: string
 ): Promise<FetchUserProfileResponse> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  try {
+    const token = localStorage.getItem('token');
+    console.log("userId", userId);
+    console.log("currentUserId", currentUserId);
+    console.log("token", token);
+    const response = await axios.get('http://18.144.2.16/api/showProfile', {
+      headers: {
+        'token': token,
+        'userid': currentUserId,
+      },
+      params: {
+        'other': userId,
+      }
+    });
 
-  const user = mockUserData[userId as keyof typeof mockUserData] || {
-    username: "Unknown User",
-    email: "",
-    bio: "User not found",
-    followers: 0,
-    following: 0,
-    avatarSrc: "/profile/user.png",
-  };
+    const userData = response.data.result[0];
+    // console.log("userData", userData);
+    const isCurrentUser = currentUserId === userId;
 
-  const isCurrentUser = currentUserId === userId;
-
-  return {
-    success: true,
-    data: {
-      ...user,
-      email: isCurrentUser ? user.email : "", // Only show email for current user
-      isCurrentUser,
-    },
-  };
+    return {
+      success: true,
+      data: {
+        username: userData.name,
+        email: isCurrentUser ? userData.email : "",
+        followers: userData.followers || 0,
+        following: userData.followings || 0,
+        avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
+        isCurrentUser
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return {
+      success: false,
+      data: {
+        username: "Unknown User",
+        email: "",
+        followers: 0,
+        following: 0,
+        avatarSrc: "/profile/user.png",
+        isCurrentUser: false,
+      },
+    };
+  }
 };
 
 export const fetchUserPosts = async (
-  userId: string
+  userId: string,
+  isCurrentUser: boolean
 ): Promise<UserPostsResponse> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  try {
+    const token = localStorage.getItem('token');
+    const currentUserId = localStorage.getItem('userId');
 
-  // Filter posts for the current user from mock data
-  const userPosts = Object.values(mockPosts)
-    .filter((post) => post.userId === userId)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .map((post) => ({
-      id: parseInt(post.id),
-      imageSrc: post.imageUrl,
+    const params = isCurrentUser ? {} : {
+      'userId': userId
+    }
+    const response = await axios.get('http://18.144.2.16/api/get-posts', {
+      headers: {
+        'token': token,
+        'userid': currentUserId,
+      },
+      params: params
+    });
+
+    const posts = response.data.posts.map((post: any) => ({
+      id: post._id,
+      imageSrc: post.data.media[0]?.url || '',
+      content: post.data.content,
+      createdAt: post.createdAt,
+      author: {
+        name: post.name,
+        profilePic: post.profilePic
+      },
+      stats: {
+        commentCount: post.commentCount,
+        reactionCount: post.reactionCount,
+        hasReacted: post.reaction.hasReacted,
+        reactionType: post.reaction.reactionType
+      }
     }));
 
-  return {
-    posts: userPosts,
-  };
+    return {
+      posts,
+    };
+  } catch (error) {
+    console.error("Error fetching user posts:", error);
+    return {
+      posts: [],
+    };
+  }
 };

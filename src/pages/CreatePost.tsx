@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import axios from 'axios';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -41,13 +42,62 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     setMediaPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (content.trim() || mediaFiles.length > 0 || documentFiles.length > 0) {
-      onSubmit?.(content, [...mediaFiles, ...documentFiles]);
-      setContent('');
-      setMediaFiles([]);
-      setMediaPreviews([]);
-      setDocumentFiles([]);
+      try {
+        const formData = new FormData();
+        formData.append('content', content);
+        formData.append('whoCanComment', '1');
+        formData.append('privacy', '1');
+        
+        // Append media files
+        mediaFiles.forEach((file, index) => {
+          formData.append('image', file);
+        });
+
+        const userId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+
+        console.log("userId from local storage: ", userId);
+        console.log("token from local storage: ", token);
+
+        if (!userId || !token) {
+          throw new Error('User not authenticated');
+        }
+
+        // Properly inspect FormData contents
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        console.log("mediaFiles: ", mediaFiles);
+
+        const response = await axios.post('http://18.144.2.16/api/post', formData, {
+          headers: {
+            'userId': userId,
+            'token': token,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Failed to create post');
+        }
+
+        console.log('Post created successfully:', response.data);
+
+        // Clear form after successful submission
+        setContent('');
+        setMediaFiles([]);
+        setMediaPreviews([]);
+        setDocumentFiles([]);
+        
+        // Call the onSubmit prop if provided
+        onSubmit?.(content, [...mediaFiles, ...documentFiles]);
+      } catch (error) {
+        console.error('Error creating post:', error);
+        // You might want to show an error message to the user here
+      }
     }
   };
 

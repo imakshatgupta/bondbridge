@@ -17,13 +17,12 @@ export default function Activity() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Activity</h1>
         <div className="flex gap-2">
-          <Link
-            to="/create-group"
-            className="rounded-full bg-background text-primary border border-primary px-4 py-2 inline-block text-center"
-          >
-            create group
+          <Link to="/create-group">
+            <Button variant="outline" className="cursor-pointer rounded-full bg-background text-primary border-primary">
+              Create Group
+            </Button>
           </Link>
-          <Button className="rounded-full">
+          <Button className="cursor-pointer rounded-full">
             Add +
           </Button>
         </div>

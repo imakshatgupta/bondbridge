@@ -15,7 +15,7 @@ const ProfilePage: React.FC = () => {
   useEffect(() => {
     const loadUserData = async () => {
       if (!userId) return;
-      const currentUserId = "1"; // Mock logged-in user ID
+      const currentUserId = localStorage.getItem("userId") || ""; 
       const result = await executeProfileFetch(userId, currentUserId);
       if (result.success && result.data) {
         setUserData(result.data.data);

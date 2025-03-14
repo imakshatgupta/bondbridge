@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import SidebarAvatar from "./profile/SidebarAvatar";
 import Navbar from "./Navbar";
@@ -7,6 +7,9 @@ import ChatInterface from "./activity/ChatInterface";
 import { setActiveChat } from "@/store/chatSlice";
 import { Link } from "react-router-dom";
 import mockUserData from "@/constants/users";
+import { log } from "console";
+import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
+import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 // import { useAppSelector } from '@/app/store';
 
 interface LayoutProps {
@@ -88,9 +91,11 @@ const LeftSidebar: React.FC = () => {
               <span className="grad">Bond Chat</span>
             </Link>
           </li>
-          <Button size={"lg"} className="text-lg w-full">
-            + Post
-          </Button>
+          <Link to="/create-post">
+            <Button size={"lg"} className="text-lg w-full cursor-pointer">
+              + Post
+            </Button>
+          </Link>
         </ul>
         {/* Settings */}
         <div className="pb-5">
@@ -118,7 +123,18 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const activeChat = useAppSelector((state) => state.chat.activeChat);
-  const currentUserId = "1"; // Mock current user ID
+  const currentUserId = localStorage.getItem('userId') || "";
+  const [currentUser, setCurrentUser] = useState<UserProfileData | null>(null);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const result = await fetchUserProfile(currentUserId, currentUserId);
+      if (result.success) {
+        setCurrentUser(result.data);
+      }
+    };
+    loadCurrentUser();
+  }, [currentUserId]);
 
   // Convert mockUserData to array and filter out current user
   const sidebarUsers = Object.entries(mockUserData)
@@ -165,14 +181,16 @@ const Layout: React.FC<LayoutProps> = ({
                 <div className="p-4 border-2 border-sidebar-border">
                   <div className="flex flex-col items-center">
                     <img
-                      src="/profile/avatars/2.png"
+                      src={currentUser?.avatarSrc || ""}
                       alt="Profile"
                       className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
                     />
                     <h3 className="font-semibold text-xl text-sidebar-foreground">
-                      France Leaphart
+                      {currentUser?.username || "Loading..."}
                     </h3>
-                    <p className="text-sidebar-foreground/60">UI/UX Designer</p>
+                    <p className="text-sidebar-foreground/60">
+                      {currentUser?.bio || ""}
+                    </p>
                     <Link to={`/profile/${currentUserId}`}>
                       <Button
                         variant={"outline"}

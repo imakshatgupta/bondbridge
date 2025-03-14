@@ -1,124 +1,80 @@
-import { Button } from "../ui/button";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useApiCall } from "@/apis/globalCatchError";
+import {
+  acceptFriendRequest,
+  rejectFriendRequest,
+} from "@/apis/commonApiCalls/notificationsApi";
+import type { FollowRequest } from "@/apis/commonApiCalls/notificationsApi";
 
-type Props = {
-  avatar: string;
-  name: string;
-  bio: string;
-  requestId: number;
-  userId?: string;  // For passing the current user's ID
+interface FriendRequestProps extends FollowRequest {
+  onActionComplete: (
+    requestId: string,
+    success: boolean,
+    action: "accept" | "reject"
+  ) => void;
 }
 
-const FriendRequest = ({ avatar, name, bio, requestId, userId }: Props) => {
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isDeclined, setIsDeclined] = useState(false);
+const FriendRequest = ({
+  _id,
+  name,
+  avatar,
+  nickName,
+  onActionComplete,
+}: FriendRequestProps) => {
+  const [executeAccept, isAccepting] = useApiCall(acceptFriendRequest);
+  const [executeReject, isRejecting] = useApiCall(rejectFriendRequest);
 
-  const [localAccept, setLocalAccept] = useState(false);
-  const [localDecline, setLocalDecline] = useState(false);
-  // to do: remove local accept
+  const handleAccept = async () => {
+    // Notify parent to remove the request immediately
+    onActionComplete(_id, true, "accept");
 
-  const handleAcceptRequest = async () => {
-    setIsAccepting(true);
-    try {
-      // Create form data
-      const formData = new FormData();
-      formData.append('otherid', requestId.toString());
-      
-      // Get the token from localStorage or context if available
-      const token = localStorage.getItem('token') || '';
-      const currentUserId = userId || localStorage.getItem('userId') || '';
-      
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/acceptRequest`, {
-        method: 'POST',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'userid': currentUserId,
-          'token': token,
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to accept friend request');
-      }
-      
-      // Handle success here - maybe update UI or notify parent component
-      console.log('Friend request accepted successfully');
-      
-    } catch (error) {
-      console.error('Error accepting friend request:', error);
-    } finally {
-      setIsAccepting(false);
+    // Try to accept the request
+    const result = await executeAccept({ otherId: _id });
+
+    // If it fails, notify parent to restore the request
+    if (!result.success) {
+      onActionComplete(_id, false, "accept");
     }
   };
 
-  const handleDeclineRequest = async () => {
-    setIsDeclined(true);
-    try {
-      // Create form data
-      const formData = new FormData();
-      formData.append('otherid', requestId.toString());
-      
-      // Get the token from localStorage or context if available
-      const token = localStorage.getItem('token') || '';
-      const currentUserId = userId || localStorage.getItem('userId') || '';
-      
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/rejectRequest`, {
-        method: 'POST',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'userid': currentUserId,
-          'token': token,
-        },
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to decline friend request');
-      }
-      
-      console.log('Friend request declined successfully');
-      
-    } catch (error) {
-      console.error('Error declining friend request:', error);
-      setIsDeclined(false); // Reset if there's an error
+  const handleReject = async () => {
+    // Notify parent to remove the request immediately
+    onActionComplete(_id, true, "reject");
+
+    // Try to reject the request
+    const result = await executeReject({ otherId: _id });
+
+    // If it fails, notify parent to restore the request
+    if (!result.success) {
+      onActionComplete(_id, false, "reject");
     }
   };
-      
+
+  const isLoading = isAccepting || isRejecting;
+
   return (
-    <div className="flex items-center gap-4 p-4 border-b hover:bg-muted cursor-pointer">
-      <div className="w-12 h-12">
-        <img 
-          src={avatar} 
-          alt="User avatar" 
-          className="w-full h-full rounded-full object-cover"
+    <div className="flex items-center justify-between p-4 border rounded-lg">
+      <div className="flex items-center gap-4">
+        <img
+          src={avatar}
+          alt={name}
+          className="w-12 h-12 rounded-full object-cover"
         />
-      </div>
-      <div className="flex-1">
-        <h3 className="font-medium text-xl text-foreground">{name}</h3>
-        <p className="text-muted-foreground">{bio}</p>
+        <div>
+          <h3 className="font-medium">{name}</h3>
+          <p className="text-sm text-muted-foreground">{nickName}</p>
+        </div>
       </div>
       <div className="flex gap-2">
-        <Button 
-          className=""
-          onClick={() => setLocalAccept(!localAccept)}
-          disabled={isAccepting || isDeclined}
-        >
-          {/* {isAccepting ? 'Accepting...' : 'Accept'} */}
-          {localAccept ? 'Accepted' : 'Accept'}
+        <Button variant="outline" onClick={handleReject} disabled={isLoading}>
+          Reject
         </Button>
-        <Button 
-          variant={'outline'} 
-          className="border-primary text-primary"
-          onClick={() => setLocalDecline(!localDecline)}
-          disabled={isAccepting || isDeclined}
-        >
-          {/* {isDeclined ? 'Declined' : 'Decline'} */}
-          {localDecline ? 'Declined' : 'Decline'}
+        <Button onClick={handleAccept} disabled={isLoading}>
+          Accept
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default FriendRequest
+export default FriendRequest;

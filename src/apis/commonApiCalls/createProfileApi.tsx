@@ -28,13 +28,12 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
 
   // commented out as not being uploaded currently
   // formData.append('dateOfBirth', dateOfBirth);
-  // formData.append('password', password);
 
   if (skillSelected && skillSelected.length > 0) {
     formData.append('interests', JSON.stringify(skillSelected));
   }
   
-  // acommentend out as not being uploaded currently
+  // commented out as not being uploaded currently
   // if (image) {
   //   formData.append('image', image);
   // }
