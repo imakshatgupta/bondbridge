@@ -216,3 +216,17 @@ export interface StartMessageResponse {
     updatedAt: string;
   };
 }
+
+interface FollowingUser {
+  _id: string;
+  name: string;
+  avatar: string;
+  bio?: string;
+  email: string;
+  interests: string[];
+}
+
+export interface FollowingsResponse {
+  result: FollowingUser[];
+  message: string;
+}

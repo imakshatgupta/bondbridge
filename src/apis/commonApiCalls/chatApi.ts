@@ -9,19 +9,8 @@ import { StartMessageRequest } from "../apiTypes/request";
 export const getMessages = async (
   request: GetMessagesRequest
 ): Promise<GetMessagesResponse> => {
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
-
-  if (!token || !userId) {
-    throw new Error("User not authenticated");
-  }
-
   try {
-    const response = await apiClient.post("/get-all-messages", request, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await apiClient.post("/get-all-messages", request);
     return response.data;
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -32,19 +21,8 @@ export const getMessages = async (
 export const startMessage = async (
   request: StartMessageRequest
 ): Promise<StartMessageResponse> => {
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
-
-  if (!token || !userId) {
-    throw new Error("User not authenticated");
-  }
-
   try {
-    const response = await apiClient.post("/start-message", request, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await apiClient.post("/start-message", request);
     return response.data;
   } catch (error) {
     console.error("Error starting conversation:", error);
