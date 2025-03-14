@@ -117,6 +117,33 @@ export interface CreateGroupRequest {
   participants: string[];
 }
 
+export interface StoryData {
+  type: 'text' | 'photo' | 'video';
+  content: string | File | Blob;
+  theme: string;
+  privacy: number;
+}
+
+export interface Story {
+  type: 'text' | 'photo' | 'video';
+  content: string | File | Blob;
+  theme: string;
+  privacy?: number;
+  previewUrl?: string;
+}
+
+export interface StoryRequest {
+  contentType: 'text' | 'image' | 'video';
+  privacy: number;
+  theme: string;
+  text?: string;      
+  image?: File;       
+  video?: File;
+  repliesEnabled?: number;
+  taggedUsers?: string[];
+  privateTo?: string[];
+  hideFrom?: string[];
+}
 export interface StartMessageRequest {
   userId2: string;
 }

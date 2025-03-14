@@ -120,7 +120,7 @@ export interface FetchCommentsResponse {
 export interface PostCommentResponse {
   success: boolean;
   message?: string;
-  cmment?: object;
+  comment?: object;
 }
 
 export interface HomePostData {
@@ -325,6 +325,18 @@ export interface FollowRequestsResponse {
   result: FollowRequest[];
 }
 
+export interface StoryItem {
+  id: string;
+  content: string;
+  type: string;
+  theme: string;
+  privacy: number;
+  createdAt: string;
+}
+
+export type UploadStoryResponse = {
+  stories: StoryItem[];
+};
 export interface ChatMessage {
   _id: string;
   content: string;
