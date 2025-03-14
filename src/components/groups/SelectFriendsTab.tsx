@@ -69,7 +69,6 @@ const SelectFriendsTab: React.FC = () => {
   const { selectedFriends } = useSelector(
     (state: RootState) => state.createGroup
   );
-  const { userId } = useSelector((state: RootState) => state.createProfile);
 
   // Fetch friends list from API
   useEffect(() => {
@@ -77,6 +76,7 @@ const SelectFriendsTab: React.FC = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('token') || '';
+        const userId = localStorage.getItem('userId') || "";
         
         const response = await axios.get('http://localhost:3000/api/followings', {
           headers: {

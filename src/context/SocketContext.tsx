@@ -14,7 +14,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const socketToken = localStorage.getItem('socketToken');
 
   useEffect(() => {
-    const newSocket = io("http://localhost:3000", {
+    const newSocket = io(`http://localhost:3000`, {
       auth: {
         token: socketToken,
       },

@@ -124,6 +124,8 @@ interface ChatParticipant {
   status: string;
   createdAt: string;
   updatedAt: string;
+  name: string;
+  profilePic: string;
 }
 
 interface BaseChatRoom {
@@ -177,4 +179,20 @@ export interface FollowRequestsResponse {
   success: boolean;
   message: string;
   result: FollowRequest[];
+}
+
+export interface ChatMessage {
+  _id: string;
+  content: string;
+  senderId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetMessagesResponse {
+  success: boolean;
+  message: string;
+  messages: ChatMessage[];
+  totalPages: number;
+  currentPage: number;
 }

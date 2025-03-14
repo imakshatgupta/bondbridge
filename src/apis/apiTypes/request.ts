@@ -71,3 +71,18 @@ export interface FollowRequestsRequest {
 export interface FriendRequestActionRequest {
   otherId: string;
 }
+
+export interface GetMessagesRequest {
+  roomId: string;
+  page: number;
+  limit: number;
+}
+
+export interface SendMessageRequest {
+  senderId: string;
+  content: string;
+  entityId: string;
+  media: null;
+  entity: "chat";
+  isBot: boolean;
+}
