@@ -96,3 +96,8 @@ export interface FollowRequestsRequest {
 export interface FriendRequestActionRequest {
   otherId: string;
 }
+
+export interface CreateGroupRequest {
+  groupName: string;
+  participants: string[];
+}
