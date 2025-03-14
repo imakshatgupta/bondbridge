@@ -19,17 +19,21 @@ interface FollowingsResponse {
 export const fetchFollowings = async (): Promise<SearchResponse> => {
   const response = await apiClient.get<FollowingsResponse>("/followings");
 
-  // Transform the response to match SearchResponse format
-  return {
-    success: true,
-    message: response.data.message,
-    users: response.data.result.map((user) => ({
-      id: user._id,
-      name: user.name,
-      avatar: user.avatar,
-      bio: user.interests.join(", "), // Using interests as bio since it's required in Person type
-    })),
-  };
+  if (response.status === 200) {
+    // Transform the response to match SearchResponse format
+    return {
+      success: true,
+      message: response.data.message,
+      users: response.data.result.map((user) => ({
+        id: user._id,
+        name: user.name,
+        avatar: user.avatar,
+        bio: user.interests.join(", "), // Using interests as bio since it's required in Person type
+      })),
+    };
+  } else {
+    throw new Error(response.data.message || "Failed to fetch followings");
+  }
 };
 
 export const createGroup = async (
@@ -37,5 +41,10 @@ export const createGroup = async (
 ): Promise<ApiResponse> => {
   console.log("data", data);
   const response = await apiClient.post<ApiResponse>("/create-group", data);
-  return response.data;
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to create group");
+  }
 };
