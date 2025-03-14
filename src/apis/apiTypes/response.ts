@@ -25,6 +25,7 @@ export type VerifyOTPResponse = {
 // Login response interface
 export type LoginResponse = {
   token: string;
+  socketToken: string;
   message: string;
   userDetails: {
     statusCode: number;
@@ -44,6 +45,11 @@ export type RequestPasswordResetResponse = ApiResponse<{
 export type ResetPasswordResponse = ApiResponse<{
   message: string;
 }>;
+
+export type SetPasswordResponse = {
+  success: boolean;
+  message: string;
+};
 
 export interface AvatarItem {
   url: string;
@@ -76,13 +82,48 @@ export type FetchAvatarsResponse = {
   };
 };
 
+export interface Person {
+  id: string;
+  name: string;
+  bio: string;
+  avatar: string;
+}
+
+export interface SearchResponse {
+  success: boolean;
+  message: string;
+  users: Person[];
+}
+
+export interface Notification {
+  id: number;
+  title: string;
+  description: string;
+  avatar: string;
+  timestamp: string;
+  seen: boolean;
+}
+
+export interface FollowRequest {
+  _id: string;
+  mobileNumber: string;
+  countryCode: string;
+  nickName: string;
+  statusCode: number;
+  privacyLevel: number;
+  avatar: string;
+  email: string;
+  entityType: string;
+  interests: string[];
+  name: string;
+  profilePic: string;
+}
+
 interface ChatParticipant {
   userId: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-  name: string;
-  profilePic: string;
 }
 
 interface BaseChatRoom {
@@ -124,4 +165,16 @@ export type ChatRoom = DMChatRoom | GroupChatRoom | CommunityChatRoom;
 export interface ChatRoomsResponse {
   message: string;
   chatRooms: ChatRoom[];
+}
+
+export interface NotificationsResponse {
+  success: boolean;
+  message: string;
+  notifications: Notification[];
+}
+
+export interface FollowRequestsResponse {
+  success: boolean;
+  message: string;
+  result: FollowRequest[];
 }

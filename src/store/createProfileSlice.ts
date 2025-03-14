@@ -11,9 +11,6 @@ export const createProfile = createSlice({
     communitiesAvailable: [...INITIAL_PROFILE_STATE.communitiesAvailable],
   },
   reducers: {
-    setUserId: (state, action) => {
-      state.userId = action.payload;
-    },
     setName: (state, action) => {
       state.name = action.payload;
     },
@@ -61,7 +58,6 @@ export const createProfile = createSlice({
 });
 
 export const {
-  setUserId,
   setName,
   setEmail,
   setDateOfBirth,

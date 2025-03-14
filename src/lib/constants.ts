@@ -7,19 +7,24 @@ export interface Community {
 }
 
 export const INITIAL_PROFILE_STATE = {
-  userId: "",
   name: "",
   email: "",
   dateOfBirth: "",
   password: "",
   skillsAvailable: [
-    "NEWS",
+    "News",
     "Music",
     "Sports",
     "Racing cars",
     "Marketing",
     "Science",  
     "Chess",
+    "Gaming",
+    "Anime",
+    "Food",
+    "Travel",
+    "Art",
+    "Writing",
   ],
   skillSelected: [] as string[],
   image: null as File | null,
@@ -65,10 +70,10 @@ export const INITIAL_PROFILE_STATE = {
   communitiesSelected: [] as Community[],
 } as const;
 
-export const GET_AUTH_HEADERS = (userId?: string) => ({
+export const GET_AUTH_HEADERS = () => ({
   'Content-Type': 'multipart/form-data',
   'token': localStorage.getItem('token') || '',
-  'userId': userId || '',
+  'userId': localStorage.getItem('userId') || '',
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 });
 
