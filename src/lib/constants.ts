@@ -70,7 +70,6 @@ export const INITIAL_PROFILE_STATE = {
 } as const;
 
 export const GET_AUTH_HEADERS = () => ({
-  'Content-Type': 'multipart/form-data',
   'token': localStorage.getItem('token') || '',
   'userId': localStorage.getItem('userId') || '',
   'Authorization': `Bearer ${localStorage.getItem('token')}`

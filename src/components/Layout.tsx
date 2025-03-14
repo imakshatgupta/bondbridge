@@ -173,7 +173,7 @@ const Layout: React.FC<LayoutProps> = ({
                       {mockUserData["1"].username}
                     </h3>
                     <p className="text-sidebar-foreground/60">
-                      {mockUserData["1"].profession}
+                      {mockUserData["1"].bio}
                     </p>
                     <Link to={`/profile/${currentUserId}`}>
                       <Button
