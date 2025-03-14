@@ -22,7 +22,6 @@ export const fetchNotifications = async (
     { params }
   );
 
-
   if (response.status === 200) {
     return response.data;
   } else {
@@ -37,7 +36,6 @@ export const fetchFollowRequests = async (
     "/followRequests",
     { params }
   );
-
 
   if (response.status === 200) {
     return response.data;
@@ -56,7 +54,6 @@ export const acceptFriendRequest = async (
     "/acceptRequest",
     formData
   );
-
 
   if (response.status === 200) {
     return response.data;
