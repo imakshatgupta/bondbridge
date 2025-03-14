@@ -5,8 +5,6 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import IntlTelInput from 'react-intl-tel-input';
 import 'react-intl-tel-input/dist/main.css';
-import { useAppDispatch } from '../store';
-import { setUserId } from '../store/createProfileSlice';
 import { loginUser } from '../apis/commonApiCalls/authenticationApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { Toaster } from "@/components/ui/sonner";
@@ -16,12 +14,11 @@ import { LoginResponse } from '../apis/apiTypes/response';
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [countryCode, setCountryCode] = useState('91'); // Default to India (+91)
+    const [countryCode, setCountryCode] = useState('11'); // Default to India (+1)
     const [, setIsValidPhone] = useState(false);
     const [password, setPassword] = useState('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
 
     // Use our custom hook for API calls
     const [executeLogin, isLoggingIn] = useApiCall(loginUser);
@@ -73,11 +70,9 @@ const Login: React.FC = () => {
         });
 
         if (result.success && result.data) {
-            const  data  = result.data as LoginResponse;
+            const data = result.data as LoginResponse;
             
             if (data.userDetails.statusCode == 1) {
-                localStorage.setItem('token', data.token);
-                dispatch(setUserId(data.userDetails._id));
                 navigate('/');
             }
         }
@@ -121,8 +116,8 @@ const Login: React.FC = () => {
                                 ref={phoneInputRef}
                                 containerClassName="intl-tel-input"
                                 inputClassName="form-control w-full h-10 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
-                                defaultCountry={'in'}
-                                preferredCountries={['in']}
+                                defaultCountry={'us'}
+                                preferredCountries={['us']}
                                 onPhoneNumberChange={handlePhoneChange}
                                 onPhoneNumberBlur={handlePhoneChange}
                                 format={true}

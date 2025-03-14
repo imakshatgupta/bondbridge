@@ -1,19 +1,19 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { store } from './store';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import SetupProfile from './pages/SetupProfile';
-import Layout from './components/Layout';
-import HomePage from './pages/HomePage';
-import Notifications from './pages/Notifications';
-import Search from './pages/Search';
-import CommentsPage from '@/pages/CommentsPage';
-import CreateGroup from './pages/CreateGroup';
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import SetupProfile from "./pages/SetupProfile";
+import Layout from "./components/Layout";
+import HomePage from "./pages/HomePage";
+import Notifications from "./pages/Notifications";
+import Search from "./pages/Search";
+import CommentsPage from "@/pages/CommentsPage";
+import CreateGroup from "./pages/CreateGroup";
 import ProfilePage from "@/pages/ProfilePage";
 import OthersProfilePage from "./pages/OthersProfilePage";
-import Activity from '@/pages/Activity';
-import BondChat from './pages/BondChat';
+import Activity from "@/pages/Activity";
+import BondChat from "./pages/BondChat";
 import StoryPage from "@/pages/StoryPage";
 import CreatePost from './pages/CreatePost';
 import CreateStory from './pages/CreateStory';
@@ -40,17 +40,42 @@ function App() {
               <Layout showSidebars={true}>
                 <OthersProfilePage />
               </Layout>
-            } />
-            <Route path="/bondchat" element={<Layout showSidebars={true} className='py-0'><BondChat /></Layout>} />
-            <Route path="/story" element={
+            }
+          />
+          <Route
+            path="/bondchat"
+            element={
+              <Layout showSidebars={true} className="py-0">
+                <BondChat />
+              </Layout>
+            }
+          />
+          <Route
+            path="/story"
+            element={
               <Layout showSidebars={true} className="!p-0">
                 <StoryPage />
               </Layout>
-            } />
-            <Route path="/create-post" element={<Layout showSidebars={true}><CreatePost /></Layout>} />
-            <Route path="/create-story" element={<Layout showSidebars={true} className="!p-0"><CreateStory /></Layout>} />
-          </Routes>
-        </Router>
+            }
+          />
+          <Route
+            path="/create-post"
+            element={
+              <Layout showSidebars={true}>
+                <CreatePost />
+              </Layout>
+            }
+          />
+          <Route
+            path="/create-story"
+            element={
+              <Layout showSidebars={true} className="!p-0">
+                <CreateStory />
+              </Layout>
+            }
+          />
+        </Routes>
+      </Router>
     </Provider>
   );
 }

@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { GET_AUTH_HEADERS } from '@/lib/constants';
-import { store } from '@/store'; // Import your Redux store
 
 // Create an Axios instance
 const apiClient = axios.create({
@@ -15,15 +14,13 @@ const apiClient = axios.create({
 // Request interceptor to add auth headers automatically
 apiClient.interceptors.request.use(
   (config) => {
-    // Get userId from Redux store
-    const userId = store.getState().createProfile.userId;
-    const authHeaders = GET_AUTH_HEADERS(userId);
+    // Get auth headers directly from the function
+    const authHeaders = GET_AUTH_HEADERS();
     
     // Apply all auth headers to the request
-    config.headers = {
-      ...config.headers,
-      ...authHeaders
-    };
+    if (config.headers) {
+      Object.assign(config.headers, authHeaders);
+    }
     
     return config;
   },
@@ -45,14 +42,12 @@ export const formDataApiClient = axios.create({
 // Add the same interceptor to formDataApiClient
 formDataApiClient.interceptors.request.use(
   (config) => {
-    // Get userId from Redux store
-    const userId = store.getState().createProfile.userId;
-    const authHeaders = GET_AUTH_HEADERS(userId);
+    // Get auth headers directly from the function
+    const authHeaders = GET_AUTH_HEADERS();
     
-    config.headers = {
-      ...config.headers,
-      ...authHeaders
-    };
+    if (config.headers) {
+      Object.assign(config.headers, authHeaders);
+    }
     
     return config;
   },

@@ -33,7 +33,7 @@ export interface Community {
 }
 
 export interface CreateProfileRequest {
-  userId: string;
+  userId?: string;
   name: string;
   email: string;
   dateOfBirth: string;
@@ -46,4 +46,33 @@ export interface CreateProfileRequest {
 
 export interface FetchAvatarsRequest {
   userId?: string;
-} 
+}
+
+export interface SetPasswordRequest {
+  userId?: string;
+  password: string;
+  token?: string;
+}
+
+export interface SearchRequest {
+  searchString: string;
+}
+
+export interface NotificationsRequest {
+  page?: number;
+  limit?: number;
+}
+
+export interface FollowRequestsRequest {
+  page: number;
+  limit: number;
+}
+
+export interface FriendRequestActionRequest {
+  otherId: string;
+}
+
+export interface CreateGroupRequest {
+  groupName: string;
+  participants: string[];
+}
