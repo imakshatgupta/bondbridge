@@ -1,3 +1,4 @@
+export const TYPING_TIME = 2000;
 export interface Community {
   id: number;
   name: string;

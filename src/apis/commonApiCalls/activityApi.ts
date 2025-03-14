@@ -1,20 +1,15 @@
 import apiClient from "@/apis/apiClient";
-import { SearchResponse, ApiResponse } from "../apiTypes/response";
+import { SearchResponse, ApiResponse, ChatRoomsResponse, FollowingsResponse } from "../apiTypes/response";
 import { CreateGroupRequest } from "../apiTypes/request";
 
-interface FollowingUser {
-  _id: string;
-  name: string;
-  avatar: string;
-  bio?: string;
-  email: string;
-  interests: string[];
-}
 
-interface FollowingsResponse {
-  result: FollowingUser[];
-  message: string;
-}
+export const fetchChatRooms = async (): Promise<ChatRoomsResponse> => {
+
+  const response = await apiClient.get<ChatRoomsResponse>(
+    "/get-all-chat-rooms"
+  );
+  return response.data;
+};
 
 export const fetchFollowings = async (): Promise<SearchResponse> => {
   const response = await apiClient.get<FollowingsResponse>("/followings");

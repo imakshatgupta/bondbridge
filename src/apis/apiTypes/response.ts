@@ -25,6 +25,7 @@ export type VerifyOTPResponse = {
 // Login response interface
 export type LoginResponse = {
   token: string;
+  socketToken: string;
   message: string;
   userDetails: {
     statusCode: number;
@@ -262,6 +263,56 @@ export interface FollowRequest {
   profilePic: string;
 }
 
+interface ChatParticipant {
+  userId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  profilePic: string;
+}
+
+interface BaseChatRoom {
+  _id: string;
+  chatRoomId: string;
+  participants: ChatParticipant[];
+  roomType: "dm" | "group" | "community";
+  createdAt: string;
+  updatedAt: string;
+  isPart: boolean;
+  unseenCount: number;
+  lastMessage?:
+    | {
+        text: string;
+      }
+    | string;
+}
+
+interface DMChatRoom extends BaseChatRoom {
+  roomType: "dm";
+}
+
+interface GroupChatRoom extends BaseChatRoom {
+  roomType: "group";
+  groupName: string;
+  profileUrl: string | null;
+  admin: string;
+}
+
+interface CommunityChatRoom extends BaseChatRoom {
+  roomType: "community";
+  groupName: string;
+  profileUrl: string | null;
+  admin: string;
+}
+
+export type ChatRoom = DMChatRoom | GroupChatRoom | CommunityChatRoom;
+
+export interface ChatRoomsResponse {
+  message: string;
+  chatRooms: ChatRoom[];
+}
+
 export interface NotificationsResponse {
   success: boolean;
   message: string;
@@ -272,6 +323,56 @@ export interface FollowRequestsResponse {
   success: boolean;
   message: string;
   result: FollowRequest[];
+}
+
+export interface ChatMessage {
+  _id: string;
+  content: string;
+  senderId: string;
+  createdAt: string;
+  updatedAt: string;
+  senderName?: string;
+  senderAvatar?: string;
+}
+
+export interface GetMessagesResponse {
+  success: boolean;
+  message: string;
+  messages: ChatMessage[];
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface StartMessageResponse {
+  message: string;
+  chatRoom: {
+    _id: string;
+    chatRoomId: string;
+    participants: {
+      userId: string;
+      profilePic: string;
+      name: string;
+    }[];
+    roomType: "dm" | "group" | "community";
+    profileUrl: string | null;
+    admin: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+interface FollowingUser {
+  _id: string;
+  name: string;
+  avatar: string;
+  bio?: string;
+  email: string;
+  interests: string[];
+}
+
+export interface FollowingsResponse {
+  result: FollowingUser[];
+  message: string;
 }
 
 // Add missing response types for homepage API

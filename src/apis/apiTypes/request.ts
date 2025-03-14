@@ -97,7 +97,26 @@ export interface FriendRequestActionRequest {
   otherId: string;
 }
 
+export interface GetMessagesRequest {
+  roomId: string;
+  page: number;
+  limit: number;
+}
+
+export interface SendMessageRequest {
+  senderId: string;
+  content: string;
+  entityId: string;
+  media: null;
+  entity: "chat";
+  isBot: boolean;
+}
+
 export interface CreateGroupRequest {
   groupName: string;
   participants: string[];
+}
+
+export interface StartMessageRequest {
+  userId2: string;
 }

@@ -1,61 +1,55 @@
-import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ChatItem } from "@/store/chatSlice";
+import { useAppDispatch } from "../../store";
+import { setActiveChat } from "../../store/chatSlice";
 
-interface Group {
-  id: number;
-  name: string;
-  image: string;
-  members: number;
-  lastActive: string;
+interface GroupListProps {
+  groups: ChatItem[];
+  isLoading: boolean;
+  onSelectGroup: (group: ChatItem) => void;
 }
 
-const groups: Group[] = [
-  {
-    id: 1,
-    name: 'Design Team',
-    image: '/profile/community/pubg.png',
-    members: 12,
-    lastActive: '5m ago'
-  },
-  {
-    id: 2,
-    name: 'Project Alpha',
-    image: '/profile/community/pubg.png',
-    members: 8,
-    lastActive: '1h ago'
-  },
-  {
-    id: 3,
-    name: 'Weekend Hangout',
-    image: '/profile/community/pubg.png',
-    members: 6,
-    lastActive: '3h ago'
-  }
-];
+const GroupList = ({ groups, isLoading, onSelectGroup }: GroupListProps) => {
+  const dispatch = useAppDispatch();
 
-const GroupList: React.FC = () => {
+  const handleGroupSelect = (group: ChatItem) => {
+    dispatch(setActiveChat(group));
+    onSelectGroup(group);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-4">Loading groups...</div>;
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       {groups.map((group) => (
-        <div 
-          key={group.id} 
+        <div
+          key={group.id}
           className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer"
+          onClick={() => handleGroupSelect(group)}
         >
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 rounded-lg">
-              <AvatarImage src={group.image} alt={group.name} className="object-cover" />
-              <AvatarFallback className="rounded-lg">{group.name[0]}</AvatarFallback>
-            </Avatar>
+            <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
+              <img
+                src={group.avatar || "/profile/user.png"}
+                alt={group.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div>
               <h3 className="font-medium">{group.name}</h3>
-              <p className="text-sm text-muted-foreground">{group.members} members</p>
+              <p className="text-sm text-muted-foreground">
+                {group.lastMessage}
+              </p>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground">{group.lastActive}</span>
+          <span className="text-xs text-muted-foreground">
+            {group.timestamp}
+          </span>
         </div>
       ))}
     </div>
   );
 };
 
-export default GroupList; 
+export default GroupList;
