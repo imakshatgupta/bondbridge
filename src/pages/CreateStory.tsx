@@ -266,8 +266,6 @@ const CreateStory = () => {
               </Button>
             )}
 
-
-
             {/* Progress Indicators */}
             <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
               {stories.map((_, index) => (
@@ -276,14 +274,13 @@ const CreateStory = () => {
                   className="h-1 flex-1 rounded-full overflow-hidden bg-muted/30"
                 >
                   <div
-                    className={`h-full bg-foreground  ${index === currentPage ? 'w-full' : 'w-0'
-                      }`}
+                    className={`h-full bg-foreground ${index === currentPage ? 'w-full' : 'w-0'}`}
                   />
                 </div>
               ))}
             </div>
 
-            {/* Story Content */}
+            {/* Story Content - Incorporating improved media handling from first file */}
             <div className="h-full w-full flex items-center justify-center relative z-10">
               {currentStory.type === 'text' && (
                 <div className="w-full px-4">
@@ -297,18 +294,29 @@ const CreateStory = () => {
                   />
                 </div>
               )}
+              
+              {/* Improved image handling from first file */}
               {currentStory.type === 'photo' && (
-                <img
-                  src={currentPreviewUrl}
-                  alt="Story"
-                  className="w-full h-full p-4 object-contain"
-                />
+                <div className="w-full h-full px-4 py-18 overflow-y-auto flex items-center justify-center">
+                  <img
+                    src={currentPreviewUrl}
+                    alt="Story"
+                    className="max-w-full object-contain"
+                    style={{ maxHeight: 'calc(100% - 40px)' }} // Subtract space for buttons
+                  />
+                </div>
               )}
+              
+              {/* Improved video handling from first file */}
               {currentStory.type === 'video' && (
-                <video
-                  src={currentPreviewUrl}
-                  className="w-full h-full p-4 object-contain"
-                />
+                <div className="w-full h-full px-4 py-18 overflow-y-auto flex items-center justify-center">
+                  <video
+                    src={currentPreviewUrl}
+                    className="max-w-full object-contain"
+                    style={{ maxHeight: 'calc(100% - 40px)' }} // Subtract space for buttons
+                    controls
+                  />
+                </div>
               )}
 
               {/* Show color picker only for text type */}
@@ -335,27 +343,27 @@ const CreateStory = () => {
                   </button>
                 </div>
               )}
-               {/* Navigation Arrows */}
-          {currentPage > 0 && (
-            <button
-              onClick={() => setCurrentPage(currentPage - 1)}
-              className="absolute left-0 top-1/2  -translate-y-1/2 -translate-x-[calc(100%+10px)] bg-accent/60 p-2 rounded-full z-20 hover:bg-accent/20"
-            >
-              <ChevronLeft className="w-6 h-6 text-foreground" />
-            </button>
-          )}
+              
+              {/* Navigation Arrows - Keeping EXACTLY as in the second file */}
+              {currentPage > 0 && (
+                <button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+10px)] bg-accent/60 p-2 rounded-full z-20 hover:bg-accent/20"
+                >
+                  <ChevronLeft className="w-6 h-6 text-foreground" />
+                </button>
+              )}
 
-          {currentPage < stories.length - 1 && (
-            <button
-              onClick={() => setCurrentPage(currentPage + 1)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+10px)] bg-accent/60 p-2 rounded-full z-20 hover:bg-accent/20"
-            >
-              <ChevronRight className="w-6 h-6 text-foreground" />
-            </button>
-          )}
+              {currentPage < stories.length - 1 && (
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+10px)] bg-accent/60 p-2 rounded-full z-20 hover:bg-accent/20"
+                >
+                  <ChevronRight className="w-6 h-6 text-foreground" />
+                </button>
+              )}
             </div>
           </div>
-         
         </div>
       </div>
     </div>

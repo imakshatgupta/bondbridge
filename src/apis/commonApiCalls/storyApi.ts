@@ -20,7 +20,7 @@ export const uploadStory = async (storiesData: StoryData[]): Promise<UploadStory
     // For File or Blob, check if size is 0
     if (story.content instanceof File || story.content instanceof Blob) {
       return story.content.size === 0;
-    }
+    } 
     return false;
   });
   
@@ -39,23 +39,45 @@ export const uploadStory = async (storiesData: StoryData[]): Promise<UploadStory
   formData.append('contentType', primaryStory.type === 'photo' ? 'image' : primaryStory.type === 'video' ? 'video' : 'text');
   formData.append('privacy', primaryStory.privacy.toString());
   
-  // Add theme if provided
-  // if (primaryStory.theme) {
-  //   formData.append('theme', primaryStory.theme);
-  // }
-
-  if (primaryStory.type === 'text') {
-    formData.append('text', primaryStory.content.toString());
-  } else if (primaryStory.type === 'photo' || primaryStory.type === 'video') {
-    // Check if content is already a File object
-    if (primaryStory.content instanceof File) {
-      if (primaryStory.type === 'photo') {
-        formData.append('image', primaryStory.content, primaryStory.content.name);
-      } else if (primaryStory.type === 'video') {
-        formData.append('video', primaryStory.content, primaryStory.content.name);
+  // Collect all images, videos, and texts from stories
+  const images: File[] = [];
+  const videos: File[] = [];
+  const texts: string[] = [];
+  
+  // Process all stories to extract media files and texts
+  storiesData.forEach(story => {
+    if (story.type === 'text') {
+      texts.push(story.content.toString());
+    } else if (story.content instanceof File) {
+      // Check file size (1MB = 1024 * 1024 bytes)
+      const maxSize = 1024 * 1024; // 1MB in bytes
+      if (story.content.size > maxSize) {
+        throw new Error(`File ${story.content.name} exceeds maximum size of 1MB`);
       }
-    } 
-  }
+
+      if (story.type === 'photo') {
+        images.push(story.content);
+      } else if (story.type === 'video') {
+        videos.push(story.content);
+      }
+    }
+  });
+  
+  // Append all texts
+  texts.forEach(text => {
+    formData.append('text', text);
+  });
+
+  // Append all images
+  images.forEach(image => {
+    formData.append('image', image, image.name);
+  });
+  
+  // Append all videos
+  videos.forEach(video => {
+    formData.append('video', video, video.name);
+  });
+
   // Make the API request
   const response = await formDataApiClient.post('/upload-story', formData);
 
