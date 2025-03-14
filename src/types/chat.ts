@@ -3,6 +3,8 @@ export interface Message {
   text: string;
   timestamp: string;
   isUser: boolean;
+  avatar: string;
+  username: string;
 }
 
 export interface ChatInterfaceProps {

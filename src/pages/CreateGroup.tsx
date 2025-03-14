@@ -26,16 +26,13 @@ const CreateGroup: React.FC = () => {
     (state: RootState) => state.createGroup
   );
   
-  // Get user ID from profile state for authorization
-  const { userId } = useSelector((state: RootState) => state.createProfile);
-
   const handleNext = () => {
     const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
     if (currentIndex < tabs.length - 1) {
       navigate(`#${tabs[currentIndex + 1].id}`);
     }
   };
-
+  
   const handleBack = () => {
     const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
     if (currentIndex > 0) {
@@ -44,19 +41,19 @@ const CreateGroup: React.FC = () => {
       navigate(-1);
     }
   };
-
+  
   const lastPage = currentTab === tabs[tabs.length - 1].id;
-
+  
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
-
+    
     try {
       // Validate required fields
       if (!name) {
         throw new Error('Group name is required');
       }
-
+      
       // Create form data for multipart/form-data submission (needed for file upload)
       const formData = new FormData();
       formData.append('name', name);
@@ -74,10 +71,11 @@ const CreateGroup: React.FC = () => {
       if (image instanceof File) {
         formData.append('image', image);
       }
-
+      
       // Get token from localStorage
-      const token = localStorage.getItem('token') || '';
-
+      // const token = localStorage.getItem('token') || '';
+      // const userId = localStorage.getItem('userId');
+      
       // Send API request to create group
       // const response = await axios.post(`${API_BASE_URL}/create-group`, formData, {
       //   headers: {
