@@ -89,7 +89,10 @@ const Profile: React.FC<ProfileProps> = ({
             <div className="text-sm text-muted-foreground">following</div>
           </div>
           {isCurrentUser && (
-            <button className="p-2 rounded-full border h-fit">
+            <button 
+              className="p-2 rounded-full border h-fit"
+              onClick={() => navigate('/settings')}
+            >
               <Settings size={20} />
             </button>
           )}

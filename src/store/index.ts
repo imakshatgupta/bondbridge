@@ -4,11 +4,13 @@ import createProfileReducer from './createProfileSlice';
 import { TypedUseSelectorHook } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
+import settingsReducer from './settingsSlice';
 
 export const store = configureStore({
   reducer: {
     chat: chatReducer,
     createProfile: createProfileReducer,
+    settings: settingsReducer,
     // Add other reducers here
   },
 });

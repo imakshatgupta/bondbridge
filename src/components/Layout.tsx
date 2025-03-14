@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import ChatInterface from './activity/ChatInterface';
 import { setActiveChat } from '@/store/chatSlice';
 import { Link } from 'react-router-dom';
+import SettingLayout from './settings/SettingLayout';
 // import { useAppSelector } from '@/app/store';
 
 interface LayoutProps {
@@ -57,7 +58,7 @@ const LeftSidebar: React.FC = () => {
                     <li>
                         <a href="/bondchat" className={`flex items-center space-x-3 ${pathname === '/bondchat' ? 'font-medium' : ''}`}>
                             <img src="/bondchat.svg" alt="" />
-                            <span className='grad'>Bond Chat</span>
+                            <span className='grad'>BondChat</span>
                         </a>
                     </li>
                     <Button size={'lg'} className='text-lg w-full'>
@@ -82,16 +83,17 @@ const LeftSidebar: React.FC = () => {
 }
 
 
-const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,className}) => {
+const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false, className }) => {
     const dispatch = useAppDispatch();
     const activeChat = useAppSelector((state) => state.chat.activeChat);
-    
+    const isSettingsActive = useAppSelector((state) => state.settings.isSettingsActive);
+
     const handleCloseChat = () => {
         dispatch(setActiveChat(null));
     };
 
     return (
-        <div className=" flex flex-col overflow-hidden">
+        <div className=" flex flex-col overflow-hidden w-screen h-screen">
             {/* Navbar */}
             <Navbar />
 
@@ -109,15 +111,20 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,classNa
                         </div>
 
                         {/* Right Sidebar */}
-                        {activeChat ? <>
-                            <div className=" w-2/3">
+                        {isSettingsActive ? (
+                            <div className="w-2/3">
+                                <SettingLayout />
+                            </div>
+                        ) : activeChat ? (
+                            <div className="w-2/3">
                                 <ChatInterface
                                     chatId={activeChat.id}
                                     name={activeChat.name}
                                     avatar={activeChat.avatar}
                                     onClose={handleCloseChat}
                                 />
-                            </div></> :
+                            </div>
+                        ) : (
                             <div className="p-5 w-1/2  px-12 space-y-6 *:rounded-xl ">
                                 {/* Profile Section */}
                                 <div className="p-4 border-2 border-sidebar-border ">
@@ -126,9 +133,9 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,classNa
                                         <h3 className="font-semibold text-xl text-sidebar-foreground">France Leaphart</h3>
                                         <p className="text-sidebar-foreground/60">UI/UX Designer</p>
                                         <Link to={`/profile/chaitanya`}>
-                                        <Button variant={'outline'} className='mt-2 text-sidebar-primary text-sm font-medium border-primary w-full'>
-                                            View Profile
-                                        </Button>
+                                            <Button variant={'outline'} className='mt-2 text-sidebar-primary text-sm font-medium border-primary w-full'>
+                                                View Profile
+                                            </Button>
                                         </Link>
                                     </div>
                                 </div>
@@ -154,7 +161,7 @@ const Layout: React.FC<LayoutProps> = ({ children, showSidebars = false ,classNa
                                     </ul>
                                 </div>
                             </div>
-                        }
+                        )}
                     </div>
                 </div>
             ) : (

@@ -17,6 +17,7 @@ import BondChat from './pages/BondChat';
 import StoryPage from "@/pages/StoryPage";
 import CreatePost from './pages/CreatePost';
 import CreateStory from './pages/CreateStory';
+import Settings from './pages/Settings';
 
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             <Route path="/activity" element={<Layout showSidebars={true}><Activity /></Layout>} />
             <Route path="/create-group" element={<Layout showSidebars={false}><CreateGroup /></Layout>} />
             <Route path="/profile/:username" element={<Layout showSidebars={true}><ProfilePage /></Layout>} />
+            <Route path="/settings" element={<Layout showSidebars={true}><Settings /></Layout>} />
             <Route path="/others-profile" element={
               <Layout showSidebars={true}>
                 <OthersProfilePage />
