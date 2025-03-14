@@ -3,61 +3,27 @@ import {
   FetchHomepageDataResponse,
   FetchPostsResponse,
   FetchStoriesResponse,
-  HomePostData,
-  StoryData
 } from '@/apis/apiTypes/response';
-
-// Fallback data that can be used directly in this file
-import avatarImage from "/activity/cat.png";
-
-// Fallback story data
-export const fallbackStoryData: StoryData[] = [
-  { id: 1, user: "name one", avatar: avatarImage, isLive: true },
-  { id: 2, user: "name two", avatar: avatarImage, isLive: false },
-  { id: 3, user: "name three", avatar: avatarImage, isLive: false },
-  { id: 4, user: "name four", avatar: avatarImage, isLive: false },
-];
-
-// Fallback posts data
-export const fallbackPostsData: HomePostData[] = [
-  {
-    id: 1,
-    user: "John Doe",
-    avatar: avatarImage,
-    postDate: "2024-03-21",
-    caption: "Hello world!",
-    image: avatarImage,
-    likes: 210,
-    comments: 32,
-    datePosted: "2 days ago"
-  },
-  {
-    id: 2,
-    user: "Jane Smith",
-    avatar: avatarImage,
-    postDate: "2024-03-22",
-    caption: "Beautiful day outside!",
-    image: avatarImage,
-    likes: 145,
-    comments: 18,
-    datePosted: "1 day ago"
-  }
-];
 
 /**
  * Function to fetch posts for the homepage
  */
-export const fetchPosts = async (): Promise<FetchPostsResponse> => {
+export const fetchPosts = async (page: number): Promise<FetchPostsResponse> => {
   try {
     const response = await apiClient.get<FetchPostsResponse>(
       '/get-home-posts',
+      {
+        params: { page }
+      }
     );
-    
-    if (response.status === 200 && response.data.success) {
+
+    // Handle the actual response structure
+    if (response.status === 200) {
       return {
         success: true,
-        posts: response.data.posts?.length ? response.data.posts : fallbackPostsData,
-        hasMore: response.data.hasMore || false
+        posts: response.data.posts || [],
+        hasMore: response.data.hasMore || false,
+        message: response.data.message
       };
     } else {
       throw new Error(response.data.message || 'Failed to fetch posts');
@@ -67,7 +33,7 @@ export const fetchPosts = async (): Promise<FetchPostsResponse> => {
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to fetch posts',
-      posts: fallbackPostsData,
+      posts: [],
       hasMore: false
     };
   }
@@ -79,13 +45,14 @@ export const fetchPosts = async (): Promise<FetchPostsResponse> => {
 export const fetchStories = async (): Promise<FetchStoriesResponse> => {
   try {
     const response = await apiClient.get<FetchStoriesResponse>(
-      '/get-stories',
+      '/get-stories'
     );
     
-    if (response.status === 200 && response.data.success) {
+    if (response.status === 200) {
       return {
         success: true,
-        stories: response.data.stories?.length ? response.data.stories : fallbackStoryData
+        stories: response.data.stories || [],
+        message: response.data.message
       };
     } else {
       throw new Error(response.data.message || 'Failed to fetch stories');
@@ -95,7 +62,7 @@ export const fetchStories = async (): Promise<FetchStoriesResponse> => {
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Failed to fetch stories',
-      stories: fallbackStoryData
+      stories: []
     };
   }
 };
@@ -103,31 +70,34 @@ export const fetchStories = async (): Promise<FetchStoriesResponse> => {
 /**
  * Function to fetch both posts and stories in parallel for the homepage
  */
-export const fetchHomepageData = async (_nextPage: number): Promise<FetchHomepageDataResponse> => {
+export const fetchHomepageData = async (page: number): Promise<FetchHomepageDataResponse> => {
   try {
     // Fetch posts and stories in parallel
     const [postsData, storiesData] = await Promise.all([
-      fetchPosts(),
+      fetchPosts(page),
       fetchStories()
     ]);
     
     return {
+      success: true,
       postsData,
       storiesData
     };
   } catch (error) {
     console.error('Error fetching homepage data:', error);
     return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to fetch homepage data',
       postsData: {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to fetch posts',
-        posts: fallbackPostsData,
+        posts: [],
         hasMore: false
       },
       storiesData: {
         success: false,
         message: error instanceof Error ? error.message : 'Failed to fetch stories',
-        stories: fallbackStoryData
+        stories: []
       }
     };
   }

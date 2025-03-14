@@ -165,14 +165,16 @@ const Layout: React.FC<LayoutProps> = ({
                 <div className="p-4 border-2 border-sidebar-border">
                   <div className="flex flex-col items-center">
                     <img
-                      src="/profile/avatars/2.png"
+                      src={mockUserData["1"].avatarSrc}
                       alt="Profile"
                       className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
                     />
                     <h3 className="font-semibold text-xl text-sidebar-foreground">
-                      France Leaphart
+                      {mockUserData["1"].username}
                     </h3>
-                    <p className="text-sidebar-foreground/60">UI/UX Designer</p>
+                    <p className="text-sidebar-foreground/60">
+                      {mockUserData["1"].profession}
+                    </p>
                     <Link to={`/profile/${currentUserId}`}>
                       <Button
                         variant={"outline"}

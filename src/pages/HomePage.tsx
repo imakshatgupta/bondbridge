@@ -1,35 +1,44 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { fetchHomepageData, fallbackPostsData, fallbackStoryData } from "@/apis/commonApiCalls/homepageApi";
-import { HomePostData, StoryData } from "@/apis/apiTypes/response";
+import { useState, useEffect } from "react";
+import { fetchHomepageData } from "@/apis/commonApiCalls/homepageApi";
+import { HomepageResponse, HomePostData, StoryData } from "@/apis/apiTypes/response";
+import { useApiCall } from "@/apis/globalCatchError";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<HomePostData[]>(fallbackPostsData);
-  const [stories, setStories] = useState<StoryData[]>(fallbackStoryData);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [posts, setPosts] = useState<HomePostData[]>([]);
+  const [stories, setStories] = useState<StoryData[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const observer = useRef<IntersectionObserver | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Use our custom hook for API calls
+  const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
+  
+  // Get current user ID from localStorage
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    setCurrentUserId(userId);
+  }, []);
   
   // Load initial data
   useEffect(() => {
     const loadHomepageData = async () => {
-      try {
-        const { postsData, storiesData } = await fetchHomepageData(1);
+      const result = await executeFetchHomepageData(1);
+      console.log(result.data);
+      
+      if (result.success && result.data) {
+        const { postsData, storiesData } = result.data as HomepageResponse;
         
         setPosts(postsData.posts);
         setStories(storiesData.stories);
         setHasMore(postsData.hasMore || false);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error loading homepage data:', err);
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setLoading(false);
+      } else {
+        setError(result.data?.message || 'Failed to load homepage data');
       }
     };
     
@@ -38,82 +47,92 @@ export default function HomePage() {
   
   // Function to load more posts
   const loadMorePosts = async () => {
-    if (loadingMore || !hasMore) return;
+    if (isLoading || !hasMore) return;
     
-    setLoadingMore(true);
-    try {
-      const nextPage = page + 1;
-      const { postsData } = await fetchHomepageData(nextPage);
-      
+    const nextPage = page + 1;
+    const result = await executeFetchHomepageData(nextPage);
+    
+    if (result.success && result.data) {
+      const { postsData } = result.data as HomepageResponse;
+
       setPosts(prev => [...prev, ...postsData.posts]);
       setHasMore(postsData.hasMore || false);
       setPage(nextPage);
-    } catch (err) {
-      console.error('Error loading more posts:', err);
-    } finally {
-      setLoadingMore(false);
     }
   };
+
+  // Use infinite scroll hook
+  const lastPostElementRef = useInfiniteScroll({
+    isLoading,
+    hasMore,
+    onLoadMore: loadMorePosts
+  });
   
-  // Setup intersection observer for infinite scroll
-  const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading || loadingMore) return;
-    if (observer.current) observer.current.disconnect();
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadMorePosts();
-      }
-    }, { threshold: 0.8 });
-    
-    if (node) observer.current.observe(node);
-  }, [loading, loadingMore, hasMore]);
-  
-  const handleCommentClick = (postId: number | string) => {
-    navigate(`/comments/${postId}`);
+  const handleLikeClick = (postId: string) => {
+    console.log(postId);
+  };
+
+  const handleCommentClick = (postId: string, postData: HomePostData) => {
+    navigate(`/comments/${postId}`, { state: { postData } });
   };
   
-  if (loading) {
+  if (isLoading && posts.length === 0) {
     return <div className="max-w-2xl mx-auto p-4">Loading posts...</div>;
   }
-  
+
   if (error) {
-    return <div className="max-w-2xl mx-auto p-4 text-red-500">Error: {error}</div>;
+    return (
+      <div className="max-w-2xl mx-auto p-4 text-center">
+        <div className="text-red-500 mb-4">{error}</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="text-primary hover:underline"
+        >
+          Try Again
+        </button>
+      </div>
+    );
   }
   
   return (
     <div className="max-w-2xl mx-auto bg-background">
       {/* Stories Section */}
-      <div className="mb-2 overflow-x-auto">
-        <div className="flex gap-4 pb-2">
-          {stories.map((story) => (
-            <Story
-              key={story.id}
-              user={story.user}
-              avatar={story.avatar}
-              isLive={story.isLive}
-            />
-          ))}
+      {stories.length > 0 && (
+        <div className="mb-2 overflow-x-auto">
+          <div className="flex gap-4 pb-2">
+            {stories.map((story, index) => (
+              <Story
+                key={`story-${story.userId || index}`}
+                user={story.name}
+                avatar={story.profilePic}
+                isLive={story.isLive}
+                hasStory={story.hasStory}
+                stories={story.stories}
+                latestStoryTime={story.latestStoryTime}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Posts Section */}
       {posts.length > 0 ? (
         posts.map((post, index) => (
           <div
-            key={post.id}
+            key={`post-${post._id || index}`}
             ref={index === posts.length - 1 ? lastPostElementRef : undefined}
           >
             <Post 
-              user={post.user}
-              avatar={post.avatar}
-              postDate={post.postDate}
-              caption={post.caption}
-              image={post.image}
-              likes={post.likes}
-              comments={post.comments}
-              datePosted={post.datePosted}
-              onCommentClick={() => handleCommentClick(post.id)}
+              user={post.name}
+              avatar={post.profilePic}
+              caption={post.data.content}
+              image={post.data.media[0].url}
+              likes={post.reactionCount}
+              comments={post.commentCount}
+              datePosted={post.ago_time}
+              isOwner={currentUserId === post.userId}
+              onCommentClick={() => handleCommentClick(post.feedId, post)}
+              onLikeClick={() => handleLikeClick(post._id)}
             />
           </div>
         ))
@@ -122,7 +141,7 @@ export default function HomePage() {
       )}
       
       {/* Loading indicator for more posts */}
-      {loadingMore && (
+      {isLoading && posts.length > 0 && (
         <div className="text-center py-4">Loading more posts...</div>
       )}
       

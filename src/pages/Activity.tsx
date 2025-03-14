@@ -6,6 +6,7 @@ import SuggestedCommunities from '@/components/activity/SuggestedCommunities';
 import ChatList from '@/components/activity/ChatList';
 import GroupList from '@/components/activity/GroupList';
 import CommunityList from '@/components/activity/CommunityList';
+import { Link } from 'react-router-dom';
 
 
 export default function Activity() {
@@ -20,10 +21,12 @@ export default function Activity() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">Activity</h1>
         <div className="flex gap-2">
-          <Button variant="outline" className="rounded-full bg-background text-primary border-primary">
-            create group
-          </Button>
-          <Button className="rounded-full">
+          <Link to="/create-group">
+            <Button variant="outline" className="cursor-pointer rounded-full bg-background text-primary border-primary">
+              Create Group
+            </Button>
+          </Link>
+          <Button className="cursor-pointer rounded-full">
             Add +
           </Button>
         </div>

@@ -55,7 +55,7 @@ export const postComment = async (requestData: PostCommentRequest): Promise<Post
 /**
  * Function to delete a comment
  */
-export const deleteComment = async (commentId: string, postId: number): Promise<void> => {
+export const deleteComment = async (commentId: string, postId: string): Promise<void> => {
   if (!postId) {
     throw new Error('Post ID is required');
   }
@@ -65,10 +65,10 @@ export const deleteComment = async (commentId: string, postId: number): Promise<
   }
 
   const response = await apiClient.delete('/comment', {
-    data: {
-      commentId,
-      postId,
-    },
+    data: { 
+      commentId, 
+      postId
+    }
   });
 
   if (response.status !== 200 || !response.data.success) {

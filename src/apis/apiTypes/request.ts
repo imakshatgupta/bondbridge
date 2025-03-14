@@ -33,7 +33,7 @@ export interface Community {
 }
 
 export interface CreateProfileRequest {
-  userId: string;
+  userId?: string;
   name: string;
   email: string;
   dateOfBirth: string;
@@ -68,10 +68,31 @@ export interface RejectFriendRequestRequest {
 }
 
 export interface FetchFriendRequestsRequest {
+}
+
+export interface SetPasswordRequest {
+  userId?: string;
+  password: string;
+  token?: string;
+}
+
+export interface SearchRequest {
+  searchString: string;
+}
+
+export interface NotificationsRequest {
   page?: number;
   limit?: number;
 }
 
 export interface SendFriendRequestRequest {
   userId: number;
+}
+export interface FollowRequestsRequest {
+  page: number;
+  limit: number;
+}
+
+export interface FriendRequestActionRequest {
+  otherId: string;
 }
