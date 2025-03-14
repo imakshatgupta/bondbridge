@@ -86,3 +86,8 @@ export interface SendMessageRequest {
   entity: "chat";
   isBot: boolean;
 }
+
+export interface CreateGroupRequest {
+  groupName: string;
+  participants: string[];
+}

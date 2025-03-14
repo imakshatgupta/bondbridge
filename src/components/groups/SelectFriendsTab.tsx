@@ -1,223 +1,190 @@
-// import React from "react";
-// import { Button } from "../ui/button";
-
-// const SelectFriendsTab: React.FC = () => {
-//   const friends = [
-//     { id: 1, name: "Alex Johnson", avatar: "/profile/avatars/1.png", mutualFriends: 12 },
-//     { id: 2, name: "Jamie Smith", avatar: "/profile/avatars/2.png", mutualFriends: 8 },
-//     { id: 3, name: "Taylor Wilson", avatar: "/profile/avatars/3.png", mutualFriends: 5 },
-//     { id: 4, name: "Morgan Lee", avatar: "/profile/avatars/4.png", mutualFriends: 3 },
-//     { id: 5, name: "Casey Brown", avatar: "/profile/avatars/5.png", mutualFriends: 7 },
-//   ];
-
-//   return (
-//     <div className="space-y-6">
-//       <h2 className="text-xl font-medium mb-4">Invite Friends to Your Group</h2>
-//       <div className="mb-4">
-//         <input
-//           type="text"
-//           placeholder="Search friends..."
-//           className="w-full px-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-//         />
-//       </div>
-
-//       <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-//         {/* impleement infinite scroll here */}
-//         {friends.map((friend) => (
-//           <div 
-//             key={friend.id}
-//             className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-accent"
-//           >
-//             <div className="flex items-center space-x-3">
-//               <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
-//                 <img src={friend.avatar} alt={friend.name} className="w-full h-full object-cover" />
-//               </div>
-//               <div>
-//                 <h3 className="font-medium">{friend.name}</h3>
-//                 <p className="text-sm text-muted-foreground">{friend.mutualFriends} mutual friends</p>
-//               </div>
-//             </div>
-//             <Button variant={"outline"}>
-//               Invite
-//             </Button>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SelectFriendsTab; 
-
 import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
-import axios from "axios";
-import { useDispatch, useSelector } from "react-redux";
-import { addFriend, removeFriend } from "../../store/createGroupSlice";
-import { RootState } from "../../store";
-import { Friend } from "@/types/create_group";
+import { Input } from "../ui/input";
+import { X, Loader2, Search } from "lucide-react";
+import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
+import { useApiCall } from "@/apis/globalCatchError";
+import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
 
+interface SelectedUser {
+  id: string;
+  name: string;
+  avatar: string;
+  bio: string;
+}
 
-const SelectFriendsTab: React.FC = () => {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+interface SelectFriendsTabProps {
+  selectedParticipants: string[];
+  onParticipantsChange: (participants: string[]) => void;
+}
 
-  // Get selected friends from Redux
-  const dispatch = useDispatch();
-  const { selectedFriends } = useSelector(
-    (state: RootState) => state.createGroup
-  );
+const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
+  selectedParticipants,
+  onParticipantsChange,
+}) => {
+  const currentUserId = localStorage.getItem("userId") || "";
+  const [searchQuery, setSearchQuery] = useState("");
+  const [followings, setFollowings] = useState<Person[]>([]);
+  const [searchResults, setSearchResults] = useState<Person[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
 
-  // Fetch friends list from API
+  const [executeSearch, isSearching] = useApiCall(searchPeople);
+  const [executeFetchFollowings, isLoadingFollowings] =
+    useApiCall(fetchFollowings);
+
   useEffect(() => {
-    const fetchFriends = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token') || '';
-        const userId = localStorage.getItem('userId') || "";
-        
-        const response = await axios.get('http://localhost:3000/api/followings', {
-          headers: {
-            'userid': userId,
-            'token': token
-          }
-        });
+    const loadFollowings = async () => {
+      const result = await executeFetchFollowings();
+      if (result.success && result.data?.users) {
+        const filteredFollowings = result.data.users.filter(
+          (user) => user.id !== currentUserId
+        );
+        setFollowings(filteredFollowings);
+      }
+    };
+    loadFollowings();
+  }, [currentUserId]);
 
-        if (response.data.result) {
-          setFriends(response.data.result);
-        } else {
-          setError("Failed to load friends list");
-        }
-      } catch (error) {
-        console.error("Error fetching friends:", error);
-        setError("Failed to load friends list. Please try again.");
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      const result = await executeSearch(searchQuery);
+      if (result.success && result.data?.users) {
+        const filteredResults = result.data.users.filter(
+          (user) => user.id !== currentUserId
+        );
+        setSearchResults(filteredResults);
       }
     };
 
-    fetchFriends();
-  }, [userId]);
+    const timeoutId = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, currentUserId]);
 
-  // Handle friend selection/deselection
-  const handleToggleFriend = (friend: Friend) => {
-    const isSelected = selectedFriends.some(f => f._id === friend._id);
-    
-    if (isSelected) {
-      dispatch(removeFriend(friend._id));
+  const toggleUserSelection = (user: Person) => {
+    if (user.id === currentUserId) return;
+
+    const isCurrentlySelected = selectedParticipants.includes(user.id);
+
+    if (isCurrentlySelected) {
+      // Remove user
+      onParticipantsChange(selectedParticipants.filter((id) => id !== user.id));
+      setSelectedUsers((prev) => prev.filter((u) => u.id !== user.id));
     } else {
-      dispatch(addFriend(friend));
+      // Add user
+      const newUser = {
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar,
+        bio: user.bio,
+      };
+      onParticipantsChange([...selectedParticipants, user.id]);
+      setSelectedUsers((prev) => [...prev, newUser]);
     }
   };
 
-  // Filter friends based on search term
-  const filteredFriends = friends.filter(friend =>
-    friend.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const removeSelectedUser = (userId: string) => {
+    onParticipantsChange(selectedParticipants.filter((id) => id !== userId));
+    setSelectedUsers((users) => users.filter((user) => user.id !== userId));
+  };
+
+  const displayUsers = searchQuery.trim() ? searchResults : followings;
+  const isUserSelected = (userId: string) =>
+    selectedParticipants.includes(userId);
 
   return (
     <div className="space-y-6 max-h-[50vh] overflow-y-auto">
       <h2 className="text-xl font-medium mb-4">Invite Friends to Your Group</h2>
-      
-      <div className="mb-4">
-        <input
+      <div className="mb-4 relative">
+        <Input
           type="text"
           placeholder="Search friends..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10"
         />
+        {isSearching ? (
+          <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+        ) : (
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        )}
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      ) : error ? (
-        <div className="text-center text-red-500 py-4">{error}</div>
-      ) : (
-        <>
-          {selectedFriends.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Selected ({selectedFriends.length})</h3>
-              <div className="flex flex-wrap gap-2">
-                {selectedFriends.map((friend) => (
-                  <div 
-                    key={friend._id}
-                    className="flex items-center bg-primary/10 rounded-full pl-2 pr-3 py-1"
-                  >
-                    <img 
-                      src={friend.profilePic || "/profile/default-avatar.png"} 
-                      alt={friend.name} 
-                      className="w-6 h-6 rounded-full mr-2"
-                    />
-                    <span className="text-sm">{friend.name}</span>
-                    <button 
-                      onClick={() => dispatch(removeFriend(friend._id))}
-                      className="ml-2 text-sm text-muted-foreground hover:text-foreground"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-            {filteredFriends.length === 0 ? (
-              <div className="text-center text-muted-foreground py-4">
-                {searchTerm ? "No friends match your search" : "No friends found"}
-              </div>
-            ) : (
-              filteredFriends.map((friend) => {
-                const isSelected = selectedFriends.some(f => f._id === friend._id);
-                
-                return (
-                  <div 
-                    key={friend._id}
-                    className={`flex items-center justify-between p-3 border rounded-lg transition-colors ${
-                      isSelected 
-                        ? "border-primary bg-primary/5" 
-                        : "border-border hover:bg-accent"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
-                        <img 
-                          src={friend.profilePic || "/profile/default-avatar.png"} 
-                          alt={friend.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div>
-                        <h3 className="font-medium">{friend.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {friend.bio ? 
-                            friend.bio.length > 50 ? 
-                              `${friend.bio.substring(0, 50)}...` : 
-                              friend.bio 
-                            : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant={isSelected ? "default" : "outline"}
-                      onClick={() => handleToggleFriend(friend)}
-                    >
-                      {isSelected ? "Selected" : "Select"}
-                    </Button>
-                  </div>
-                );
-              })
-            )}
+      {/* Selected Users Section */}
+      {selectedUsers.length > 0 && searchQuery.trim() === "" && (
+        <div className="mb-4">
+          <h3 className="text-sm font-medium mb-2">Selected Friends</h3>
+          <div className="space-y-3">
+            {selectedUsers.map((user) => (
+              <UserCard
+                key={user.id}
+                user={user}
+                isSelected={true}
+                onToggle={() => removeSelectedUser(user.id)}
+              />
+            ))}
           </div>
-        </>
+        </div>
       )}
+
+      {/* All Users/Search Results Section */}
+      <div className="space-y-3">
+        {isLoadingFollowings ? (
+          <div className="flex justify-center py-4">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        ) : (
+          displayUsers.map((user) => (
+            <UserCard
+              key={user.id}
+              user={user}
+              isSelected={isUserSelected(user.id)}
+              onToggle={() => toggleUserSelection(user)}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 };
+
+interface UserCardProps {
+  user: Person | SelectedUser;
+  isSelected: boolean;
+  onToggle: () => void;
+}
+
+const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onToggle }) => (
+  <div
+    className={`flex items-center justify-between p-3 border rounded-lg hover:bg-accent relative ${
+      isSelected ? "border-primary border-2" : "border-border"
+    }`}
+  >
+    <div className="flex items-center space-x-3">
+      <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
+        <img
+          src={user.avatar}
+          alt={user.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div>
+        <h3 className="font-medium">{user.name}</h3>
+        <p className="text-sm text-muted-foreground">{user.bio}</p>
+      </div>
+    </div>
+    <Button
+      variant={isSelected ? "destructive" : "outline"}
+      onClick={onToggle}
+      size="sm"
+    >
+      {isSelected ? <X className="h-4 w-4" /> : "Add"}
+    </Button>
+  </div>
+);
 
 export default SelectFriendsTab;
