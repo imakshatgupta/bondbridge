@@ -72,7 +72,7 @@ const Login: React.FC = () => {
         if (result.success && result.data) {
             const data = result.data as LoginResponse;
             
-            if (data.userDetails.statusCode == 1) {
+            if (data.userDetails.statusCode != 0) {
                 navigate('/');
             }
         }

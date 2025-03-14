@@ -1,25 +1,25 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
-import { Trash2, Plus, Type, Image, Video, Palette, Smile, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, Plus, Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-
-
-interface Story {
-  type: 'text' | 'photo' | 'video';
-  content: string;
-  theme: string;
-}
+import { useNavigate } from 'react-router-dom';
+import { uploadStory } from '../apis/commonApiCalls/storyApi';
+import { useApiCall } from '../apis/globalCatchError';
+import { Story } from '../apis/apiTypes/request';
 
 const CreateStory = () => {
   const [stories, setStories] = useState<Story[]>([{ 
     type: 'text', 
     content: '', 
-    theme: 'bg-purple-600' 
+    theme: 'bg-primary',
+    privacy: 1 
   }]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  
+  const [executeUploadStory, isUploading] = useApiCall(uploadStory);
 
   const handleTextChange = (newText: string) => {
     setStories(prev => prev.map((story, idx) => 
@@ -36,7 +36,7 @@ const CreateStory = () => {
   const handleAddPage = () => {
     if (stories.length < 10) {
       const currentTheme = stories[currentPage].theme;
-      setStories(prev => [...prev, { type: 'text', content: '', theme: currentTheme }]);
+      setStories(prev => [...prev, { type: 'text', content: '', theme: currentTheme, privacy: 1 }]);
       setCurrentPage(stories.length);
     }
   };
@@ -53,22 +53,63 @@ const CreateStory = () => {
   // Use these values from stories state
   const currentStory = stories[currentPage];
   const currentTheme = currentStory.theme;
-  const currentContent = currentStory.content;
+  const currentContentText = typeof currentStory.content === 'string' ? currentStory.content : '';
+  const currentPreviewUrl = currentStory.previewUrl || '';
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'video') => {
     const file = e.target.files?.[0];
     if (file) {
+      const newStories = [...stories];
+      
       const reader = new FileReader();
       reader.onloadend = () => {
-        const newStories = [...stories];
-        newStories[currentPage] = {
-          type,
-          content: reader.result as string,
-          theme: currentTheme
-        };
-        setStories(newStories);
+        if (reader.result) {
+          newStories[currentPage] = {
+            type,
+            content: file,
+            theme: currentTheme,
+            privacy: 1,
+            previewUrl: reader.result as string
+          };
+          setStories(newStories);
+        }
       };
       reader.readAsDataURL(file);
+    }
+  };
+  
+  const navigate = useNavigate();
+  const handleCancel = () => {
+    navigate('/');
+  };
+
+  const handleCreateStory = async () => {
+    // Validate stories
+    const emptyStory = stories.find(story => {
+      if (typeof story.content === 'string') {
+        return !story.content.trim();
+      }
+      if (story.content instanceof File || story.content instanceof Blob) {
+        return story.content.size === 0;
+      }
+      return false;
+    });
+    
+    if (emptyStory) {
+      return;
+    }
+    
+    // Ensure all stories have a privacy value
+    const storiesWithPrivacy = stories.map(story => ({
+      ...story,
+      privacy: story.privacy || 1 // Default to 1 if privacy is undefined
+    }));
+    
+    // Call the API using the useApiCall hook
+    const result = await executeUploadStory(storiesWithPrivacy);
+    
+    if (result.success && result.data) {
+      navigate('/');
     }
   };
 
@@ -86,14 +127,17 @@ const CreateStory = () => {
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-foreground"
+            onClick={handleCancel}
           >
             Cancel
           </Button>
           <Button
             size="sm"
             className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6"
+            onClick={handleCreateStory}
+            disabled={isUploading}
           >
-            Post
+            {isUploading ? "Posting..." : "Post"}
           </Button>
         </div>
       </div>
@@ -180,7 +224,7 @@ const CreateStory = () => {
               <div className="absolute left-20 top-1/2 -translate-y-1/2 z-96">
                 <EmojiPicker
                   onEmojiClick={(emojiObject) => {
-                    handleTextChange(currentContent + emojiObject.emoji);
+                    handleTextChange(currentContentText + emojiObject.emoji);
                     setShowEmojiPicker(false);
                   }}
                   width={300}
@@ -244,7 +288,7 @@ const CreateStory = () => {
               {currentStory.type === 'text' && (
                 <div className="w-full px-4">
                   <textarea
-                    value={currentContent}
+                    value={currentContentText}
                     onChange={(e) => handleTextChange(e.target.value)}
                     placeholder="What's on your mind..."
                     className="w-full bg-transparent resize-none outline-none text-foreground text-center"
@@ -255,14 +299,14 @@ const CreateStory = () => {
               )}
               {currentStory.type === 'photo' && (
                 <img
-                  src={currentContent}
+                  src={currentPreviewUrl}
                   alt="Story"
                   className="w-full h-full p-4 object-contain"
                 />
               )}
               {currentStory.type === 'video' && (
                 <video
-                  src={currentContent}
+                  src={currentPreviewUrl}
                   className="w-full h-full p-4 object-contain"
                 />
               )}
@@ -270,7 +314,7 @@ const CreateStory = () => {
               {/* Show color picker only for text type */}
               {showColorPicker && currentStory.type === 'text' && (
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-background/50 rounded-full animate-in fade-in duration-200">
-                  {['bg-purple-600', 'bg-blue-600', 'bg-green-600', 'bg-red-600', 'bg-yellow-600'].map(color => (
+                  {['bg-primary', 'bg-accent', 'bg-secondary', 'bg-destructive', 'bg-muted'].map(color => (
                     <button
                       key={color}
                       className={`w-6 h-6 rounded-full ${color} ${currentTheme === color ? 'ring-2 ring-foreground' : ''}`}
@@ -318,4 +362,4 @@ const CreateStory = () => {
   );
 };
 
-export default CreateStory; 
+export default CreateStory;

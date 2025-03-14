@@ -129,3 +129,16 @@ export interface FollowRequestsResponse {
   message: string;
   result: FollowRequest[];
 }
+
+export interface StoryItem {
+  id: string;
+  content: string;
+  type: string;
+  theme: string;
+  privacy: number;
+  createdAt: string;
+}
+
+export type UploadStoryResponse = {
+  stories: StoryItem[];
+};

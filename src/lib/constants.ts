@@ -74,5 +74,3 @@ export const GET_AUTH_HEADERS = () => ({
   'userId': localStorage.getItem('userId') || '',
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 });
-
-
