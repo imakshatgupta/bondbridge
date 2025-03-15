@@ -40,6 +40,7 @@ export const fetchUserPosts = async (
   const params = isCurrentUser ? {} : { 'userId': userId };
   const response = await apiClient.get('/get-posts', { params });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts = response.data.posts.map((post: any) => ({
     id: post._id,
     imageSrc: post.data.media[0]?.url || '',

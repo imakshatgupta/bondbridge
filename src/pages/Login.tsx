@@ -11,6 +11,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LoginResponse } from '../apis/apiTypes/response';
+import { useAppDispatch } from '@/store';
+import { setCurrentUser } from '@/store/settingsSlice';
+import { fetchUserProfile } from '@/apis/commonApiCalls/profileApi';
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -19,6 +22,7 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
     // Use our custom hook for API calls
     const [executeLogin, isLoggingIn] = useApiCall(loginUser);
@@ -73,6 +77,11 @@ const Login: React.FC = () => {
 
         if (result.success && result.data) {
             const data = result.data as LoginResponse;
+
+            const userData = await fetchUserProfile(data.userDetails._id, data.userDetails._id);
+            if (userData.success) {
+              dispatch(setCurrentUser(userData.data));
+            }
             
             if (data.userDetails.statusCode != 0) {
                 navigate('/');
