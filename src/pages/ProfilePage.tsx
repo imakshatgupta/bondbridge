@@ -13,15 +13,24 @@ const ProfilePage: React.FC = () => {
   const [executeProfileFetch, isLoading] = useApiCall(fetchUserProfile);
 
   useEffect(() => {
+    console.log("userId", userId);
+    console.log("userData", userData);
+  }, [userId, userData]);
+
+  useEffect(() => {
     const loadUserData = async () => {
+      console.log("userIdsxns", userId);
       if (!userId) return;
       const currentUserId = localStorage.getItem("userId") || ""; 
       console.log("fetching user data");
       const result = await executeProfileFetch(userId, currentUserId);
+      console.log("result", result);
       if (result.success && result.data) {
         setUserData(result.data.data);
       }
     };
+
+
 
     loadUserData();
   }, [userId]);

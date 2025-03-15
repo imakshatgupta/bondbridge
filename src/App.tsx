@@ -101,7 +101,7 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/profile/:username"
+              path="/profile/:userId"
               element={
                 <Layout showSidebars={true}>
                   <ProfilePage />
