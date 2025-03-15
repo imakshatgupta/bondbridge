@@ -38,7 +38,7 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
   decorativeImages,
 }) => {
   return (
-    <Grid className="h-full grid items-center">
+    <Grid className="h-[calc(100vh-64px)] grid items-center">
       {/* Left Section: Heading + Nav */}
       <div className="">
         <h1 className="text-5xl font-medium mb-6">{title}</h1>

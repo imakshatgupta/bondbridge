@@ -83,6 +83,33 @@ const CreateStory = () => {
     navigate('/');
   };
 
+  // Helper function to get computed color from CSS variables
+  const getComputedColor = (cssVar: string): string => {
+    // For direct color values (like #fff or rgb values)
+    if (cssVar.startsWith('#') || cssVar.startsWith('rgb')) {
+      return cssVar;
+    }
+    
+    // For CSS variables in the format bg-{name}
+    if (cssVar.startsWith('bg-')) {
+      // Create a temporary element to compute the style
+      const tempEl = document.createElement('div');
+      tempEl.className = cssVar;
+      document.body.appendChild(tempEl);
+      
+      // Get the computed style
+      const computedStyle = window.getComputedStyle(tempEl);
+      const backgroundColor = computedStyle.backgroundColor;
+      
+      // Clean up
+      document.body.removeChild(tempEl);
+      
+      return backgroundColor || '#000000'; // Fallback to black
+    }
+    
+    return cssVar; // Return as is if not recognized
+  };
+
   // New utility function to render text to canvas and return as image
   const renderTextToImage = (text: string, theme: string): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -95,29 +122,10 @@ const CreateStory = () => {
         throw new Error('Could not get canvas context');
       }
       
-      // Set background color based on theme
-      let backgroundColor = '#000000';
-      switch (theme) {
-        case 'bg-primary':
-          backgroundColor = 'hsl(var(--primary))';
-          break;
-        case 'bg-accent':
-          backgroundColor = 'hsl(var(--accent))';
-          break;
-        case 'bg-secondary':
-          backgroundColor = 'hsl(var(--secondary))';
-          break;
-        case 'bg-destructive':
-          backgroundColor = 'hsl(var(--destructive))';
-          break;
-        case 'bg-muted':
-          backgroundColor = 'hsl(var(--muted))';
-          break;
-        default:
-          backgroundColor = theme; // Use custom color directly
-      }
+      // Get the actual color value from the theme
+      const backgroundColor = getComputedColor(theme);
       
-      // Fill background
+      // Fill background with the computed color
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
