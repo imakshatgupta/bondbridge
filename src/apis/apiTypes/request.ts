@@ -147,3 +147,21 @@ export interface StoryRequest {
 export interface StartMessageRequest {
   userId2: string;
 }
+
+// Profile update request type
+export interface UpdateProfileRequest {
+  name: string;
+  email: string;
+  interests: string[];
+  privacyLevel: number;
+  avatar?: string | File;
+}
+
+// Post creation request type
+export interface CreatePostRequest {
+  content: string;
+  whoCanComment: number;
+  privacy: number;
+  image?: File[];
+  document?: File[];
+}

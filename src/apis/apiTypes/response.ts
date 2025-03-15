@@ -407,3 +407,32 @@ export interface FetchHomepageDataResponse {
   postsData: FetchPostsResponse;
   storiesData: FetchStoriesResponse;
 }
+
+export interface UpdateProfileResponse {
+  success: boolean;
+  message: string;
+  user?: {
+    _id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    interests: string[];
+    privacyLevel: number;
+  };
+}
+
+export interface CreatePostResponse {
+  success: boolean;
+  message: string;
+  post?: {
+    _id: string;
+    feedId: string;
+    author: string;
+    content: string;
+    media?: Array<{
+      url: string;
+      type: string;
+    }>;
+    createdAt: string;
+  };
+}

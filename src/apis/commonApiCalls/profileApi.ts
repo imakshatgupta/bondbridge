@@ -1,102 +1,95 @@
-import axios from 'axios';
 import {
   FetchUserProfileResponse,
   UserPostsResponse,
 } from "../apiTypes/profileTypes";
+import { UpdateProfileResponse } from "../apiTypes/response";
+import apiClient, { formDataApiClient } from '../apiClient';
+import { UpdateProfileRequest } from "../apiTypes/request";
 
 export const fetchUserProfile = async (
   userId: string,
   currentUserId: string
 ): Promise<FetchUserProfileResponse> => {
-  try {
-    const token = localStorage.getItem('token');
-    console.log("userId", userId);
-    console.log("currentUserId", currentUserId);
-    console.log("token", token);
-    const response = await axios.get('http://18.144.2.16/api/showProfile', {
-      headers: {
-        'token': token,
-        'userid': currentUserId,
-      },
-      params: {
-        'other': userId,
-      }
-    });
+  const response = await apiClient.get('/showProfile', {
+    params: {
+      'other': userId,
+    }
+  });
 
-    const userData = response.data.result[0];
-    // console.log("userData", userData);
-    const isCurrentUser = currentUserId === userId;
+  const userData = response.data.result[0];
+  const isCurrentUser = currentUserId === userId;
 
-    return {
-      success: true,
-      data: {
-        username: userData.name,
-        email: isCurrentUser ? userData.email : "",
-        followers: userData.followers || 0,
-        following: userData.followings || 0,
-        avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
-        isCurrentUser
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    return {
-      success: false,
-      data: {
-        username: "Unknown User",
-        email: "",
-        followers: 0,
-        following: 0,
-        avatarSrc: "/profile/user.png",
-        isCurrentUser: false,
-      },
-    };
-  }
+  return {
+    success: true,
+    data: {
+      username: userData.name,
+      email: isCurrentUser ? userData.email : "",
+      followers: userData.followers || 0,
+      following: userData.followings || 0,
+      avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
+      isCurrentUser
+    },
+  };
 };
 
 export const fetchUserPosts = async (
   userId: string,
   isCurrentUser: boolean
 ): Promise<UserPostsResponse> => {
-  try {
-    const token = localStorage.getItem('token');
-    const currentUserId = localStorage.getItem('userId');
+  const params = isCurrentUser ? {} : { 'userId': userId };
+  const response = await apiClient.get('/get-posts', { params });
 
-    const params = isCurrentUser ? {} : {
-      'userId': userId
+  const posts = response.data.posts.map((post: any) => ({
+    id: post._id,
+    imageSrc: post.data.media[0]?.url || '',
+    content: post.data.content,
+    createdAt: post.createdAt,
+    author: {
+      name: post.name,
+      profilePic: post.profilePic
+    },
+    stats: {
+      commentCount: post.commentCount,
+      reactionCount: post.reactionCount,
+      hasReacted: post.reaction.hasReacted,
+      reactionType: post.reaction.reactionType
     }
-    const response = await axios.get('http://18.144.2.16/api/get-posts', {
-      headers: {
-        'token': token,
-        'userid': currentUserId,
-      },
-      params: params
-    });
+  }));
 
-    const posts = response.data.posts.map((post: any) => ({
-      id: post._id,
-      imageSrc: post.data.media[0]?.url || '',
-      content: post.data.content,
-      createdAt: post.createdAt,
-      author: {
-        name: post.name,
-        profilePic: post.profilePic
-      },
-      stats: {
-        commentCount: post.commentCount,
-        reactionCount: post.reactionCount,
-        hasReacted: post.reaction.hasReacted,
-        reactionType: post.reaction.reactionType
-      }
-    }));
+  return {
+    posts,
+  };
+};
 
-    return {
-      posts,
-    };
-  } catch (error) {
-    console.error("Error fetching user posts:", error);
-    return {
-      posts: [],
-    };
+export const updateUserProfile = async (
+  profileData: UpdateProfileRequest
+): Promise<UpdateProfileResponse> => {
+  // Create FormData object
+  const formDataObj = new FormData();
+  
+  // Append form data
+  formDataObj.append('name', profileData.name);
+  formDataObj.append('email', profileData.email);
+  formDataObj.append('interests', JSON.stringify(profileData.interests));
+  formDataObj.append('privacyLevel', profileData.privacyLevel.toString());
+  
+  // Handle avatar - could be a string URL or a File
+  if (profileData.avatar) {
+    if (typeof profileData.avatar === 'string' && profileData.avatar.startsWith('/')) {
+      // For pre-defined avatars, just send the path
+      formDataObj.append('avatar', profileData.avatar);
+    } else if (profileData.avatar instanceof File) {
+      // For file uploads
+      formDataObj.append('avatar', profileData.avatar);
+    }
   }
+  
+  // Make the API call
+  const response = await formDataApiClient.put('/edit-profile', formDataObj);
+  
+  return {
+    success: response.status === 200,
+    message: response.data.message || 'Profile updated successfully',
+    user: response.data.user
+  };
 };
