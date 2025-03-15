@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AllPosts from "@/components/AllPosts";
-import AllAudios from "@/components/AllAudios";
-import AllReplies from "@/components/AllReplies";
 import { useEffect, useState } from "react";
 import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
@@ -58,18 +56,6 @@ const Profile: React.FC<ProfileProps> = ({
 
     loadPosts();
   }, [userId]);
-
-  const audios = [
-    { id: 1, title: "Nature sounds", duration: "2:34" },
-    { id: 2, title: "Morning birds", duration: "1:45" },
-    { id: 3, title: "Ocean waves", duration: "3:21" },
-  ];
-
-  const replies = [
-    { id: 1, text: "Great post!", author: "user123" },
-    { id: 2, text: "I love this content", author: "nature_lover" },
-    { id: 3, text: "Amazing photography", author: "photo_enthusiast" },
-  ];
 
   const handleStartConversation = async () => {
     try {
@@ -204,7 +190,7 @@ const Profile: React.FC<ProfileProps> = ({
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
         <TabsList
-          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+          className="grid w-full grid-cols-2 bg-transparent *:rounded-none *:border-transparent 
         *:data-[state=active]:text-primary"
         >
           <TabsTrigger value="posts" className="group">
@@ -212,14 +198,9 @@ const Profile: React.FC<ProfileProps> = ({
               Posts
             </span>
           </TabsTrigger>
-          <TabsTrigger value="audio" className="group">
+          <TabsTrigger value="community" className="group">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Audio
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="replies" className="group">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Replies
+              Community
             </span>
           </TabsTrigger>
         </TabsList>
@@ -234,12 +215,8 @@ const Profile: React.FC<ProfileProps> = ({
           )}
         </TabsContent>
 
-        <TabsContent value="audio" className="p-4">
-          <AllAudios audios={audios} />
-        </TabsContent>
-
-        <TabsContent value="replies" className="p-4">
-          <AllReplies replies={replies} />
+        <TabsContent value="community" className="p-4">
+          {/* Community content will go here */}
         </TabsContent>
       </Tabs>
     </div>

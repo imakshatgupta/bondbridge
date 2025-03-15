@@ -251,7 +251,7 @@ import mockUserData from "@/constants/users";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import SettingLayout from './settings/SettingLayout';
-// import { useAppSelector } from '@/app/store';
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -328,15 +328,35 @@ const LeftSidebar: React.FC = () => {
                 pathname === "/bondchat" ? "font-medium" : ""
               }`}
             >
-              <img src="/bondchat.svg" alt="" />
+              <img src="/" alt="" />
               <span className="grad">Bond Chat</span>
             </Link>
           </li>
-          <Link to="/create-post">
-            <Button size={"lg"} className="text-lg w-full cursor-pointer">
-              + Post
-            </Button>
-          </Link>
+          <li>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size={"lg"} className="text-lg w-full cursor-pointer">
+                  + Post
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2">
+                <div className="flex flex-col gap-2">
+                  <Link to="/create-post" className="flex items-center gap-2 p-2 hover:bg-muted rounded-md">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z" />
+                    </svg>
+                    <span>Post</span>
+                  </Link>
+                  <Link to="/create-story" className="flex items-center gap-2 p-2 hover:bg-muted rounded-md">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                    </svg>
+                    <span>Story</span>
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </li>
         </ul>
         {/* Settings */}
         <div className="pb-5">

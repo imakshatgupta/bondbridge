@@ -33,22 +33,23 @@ const CreateStory = () => {
     ));
   };
 
-  const handleAddPage = () => {
-    if (stories.length < 10) {
-      const currentTheme = stories[currentPage].theme;
-      setStories(prev => [...prev, { type: 'text', content: '', theme: currentTheme, privacy: 1 }]);
-      setCurrentPage(stories.length);
-    }
-  };
+  // not showing add page and delete page buttons for now as multiple stories not working
+  // const handleAddPage = () => {
+  //   if (stories.length < 10) {
+  //     const currentTheme = stories[currentPage].theme;
+  //     setStories(prev => [...prev, { type: 'text', content: '', theme: currentTheme, privacy: 1 }]);
+  //     setCurrentPage(stories.length);
+  //   }
+  // };
 
-  const handleDeletePage = () => {
-    if (stories.length > 1) {
-      setStories(prev => prev.filter((_, idx) => idx !== currentPage));
-      if (currentPage === stories.length - 1) {
-        setCurrentPage(currentPage - 1);
-      }
-    }
-  };
+  // const handleDeletePage = () => {
+  //   if (stories.length > 1) {
+  //     setStories(prev => prev.filter((_, idx) => idx !== currentPage));
+  //     if (currentPage === stories.length - 1) {
+  //       setCurrentPage(currentPage - 1);
+  //     }
+  //   }
+  // };
 
   // Use these values from stories state
   const currentStory = stories[currentPage];
@@ -179,6 +180,141 @@ const CreateStory = () => {
     });
   };
 
+  // Utility function to process image with theme
+  const renderImageWithTheme = (file: File, theme: string): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
+      
+      // Set canvas dimensions (10:16 aspect ratio)
+      canvas.width = 400;
+      canvas.height = 640;
+      
+      // Get the actual color value from the theme
+      const backgroundColor = getComputedColor(theme);
+      
+      // Create image element and load file
+      const img = document.createElement('img');
+      const reader = new FileReader();
+      
+      reader.onload = () => {
+        img.src = reader.result as string;
+      };
+      
+      img.onload = () => {
+        // Fill background with theme color
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Calculate dimensions to maintain aspect ratio
+        const scale = Math.min(
+          canvas.width / img.width,
+          canvas.height / img.height
+        );
+        const x = (canvas.width - img.width * scale) / 2;
+        const y = (canvas.height - img.height * scale) / 2;
+        
+        // Draw image maintaining aspect ratio
+        ctx.drawImage(
+          img,
+          x,
+          y,
+          img.width * scale,
+          img.height * scale
+        );
+        
+        // Convert canvas to blob
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            // Fallback if toBlob fails
+            fetch(canvas.toDataURL('image/png'))
+              .then(res => res.blob())
+              .then(resolve);
+          }
+        }, 'image/png');
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Utility function to process video and create thumbnail
+  const renderVideoWithTheme = (file: File, theme: string): Promise<{ 
+    thumbnail: Blob;
+    video: File;
+  }> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const videoElement = document.createElement('video');
+      
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
+      
+      // Set canvas dimensions (10:16 aspect ratio)
+      canvas.width = 400;
+      canvas.height = 640;
+      
+      // Get the actual color value from the theme
+      const backgroundColor = getComputedColor(theme);
+      
+      // Load video and capture first frame
+      videoElement.src = URL.createObjectURL(file);
+      
+      videoElement.onloadeddata = () => {
+        videoElement.currentTime = 0;
+      };
+      
+      videoElement.onseeked = () => {
+        // Fill background with theme color
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Calculate video dimensions to maintain aspect ratio
+        const scale = Math.min(
+          canvas.width / videoElement.videoWidth,
+          canvas.height / videoElement.videoHeight
+        );
+        const x = (canvas.width - videoElement.videoWidth * scale) / 2;
+        const y = (canvas.height - videoElement.videoHeight * scale) / 2;
+        
+        // Draw video frame
+        ctx.drawImage(
+          videoElement,
+          x,
+          y,
+          videoElement.videoWidth * scale,
+          videoElement.videoHeight * scale
+        );
+        
+        // Convert canvas to blob for thumbnail
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve({
+              thumbnail: blob,
+              video: file
+            });
+          } else {
+            // Fallback if toBlob fails
+            fetch(canvas.toDataURL('image/png'))
+              .then(res => res.blob())
+              .then(blob => resolve({
+                thumbnail: blob,
+                video: file
+              }));
+          }
+        }, 'image/png');
+      };
+    });
+  };
+
   const handleCreateStory = async () => {
     // Validate stories
     const emptyStory = stories.find(story => {
@@ -195,40 +331,60 @@ const CreateStory = () => {
       return;
     }
     
-    // Process stories - convert text to images
+    // Process all stories and store rendered images
     const processedStories = await Promise.all(
       stories.map(async (story) => {
-        // If it's a text story, convert to image
-        if (story.type === 'text' && typeof story.content === 'string') {
-          try {
+        try {
+          if (story.type === 'text' && typeof story.content === 'string') {
             const imageBlob = await renderTextToImage(story.content, story.theme);
-            
-            // Create a file from the blob
-            const filename = `story-${Date.now()}.png`;
+            const filename = `story-text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
             const imageFile = new File([imageBlob], filename, { type: 'image/png' });
             
-            // Return a new story object with the image file
             return {
               ...story,
-              type: 'photo', // Change type to photo
+              type: 'photo',
               content: imageFile,
-              originalText: story.content, // Keep original text for reference if needed
+              originalText: story.content,
             };
-          } catch (error) {
-            console.error('Error converting text to image:', error);
-            return story; // Return original story if conversion fails
+          } 
+          else if (story.type === 'photo' && story.content instanceof File) {
+            const processedBlob = await renderImageWithTheme(story.content, story.theme);
+            const filename = `story-photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
+            const processedFile = new File([processedBlob], filename, { type: 'image/png' });
+            
+            return {
+              ...story,
+              content: processedFile,
+              originalImage: story.content,
+            };
           }
+          else if (story.type === 'video' && story.content instanceof File) {
+            const { thumbnail, video } = await renderVideoWithTheme(story.content, story.theme);
+            const thumbnailFile = new File(
+              [thumbnail], 
+              `thumbnail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`, 
+              { type: 'image/png' }
+            );
+            
+            return {
+              ...story,
+              content: video,
+              thumbnail: thumbnailFile,
+            };
+          }
+          
+          return story;
+        } catch (error) {
+          console.error('Error processing story:', error);
+          return story;
         }
-        
-        // Return other story types unchanged
-        return story;
       })
     );
     
     // Ensure all stories have a privacy value
     const storiesWithPrivacy = processedStories.map(story => ({
       ...story,
-      privacy: story.privacy || 1 // Default to 1 if privacy is undefined
+      privacy: story.privacy || 1
     }));
     
     // Call the API using the useApiCall hook
@@ -374,7 +530,7 @@ const CreateStory = () => {
           >
             {currentTheme.startsWith('bg-') && <div className={`absolute inset-0 ${currentTheme} rounded-lg`}></div>}
 
-            {/* Delete and Add Page Buttons */}
+            {/* Delete and Add Page Buttons
             {stories.length > 1 && (
               <Button
                 variant="ghost"
@@ -395,10 +551,10 @@ const CreateStory = () => {
               >
                 <Plus className="w-5 h-5" />
               </Button>
-            )}
+            )} */}
 
             {/* Progress Indicators */}
-            <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
+            {/* <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
               {stories.map((_, index) => (
                 <div
                   key={index}
@@ -409,7 +565,7 @@ const CreateStory = () => {
                   />
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Story Content - Incorporating improved media handling from first file */}
             <div className="h-full w-full flex items-center justify-center relative z-10">
