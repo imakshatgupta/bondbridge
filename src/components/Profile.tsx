@@ -188,7 +188,7 @@ const Profile: React.FC<ProfileProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-sm">Go Anonymous</span>
             <Switch
-              checked={privacyLevel === 1}
+              checked={privacyLevel == 1}
               onCheckedChange={handleAnonymousToggle}
             />
           </div>
@@ -216,7 +216,7 @@ const Profile: React.FC<ProfileProps> = ({
         </div>
         <h1 className="text-xl font-semibold">
           {isCurrentUser
-            ? privacyLevel === 1
+            ? privacyLevel == 1
               ? nickname
               : username
             : username}
