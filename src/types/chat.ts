@@ -13,3 +13,14 @@ export interface ChatInterfaceProps {
   avatar: string;
   onClose: () => void;
 }
+
+export interface ChatProps {
+  messages: Message[];
+  onSendMessage: (message: string) => void;
+  placeholder?: string;
+  avatar?: string;
+  username?: string;
+  showHeader?: boolean;
+  onClose?: () => void;
+  showAvatar?: boolean;
+}
