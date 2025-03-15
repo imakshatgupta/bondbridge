@@ -35,19 +35,21 @@ export const uploadStory = async (storiesData: StoryData[]): Promise<UploadStory
   // Create FormData object
   const formData = new FormData();
   
-  // Add required fields to FormData
+  // Add basic fields from the first story
   formData.append('contentType', primaryStory.type === 'photo' ? 'image' : primaryStory.type === 'video' ? 'video' : 'text');
   formData.append('privacy', primaryStory.privacy.toString());
   
-  // Collect all images, videos, and texts from stories
-  const images: File[] = [];
-  const videos: File[] = [];
-  const texts: string[] = [];
-  
-  // Process all stories to extract media files and texts
-  storiesData.forEach(story => {
-    if (story.type === 'text') {
-      texts.push(story.content.toString());
+  // Process all stories
+  const mediaFiles: { images: File[], videos: File[], thumbnails: File[] } = {
+    images: [],
+    videos: [],
+    thumbnails: []
+  };
+
+  // Process each story and collect media files
+  storiesData.forEach((story) => {
+    if (story.type === 'text' && typeof story.content === 'string') {
+      formData.append('text', story.content);
     } else if (story.content instanceof File) {
       // Check file size (1MB = 1024 * 1024 bytes)
       const maxSize = 1024 * 1024; // 1MB in bytes
@@ -56,26 +58,27 @@ export const uploadStory = async (storiesData: StoryData[]): Promise<UploadStory
       }
 
       if (story.type === 'photo') {
-        images.push(story.content);
+        mediaFiles.images.push(story.content);
       } else if (story.type === 'video') {
-        videos.push(story.content);
+        mediaFiles.videos.push(story.content);
+        if ('thumbnail' in story && story.thumbnail instanceof File) {
+          mediaFiles.thumbnails.push(story.thumbnail);
+        }
       }
     }
   });
-  
-  // Append all texts
-  texts.forEach(text => {
-    formData.append('text', text);
+
+  // Append all collected media files to FormData
+  mediaFiles.images.forEach((image) => {
+    formData.append('image', image);
   });
 
-  // Append all images
-  images.forEach(image => {
-    formData.append('image', image, image.name);
+  mediaFiles.videos.forEach((video) => {
+    formData.append('video', video);
   });
-  
-  // Append all videos
-  videos.forEach(video => {
-    formData.append('video', video, video.name);
+
+  mediaFiles.thumbnails.forEach((thumbnail) => {
+    formData.append('thumbnail', thumbnail);
   });
 
   // Make the API request
