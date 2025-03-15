@@ -82,7 +82,7 @@ export const loginUser = async (loginData: LoginRequest): Promise<LoginResponse>
   if (response.status === 200) {
     console.log(response.data);
     
-    if (response.data.token && response.data.userDetails?._id && response.data.userDetails.statusCode === 1) {
+    if (response.data.token && response.data.userDetails?._id && response.data.userDetails.statusCode !== 0) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userId', response.data.userDetails._id);
     }
