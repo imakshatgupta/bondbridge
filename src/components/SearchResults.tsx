@@ -4,14 +4,15 @@ import { Button } from "./ui/button";
 import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
 import { useState } from "react";
 import { toast } from "sonner";
-
+import { useNavigate } from "react-router-dom";
+  
 type Props = {
   person: Person;
 };
 
 const SearchResults = ({ person }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
-
+  const navigate = useNavigate();
   const handleSendFriendRequest = async () => {
     try {
       setIsLoading(true);
@@ -24,6 +25,9 @@ const SearchResults = ({ person }: Props) => {
     }
   };
 
+  const handleProfileClick = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
   return (
     <div
       key={person.id}
@@ -39,7 +43,7 @@ const SearchResults = ({ person }: Props) => {
         </div>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" className="text-primary border-primary cursor-pointer">
+        <Button variant="outline" className="text-primary border-primary cursor-pointer"  onClick={() => handleProfileClick(person.id)}>
           View Profile
         </Button>
         <Button 

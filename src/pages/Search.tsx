@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search as SearchIcon, Loader2 } from "lucide-react";
 import SearchResults from "@/components/SearchResults";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
 import { useApiCall } from "@/apis/globalCatchError";
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
-  const navigate = useNavigate();
+
 
   const [executeSearch, isLoading] = useApiCall(searchPeople);
 
@@ -36,9 +36,7 @@ export default function Search() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  const handleProfileClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
-  };
+
 
   return (
     <>
@@ -67,7 +65,7 @@ export default function Search() {
         {/* People List */}
         <div className="space-y-4">
           {people.map((person) => (
-            <div key={person.id} onClick={() => handleProfileClick(person.id)}>
+            <div key={person.id}>
               <SearchResults person={person} />
             </div>
           ))}
