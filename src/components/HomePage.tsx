@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import avatar from "@/assets/avatar.png";
 import StoryPage from "@/components/StoryPage";
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/index';
-import { setActiveChat } from '@/store/chatSlice';
+import { setActiveChat, ChatItem } from '@/store/chatSlice';
 import ChatList from './ChatList';
 import ChatInterface from './ChatInterface';
 import SidebarAvatar from '../profile/SidebarAvatar';
@@ -10,9 +10,15 @@ import { Button } from '../ui/button';
 const ChatPage: React.FC = () => {
   const dispatch = useDispatch();
   const activeChat = useSelector((state: RootState) => state.chat.activeChat);
+  const chats = useSelector((state: RootState) => state.chat.chats);
+  const isLoading = useSelector((state: RootState) => state.chat.isLoading);
 
   const handleCloseChat = () => {
     dispatch(setActiveChat(null));
+  };
+
+  const handleSelectChat = (chat: ChatItem) => {
+    dispatch(setActiveChat(chat));
   };
 
   return (
@@ -21,7 +27,11 @@ const ChatPage: React.FC = () => {
         <div className="p-4 border-b border-border">
           <h2 className="text-xl font-semibold">Messages</h2>
         </div>
-        <ChatList />
+        <ChatList 
+          chats={chats} 
+          isLoading={isLoading} 
+          onSelectChat={handleSelectChat} 
+        />
       </div>
       
       {activeChat ? (
@@ -50,12 +60,12 @@ const ChatPage: React.FC = () => {
           <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
             <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">People</h3>
             <ul className="space-y-3">
-              <SidebarAvatar/>
-              <SidebarAvatar/>
-              <SidebarAvatar/>
-              <SidebarAvatar/>
-              <SidebarAvatar/>
-              <SidebarAvatar/>
+              <SidebarAvatar id="user1" username="John Doe" avatarSrc="/profile/avatars/1.png" />
+              <SidebarAvatar id="user2" username="Jane Smith" avatarSrc="/profile/avatars/2.png" />
+              <SidebarAvatar id="user3" username="Alex Johnson" avatarSrc="/profile/avatars/3.png" />
+              <SidebarAvatar id="user4" username="Sam Wilson" avatarSrc="/profile/avatars/4.png" />
+              <SidebarAvatar id="user5" username="Taylor Swift" avatarSrc="/profile/avatars/5.png" />
+              <SidebarAvatar id="user6" username="Chris Evans" avatarSrc="/profile/avatars/6.png" />
             </ul>
           </div>
         </div>

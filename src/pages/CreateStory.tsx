@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
-import { Trash2, Plus, Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { useNavigate } from 'react-router-dom';

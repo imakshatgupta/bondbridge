@@ -13,10 +13,10 @@ interface GroupInfo {
   description: string;
 }
 
-interface GroupSkills {
-  skills: string[];
-  interests: string[];
-}
+// interface GroupSkills {
+//   skills: string[];
+//   interests: string[];
+// }
 
 const tabs = [
   { id: "info", label: "Group Information" },
@@ -34,10 +34,10 @@ const CreateGroup: React.FC = () => {
     name: "",
     description: "",
   });
-  const [groupSkills, setGroupSkills] = useState<GroupSkills>({
-    skills: [],
-    interests: [],
-  });
+  // const [groupSkills, setGroupSkills] = useState<GroupSkills>({
+  //   skills: [],
+  //   interests: [],
+  // });
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
     []
   );
@@ -109,14 +109,14 @@ const CreateGroup: React.FC = () => {
       )}
       {currentTab === "skills" && (
         <SkillsInterestsTab
-          skills={groupSkills.skills}
-          interests={groupSkills.interests}
-          onSkillsChange={(skills: string[]) =>
-            setGroupSkills((prev) => ({ ...prev, skills }))
-          }
-          onInterestsChange={(interests: string[]) =>
-            setGroupSkills((prev) => ({ ...prev, interests }))
-          }
+          // skills={groupSkills.skills}
+          // interests={groupSkills.interests}
+          // onSkillsChange={(skills: string[]) =>
+          //   setGroupSkills((prev) => ({ ...prev, skills }))
+          // }
+          // onInterestsChange={(interests: string[]) =>
+          //   setGroupSkills((prev) => ({ ...prev, interests }))
+          // }
         />
       )}
       {currentTab === "friends" && (
