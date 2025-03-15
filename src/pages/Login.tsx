@@ -8,21 +8,18 @@ import "react-intl-tel-input/dist/main.css";
 import { loginUser } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { LoginResponse } from "../apis/apiTypes/response";
-import { useAppDispatch } from "@/store";
-import { updateCurrentUser } from "@/store/currentUserSlice";
-import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { LoginResponse } from '../apis/apiTypes/response';
 
 const Login: React.FC = () => {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode, setCountryCode] = useState("+1"); 
-  const [, setIsValidPhone] = useState(false);
-  const [password, setPassword] = useState("");
-  const phoneInputRef = useRef(null);
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [countryCode, setCountryCode] = useState('+1'); // Default to India (+1)
+    const [, setIsValidPhone] = useState(false);
+    const [password, setPassword] = useState('');
+    const phoneInputRef = useRef(null);
+    const navigate = useNavigate();
+
 
   // Use our custom hook for API calls
   const [executeLogin, isLoggingIn] = useApiCall(loginUser);
@@ -38,10 +35,57 @@ const Login: React.FC = () => {
           "width: 100% !important; height: 40px !important;"
         );
 
-        // Fix flag container height
-        const flagContainer = container.querySelector(".flag-container");
-        if (flagContainer) {
-          flagContainer.setAttribute("style", "height: 100% !important;");
+                // Fix flag container height
+                const flagContainer = container.querySelector('.flag-container');
+                if (flagContainer) {
+                    flagContainer.setAttribute('style', 'height: 100% !important;');
+                }
+
+                // Fix selected flag height
+                const selectedFlag = container.querySelector('.selected-flag');
+                if (selectedFlag) {
+                    selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
+                }
+
+                // Fix input height
+                const input = container.querySelector('input');
+                if (input) {
+                    input.setAttribute('style', 'height: 40px !important;');
+                }
+            }
+        };
+
+        // Run initially and after a small delay to ensure component is rendered
+        fixPhoneInputStyles();
+        const timeoutId = setTimeout(fixPhoneInputStyles, 100);
+
+        return () => clearTimeout(timeoutId);
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const validCountryCode = "+" + countryCode;
+
+        const result = await executeLogin({
+            phoneNumber,
+            countryCode: validCountryCode,
+            password
+        });
+
+        console.log("result", result);
+
+        if (result.success && result.data) {
+            const data = result.data as LoginResponse;
+            // commenting because link will change to /home so it will call the api automatically there
+            // const userData = await fetchUserProfile(data.userDetails._id, data.userDetails._id);
+            // if (userData.success) {
+            //   dispatch(setCurrentUser(userData.data));
+            // }
+            
+            if (data.userDetails.statusCode != 0) {
+                navigate('/');
+            }
         }
 
         // Fix selected flag height

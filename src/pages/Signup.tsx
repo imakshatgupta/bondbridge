@@ -8,9 +8,6 @@ import "react-intl-tel-input/dist/main.css";
 import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
-import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
-import { updateCurrentUser } from "@/store/currentUserSlice";
-import { useAppDispatch } from "@/store";
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
@@ -19,7 +16,6 @@ const Signup: React.FC = () => {
   const [, setIsValidPhone] = useState(false);
   const navigate = useNavigate();
   const phoneInputRef = useRef(null);
-  const dispatch = useAppDispatch();
 
   // Use our custom hooks for API calls
   const [executeSendOTP, isSendingOTP] = useApiCall(sendOTP);
@@ -124,13 +120,11 @@ const Signup: React.FC = () => {
     });
 
     if (result.success && result.data) {
-      const userData = await fetchUserProfile(
-        result.data?.userDetails._id,
-        result.data?.userDetails._id
-      );
-      if (userData.success) {
-        dispatch(updateCurrentUser(userData.data));
-      }
+      // commenting because link will change to /home so it will call the api automatically there
+      // const userData = await fetchUserProfile(result.data?.userDetails._id, result.data?.userDetails._id);
+      // if (userData.success) {
+      //   dispatch(updateCurrentUser(userData.data));
+      // }
       navigate("/setup-profile");
     }
   };
