@@ -28,7 +28,7 @@ const AVAILABLE_AVATARS = [
 
 const EditProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { username, email, avatar, interests } = useAppSelector((state) => state.settings);
+  const { username, email, avatar, interests, privacyLevel } = useAppSelector((state) => state.settings);
   
   const [formData, setFormData] = useState({
     username,
@@ -73,7 +73,7 @@ const EditProfilePage: React.FC = () => {
       name: formData.username,
       email: formData.email,
       interests: selectedInterests,
-      privacyLevel: 1, // Set privacyLevel to 1 as requested
+      privacyLevel: privacyLevel ?? 0, // Provide default value of 0 if privacyLevel is undefined
       avatar: selectedAvatar
     };
     
@@ -90,6 +90,7 @@ const EditProfilePage: React.FC = () => {
         username: formData.username,
         email: formData.email,
         avatar: selectedAvatar,
+        privacyLevel: privacyLevel ?? 0, // Provide default value of 0 if privacyLevel is undefined
       }));
       dispatch(updateInterests(selectedInterests));
       

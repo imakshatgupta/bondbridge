@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 interface Post {
   id: number;
   imageSrc: string;
@@ -8,10 +10,14 @@ interface AllPostsProps {
 }
 
 const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="grid grid-cols-3 gap-1">
       {posts.map(post => (
-        <div key={post.id} className="aspect-square overflow-hidden">
+        <div key={post.id} className="aspect-square overflow-hidden" onClick={() => {
+          navigate(`/comments/${post.id}`, { state: { post } });
+        }}>
           <img src={post.imageSrc} alt="" className="w-full h-full object-cover" />
         </div>
       ))}

@@ -31,10 +31,12 @@ const Settings = () => {
           const result = await fetchUserProfile(currentUserId, currentUserId);
           if (result.success && result.data) {
             // Update Redux store with actual user data
+            console.log("res: ",result.data);
             dispatch(updateProfile({
               username: result.data.username,
               email: result.data.email,
-              avatar: result.data.avatarSrc
+              avatar: result.data.avatarSrc,
+              privacyLevel: result.data.privacyLevel
             }));
           }
         }

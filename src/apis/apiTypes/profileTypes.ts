@@ -6,6 +6,7 @@ export interface UserProfileData {
   following: number;
   avatarSrc: string;
   isCurrentUser?: boolean;
+  privacyLevel?: number;
 }
 
 export interface UserPostsResponse {

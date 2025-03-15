@@ -7,8 +7,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AllPosts from "@/components/AllPosts";
 import { useEffect, useState } from "react";
 import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
+import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
 import { fetchChatRooms } from "@/apis/commonApiCalls/activityApi";
 import { useAppDispatch } from "@/store";
@@ -43,6 +46,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
+  const [executeSendFriendRequest, isSendingFriendRequest] = useApiCall(sendFriendRequest);
   const [executeStartMessage] = useApiCall(startMessage);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
 
@@ -51,12 +55,33 @@ const Profile: React.FC<ProfileProps> = ({
       const result = await executePostsFetch(userId, isCurrentUser);
       if (result.success && result.data) {
         setPosts(result.data.posts);
+        console.log("posts", result.data.posts);
       }
     };
 
     loadPosts();
   }, [userId]);
 
+  const handleSendFriendRequest = async () => {
+    try {
+      console.log("aksh user id", userId);
+      const result = await executeSendFriendRequest({ userId: userId });
+      if (result.success && result.data) {
+        toast.success("Friend request sent successfully!");
+      } else {
+        toast.error(result.data?.message || "Failed to send friend request");
+      }
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+      toast.error("An error occurred while sending friend request");
+    }
+  };
+
+  const audios = [
+    { id: 1, title: "Nature sounds", duration: "2:34" },
+    { id: 2, title: "Morning birds", duration: "1:45" },
+    { id: 3, title: "Ocean waves", duration: "3:21" },
+  ];
   const handleStartConversation = async () => {
     try {
       setIsMessageLoading(true);
@@ -114,6 +139,7 @@ const Profile: React.FC<ProfileProps> = ({
 
   return (
     <div className="mx-auto bg-background">
+      <Toaster />
       {/* Header */}
       <div className="flex items-center justify-between p-4 pt-0">
         <button onClick={() => navigate(-1)} className="p-1">
@@ -182,7 +208,16 @@ const Profile: React.FC<ProfileProps> = ({
                 "Message"
               )}
             </Button>
-            <Button className="flex-1 cursor-pointer">Add Friend</Button>
+            <Button 
+              className="flex-1 cursor-pointer" 
+              onClick={handleSendFriendRequest}
+              disabled={isSendingFriendRequest}
+            >
+              {isSendingFriendRequest ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : null}
+              Add Friend
+            </Button>
           </div>
         )}
       </div>
@@ -211,7 +246,7 @@ const Profile: React.FC<ProfileProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <AllPosts posts={posts} />
+            <AllPosts posts={posts}/>
           )}
         </TabsContent>
 

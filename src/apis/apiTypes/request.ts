@@ -88,7 +88,7 @@ export interface NotificationsRequest {
 }
 
 export interface SendFriendRequestRequest {
-  userId: number;
+  userId: string;
 }
 export interface FollowRequestsRequest {
   page: number;
