@@ -25,7 +25,7 @@ export default function CommentsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [pendingComment, setPendingComment] = useState<string | null>(null);
+  const [, setPendingComment] = useState<string | null>(null);
   
   // Use our custom hook for API calls
   const [executeFetchComments, isLoading] = useApiCall(fetchComments);
@@ -155,9 +155,11 @@ export default function CommentsPage() {
       toast.error("Failed to post comment. Please try again.");
     } else {
       // API call succeeded, update the temporary comment with the real data if available
-      if (result.data && result.data.cmment) {
+      if (result.data && result.data.comment) {
         // If the API returns the actual comment data, update the temporary comment
-        const realCommentData = result.data.cmment as any; // Type assertion to avoid property access errors
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const realCommentData = result.data.comment as any; // Type assertion to avoid property access errors
         setCommentsData(prevComments => 
           prevComments.map(comment => 
             comment.commentId === tempCommentId 

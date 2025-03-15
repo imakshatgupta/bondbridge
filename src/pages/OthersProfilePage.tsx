@@ -4,6 +4,7 @@ import avatar from "/profile/user.png";
 export default function OthersProfilePage() {
   // Mock data for demonstration
   const userData = {
+    userId: "user123", // Add a userId for the profile
     username: "Others Profile",
     email: "",  // We might not show email for other profiles
     followers: 20034,
@@ -14,6 +15,7 @@ export default function OthersProfilePage() {
 
   return (
     <Profile 
+      userId={userData.userId}
       username={userData.username}
       email={userData.email}
       followers={userData.followers}

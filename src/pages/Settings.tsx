@@ -14,7 +14,7 @@ const Settings = () => {
   const dispatch = useAppDispatch();
   
   // Get user data from Redux store
-  const { username, email, avatar, interests } = useAppSelector((state) => state.settings);
+  const { username, email, avatar } = useAppSelector((state) => state.settings);
 
   const handleSettingsClick = (page: SettingPage) => {
     dispatch(setSettingsActive(true));
