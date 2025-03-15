@@ -24,6 +24,7 @@ interface SettingsState {
   selectedVoice: string;
   voiceOptions: VoiceOption[];
   blockedUsers: BlockedUser[];
+  privacyLevel?: number;
   privacySettings: {
     isProfilePublic: boolean;
     showOnlineStatus: boolean;
@@ -39,6 +40,7 @@ const initialState: SettingsState = {
   avatar: '/profile/avatars/1.png',
   interests: ['Design', 'Photography', 'Travel', 'Music'],
   selectedVoice: 'voice1',
+  privacyLevel: 0,
   voiceOptions: [
     { id: 'voice1', name: 'Default Voice', preview: '/audio/sample.mp3' },
     { id: 'voice2', name: 'Deep Voice', preview: '/audio/sample.mp3' },
@@ -68,7 +70,7 @@ const settingsSlice = createSlice({
     setActivePage: (state, action: PayloadAction<SettingPage>) => {
       state.activePage = action.payload;
     },
-    updateProfile: (state, action: PayloadAction<{username?: string; email?: string; avatar?: string}>) => {
+    updateProfile: (state, action: PayloadAction<{username?: string; email?: string; avatar?: string; privacyLevel?: number}>) => {
       Object.assign(state, action.payload);
     },
     updateInterests: (state, action: PayloadAction<string[]>) => {

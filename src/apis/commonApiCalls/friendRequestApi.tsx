@@ -105,16 +105,10 @@ export const sendFriendRequest = async (requestData: SendFriendRequestRequest): 
     throw new Error('User ID is required');
   }
   
-  const formData = new FormData();
-  formData.append('userId', userId.toString());
-  
   const response = await apiClient.post<SendFriendRequestResponse>(
     `/sendRequest`,
-    formData,
     {
-      headers: {
-        'Cache-Control': 'no-cache',
-      }
+      sentTo: userId,
     }
   );
   

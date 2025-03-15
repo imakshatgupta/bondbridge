@@ -27,7 +27,8 @@ export const fetchUserProfile = async (
       followers: userData.followers || 0,
       following: userData.followings || 0,
       avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
-      isCurrentUser
+      isCurrentUser,
+      privacyLevel: userData.privacyLevel || 0,
     },
   };
 };

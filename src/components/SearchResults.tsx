@@ -1,12 +1,29 @@
 import { Person } from "@/apis/apiTypes/response";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type Props = {
   person: Person;
 };
 
 const SearchResults = ({ person }: Props) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSendFriendRequest = async () => {
+    try {
+      setIsLoading(true);
+      await sendFriendRequest({ userId: person.id });
+      toast.success(`Friend request sent to ${person.name}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to send friend request");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       key={person.id}
@@ -25,7 +42,13 @@ const SearchResults = ({ person }: Props) => {
         <Button variant="outline" className="text-primary border-primary cursor-pointer">
           View Profile
         </Button>
-        <Button className="bg-primary hover:bg-primary/90 cursor-pointer">Follow</Button>
+        <Button 
+          className="bg-primary hover:bg-primary/90 cursor-pointer"
+          onClick={handleSendFriendRequest}
+          disabled={isLoading}
+        >
+          {isLoading ? "Sending..." : "Follow"}
+        </Button>
       </div>
     </div>
   );

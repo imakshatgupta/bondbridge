@@ -68,6 +68,8 @@ export interface RejectFriendRequestRequest {
 }
 
 export interface FetchFriendRequestsRequest {
+  page?: number;
+  limit?: number;
 }
 
 export interface SetPasswordRequest {
@@ -86,7 +88,7 @@ export interface NotificationsRequest {
 }
 
 export interface SendFriendRequestRequest {
-  userId: number;
+  userId: string;
 }
 export interface FollowRequestsRequest {
   page: number;
