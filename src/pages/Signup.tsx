@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {  Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import OTPForm from "../components/auth/OTPForm";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +58,7 @@ const Signup: React.FC = () => {
 
   interface CountryData {
     dialCode?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   }
 
@@ -112,7 +113,14 @@ const Signup: React.FC = () => {
       countryCode: validCountryCode
     });
     
+
+    
     if (result.success && result.data) {
+      // commenting because link will change to /home so it will call the api automatically there
+      // const userData = await fetchUserProfile(result.data?.userDetails._id, result.data?.userDetails._id);
+      // if (userData.success) {
+      //   dispatch(updateCurrentUser(userData.data));
+      // }
       navigate("/setup-profile");
     }
   };
