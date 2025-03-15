@@ -9,10 +9,14 @@ import {
   fetchFollowRequests,
 } from "@/apis/commonApiCalls/notificationsApi";
 import { useApiCall } from "@/apis/globalCatchError";
+import { NotificationsListSkeleton } from "@/components/skeletons/NotificationSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Bell, UserPlus, AlertCircle } from "lucide-react";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<NotificationType[]>([]);
   const [friendRequests, setFriendRequests] = useState<FollowRequest[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const [executeNotificationsFetch, isLoadingNotifications] =
     useApiCall(fetchNotifications);
@@ -32,19 +36,27 @@ const Notifications = () => {
   };
 
   const loadData = async () => {
-    // Fetch notifications
-    const notificationsResult = await executeNotificationsFetch();
-    if (notificationsResult.success && notificationsResult.data?.success) {
-      setNotifications(notificationsResult.data.notifications);
-    }
+    try {
+      // Fetch notifications
+      const notificationsResult = await executeNotificationsFetch();
+      if (notificationsResult.success && notificationsResult.data?.success) {
+        setNotifications(notificationsResult.data.notifications);
+        setError(null);
+      } else {
+        setError(notificationsResult.data?.message || "Failed to load notifications");
+      }
 
-    // Fetch follow requests with pagination
-    const followRequestsResult = await executeFollowRequestsFetch({
-      page: 1,
-      limit: 10,
-    });
-    if (followRequestsResult.success && followRequestsResult.data) {
-      setFriendRequests(followRequestsResult.data.result || []);
+      // Fetch follow requests with pagination
+      const followRequestsResult = await executeFollowRequestsFetch({
+        page: 1,
+        limit: 10,
+      });
+      if (followRequestsResult.success && followRequestsResult.data) {
+        setFriendRequests(followRequestsResult.data.result || []);
+      }
+    } catch (err) {
+      console.log("err: ", err);
+      setError("An error occurred while loading notifications");
     }
   };
 
@@ -68,14 +80,25 @@ const Notifications = () => {
     }
   };
 
+  const handleRefresh = () => {
+    loadData();
+  };
+
   return (
     <div className="w-full">
       <h1 className="text-4xl font-semibold mb-5">Notifications</h1>
 
       {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
+        <NotificationsListSkeleton />
+      ) : error ? (
+        <EmptyState
+          icon={AlertCircle}
+          title="Couldn't load notifications"
+          description={error}
+          actionLabel="Try Again"
+          onAction={handleRefresh}
+          className="my-8"
+        />
       ) : (
         <Tabs defaultValue="notifications" className="">
           <TabsList className="grid grid-cols-2">
@@ -101,9 +124,12 @@ const Notifications = () => {
                   />
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-4">
-                  No notifications to show
-                </p>
+                <EmptyState
+                  icon={Bell}
+                  title="No notifications"
+                  description="You don't have any notifications yet. We'll notify you when something happens."
+                  className="my-8"
+                />
               )}
             </div>
           </TabsContent>
@@ -119,9 +145,12 @@ const Notifications = () => {
                   />
                 ))
               ) : (
-                <p className="text-center text-gray-500 py-4">
-                  No friend requests to show
-                </p>
+                <EmptyState
+                  icon={UserPlus}
+                  title="No friend requests"
+                  description="You don't have any friend requests at the moment."
+                  className="my-8"
+                />
               )}
             </div>
           </TabsContent>
