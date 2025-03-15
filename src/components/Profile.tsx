@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,12 @@ const Profile: React.FC<ProfileProps> = ({
 }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
+  console.log("fetching posts");
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
 
   useEffect(() => {
     const loadPosts = async () => {
-      const result = await executePostsFetch(userId);
+      const result = await executePostsFetch(userId,isCurrentUser);
       if (result.success && result.data) {
         setPosts(result.data.posts);
       }
@@ -105,21 +106,18 @@ const Profile: React.FC<ProfileProps> = ({
             <div className="text-sm text-muted-foreground">following</div>
           </div>
           {isCurrentUser && (
-            <button 
-              className="p-2 rounded-full border h-fit"
-              onClick={() => navigate('/settings')}
-            >
+            <Link to="/settings" className="p-2 rounded-full border h-fit">
               <Settings size={20} />
-            </button>
+            </Link>
           )}
         </div>
 
         {!isCurrentUser && (
           <div className="flex gap-2 w-full max-w-[200px]">
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1 cursor-pointer">
               Message
             </Button>
-            <Button className="flex-1">Add Friend</Button>
+            <Button className="flex-1 cursor-pointer">Add Friend</Button>
           </div>
         )}
       </div>

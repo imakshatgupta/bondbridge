@@ -1,57 +1,95 @@
-import mockUserData from "@/constants/users";
-import mockPosts from "@/constants/posts";
 import {
   FetchUserProfileResponse,
   UserPostsResponse,
 } from "../apiTypes/profileTypes";
+import { UpdateProfileResponse } from "../apiTypes/response";
+import apiClient, { formDataApiClient } from '../apiClient';
+import { UpdateProfileRequest } from "../apiTypes/request";
 
 export const fetchUserProfile = async (
   userId: string,
   currentUserId: string
 ): Promise<FetchUserProfileResponse> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  const response = await apiClient.get('/showProfile', {
+    params: {
+      'other': userId,
+    }
+  });
 
-  const user = mockUserData[userId as keyof typeof mockUserData] || {
-    username: "Unknown User",
-    email: "",
-    bio: "User not found",
-    followers: 0,
-    following: 0,
-    avatarSrc: "/profile/user.png",
-  };
-
+  const userData = response.data.result[0];
   const isCurrentUser = currentUserId === userId;
 
   return {
     success: true,
     data: {
-      ...user,
-      email: isCurrentUser ? user.email : "", // Only show email for current user
-      isCurrentUser,
+      username: userData.name,
+      email: isCurrentUser ? userData.email : "",
+      followers: userData.followers || 0,
+      following: userData.followings || 0,
+      avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
+      isCurrentUser
     },
   };
 };
 
 export const fetchUserPosts = async (
-  userId: string
+  userId: string,
+  isCurrentUser: boolean
 ): Promise<UserPostsResponse> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const params = isCurrentUser ? {} : { 'userId': userId };
+  const response = await apiClient.get('/get-posts', { params });
 
-  // Filter posts for the current user from mock data
-  const userPosts = Object.values(mockPosts)
-    .filter((post) => post.userId === userId)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .map((post) => ({
-      id: parseInt(post.id),
-      imageSrc: post.imageUrl,
-    }));
+  const posts = response.data.posts.map((post: any) => ({
+    id: post._id,
+    imageSrc: post.data.media[0]?.url || '',
+    content: post.data.content,
+    createdAt: post.createdAt,
+    author: {
+      name: post.name,
+      profilePic: post.profilePic
+    },
+    stats: {
+      commentCount: post.commentCount,
+      reactionCount: post.reactionCount,
+      hasReacted: post.reaction.hasReacted,
+      reactionType: post.reaction.reactionType
+    }
+  }));
 
   return {
-    posts: userPosts,
+    posts,
+  };
+};
+
+export const updateUserProfile = async (
+  profileData: UpdateProfileRequest
+): Promise<UpdateProfileResponse> => {
+  // Create FormData object
+  const formDataObj = new FormData();
+  
+  // Append form data
+  formDataObj.append('name', profileData.name);
+  formDataObj.append('email', profileData.email);
+  formDataObj.append('interests', JSON.stringify(profileData.interests));
+  formDataObj.append('privacyLevel', profileData.privacyLevel.toString());
+  
+  // Handle avatar - could be a string URL or a File
+  if (profileData.avatar) {
+    if (typeof profileData.avatar === 'string' && profileData.avatar.startsWith('/')) {
+      // For pre-defined avatars, just send the path
+      formDataObj.append('avatar', profileData.avatar);
+    } else if (profileData.avatar instanceof File) {
+      // For file uploads
+      formDataObj.append('avatar', profileData.avatar);
+    }
+  }
+  
+  // Make the API call
+  const response = await formDataApiClient.put('/edit-profile', formDataObj);
+  
+  return {
+    success: response.status === 200,
+    message: response.data.message || 'Profile updated successfully',
+    user: response.data.user
   };
 };

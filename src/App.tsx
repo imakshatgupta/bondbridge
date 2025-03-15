@@ -26,7 +26,7 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <SocketProvider>
-        <Router>
+      <Router>
           <Routes>
             <Route
               path="/login"
@@ -101,7 +101,7 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/profile/:username"
+              path="/profile/:userId"
               element={
                 <Layout showSidebars={true}>
                   <ProfilePage />

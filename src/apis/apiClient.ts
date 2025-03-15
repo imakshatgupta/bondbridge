@@ -3,7 +3,7 @@ import { GET_AUTH_HEADERS } from '@/lib/constants';
 
 // Create an Axios instance
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://18.144.2.16/api',
   timeout: 10000, // Adjust timeout as needed
   headers: {
     'Content-Type': 'application/json',
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
 
 // For multipart form data requests
 export const formDataApiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://18.144.2.16/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'multipart/form-data',
