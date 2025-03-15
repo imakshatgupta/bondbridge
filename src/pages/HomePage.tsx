@@ -35,7 +35,25 @@ export default function HomePage() {
         const { postsData, storiesData } = result.data as HomepageResponse;
         
         setPosts(postsData.posts);
-        setStories(storiesData.stories);
+        
+        // Sort stories to show users with unseen stories first
+        const sortedStories = [...storiesData.stories].sort((a, b) => {
+          // Check if user A has any unseen stories
+          const aHasUnseenStories = a.stories.some(story => story.seen === 0);
+          // Check if user B has any unseen stories
+          const bHasUnseenStories = b.stories.some(story => story.seen === 0);
+          
+          if (aHasUnseenStories && !bHasUnseenStories) {
+            return -1; // A comes first
+          } else if (!aHasUnseenStories && bHasUnseenStories) {
+            return 1; // B comes first
+          } else {
+            // If both have the same seen status, sort by latest story time
+            return b.latestStoryTime - a.latestStoryTime;
+          }
+        });
+        
+        setStories(sortedStories);
         setHasMore(postsData.hasMore || false);
       } else {
         setError(result.data?.message || 'Failed to load homepage data');
