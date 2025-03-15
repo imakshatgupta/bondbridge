@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Grid, { GridContentPanel } from "@/components/grid";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 interface Tab {
   id: string;
@@ -15,10 +17,12 @@ interface TabPageLayoutProps {
   onNext: () => void;
   onBack: () => void;
   children: React.ReactNode;
-  decorativeImages?: {
-    clipboard?: string;
-    deco1?: string;
-    deco2?: string;
+  nextButtonText?: string;
+  isNextLoading?: boolean;
+  decorativeImages: {
+    clipboard: string;
+    deco1: string;
+    deco2: string;
   };
 }
 
@@ -29,6 +33,8 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
   onNext,
   onBack,
   children,
+  nextButtonText = "Next",
+  isNextLoading = false,
   decorativeImages,
 }) => {
   return (
@@ -44,7 +50,9 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
               to={`#${tab.id}`}
               className={cn(
                 "block py-2 text-lg",
-                currentTab === tab.id ? "font-semibold text-foreground text-xl" : "text-muted-foreground"
+                currentTab === tab.id
+                  ? "font-semibold text-foreground text-xl"
+                  : "text-muted-foreground"
               )}
             >
               {tab.label}
@@ -60,43 +68,16 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
           {children}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            <button
-              onClick={onBack}
-              className="flex items-center justify-center rounded-full w-10 h-10 border border-input text-muted-foreground hover:bg-accent"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-
-            <button
-              onClick={onNext}
-              className="flex items-center justify-center space-x-1 rounded-full px-5 py-2 bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <span>Next</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+          <div className="flex justify-between mt-6">
+            <Button variant="outline" onClick={onBack}>
+              Back
+            </Button>
+            <Button onClick={onNext} disabled={isNextLoading}>
+              {isNextLoading && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {nextButtonText}
+            </Button>
           </div>
         </GridContentPanel>
 
@@ -136,4 +117,4 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
   );
 };
 
-export default TabPageLayout; 
+export default TabPageLayout;

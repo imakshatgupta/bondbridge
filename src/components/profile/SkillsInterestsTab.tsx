@@ -1,14 +1,11 @@
-import React from 'react';
-import {
-  addSkill,
-  removeSkill
-} from '../../store/createGroupSlice';
-import { useAppDispatch, useAppSelector } from '../../store';
+import React from "react";
+import { addSkill, removeSkill } from "../../store/createProfileSlice";
+import { useAppDispatch, useAppSelector } from "../../store";
 
 const SkillsInterestsTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const { skillSelected, skillsAvailable } = useAppSelector(
-    (state) => state.createGroup
+    (state) => state.createProfile
   );
 
   const handleAddSkill = (skill: string) => {
@@ -18,6 +15,10 @@ const SkillsInterestsTab: React.FC = () => {
   const handleRemoveSkill = (skill: string) => {
     dispatch(removeSkill(skill));
   };
+
+  // useEffect(() => {
+  //   console.log("Selected Skills:", skillSelected);
+  // }, [skillSelected]);
 
   return (
     <div className="space-y-6">
@@ -32,7 +33,7 @@ const SkillsInterestsTab: React.FC = () => {
           </button>
         ))}
       </div>
-  
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {skillsAvailable.map((skill) => (
           <button

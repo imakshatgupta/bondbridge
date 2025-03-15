@@ -1,63 +1,65 @@
-import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { CommunityL } from '@/types/activity';
 
-const communities: CommunityL[] = [
-  {
-    id: 1,
-    name: 'Tech Enthusiasts',
-    image: '/profile/community/pubg.png',
-    members: 2450,
-    joined: true
-  },
-  {
-    id: 2,
-    name: 'Creative Arts',
-    image: '/profile/community/pubg.png',
-    members: 1820,
-    joined: false
-  },
-  {
-    id: 3,
-    name: 'Fitness & Health',
-    image: '/profile/community/pubg.png',
-    members: 3100,
-    joined: false
+import { ChatItem } from "@/store/chatSlice";
+import { useAppDispatch } from "../../store";
+import { setActiveChat } from "../../store/chatSlice";
+
+interface CommunityListProps {
+  communities: ChatItem[];
+  isLoading: boolean;
+  onSelectCommunity: (community: ChatItem) => void;
+}
+
+const CommunityList = ({
+  communities,
+  isLoading,
+  onSelectCommunity,
+}: CommunityListProps) => {
+  const dispatch = useAppDispatch();
+
+  const handleCommunitySelect = (community: ChatItem) => {
+    dispatch(setActiveChat(community));
+    onSelectCommunity(community);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center p-4">Loading communities...</div>
+    );
   }
-];
 
-const CommunityList: React.FC = () => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       {communities.map((community) => (
-        <div 
-          key={community.id} 
+        <div
+          key={community.id}
           className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer"
+          onClick={() => handleCommunitySelect(community)}
         >
           <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12 rounded-lg">
-              <AvatarImage src={community.image} alt={community.name} className="object-cover" />
-              <AvatarFallback className="rounded-lg">{community.name[0]}</AvatarFallback>
-            </Avatar>
+            <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
+              <img
+                src={community.avatar || "/placeholder.png"}
+                alt={community.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div>
               <h3 className="font-medium">{community.name}</h3>
-              <p className="text-sm text-muted-foreground">{community.members.toLocaleString()} members</p>
+              <p className="text-sm text-muted-foreground">
+                {community.lastMessage}
+              </p>
             </div>
           </div>
-          <Button 
-            variant={community.joined ? "outline" : "default"}
-            className={community.joined ? "border-primary text-primary" : ""}
-          >
-            {community.joined ? 'Joined' : 'Join'}
-          </Button>
+          <span className="text-xs text-muted-foreground">
+            {community.timestamp}
+          </span>
         </div>
       ))}
     </div>
   );
 };
 
-export default CommunityList; 
+export default CommunityList;
 
 // import React, { useEffect, useState } from 'react';
 // import axios from 'axios';
@@ -104,8 +106,8 @@ export default CommunityList;
 //   return (
 //     <div className="space-y-4">
 //       {communities.map((community) => (
-//         <div 
-//           key={community.id} 
+//         <div
+//           key={community.id}
 //           className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer"
 //         >
 //           <div className="flex items-center gap-3">
@@ -118,7 +120,7 @@ export default CommunityList;
 //               <p className="text-sm text-muted-foreground">{community.members.toLocaleString()} members</p>
 //             </div>
 //           </div>
-//           <Button 
+//           <Button
 //             variant={community.joined ? "outline" : "default"}
 //             className={community.joined ? "border-primary text-primary" : ""}
 //             onClick={() => handleJoinToggle(community.id, community.joined)}

@@ -14,7 +14,7 @@ import { LoginResponse } from '../apis/apiTypes/response';
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [countryCode, setCountryCode] = useState('11'); // Default to India (+1)
+    const [countryCode, setCountryCode] = useState('+1'); // Default to India (+1)
     const [, setIsValidPhone] = useState(false);
     const [password, setPassword] = useState('');
     const phoneInputRef = useRef(null);
@@ -73,6 +73,9 @@ const Login: React.FC = () => {
             const data = result.data as LoginResponse;
             
             if (data.userDetails.statusCode == 1) {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('socketToken', data.socketToken);
+                console.log("user from login: ", data.userDetails._id);
                 navigate('/');
             }
         }
