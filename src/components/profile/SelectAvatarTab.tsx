@@ -3,6 +3,7 @@ import { useAppSelector, useAppDispatch } from '@/store';
 import { setAvatar } from '@/store/createProfileSlice';
 import { useApiCall } from '@/apis/globalCatchError';
 import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AvatarData {
   url: string;
@@ -12,6 +13,8 @@ interface AvatarData {
 const SelectAvatarTab: React.FC = () => {
   const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);
   const [femaleAvatars, setFemaleAvatars] = useState<AvatarData[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("female");
+  
   const { avatar } = useAppSelector(state => state.createProfile);
   const dispatch = useAppDispatch();
 
@@ -40,9 +43,11 @@ const SelectAvatarTab: React.FC = () => {
         
         // If no avatar is selected yet but we have avatars, select the first one
         if (!avatar) {
-          const firstAvatar = male?.[0]?.url || female?.[0]?.url;
+          const firstAvatar = female?.[0]?.url || male?.[0]?.url;
           if (firstAvatar) {
             handleAvatarSelect(firstAvatar);
+            // Set active tab based on which avatar type is available
+            setActiveTab(female?.length > 0 ? "female" : "male");
           }
         }
       }
@@ -60,6 +65,38 @@ const SelectAvatarTab: React.FC = () => {
   // Use isLoadingAvatars instead of the local loading state
   const loading = isLoadingAvatars;
 
+  // Render avatar grid
+  const renderAvatarGrid = (avatars: AvatarData[], type: string) => {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {avatars.map((avatarItem, index) => (
+          <div 
+            key={`${type}-${index}`}
+            className={`relative cursor-pointer rounded-lg border-2 ${
+              avatar === avatarItem.url 
+                ? 'border-primary bg-muted' 
+                : 'border-input hover:border-ring'
+            }`}
+            onClick={() => handleAvatarSelect(avatarItem.url)}
+          >
+            <img 
+              src={avatarItem.url} 
+              alt={`${type} Avatar ${index + 1}`}
+              className="h-full w-full mx-auto object-cover rounded-lg"
+            />
+            {avatar === avatarItem.url && (
+              <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">Choose an avatar that represents you</p>
@@ -69,78 +106,30 @@ const SelectAvatarTab: React.FC = () => {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
         </div>
       ) : (
-        <>
-          {/* Female Avatars Section */}
-          {femaleAvatars.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Female Avatars</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {femaleAvatars.map((avatarItem, index) => (
-                  <div 
-                    key={`female-${index}`}
-                    className={`relative cursor-pointer rounded-lg border-2 ${
-                      avatar === avatarItem.url 
-                        ? 'border-primary bg-muted' 
-                        : 'border-input hover:border-ring'
-                    }`}
-                    onClick={() => handleAvatarSelect(avatarItem.url)}
-                  >
-                    <img 
-                      src={avatarItem.url} 
-                      alt={`Female Avatar ${index + 1}`}
-                      className="h-full w-full mx-auto object-cover rounded-lg"
-                    />
-                    {avatar === avatarItem.url && (
-                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Male Avatars Section */}
-          {maleAvatars.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium">Male Avatars</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {maleAvatars.map((avatarItem, index) => (
-                  <div 
-                    key={`male-${index}`}
-                    className={`relative cursor-pointer rounded-lg border-2 ${
-                      avatar === avatarItem.url 
-                        ? 'border-primary bg-muted' 
-                        : 'border-input hover:border-ring'
-                    }`}
-                    onClick={() => handleAvatarSelect(avatarItem.url)}
-                  >
-                    <img 
-                      src={avatarItem.url} 
-                      alt={`Male Avatar ${index + 1}`}
-                      className="h-full w-full mx-auto object-cover rounded-lg"
-                    />
-                    {avatar === avatarItem.url && (
-                      <div className="absolute -top-2 -right-2 h-6 w-6 bg-primary rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* No avatars message */}
-          {maleAvatars.length === 0 && femaleAvatars.length === 0 && (
-            <p className="text-center text-muted-foreground">No avatars available</p>
-          )}
-        </>
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="female">Female</TabsTrigger>
+            <TabsTrigger value="male">Male</TabsTrigger>
+          </TabsList>
+          
+          <div className="mt-4 max-h-[50vh] overflow-y-auto p-1">
+            <TabsContent value="female" className="space-y-4">
+              {femaleAvatars.length > 0 ? (
+                renderAvatarGrid(femaleAvatars, "female")
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No female avatars available</p>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="male" className="space-y-4">
+              {maleAvatars.length > 0 ? (
+                renderAvatarGrid(maleAvatars, "male")
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No male avatars available</p>
+              )}
+            </TabsContent>
+          </div>
+        </Tabs>
       )}
     </div>
   );

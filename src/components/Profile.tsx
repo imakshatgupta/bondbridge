@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AllPosts from "@/components/AllPosts";
-import AllAudios from "@/components/AllAudios";
-import AllReplies from "@/components/AllReplies";
 import { useEffect, useState } from "react";
 import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
 import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
@@ -14,6 +12,15 @@ import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { startMessage } from "@/apis/commonApiCalls/chatApi";
+import { fetchChatRooms } from "@/apis/commonApiCalls/activityApi";
+import { useAppDispatch } from "@/store";
+import { ChatRoom } from "@/apis/apiTypes/response";
+import {
+  ChatItem,
+  setActiveChat,
+  transformAndSetChats,
+} from "@/store/chatSlice";
 
 interface ProfileProps {
   userId: string;
@@ -35,14 +42,17 @@ const Profile: React.FC<ProfileProps> = ({
   isCurrentUser = false,
 }) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
-  console.log("fetching posts");
+  const [isMessageLoading, setIsMessageLoading] = useState(false);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] = useApiCall(sendFriendRequest);
+  const [executeStartMessage] = useApiCall(startMessage);
+  const [executeFetchChats] = useApiCall(fetchChatRooms);
 
   useEffect(() => {
     const loadPosts = async () => {
-      const result = await executePostsFetch(userId,isCurrentUser);
+      const result = await executePostsFetch(userId, isCurrentUser);
       if (result.success && result.data) {
         setPosts(result.data.posts);
         console.log("posts", result.data.posts);
@@ -72,12 +82,60 @@ const Profile: React.FC<ProfileProps> = ({
     { id: 2, title: "Morning birds", duration: "1:45" },
     { id: 3, title: "Ocean waves", duration: "3:21" },
   ];
+  const handleStartConversation = async () => {
+    try {
+      setIsMessageLoading(true);
+      const result = await executeStartMessage({ userId2: userId });
+      if (result.success && result.data) {
+        // Refresh the chat list to include the new conversation
+        const refreshResult = await executeFetchChats();
+        if (refreshResult.success && refreshResult.data) {
+          const currentUserId = localStorage.getItem("userId") || "";
+          dispatch(
+            transformAndSetChats({
+              chatRooms: refreshResult.data.chatRooms || [],
+              currentUserId,
+            })
+          );
 
-  const replies = [
-    { id: 1, text: "Great post!", author: "user123" },
-    { id: 2, text: "I love this content", author: "nature_lover" },
-    { id: 3, text: "Amazing photography", author: "photo_enthusiast" },
-  ];
+          // Find the newly created chat and set it as active
+          const newChatRoomId = result.data.chatRoom?.chatRoomId;
+          if (newChatRoomId && refreshResult.data.chatRooms) {
+            const newChat = refreshResult.data.chatRooms.find(
+              (chat: ChatRoom) => chat.chatRoomId === newChatRoomId
+            );
+
+            if (newChat) {
+              // Create a ChatItem directly from the API response
+              const chatItem: ChatItem = {
+                id: newChatRoomId,
+                name: username,
+                avatar: avatarSrc,
+                lastMessage: "No messages yet",
+                timestamp: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                unread: false,
+                type: "dm",
+                participants: newChat.participants.map((p) => ({
+                  userId: p.userId,
+                  name: p.name,
+                  profilePic: p.profilePic,
+                })),
+              };
+
+              dispatch(setActiveChat(chatItem));
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+    } finally {
+      setIsMessageLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto bg-background">
@@ -135,8 +193,20 @@ const Profile: React.FC<ProfileProps> = ({
 
         {!isCurrentUser && (
           <div className="flex gap-2 w-full max-w-[200px]">
-            <Button variant="outline" className="flex-1 cursor-pointer">
-              Message
+            <Button
+              variant="outline"
+              className="flex-1 cursor-pointer"
+              onClick={handleStartConversation}
+              disabled={isMessageLoading}
+            >
+              {isMessageLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Opening...</span>
+                </div>
+              ) : (
+                "Message"
+              )}
             </Button>
             <Button 
               className="flex-1 cursor-pointer" 
@@ -155,7 +225,7 @@ const Profile: React.FC<ProfileProps> = ({
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
         <TabsList
-          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+          className="grid w-full grid-cols-2 bg-transparent *:rounded-none *:border-transparent 
         *:data-[state=active]:text-primary"
         >
           <TabsTrigger value="posts" className="group">
@@ -163,14 +233,9 @@ const Profile: React.FC<ProfileProps> = ({
               Posts
             </span>
           </TabsTrigger>
-          <TabsTrigger value="audio" className="group">
+          <TabsTrigger value="community" className="group">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Audio
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="replies" className="group">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Replies
+              Community
             </span>
           </TabsTrigger>
         </TabsList>
@@ -185,12 +250,8 @@ const Profile: React.FC<ProfileProps> = ({
           )}
         </TabsContent>
 
-        <TabsContent value="audio" className="p-4">
-          <AllAudios audios={audios} />
-        </TabsContent>
-
-        <TabsContent value="replies" className="p-4">
-          <AllReplies replies={replies} />
+        <TabsContent value="community" className="p-4">
+          {/* Community content will go here */}
         </TabsContent>
       </Tabs>
     </div>
