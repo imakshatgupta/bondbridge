@@ -3,12 +3,18 @@ import { ArrowLeft } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
-import { useAppDispatch } from '@/store';
-import { setActivePage, setSettingsActive, SettingPage } from '@/store/settingsSlice';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { setActivePage, setSettingsActive, SettingPage, updateProfile } from '@/store/settingsSlice';
+import { fetchUserProfile } from '@/apis/commonApiCalls/profileApi';
+import { Loader2 } from 'lucide-react';
 
 const Settings = () => {
   const [anonymousMode, setAnonymousMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const dispatch = useAppDispatch();
+  
+  // Get user data from Redux store
+  const { username, email, avatar, interests } = useAppSelector((state) => state.settings);
 
   const handleSettingsClick = (page: SettingPage) => {
     dispatch(setSettingsActive(true));
@@ -16,8 +22,30 @@ const Settings = () => {
   };
 
   useEffect(() => {
-    // Activate settings sidebar when component mounts
-    // dispatch(setSettingsActive(true));
+    // Fetch current user data and update Redux store
+    const loadCurrentUser = async () => {
+      setIsLoading(true);
+      try {
+        const currentUserId = localStorage.getItem('userId') || '';
+        if (currentUserId) {
+          const result = await fetchUserProfile(currentUserId, currentUserId);
+          if (result.success && result.data) {
+            // Update Redux store with actual user data
+            dispatch(updateProfile({
+              username: result.data.username,
+              email: result.data.email,
+              avatar: result.data.avatarSrc
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCurrentUser();
 
     // Deactivate settings sidebar when component unmounts
     return () => {
@@ -43,16 +71,22 @@ const Settings = () => {
       </div>
 
       {/* Profile Section */}
-      <div className="p-4 flex items-center gap-4 ">
-        <Avatar className="h-16 w-16">
-          <AvatarImage src="/profile/avatars/1.png" alt="Profile" />
-          <AvatarFallback>JH</AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="text-xl font-semibold">Jo Hall</h2>
-          <p className="text-muted-foreground">cloudysanfrancisco@gmail.com</p>
+      {isLoading ? (
+        <div className="p-4 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      </div>
+      ) : (
+        <div className="p-4 flex items-center gap-4 ">
+          <Avatar className="h-16 w-16">
+            <AvatarImage src={avatar || "/profile/user.png"} alt="Profile" />
+            <AvatarFallback>{username?.substring(0, 2) || "U"}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-xl font-semibold">{username || "User"}</h2>
+            <p className="text-muted-foreground">{email || "No email available"}</p>
+          </div>
+        </div>
+      )}
 
       {/* Settings Options */}
       <div className="flex-1">

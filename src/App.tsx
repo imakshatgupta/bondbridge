@@ -26,7 +26,7 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <SocketProvider>
-        <Router>
+      <Router>
           <Routes>
             <Route
               path="/login"

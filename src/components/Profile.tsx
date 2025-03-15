@@ -1,12 +1,10 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Settings, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AllPosts from "@/components/AllPosts";
-import AllAudios from "@/components/AllAudios";
-import AllReplies from "@/components/AllReplies";
 import { useEffect, useState } from "react";
 import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
@@ -33,11 +31,12 @@ const Profile: React.FC<ProfileProps> = ({
 }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
+  console.log("fetching posts");
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
 
   useEffect(() => {
     const loadPosts = async () => {
-      const result = await executePostsFetch(userId);
+      const result = await executePostsFetch(userId,isCurrentUser);
       if (result.success && result.data) {
         setPosts(result.data.posts);
       }
@@ -45,18 +44,6 @@ const Profile: React.FC<ProfileProps> = ({
 
     loadPosts();
   }, [userId]);
-
-  const audios = [
-    { id: 1, title: "Nature sounds", duration: "2:34" },
-    { id: 2, title: "Morning birds", duration: "1:45" },
-    { id: 3, title: "Ocean waves", duration: "3:21" },
-  ];
-
-  const replies = [
-    { id: 1, text: "Great post!", author: "user123" },
-    { id: 2, text: "I love this content", author: "nature_lover" },
-    { id: 3, text: "Amazing photography", author: "photo_enthusiast" },
-  ];
 
   return (
     <div className="mx-auto bg-background">
@@ -105,21 +92,18 @@ const Profile: React.FC<ProfileProps> = ({
             <div className="text-sm text-muted-foreground">following</div>
           </div>
           {isCurrentUser && (
-            <button 
-              className="p-2 rounded-full border h-fit"
-              onClick={() => navigate('/settings')}
-            >
+            <Link to="/settings" className="p-2 rounded-full border h-fit">
               <Settings size={20} />
-            </button>
+            </Link>
           )}
         </div>
 
         {!isCurrentUser && (
           <div className="flex gap-2 w-full max-w-[200px]">
-            <Button variant="outline" className="flex-1">
+            <Button variant="outline" className="flex-1 cursor-pointer">
               Message
             </Button>
-            <Button className="flex-1">Add Friend</Button>
+            <Button className="flex-1 cursor-pointer">Add Friend</Button>
           </div>
         )}
       </div>
@@ -127,7 +111,7 @@ const Profile: React.FC<ProfileProps> = ({
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
         <TabsList
-          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+          className="grid w-full grid-cols-2 bg-transparent *:rounded-none *:border-transparent 
         *:data-[state=active]:text-primary"
         >
           <TabsTrigger value="posts" className="group">
@@ -135,14 +119,9 @@ const Profile: React.FC<ProfileProps> = ({
               Posts
             </span>
           </TabsTrigger>
-          <TabsTrigger value="audio" className="group">
+          <TabsTrigger value="community" className="group">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Audio
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="replies" className="group">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Replies
+              Community
             </span>
           </TabsTrigger>
         </TabsList>
@@ -157,12 +136,8 @@ const Profile: React.FC<ProfileProps> = ({
           )}
         </TabsContent>
 
-        <TabsContent value="audio" className="p-4">
-          <AllAudios audios={audios} />
-        </TabsContent>
-
-        <TabsContent value="replies" className="p-4">
-          <AllReplies replies={replies} />
+        <TabsContent value="community" className="p-4">
+          {/* Community content will go here */}
         </TabsContent>
       </Tabs>
     </div>

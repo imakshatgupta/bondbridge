@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import SidebarAvatar from "./profile/SidebarAvatar";
 import Navbar from "./Navbar";
@@ -7,8 +7,10 @@ import ChatInterface from "./activity/ChatInterface";
 import { setActiveChat } from "@/store/chatSlice";
 import { Link } from "react-router-dom";
 import mockUserData from "@/constants/users";
+import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
+import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import SettingLayout from './settings/SettingLayout';
-// import { useAppSelector } from '@/app/store';
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -89,9 +91,31 @@ const LeftSidebar: React.FC = () => {
               <span className="grad">Bond Chat</span>
             </Link>
           </li>
-          <Button size={"lg"} className="text-lg w-full">
-            + Post
-          </Button>
+          <li>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size={"lg"} className="text-lg w-full cursor-pointer">
+                  + Post
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2">
+                <div className="flex flex-col gap-2">
+                  <Link to="/create-post" className="flex items-center gap-2 p-2 hover:bg-muted rounded-md">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z" />
+                    </svg>
+                    <span>Post</span>
+                  </Link>
+                  <Link to="/create-story" className="flex items-center gap-2 p-2 hover:bg-muted rounded-md">
+                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
+                    </svg>
+                    <span>Story</span>
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </li>
         </ul>
         {/* Settings */}
         <div className="pb-5">
@@ -119,7 +143,18 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const activeChat = useAppSelector((state) => state.chat.activeChat);
-  const currentUserId = "1"; // Mock current user ID
+  const currentUserId = localStorage.getItem('userId') || "";
+  const [currentUser, setCurrentUser] = useState<UserProfileData | null>(null);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const result = await fetchUserProfile(currentUserId, currentUserId);
+      if (result.success) {
+        setCurrentUser(result.data);
+      }
+    };
+    loadCurrentUser();
+  }, [currentUserId]);
   const isSettingsActive = useAppSelector((state) => state.settings.isSettingsActive);
 
   // Convert mockUserData to array and filter out current user
@@ -171,15 +206,15 @@ const Layout: React.FC<LayoutProps> = ({
                 <div className="p-4 border-2 border-sidebar-border">
                   <div className="flex flex-col items-center">
                     <img
-                      src={mockUserData["1"].avatarSrc}
+                      src={currentUser?.avatarSrc || ""}
                       alt="Profile"
                       className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
                     />
                     <h3 className="font-semibold text-xl text-sidebar-foreground">
-                      {mockUserData["1"].username}
+                      {currentUser?.username || "Loading..."}
                     </h3>
                     <p className="text-sidebar-foreground/60">
-                      {mockUserData["1"].bio}
+                      {currentUser?.bio || ""}
                     </p>
                     <Link to={`/profile/${currentUserId}`}>
                       <Button
