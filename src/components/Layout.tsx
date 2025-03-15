@@ -1,6 +1,4 @@
-
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import SidebarAvatar from "./profile/SidebarAvatar";
 import Navbar from "./Navbar";
@@ -14,6 +12,8 @@ import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import SettingLayout from './settings/SettingLayout';
 import LeftSidebar from "./auth/LeftSidebar";
 import { setCurrentUser as setCurrentUserHandler } from "@/store/settingsSlice";
+import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
+
 interface LayoutProps {
   children: React.ReactNode;
   showSidebars?: boolean; // Flag to control sidebar visibility
@@ -30,6 +30,8 @@ const Layout: React.FC<LayoutProps> = ({
   const activeChat = useAppSelector((state) => state.chat.activeChat);
   const currentUserId = localStorage.getItem('userId') || "";
   const currentUser = useAppSelector((state) => state.settings.currentUser);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  
   const setCurrentUser = (user: UserProfileData) => {
     dispatch(setCurrentUserHandler(user));
   }
@@ -38,10 +40,12 @@ const Layout: React.FC<LayoutProps> = ({
   useEffect(() => {
     // console.log("location: ", location);
     const loadCurrentUser = async () => {
+      setIsLoadingProfile(true);
       const result = await fetchUserProfile(currentUserId, currentUserId);
       if (result.success) {
         setCurrentUser(result.data);
       }
+      setIsLoadingProfile(false);
     };
     loadCurrentUser();
   }, [currentUserId,location]);
@@ -97,45 +101,56 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
             ) : (
               <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl">
-                <div className="p-4 border-2 border-sidebar-border">
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={currentUser?.avatarSrc || "/profile/avatars/1.png"}
-                      alt="Profile"
-                      className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
-                    />
-                    <h3 className="font-semibold text-xl text-sidebar-foreground">
-                      {currentUser?.username || "Loading..."}
-                    </h3>
-                    <p className="text-sidebar-foreground/60">
-                      {currentUser?.bio || ""}
-                    </p>
-                    <Link to={`/profile/${currentUserId}`}>
-                      <Button
-                        variant={"outline"}
-                        className="mt-2 cursor-pointer text-sidebar-primary text-sm font-medium border-primary w-full"
-                      >
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                {isLoadingProfile ? (
+                  // Show skeleton loaders when loading
+                  <>
+                    <SidebarProfileSkeleton />
+                    <SidebarPeopleSkeleton />
+                  </>
+                ) : (
+                  // Show actual content when loaded
+                  <>
+                    <div className="p-4 border-2 border-sidebar-border">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={currentUser?.avatarSrc || "/profile/avatars/1.png"}
+                          alt="Profile"
+                          className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
+                        />
+                        <h3 className="font-semibold text-xl text-sidebar-foreground">
+                          {currentUser?.username || "Loading..."}
+                        </h3>
+                        <p className="text-sidebar-foreground/60">
+                          {currentUser?.bio || ""}
+                        </p>
+                        <Link to={`/profile/${currentUserId}`}>
+                          <Button
+                            variant={"outline"}
+                            className="mt-2 cursor-pointer text-sidebar-primary text-sm font-medium border-primary w-full"
+                          >
+                            View Profile
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
 
-                <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
-                  <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">
-                    People
-                  </h3>
-                  <ul className="space-y-3">
-                    {sidebarUsers.map((user) => (
-                      <SidebarAvatar
-                        key={user.id}
-                        id={user.id}
-                        username={user.username}
-                        avatarSrc={user.avatarSrc}
-                      />
-                    ))}
-                  </ul>
-                </div>
+                    <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
+                      <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">
+                        People
+                      </h3>
+                      <ul className="space-y-3">
+                        {sidebarUsers.map((user) => (
+                          <SidebarAvatar
+                            key={user.id}
+                            id={user.id}
+                            username={user.username}
+                            avatarSrc={user.avatarSrc}
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
