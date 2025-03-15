@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft } from "lucide-react";
 import { useSocket } from '../../context/SocketContext';
 import axios from 'axios';
-import { useAppSelector } from "../../store";
 import { ChatInterfaceProps, Message } from '@/types/chat';
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onClose }) => {
@@ -14,9 +13,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket } = useSocket();
-  const { userId } = useAppSelector(state => state.createProfile);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
+  const userId = localStorage.getItem('userId');
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };

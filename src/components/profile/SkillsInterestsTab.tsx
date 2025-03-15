@@ -1,9 +1,6 @@
-import React from 'react';
-import {
-  addSkill,
-  removeSkill
-} from '../../store/createGroupSlice';
-import { useAppDispatch, useAppSelector } from '../../store';
+import React from "react";
+import { addSkill, removeSkill } from "../../store/createProfileSlice";
+import { useAppDispatch, useAppSelector } from "../../store";
 
 const SkillsInterestsTab: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -32,7 +29,7 @@ const SkillsInterestsTab: React.FC = () => {
           </button>
         ))}
       </div>
-  
+
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {skillsAvailable.map((skill) => (
           <button
