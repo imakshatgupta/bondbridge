@@ -33,6 +33,7 @@ const Profile: React.FC<ProfileProps> = ({
 }) => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
+  console.log("fetching posts");
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
 
   useEffect(() => {

@@ -16,6 +16,7 @@ const ProfilePage: React.FC = () => {
     const loadUserData = async () => {
       if (!userId) return;
       const currentUserId = localStorage.getItem("userId") || ""; 
+      console.log("fetching user data");
       const result = await executeProfileFetch(userId, currentUserId);
       if (result.success && result.data) {
         setUserData(result.data.data);

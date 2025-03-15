@@ -1,5 +1,4 @@
 import axios from 'axios';
-import mockPosts from "@/constants/posts";
 import {
   FetchUserProfileResponse,
   UserPostsResponse,
