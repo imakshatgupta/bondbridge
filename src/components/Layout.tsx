@@ -328,7 +328,7 @@ const LeftSidebar: React.FC = () => {
                 pathname === "/bondchat" ? "font-medium" : ""
               }`}
             >
-              <img src="/bondchat.svg" alt="" />
+              <img src="/" alt="" />
               <span className="grad">Bond Chat</span>
             </Link>
           </li>
