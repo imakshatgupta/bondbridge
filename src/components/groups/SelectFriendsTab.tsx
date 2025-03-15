@@ -95,7 +95,10 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
     console.log("selectedUsers: ", selectedUsers);
   };
 
-  const displayUsers = searchQuery.trim() ? searchResults : followings;
+  const displayUsers = searchQuery.trim()
+    ? searchResults // Don't filter selected users from search results
+    : followings.filter((user) => !selectedParticipants.includes(user.id)); // Only filter from followings list
+
   const isUserSelected = (userId: string) =>
     selectedParticipants.includes(userId);
 
@@ -117,8 +120,8 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
         )}
       </div>
 
-      {/* Selected Users Section */}
-      {selectedUsers.length > 0 && searchQuery.trim() === "" && (
+      {/* Selected Users Section - Only show when not searching */}
+      {selectedUsers.length > 0 && !searchQuery.trim() && (
         <div className="mb-4">
           <h3 className="text-sm font-medium mb-2">Selected Friends</h3>
           <div className="space-y-3">
