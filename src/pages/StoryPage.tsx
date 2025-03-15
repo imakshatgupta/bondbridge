@@ -1,65 +1,244 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Send, Pause, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-import avatarImage from "/activity/cat.png";
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-const users = [
-    {
-        name: "Michel Smithwick",
-        avatar: avatarImage,
-        stories: [avatarImage],
-    },
-    {
-        name: "Emma Johnson",
-        avatar: avatarImage,
-        stories: [avatarImage, avatarImage,avatarImage,avatarImage,avatarImage,],
-    },
-    {
-        name: "John Doe",
-        avatar: avatarImage,
-        stories: [avatarImage,avatarImage,avatarImage,],
-    }
-];
+// Define the type for the story data
+interface StoryItem {
+  _id: string;
+  author: string;
+  privacy: number;
+  contentType: string;
+  taggedUsers: string[] | null;
+  hideFrom: string[];
+  createdAt: number;
+  url: string;
+  status: number;
+  ago_time: string;
+  seen: number;
+}
+
+interface StoryUser {
+  user: string;
+  userId: string;
+  avatar: string;
+  isLive: boolean;
+  hasStory: boolean;
+  stories: StoryItem[];
+  latestStoryTime: number;
+}
 
 export default function StoryPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [allStories, setAllStories] = useState<StoryUser[]>([]);
     const [currentUserIndex, setCurrentUserIndex] = useState(0);
     const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isPaused, setIsPaused] = useState(false);
+    const [videoDuration, setVideoDuration] = useState(5); // Default duration in seconds
+    const [videoProgress, setVideoProgress] = useState(0); // 0 to 100 percentage
+    const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+    const [videoEnded, setVideoEnded] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
-    const currentUser = users[currentUserIndex];
-    const totalStories = currentUser.stories.length;
+    // Initialize with the story data passed from the HomePage
+    useEffect(() => {
+        if (location.state) {
+            const { currentStory, allStories: passedStories, initialUserIndex } = location.state;
+            
+            if (passedStories && passedStories.length > 0) {
+                // Map the API story data to our StoryUser format
+                const formattedStories = passedStories.map((story: any) => ({
+                    user: story.name,
+                    userId: story.userId,
+                    avatar: story.profilePic,
+                    isLive: story.isLive,
+                    hasStory: story.hasStory,
+                    stories: story.stories,
+                    latestStoryTime: story.latestStoryTime
+                }));
+                
+                setAllStories(formattedStories);
+                setCurrentUserIndex(initialUserIndex || 0);
+            } else if (currentStory) {
+                // If only a single story was passed
+                setAllStories([currentStory]);
+            } else {
+                // If no story data is passed, navigate back to home
+                navigate('/');
+            }
+        } else {
+            // If no location state, navigate back to home
+            navigate('/');
+        }
+        setIsLoading(false);
+    }, [location.state, navigate]);
 
-    const goToNextStory = () => {
+    // Define navigation functions with useCallback to prevent unnecessary re-renders
+    const goToNextStory = useCallback(() => {
+        if (allStories.length === 0) return;
+        
+        const totalStories = allStories[currentUserIndex]?.stories.length || 0;
+        
         if (currentStoryIndex < totalStories - 1) {
             // Go to next story of the same user
             setCurrentStoryIndex(currentStoryIndex + 1);
         } else {
             // Move to next user if available
-            if (currentUserIndex < users.length - 1) {
+            if (currentUserIndex < allStories.length - 1) {
                 setCurrentUserIndex(currentUserIndex + 1);
                 setCurrentStoryIndex(0); // Reset story index for new user
             } else {
-                // If it's the last user's last story, restart from the first user
-                setCurrentUserIndex(0);
-                setCurrentStoryIndex(0);
+                // If it's the last user's last story, go back to home
+                navigate('/');
             }
         }
-    };
+        
+        // Reset video ended flag when moving to next story
+        setVideoEnded(false);
+    }, [allStories, currentUserIndex, currentStoryIndex, navigate]);
 
-    const goToPreviousStory = () => {
+    const goToPreviousStory = useCallback(() => {
+        if (allStories.length === 0) return;
+        
         if (currentStoryIndex > 0) {
             setCurrentStoryIndex(currentStoryIndex - 1);
         } else {
             // Move to the previous user if available
             if (currentUserIndex > 0) {
-                const prevUserStories = users[currentUserIndex - 1].stories.length;
+                const prevUserStories = allStories[currentUserIndex - 1].stories.length;
                 setCurrentUserIndex(currentUserIndex - 1);
                 setCurrentStoryIndex(prevUserStories - 1);
             }
         }
-    };
+        
+        // Reset video ended flag when moving to previous story
+        setVideoEnded(false);
+    }, [allStories, currentUserIndex, currentStoryIndex]);
+
+    // Reset video progress when story changes
+    useEffect(() => {
+        setVideoProgress(0);
+        setVideoEnded(false);
+    }, [currentUserIndex, currentStoryIndex]);
+
+    // Handle video playback when story changes
+    useEffect(() => {
+        if (!isLoading && allStories.length > 0) {
+            const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+            
+            if (currentStoryItem?.contentType === 'video' && videoRef.current) {
+                // Reset video state
+                videoRef.current.currentTime = 0;
+                setVideoProgress(0);
+                setVideoEnded(false);
+                
+                // Play the video
+                const playPromise = videoRef.current.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            setIsVideoPlaying(true);
+                            setIsPaused(false);
+                        })
+                        .catch(error => {
+                            console.error("Video playback failed:", error);
+                            // If autoplay is prevented, we need to show play button
+                            setIsVideoPlaying(false);
+                            setIsPaused(true);
+                        });
+                }
+            }
+        }
+    }, [currentUserIndex, currentStoryIndex, isLoading, allStories]);
+
+    // Handle video ended state to advance to next story
+    useEffect(() => {
+        if (videoEnded) {
+            // Immediately go to next story without delay
+            goToNextStory();
+        }
+    }, [videoEnded, goToNextStory]);
+
+    // Auto-advance to the next story after duration (5s for images, video duration for videos)
+    useEffect(() => {
+        // Only set up the timer if we have stories loaded and not paused
+        if (!isLoading && allStories.length > 0 && !isPaused) {
+            const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+            
+            // Only use timer for image content types
+            if (currentStoryItem?.contentType !== 'video') {
+                const timer = setTimeout(() => {
+                    goToNextStory();
+                }, 5000);
+                
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [currentUserIndex, currentStoryIndex, isLoading, allStories.length, goToNextStory, isPaused]);
+
+    // Toggle video play/pause
+    const toggleVideoPlayback = useCallback(() => {
+        if (!videoRef.current) return;
+        
+        if (videoRef.current.paused) {
+            videoRef.current.play();
+            setIsVideoPlaying(true);
+            setIsPaused(false);
+        } else {
+            videoRef.current.pause();
+            setIsVideoPlaying(false);
+            setIsPaused(true);
+        }
+    }, []);
+
+    // Update video progress
+    const updateVideoProgress = useCallback(() => {
+        if (!videoRef.current || videoDuration <= 0) return;
+        
+        const currentTime = videoRef.current.currentTime;
+        const progressPercentage = (currentTime / videoDuration) * 100;
+        setVideoProgress(progressPercentage);
+    }, [videoDuration]);
+
+    // Add keyboard event listener for arrow key navigation
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'ArrowLeft') {
+                goToPreviousStory();
+            } else if (event.key === 'ArrowRight') {
+                goToNextStory();
+            } else if (event.key === 'Escape') {
+                navigate(-1); // Go back to the previous page
+            } else if (event.key === ' ') { // Space bar
+                const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+                if (currentStoryItem?.contentType === 'video') {
+                    toggleVideoPlayback();
+                }
+            }
+        };
+
+        // Add event listener
+        window.addEventListener('keydown', handleKeyDown);
+
+        // Clean up
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [goToNextStory, goToPreviousStory, navigate, allStories, currentUserIndex, currentStoryIndex, toggleVideoPlayback]);
+
+    // If still loading or no stories, show a loading state
+    if (isLoading || allStories.length === 0) {
+        return <div className="flex items-center justify-center h-screen">Loading stories...</div>;
+    }
+
+    const currentUser = allStories[currentUserIndex];
+    const totalStories = currentUser.stories.length;
+    const currentStoryItem = currentUser.stories[currentStoryIndex];
+    const isVideo = currentStoryItem.contentType === 'video';
 
     return (
         <div className="max-w-sm mx-auto py-5 h-[calc(100vh-64px)] relative">
@@ -87,9 +266,16 @@ export default function StoryPage() {
                             className="h-1 flex-1 rounded-full overflow-hidden bg-muted"
                         >
                             <div
-                                className={`h-full bg-primary transition-all duration-300 ${index < currentStoryIndex ? 'w-full' :
-                                    index === currentStoryIndex ? 'w-full' : 'w-0'
-                                    }`}
+                                className={`h-full bg-primary transition-all duration-300 ${
+                                    index < currentStoryIndex ? 'w-full' :
+                                    index === currentStoryIndex && !isVideo ? 'w-full animate-progress' : 
+                                    index === currentStoryIndex && isVideo ? '' : 'w-0'
+                                }`}
+                                style={{
+                                    width: index === currentStoryIndex && isVideo ? `${videoProgress}%` : undefined,
+                                    animationDuration: index === currentStoryIndex && !isVideo ? '5s' : '0s',
+                                    animationPlayState: isPaused ? 'paused' : 'running'
+                                }}
                             />
                         </div>
                     ))}
@@ -104,11 +290,17 @@ export default function StoryPage() {
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={currentUser.avatar} />
-                                <AvatarFallback>{currentUser.name[0]}</AvatarFallback>
+                                <AvatarFallback>{currentUser.user[0]}</AvatarFallback>
                             </Avatar>
-                            <div>
-                                <p className="font-semibold text-sm text-foreground">{currentUser.name}</p>
-                                <p className="text-xs text-muted-foreground">2h ago</p>
+                            <div 
+                                className="cursor-pointer" 
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent triggering the parent's onClick
+                                    navigate(`/profile/${currentUser.userId}`);
+                                }}
+                            >
+                                <p className="font-semibold text-sm text-foreground">{currentUser.user}</p>
+                                <p className="text-xs text-muted-foreground">{currentStoryItem.ago_time}</p>
                             </div>
                         </div>
                     </div>
@@ -117,13 +309,64 @@ export default function StoryPage() {
                 {/* Story Content */}
                 <div
                     className="h-[calc(100vh-104px)] w-full flex items-center justify-center bg-background relative"
-                    onClick={goToNextStory}
+                    onClick={isVideo ? toggleVideoPlayback : goToNextStory}
                 >
-                    <img
-                        src={currentUser.stories[currentStoryIndex]}
-                        alt="Story content"
-                        className="w-full h-full p-4 object-contain"
-                    />
+                    {isVideo ? (
+                        <>
+                            <video
+                                ref={videoRef}
+                                src={currentStoryItem.url}
+                                className="w-full h-full p-4 object-contain"
+                                playsInline
+                                preload="auto"
+                                onLoadedMetadata={(e) => {
+                                    const target = e.target as HTMLVideoElement;
+                                    setVideoDuration(target.duration);
+                                }}
+                                onTimeUpdate={updateVideoProgress}
+                                onEnded={() => {
+                                    // When video ends, just set videoEnded flag to true
+                                    // Don't set isVideoPlaying to false to avoid showing pause state
+                                    setVideoEnded(true);
+                                }}
+                                onPlay={() => {
+                                    setIsVideoPlaying(true);
+                                    setIsPaused(false);
+                                }}
+                                onPause={() => {
+                                    // Only set video as paused if it hasn't ended
+                                    if (!videoEnded) {
+                                        setIsVideoPlaying(false);
+                                        setIsPaused(true);
+                                    }
+                                }}
+                            />
+                            {/* Video Controls Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                {!isVideoPlaying && !videoEnded && (
+                                    <button 
+                                        className="w-16 h-16 bg-primary/80 rounded-full flex items-center justify-center pointer-events-auto"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleVideoPlayback();
+                                        }}
+                                    >
+                                        {isPaused ? (
+                                            <Play className="h-8 w-8 text-primary-foreground" />
+                                        ) : (
+                                            <Pause className="h-8 w-8 text-primary-foreground" />
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <img
+                            src={currentStoryItem.url}
+                            alt="Story content"
+                            className="w-full h-full p-4 object-contain"
+                        />
+                    )}
                 </div>
 
                 {/* Emojis */}
@@ -133,7 +376,10 @@ export default function StoryPage() {
                             <button
                                 key={index}
                                 className="w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border hover:bg-muted transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary active:bg-primary/20"
-                                onClick={() => {/* Add reaction logic here */ }}
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent triggering the parent's onClick
+                                    /* Add reaction logic here */
+                                }}
                             >
                                 {emoji}
                             </button>
@@ -147,8 +393,15 @@ export default function StoryPage() {
                         <Input
                             placeholder="What's on your mind..."
                             className="bg-muted border-none rounded-full text-sm"
+                            onClick={(e) => e.stopPropagation()} // Prevent triggering the parent's onClick
                         />
-                        <button className="p-2 rounded-full bg-primary text-primary-foreground">
+                        <button 
+                            className="p-2 rounded-full bg-primary text-primary-foreground"
+                            onClick={(e) => {
+                                e.stopPropagation(); // Prevent triggering the parent's onClick
+                                /* Add send message logic here */
+                            }}
+                        >
                             <Send className="h-5 w-5" />
                         </button>
                     </div>

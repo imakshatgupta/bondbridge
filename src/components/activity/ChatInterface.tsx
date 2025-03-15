@@ -7,7 +7,6 @@ import { useSocket } from "../../context/SocketContext";
 import {
   Message,
   addMessage,
-  setActiveChat,
   setIsTyping,
   setLoadingMessages,
   setMessages,
@@ -43,7 +42,14 @@ interface SendMessageResponse {
   };
 }
 
-const ChatInterface: React.FC = () => {
+interface ChatInterfaceProps {
+  chatId: string;
+  name: string;
+  avatar: string;
+  onClose: () => void;
+}
+
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onClose }) => {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket } = useSocket();
@@ -53,10 +59,10 @@ const ChatInterface: React.FC = () => {
 
   const dispatch = useAppDispatch();
   const {
-    activeChat: chat,
     messages,
     isLoadingMessages,
     isTyping,
+    activeChat: chat,
   } = useAppSelector((state) => state.chat);
 
   // Find current user's info from participants
@@ -74,16 +80,16 @@ const ChatInterface: React.FC = () => {
 
   useEffect(() => {
     const fetchMessageHistory = async () => {
-      if (!chat || !chat.id) {
-        console.error("Invalid chat object:", chat);
+      if (!chatId) {
+        console.error("Invalid chat ID:", chatId);
         return;
       }
 
       dispatch(setLoadingMessages(true));
 
-      console.log("chat.id", chat.id);
+      console.log("chatId", chatId);
       const result = await executeGetMessages({
-        roomId: chat.id,
+        roomId: chatId,
         page: 1,
         limit: 50,
       });
@@ -92,7 +98,7 @@ const ChatInterface: React.FC = () => {
         const messageHistory = result.data.messages
           .map((msg) => {
             // Find sender info from participants
-            const sender = chat.participants.find(
+            const sender = chat?.participants.find(
               (p) => p.userId === msg.senderId
             );
             return {
@@ -120,17 +126,17 @@ const ChatInterface: React.FC = () => {
 
     console.log("Socket", socket);
 
-    if (socket && chat && chat.id) {
+    if (socket && chatId) {
       // Join the chat room
       console.log("Join emitted");
-      socket.emit("join", chat.id);
+      socket.emit("join", chatId);
       fetchMessageHistory();
 
       // Set up socket event listeners
       const handleReceiveMessage = (data: MessageResponse) => {
         console.log("Received message:", data);
         // Find sender info from participants
-        const sender = chat.participants.find(
+        const sender = chat?.participants.find(
           (p) => p.userId === data.senderId
         );
 
@@ -157,7 +163,7 @@ const ChatInterface: React.FC = () => {
       };
 
       const handleTypingEvent = (data: TypingResponse) => {
-        if (data.chatId === chat.id && data.senderId !== userId) {
+        if (data.chatId === chatId && data.senderId !== userId) {
           dispatch(setIsTyping(true));
           if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current);
@@ -180,18 +186,18 @@ const ChatInterface: React.FC = () => {
           clearTimeout(typingTimeoutRef.current);
         }
         // Leave the room when component unmounts or chat changes
-        socket.emit("leave", chat.id);
+        socket.emit("leave", chatId);
       };
     }
-  }, [socket, chat, userId]);
+  }, [socket, chatId, userId, chat]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim() && socket && chat && chat.id) {
+    if (newMessage.trim() && socket && chatId) {
       // Create message data
       const messageData = {
         senderId: userId,
         content: newMessage,
-        entityId: chat.id,
+        entityId: chatId,
         media: null,
         entity: "chat",
         isBot: false,
@@ -229,13 +235,13 @@ const ChatInterface: React.FC = () => {
   };
 
   const handleTyping = () => {
-    if (socket && chat && chat.id) {
-      socket.emit("typing", { chatId: chat.id, senderId: userId });
+    if (socket && chatId) {
+      socket.emit("typing", { chatId: chatId, senderId: userId });
     }
   };
 
   const handleClose = () => {
-    dispatch(setActiveChat(null));
+    onClose();
   };
 
   if (!chat) {
@@ -270,11 +276,11 @@ const ChatInterface: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <Avatar className="h-10 w-10">
-            <AvatarImage src={chat.avatar} alt={chat.name} />
-            <AvatarFallback>{chat.name?.[0]}</AvatarFallback>
+            <AvatarImage src={avatar} alt={name} />
+            <AvatarFallback>{name?.[0]}</AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-medium">{chat.name}</h3>
+            <h3 className="font-medium">{name}</h3>
             <p className="text-xs text-muted-foreground">
               {chat.type === "dm"
                 ? "online"
@@ -385,11 +391,11 @@ const ChatInterface: React.FC = () => {
           <div className="flex items-start gap-2">
             <Avatar className="h-6 w-6 mt-1">
               <AvatarImage
-                src={typingUser?.profilePic || chat.avatar}
-                alt={typingUser?.name || chat.name}
+                src={typingUser?.profilePic || avatar}
+                alt={typingUser?.name || name}
               />
               <AvatarFallback>
-                {(typingUser?.name || chat.name)[0]}
+                {(typingUser?.name || name)[0]}
               </AvatarFallback>
             </Avatar>
             <div className="bg-muted p-2 rounded-md text-sm rounded-tl-none">

@@ -63,7 +63,7 @@ export const createGroup = createSlice({
       const friendId = action.payload;
       state.selectedFriends = state.selectedFriends.filter(friend => friend._id !== friendId);
     },
-    resetGroupState: (state) => {
+    resetGroupState: () => {
       return initialState;
     }
   },

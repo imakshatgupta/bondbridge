@@ -49,9 +49,9 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
 
   // Default likes to 0 if not provided
   const likes = comment.likes || 0;
-  const formattedLikes = likes >= 1000
-    ? `${(likes / 1000).toFixed(1)}k`
-    : likes.toString();
+  // const formattedLikes = likes >= 1000
+  //   ? `${(likes / 1000).toFixed(1)}k`
+  //   : likes.toString();
 
   // Memoize handlers to prevent recreation on each render
   const toggleReplies = useCallback(() => setShowReplies(prev => !prev), []);
