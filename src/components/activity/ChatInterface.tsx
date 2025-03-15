@@ -370,9 +370,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </Avatar>
                 )}
                 {/* Add a spacer when we don't show the avatar to keep alignment */}
-                {(!isPreviousDifferentSender) && (
-                  <div className="w-7" />
-                )}
+                {!isPreviousDifferentSender && <div className="w-7" />}
 
                 <div
                   className={`max-w-[70%] p-3 rounded-lg ${
