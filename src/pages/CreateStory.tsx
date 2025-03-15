@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
 import { uploadStory } from '../apis/commonApiCalls/storyApi';
 import { useApiCall } from '../apis/globalCatchError';
-import { Story } from '../apis/apiTypes/request';
+import { Story, StoryData } from '../apis/apiTypes/request';
 
 const CreateStory = () => {
   const [stories, setStories] = useState<Story[]>([{ 
@@ -83,6 +83,94 @@ const CreateStory = () => {
     navigate('/');
   };
 
+  // New utility function to render text to canvas and return as image
+  const renderTextToImage = (text: string, theme: string): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 600;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        throw new Error('Could not get canvas context');
+      }
+      
+      // Set background color based on theme
+      let backgroundColor = '#000000';
+      switch (theme) {
+        case 'bg-primary':
+          backgroundColor = 'hsl(var(--primary))';
+          break;
+        case 'bg-accent':
+          backgroundColor = 'hsl(var(--accent))';
+          break;
+        case 'bg-secondary':
+          backgroundColor = 'hsl(var(--secondary))';
+          break;
+        case 'bg-destructive':
+          backgroundColor = 'hsl(var(--destructive))';
+          break;
+        case 'bg-muted':
+          backgroundColor = 'hsl(var(--muted))';
+          break;
+        default:
+          backgroundColor = theme; // Use custom color directly
+      }
+      
+      // Fill background
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Set text properties
+      ctx.fillStyle = 'white'; // Text color
+      ctx.textAlign = 'center';
+      ctx.font = '24px sans-serif';
+      
+      // Word wrap text
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+      const maxWidth = canvas.width - 40; // Padding on both sides
+      
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > maxWidth && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+      
+      // Draw text
+      const lineHeight = 30;
+      const startY = (canvas.height - (lines.length * lineHeight)) / 2;
+      
+      lines.forEach((line, index) => {
+        ctx.fillText(line, canvas.width / 2, startY + (index * lineHeight));
+      });
+      
+      // Convert canvas to blob
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          // Fallback if toBlob fails
+          canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
+          fetch(canvas.toDataURL('image/png'))
+            .then(res => res.blob())
+            .then(resolve);
+        }
+      }, 'image/png');
+    });
+  };
+
   const handleCreateStory = async () => {
     // Validate stories
     const emptyStory = stories.find(story => {
@@ -99,18 +187,55 @@ const CreateStory = () => {
       return;
     }
     
+    // Process stories - convert text to images
+    const processedStories = await Promise.all(
+      stories.map(async (story) => {
+        // If it's a text story, convert to image
+        if (story.type === 'text' && typeof story.content === 'string') {
+          try {
+            const imageBlob = await renderTextToImage(story.content, story.theme);
+            
+            // Create a file from the blob
+            const filename = `story-${Date.now()}.png`;
+            const imageFile = new File([imageBlob], filename, { type: 'image/png' });
+            
+            // Return a new story object with the image file
+            return {
+              ...story,
+              type: 'photo', // Change type to photo
+              content: imageFile,
+              originalText: story.content, // Keep original text for reference if needed
+            };
+          } catch (error) {
+            console.error('Error converting text to image:', error);
+            return story; // Return original story if conversion fails
+          }
+        }
+        
+        // Return other story types unchanged
+        return story;
+      })
+    );
+    
     // Ensure all stories have a privacy value
-    const storiesWithPrivacy = stories.map(story => ({
+    const storiesWithPrivacy = processedStories.map(story => ({
       ...story,
       privacy: story.privacy || 1 // Default to 1 if privacy is undefined
     }));
     
     // Call the API using the useApiCall hook
-    const result = await executeUploadStory(storiesWithPrivacy);
+    const result = await executeUploadStory(storiesWithPrivacy as StoryData[]);
     
     if (result.success && result.data) {
       navigate('/');
     }
+  };
+
+  const handleSetTextType = () => {
+    // Set the current story type to text
+    setStories(prev => prev.map((story, idx) => 
+      idx === currentPage ? { ...story, type: 'text', content: typeof story.content === 'string' ? story.content : '' } : story
+    ));
   };
 
   return (
@@ -152,9 +277,7 @@ const CreateStory = () => {
               variant="ghost"
               size="icon"
               className="text-foreground h-auto p-2"
-              onClick={() => {
-                setShowEmojiPicker(!showEmojiPicker);
-              }}
+              onClick={handleSetTextType}
             >
               <Type className="w-5 h-5" />
             </Button>
