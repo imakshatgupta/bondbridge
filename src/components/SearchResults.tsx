@@ -1,4 +1,4 @@
-import { Person } from "@/apis/commonApiCalls/searchApi";
+import { Person } from "@/apis/apiTypes/response";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 

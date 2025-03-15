@@ -25,6 +25,7 @@ export type VerifyOTPResponse = {
 // Login response interface
 export type LoginResponse = {
   token: string;
+  socketToken: string;
   message: string;
   userDetails: {
     statusCode: number;
@@ -78,8 +79,152 @@ export type FetchAvatarsResponse = {
   URLS: {
     male: AvatarItem[];
     female: AvatarItem[];
+  }
+}
+
+export interface CommentData {
+  commentId: string;
+  postId: string;
+  parentComment: string | null;
+  comment: string;
+  createdAt: string;
+  agoTime: string;
+  user: {
+    userId: string;
+    name: string;
+    profilePic: string;
   };
-};
+  likes: number;
+  hasReplies: boolean;
+  replies?: CommentData[];
+}
+
+export interface PostData {
+  user: string;
+  avatar: string;
+  caption: string;
+  image: string;
+  likes: number;
+  comments: number;
+  datePosted: string;
+}
+
+export interface FetchCommentsResponse {
+  hasMoreComments: boolean;
+  success: boolean;
+  message?: string;
+  comments: CommentData[];
+  post?: PostData;
+}
+
+export interface PostCommentResponse {
+  success: boolean;
+  message?: string;
+  comment?: object;
+}
+
+export interface HomePostData {
+  _id: string;
+  author: string;
+  whoCanComment: number;
+  privacy: number;
+  content_type: string | null;
+  taggedUsers: string[] | null;
+  hideFrom: string[] | null;
+  status: number;
+  createdAt: number;
+  data: {
+    content: string;
+    media: Array<{
+      url: string;
+      type: string;
+    }>;
+  };
+  feedId: string;
+  weekIndex: string;
+  userId: string;
+  ago_time: string;
+  commentCount: number;
+  reactionCount: number;
+  reaction: {
+    hasReacted: boolean;
+    reactionType: string | null;
+  };
+  name: string;
+  profilePic: string;
+}
+
+export interface StoryData {
+  userId: string;
+  name: string;
+  profilePic: string;
+  isLive: boolean;
+  hasStory: boolean;
+  latestStoryTime: number;
+  stories: Array<{
+    _id: string;
+    author: string;
+    privacy: number;
+    contentType: string;
+    taggedUsers: string[] | null;
+    hideFrom: string[];
+    createdAt: number;
+    url: string;
+    status: number;
+    ago_time: string;
+    seen: number;
+  }>;
+  channelName: string | null;
+}
+
+export interface HomepageResponse {
+  success: boolean;
+  postsData: {
+    success: boolean;
+    posts: HomePostData[];
+    hasMore: boolean;
+    message: string;
+  };
+  storiesData: {
+    success: boolean;
+    stories: StoryData[];
+    message: string;
+  };
+}
+
+export interface FriendRequest {
+  id: number;
+  userId: number;
+  name: string;
+  avatar: string;
+  bio: string;
+  createdAt: string;
+}
+
+export interface AcceptFriendRequestResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface RejectFriendRequestResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface FetchFriendRequestsResponse {
+  success: boolean;
+  message?: string;
+  data: {
+    requests: FriendRequest[];
+    hasMore: boolean;
+    totalCount: number;
+  };
+}
+
+export interface SendFriendRequestResponse {
+  success: boolean;
+  message?: string;
+}
 
 export interface Person {
   id: string;
@@ -118,6 +263,56 @@ export interface FollowRequest {
   profilePic: string;
 }
 
+interface ChatParticipant {
+  userId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  profilePic: string;
+}
+
+interface BaseChatRoom {
+  _id: string;
+  chatRoomId: string;
+  participants: ChatParticipant[];
+  roomType: "dm" | "group" | "community";
+  createdAt: string;
+  updatedAt: string;
+  isPart: boolean;
+  unseenCount: number;
+  lastMessage?:
+    | {
+        text: string;
+      }
+    | string;
+}
+
+interface DMChatRoom extends BaseChatRoom {
+  roomType: "dm";
+}
+
+interface GroupChatRoom extends BaseChatRoom {
+  roomType: "group";
+  groupName: string;
+  profileUrl: string | null;
+  admin: string;
+}
+
+interface CommunityChatRoom extends BaseChatRoom {
+  roomType: "community";
+  groupName: string;
+  profileUrl: string | null;
+  admin: string;
+}
+
+export type ChatRoom = DMChatRoom | GroupChatRoom | CommunityChatRoom;
+
+export interface ChatRoomsResponse {
+  message: string;
+  chatRooms: ChatRoom[];
+}
+
 export interface NotificationsResponse {
   success: boolean;
   message: string;
@@ -128,4 +323,87 @@ export interface FollowRequestsResponse {
   success: boolean;
   message: string;
   result: FollowRequest[];
+}
+
+export interface StoryItem {
+  id: string;
+  content: string;
+  type: string;
+  theme: string;
+  privacy: number;
+  createdAt: string;
+}
+
+export type UploadStoryResponse = {
+  stories: StoryItem[];
+};
+export interface ChatMessage {
+  _id: string;
+  content: string;
+  senderId: string;
+  createdAt: string;
+  updatedAt: string;
+  senderName?: string;
+  senderAvatar?: string;
+}
+
+export interface GetMessagesResponse {
+  success: boolean;
+  message: string;
+  messages: ChatMessage[];
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface StartMessageResponse {
+  message: string;
+  chatRoom: {
+    _id: string;
+    chatRoomId: string;
+    participants: {
+      userId: string;
+      profilePic: string;
+      name: string;
+    }[];
+    roomType: "dm" | "group" | "community";
+    profileUrl: string | null;
+    admin: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+interface FollowingUser {
+  _id: string;
+  name: string;
+  avatar: string;
+  bio?: string;
+  email: string;
+  interests: string[];
+}
+
+export interface FollowingsResponse {
+  result: FollowingUser[];
+  message: string;
+}
+
+// Add missing response types for homepage API
+export interface FetchPostsResponse {
+  success: boolean;
+  message: string;
+  posts: HomePostData[];
+  hasMore: boolean;
+}
+
+export interface FetchStoriesResponse {
+  success: boolean;
+  message: string;
+  stories: StoryData[];
+}
+
+export interface FetchHomepageDataResponse {
+  success: boolean;
+  message?: string;
+  postsData: FetchPostsResponse;
+  storiesData: FetchStoriesResponse;
 }

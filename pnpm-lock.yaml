@@ -5,7 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 importers:
-
   .:
     dependencies:
       '@radix-ui/react-avatar':
@@ -4975,7 +4974,7 @@ snapshots:
     dependencies:
       esbuild: 0.25.1
       postcss: 8.5.3
-      rollup: 4.35.0
+      rollup: 4.34.9
     optionalDependencies:
       '@types/node': 22.13.10
       fsevents: 2.3.3
