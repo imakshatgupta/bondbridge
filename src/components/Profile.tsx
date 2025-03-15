@@ -77,11 +77,11 @@ const Profile: React.FC<ProfileProps> = ({
     }
   };
 
-  const audios = [
-    { id: 1, title: "Nature sounds", duration: "2:34" },
-    { id: 2, title: "Morning birds", duration: "1:45" },
-    { id: 3, title: "Ocean waves", duration: "3:21" },
-  ];
+  // const audios = [
+  //   { id: 1, title: "Nature sounds", duration: "2:34" },
+  //   { id: 2, title: "Morning birds", duration: "1:45" },
+  //   { id: 3, title: "Ocean waves", duration: "3:21" },
+  // ];
   const handleStartConversation = async () => {
     try {
       setIsMessageLoading(true);

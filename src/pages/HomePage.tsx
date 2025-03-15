@@ -130,7 +130,8 @@ export default function HomePage() {
               avatar={post.profilePic}
               userId={post.userId}
               caption={post.data.content}
-              image={post.data.media?.[0].url}
+              media={post.data.media}
+              image={post.data.media && post.data.media.length > 0 ? post.data.media[0].url : undefined}
               likes={post.reactionCount}
               comments={post.commentCount}
               datePosted={post.ago_time}

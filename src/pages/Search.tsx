@@ -59,11 +59,11 @@ export default function Search() {
             )}
           </div>
         </div>
-        {searchQuery === "" && (
+        {/* {searchQuery === "" && (
           <div className="text-sm text-muted-foreground mb-4">
             Recent Searches
           </div>
-        )}
+        )} */}
         {/* People List */}
         <div className="space-y-4">
           {people.map((person) => (

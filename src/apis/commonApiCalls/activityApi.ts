@@ -37,8 +37,14 @@ export const createGroup = async (
   console.log("data", data);
   const response = await apiClient.post<ApiResponse>("/create-group", data);
 
-  if (response.status === 200) {
-    return response.data;
+  console.log("response from create group: ", response);
+
+  if (response.status === 200 || response.status === 201) {
+    // Ensure the response has a success property
+    return {
+      ...response.data,
+      success: true
+    };
   } else {
     throw new Error(response.data.message || "Failed to create group");
   }

@@ -74,6 +74,7 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
       // Remove user
       onParticipantsChange(selectedParticipants.filter((id) => id !== user.id));
       setSelectedUsers((prev) => prev.filter((u) => u.id !== user.id));
+      console.log("selectedUsers: ", selectedUsers);
     } else {
       // Add user
       const newUser = {
@@ -84,12 +85,14 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
       };
       onParticipantsChange([...selectedParticipants, user.id]);
       setSelectedUsers((prev) => [...prev, newUser]);
+      console.log("selectedUsers: ", selectedUsers);
     }
   };
 
   const removeSelectedUser = (userId: string) => {
     onParticipantsChange(selectedParticipants.filter((id) => id !== userId));
     setSelectedUsers((users) => users.filter((user) => user.id !== userId));
+    console.log("selectedUsers: ", selectedUsers);
   };
 
   const displayUsers = searchQuery.trim() ? searchResults : followings;
