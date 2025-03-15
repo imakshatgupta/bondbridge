@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Button } from "./ui/button";
 import SidebarAvatar from "./profile/SidebarAvatar";
 import Navbar from "./Navbar";
@@ -8,7 +8,6 @@ import { setActiveChat } from "@/store/chatSlice";
 import { Link } from "react-router-dom";
 import mockUserData from "@/constants/users";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
-import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import SettingLayout from "./settings/SettingLayout";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { updateCurrentUser } from "@/store/currentUserSlice";
@@ -162,6 +161,7 @@ const Layout: React.FC<LayoutProps> = ({
   const currentUser = useAppSelector((state) => state.currentUser);
 
   useEffect(() => {
+    // console.log("location: ", location);
     const loadCurrentUser = async () => {
       const result = await fetchUserProfile(currentUserId, currentUserId);
       if (result.success) {
@@ -198,7 +198,11 @@ const Layout: React.FC<LayoutProps> = ({
   };
 
   return (
-    <div className=" flex flex-col overflow-hidden h-screen w-screen overflow-x-hidden">
+    <>
+    <div className="flex justify-center items-center h-screen w-screen overflow-x-hidden md:hidden">
+      <div className="text-2xl font-bold">Please open on app</div>
+    </div>
+    <div className=" flex-col overflow-hidden h-screen w-screen overflow-x-hidden hidden md:flex">
       {/* Navbar */}
       <Navbar />
 
@@ -278,6 +282,7 @@ const Layout: React.FC<LayoutProps> = ({
         <main className="flex-grow">{children}</main>
       )}
     </div>
+    </>
   );
 };
 

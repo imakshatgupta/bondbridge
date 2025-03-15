@@ -67,6 +67,8 @@ const CreateGroup: React.FC = () => {
         participants: selectedParticipants,
       });
 
+      console.log("result: ", result);
+
       if (result.success) {
         toast.success("Group created successfully!");
         navigate("/activity");

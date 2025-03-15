@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {  Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/auth/AuthLayout";
 import OTPForm from "../components/auth/OTPForm";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +8,9 @@ import "react-intl-tel-input/dist/main.css";
 import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { Toaster } from "@/components/ui/sonner";
+import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
+import { setCurrentUser } from "@/store/settingsSlice";
+import { useAppDispatch } from "@/store";
 
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
@@ -16,6 +19,7 @@ const Signup: React.FC = () => {
   const [, setIsValidPhone] = useState(false);
   const navigate = useNavigate();
   const phoneInputRef = useRef(null);
+  const dispatch = useAppDispatch();
 
   // Use our custom hooks for API calls
   const [executeSendOTP, isSendingOTP] = useApiCall(sendOTP);
@@ -58,6 +62,7 @@ const Signup: React.FC = () => {
 
   interface CountryData {
     dialCode?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   }
 
@@ -112,7 +117,13 @@ const Signup: React.FC = () => {
       countryCode: validCountryCode
     });
     
+
+    
     if (result.success && result.data) {
+      const userData = await fetchUserProfile(result.data?.userDetails._id, result.data?.userDetails._id);
+      if (userData.success) {
+        dispatch(setCurrentUser(userData.data));
+      }
       navigate("/setup-profile");
     }
   };
