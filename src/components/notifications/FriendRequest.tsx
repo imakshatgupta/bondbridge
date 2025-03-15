@@ -3,8 +3,8 @@ import { useApiCall } from "@/apis/globalCatchError";
 import {
   acceptFriendRequest,
   rejectFriendRequest,
+  FollowRequest
 } from "@/apis/commonApiCalls/notificationsApi";
-import type { FollowRequest } from "@/apis/commonApiCalls/notificationsApi";
 
 interface FriendRequestProps extends FollowRequest {
   onActionComplete: (

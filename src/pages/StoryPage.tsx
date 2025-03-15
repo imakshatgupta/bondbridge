@@ -3,31 +3,9 @@ import { ArrowLeft, Send, Pause, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
-
-// Define the type for the story data
-interface StoryItem {
-  _id: string;
-  author: string;
-  privacy: number;
-  contentType: string;
-  taggedUsers: string[] | null;
-  hideFrom: string[];
-  createdAt: number;
-  url: string;
-  status: number;
-  ago_time: string;
-  seen: number;
-}
-
-interface StoryUser {
-  user: string;
-  userId: string;
-  avatar: string;
-  isLive: boolean;
-  hasStory: boolean;
-  stories: StoryItem[];
-  latestStoryTime: number;
-}
+import { saveStoryInteraction } from '@/apis/commonApiCalls/storyApi';
+import { useApiCall } from '@/apis/globalCatchError';
+import { StoryItem, StoryUser } from '@/types/story';
 
 export default function StoryPage() {
     const navigate = useNavigate();
@@ -42,6 +20,9 @@ export default function StoryPage() {
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [videoEnded, setVideoEnded] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    
+    // Use our custom hook for API calls
+    const [executeSaveInteraction] = useApiCall(saveStoryInteraction);
 
     // Initialize with the story data passed from the HomePage
     useEffect(() => {
@@ -62,10 +43,37 @@ export default function StoryPage() {
                 }));
                 
                 setAllStories(formattedStories);
-                setCurrentUserIndex(initialUserIndex || 0);
+                
+                // Set the initial user index
+                const userIndex = initialUserIndex || 0;
+                setCurrentUserIndex(userIndex);
+                
+                // Find the first unseen story for this user
+                const firstUnseenIndex = formattedStories[userIndex]?.stories.findIndex(
+                    (story: StoryItem) => story.seen === 0
+                );
+                
+                // If there's an unseen story, start from there, otherwise start from the beginning
+                if (firstUnseenIndex !== -1) {
+                    setCurrentStoryIndex(firstUnseenIndex);
+                } else {
+                    setCurrentStoryIndex(0);
+                }
             } else if (currentStory) {
                 // If only a single story was passed
                 setAllStories([currentStory]);
+                
+                // Find the first unseen story for this user
+                const firstUnseenIndex = currentStory.stories.findIndex(
+                    (story: StoryItem) => story.seen === 0
+                );
+                
+                // If there's an unseen story, start from there, otherwise start from the beginning
+                if (firstUnseenIndex !== -1) {
+                    setCurrentStoryIndex(firstUnseenIndex);
+                } else {
+                    setCurrentStoryIndex(0);
+                }
             } else {
                 // If no story data is passed, navigate back to home
                 navigate('/');
@@ -90,15 +98,29 @@ export default function StoryPage() {
             // Move to next user if available
             if (currentUserIndex < allStories.length - 1) {
                 setCurrentUserIndex(currentUserIndex + 1);
-                setCurrentStoryIndex(0); // Reset story index for new user
+                
+                // Find the first unseen story for the next user
+                const nextUserIndex = currentUserIndex + 1;
+                const firstUnseenIndex = allStories[nextUserIndex]?.stories.findIndex(
+                    story => story.seen === 0
+                );
+                
+                // If there's an unseen story, start from there, otherwise start from the beginning
+                if (firstUnseenIndex !== -1) {
+                    setCurrentStoryIndex(firstUnseenIndex);
+                } else {
+                    setCurrentStoryIndex(0);
+                }
             } else {
                 // If it's the last user's last story, go back to home
                 navigate('/');
             }
         }
         
-        // Reset video ended flag when moving to next story
+        // Reset video state when moving to next story
         setVideoEnded(false);
+        setVideoProgress(0);
+        setIsPaused(false);
     }, [allStories, currentUserIndex, currentStoryIndex, navigate]);
 
     const goToPreviousStory = useCallback(() => {
@@ -115,15 +137,35 @@ export default function StoryPage() {
             }
         }
         
-        // Reset video ended flag when moving to previous story
+        // Reset video state when moving to previous story
         setVideoEnded(false);
+        setVideoProgress(0);
+        setIsPaused(false);
     }, [allStories, currentUserIndex, currentStoryIndex]);
 
     // Reset video progress when story changes
     useEffect(() => {
         setVideoProgress(0);
         setVideoEnded(false);
+        setIsPaused(false);
     }, [currentUserIndex, currentStoryIndex]);
+
+    // Mark story as seen when it's viewed
+    useEffect(() => {
+        if (!isLoading && allStories.length > 0) {
+            const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+            
+            if (currentStoryItem && currentStoryItem.seen === 0) {
+                // Call the API to mark the story as seen
+                executeSaveInteraction(currentStoryItem._id);
+                
+                // Update the local state to mark the story as seen
+                const updatedStories = [...allStories];
+                updatedStories[currentUserIndex].stories[currentStoryIndex].seen = 1;
+                setAllStories(updatedStories);
+            }
+        }
+    }, [currentUserIndex, currentStoryIndex, isLoading, allStories, executeSaveInteraction]);
 
     // Handle video playback when story changes
     useEffect(() => {
@@ -159,8 +201,15 @@ export default function StoryPage() {
     // Handle video ended state to advance to next story
     useEffect(() => {
         if (videoEnded) {
-            // Immediately go to next story without delay
-            goToNextStory();
+            // Set progress to 100% before moving to next story
+            setVideoProgress(100);
+            
+            // Add a small delay to show the completed progress bar before moving to next story
+            const timer = setTimeout(() => {
+                goToNextStory();
+            }, 500); // Increased delay for better visibility
+            
+            return () => clearTimeout(timer);
         }
     }, [videoEnded, goToNextStory]);
 
@@ -261,25 +310,29 @@ export default function StoryPage() {
 
             <div className='bg-background relative border border-border rounded-lg shadow-sm overflow-hidden'>
                 <div className="absolute top-0 left-0 right-0 flex gap-1 z-10">
-                    {Array.from({ length: totalStories }).map((_, index) => (
-                        <div
-                            key={index}
-                            className="h-1 flex-1 rounded-full overflow-hidden bg-muted"
-                        >
+                    {Array.from({ length: totalStories }).map((_, index) => {
+                        // Determine if this story item is a video
+                        
+                        return (
                             <div
-                                className={`h-full bg-primary transition-all duration-300 ${
-                                    index < currentStoryIndex ? 'w-full' :
-                                    index === currentStoryIndex && !isVideo ? 'w-full animate-progress' : 
-                                    index === currentStoryIndex && isVideo ? '' : 'w-0'
-                                }`}
-                                style={{
-                                    width: index === currentStoryIndex && isVideo ? `${videoProgress}%` : undefined,
-                                    animationDuration: index === currentStoryIndex && !isVideo ? '5s' : '0s',
-                                    animationPlayState: isPaused ? 'paused' : 'running'
-                                }}
-                            />
-                        </div>
-                    ))}
+                                key={index}
+                                className="h-1 flex-1 rounded-full overflow-hidden bg-muted"
+                            >
+                                <div
+                                    className={`h-full bg-primary transition-all duration-300 ${
+                                        index < currentStoryIndex ? 'w-full' :
+                                        index === currentStoryIndex && !isVideo ? 'w-full animate-progress' : 
+                                        index === currentStoryIndex && isVideo ? '' : 'w-0'
+                                    }`}
+                                    style={{
+                                        width: index === currentStoryIndex && isVideo ? `${videoProgress}%` : undefined,
+                                        animationDuration: index === currentStoryIndex && !isVideo ? '5s' : '0s',
+                                        animationPlayState: isPaused ? 'paused' : 'running'
+                                    }}
+                                />
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Header */}
@@ -326,9 +379,9 @@ export default function StoryPage() {
                                 }}
                                 onTimeUpdate={updateVideoProgress}
                                 onEnded={() => {
-                                    // When video ends, just set videoEnded flag to true
-                                    // Don't set isVideoPlaying to false to avoid showing pause state
+                                    // When video ends, set videoEnded flag to true and ensure progress is 100%
                                     setVideoEnded(true);
+                                    setVideoProgress(100);
                                 }}
                                 onPlay={() => {
                                     setIsVideoPlaying(true);
