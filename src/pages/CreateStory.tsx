@@ -554,7 +554,7 @@ const CreateStory = () => {
             )} */}
 
             {/* Progress Indicators */}
-            <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
+            {/* <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
               {stories.map((_, index) => (
                 <div
                   key={index}
@@ -565,7 +565,7 @@ const CreateStory = () => {
                   />
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Story Content - Incorporating improved media handling from first file */}
             <div className="h-full w-full flex items-center justify-center relative z-10">
