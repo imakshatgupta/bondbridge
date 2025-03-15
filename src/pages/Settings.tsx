@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
-import { Link } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   setActivePage,
@@ -17,11 +16,13 @@ import {
 import { Loader2 } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Settings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useAppDispatch();
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
+  const navigate = useNavigate();
 
   // Get user data from Redux store
   const { username, nickname, email, avatar, privacyLevel, interests } =
@@ -103,9 +104,9 @@ const Settings = () => {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       {/* Header */}
       <div className="flex items-center p-4 ">
-        <Link to="/profile" className="mr-4">
+        <div onClick={() => navigate(-1)} className="mr-4 cursor-pointer">
           <ArrowLeft className="h-6 w-6" />
-        </Link>
+        </div>
         <h1 className="text-xl font-semibold flex-1">Settings</h1>
         <div className="flex items-center gap-2">
           <span>Go Anonymous</span>

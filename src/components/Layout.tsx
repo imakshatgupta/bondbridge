@@ -5,13 +5,14 @@ import Navbar from "./Navbar";
 import { useAppDispatch, useAppSelector } from "@/store";
 import ChatInterface from "./activity/ChatInterface";
 import { setActiveChat } from "@/store/chatSlice";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import mockUserData from "@/constants/users";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import SettingLayout from "./settings/SettingLayout";
 import LeftSidebar from "./auth/LeftSidebar";
 import { updateCurrentUser } from "@/store/currentUserSlice";
 import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
+import { useLocation } from "react-router-dom";
 
 interface LayoutProps {
   children: React.ReactNode;
