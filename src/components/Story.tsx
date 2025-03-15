@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 interface StoryProps {
   user: string;
+  userId: string;
   avatar: string;
   isLive: boolean;
   hasStory: boolean;
@@ -22,21 +23,57 @@ interface StoryProps {
   latestStoryTime: number;
   liveRingColor?: string;
   defaultRingColor?: string;
+  allStories?: Array<any>; // All stories from the homepage
+  storyIndex?: number; // Index of this story in the allStories array
+  usernameLengthLimit?: number; // Maximum length for username display
 }
 
 export const Story: FC<StoryProps> = ({ 
   user, 
+  userId,
   avatar, 
   isLive,
+  hasStory,
+  stories,
+  latestStoryTime,
   liveRingColor = 'ring-primary',
-  defaultRingColor = 'ring-muted'
+  defaultRingColor = 'ring-muted',
+  allStories = [],
+  storyIndex = 0,
+  usernameLengthLimit = 10
 }) => {
   const navigate = useNavigate();
+
+  const handleStoryClick = () => {
+    navigate('/story', { 
+      state: { 
+        currentStory: {
+          user,
+          userId,
+          avatar,
+          isLive,
+          hasStory,
+          stories,
+          latestStoryTime
+        },
+        allStories,
+        initialUserIndex: storyIndex
+      }
+    });
+  };
+
+  // Function to truncate username if it exceeds the limit
+  const truncateUsername = (username: string): string => {
+    if (username.length <= usernameLengthLimit) {
+      return username;
+    }
+    return `${username.substring(0, usernameLengthLimit)}...`;
+  };
 
   return (
     <div 
       className="flex flex-col items-center space-y-1 mx-2 my-1"
-      onClick={() => navigate('/story')}
+      onClick={handleStoryClick}
       role="button"
       tabIndex={0}
     >
@@ -56,7 +93,7 @@ export const Story: FC<StoryProps> = ({
           </span>
         )}
       </div>
-      <span className="text-xs text-muted-foreground">{user}</span>
+      <span className="text-xs text-muted-foreground" title={user}>{truncateUsername(user)}</span>
     </div>
   );
 }; 

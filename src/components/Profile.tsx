@@ -39,6 +39,7 @@ const Profile: React.FC<ProfileProps> = ({
   useEffect(() => {
     const loadPosts = async () => {
       const result = await executePostsFetch(userId,isCurrentUser);
+      console.log("result", result);
       if (result.success && result.data) {
         setPosts(result.data.posts);
       }

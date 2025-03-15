@@ -155,9 +155,9 @@ export default function CommentsPage() {
       toast.error("Failed to post comment. Please try again.");
     } else {
       // API call succeeded, update the temporary comment with the real data if available
-      if (result.data && result.data.cmment) {
+      if (result.data && result.data.comment) {
         // If the API returns the actual comment data, update the temporary comment
-        const realCommentData = result.data.cmment as any; // Type assertion to avoid property access errors
+        const realCommentData = result.data.comment as any; // Type assertion to avoid property access errors
         setCommentsData(prevComments => 
           prevComments.map(comment => 
             comment.commentId === tempCommentId 
@@ -218,6 +218,7 @@ export default function CommentsPage() {
           {post && (
             <Post 
               user={post.name}
+              userId={post.userId}
               avatar={post.profilePic}
               caption={post.data.content}
               image={post.data.media[0]?.url}

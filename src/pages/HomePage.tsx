@@ -104,11 +104,14 @@ export default function HomePage() {
               <Story
                 key={`story-${story.userId || index}`}
                 user={story.name}
+                userId={story.userId}
                 avatar={story.profilePic}
                 isLive={story.isLive}
                 hasStory={story.hasStory}
                 stories={story.stories}
                 latestStoryTime={story.latestStoryTime}
+                allStories={stories}
+                storyIndex={index}
               />
             ))}
           </div>
@@ -125,6 +128,7 @@ export default function HomePage() {
             <Post 
               user={post.name}
               avatar={post.profilePic}
+              userId={post.userId}
               caption={post.data.content}
               image={post.data.media[0].url}
               likes={post.reactionCount}
