@@ -4,13 +4,26 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { useState } from "react";
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from "@/components/ui/carousel";
+
+export interface MediaItem {
+    url: string;
+    type: string;
+}
 
 export interface PostProps {
     user: string;
     userId: string;
     avatar: string;
     caption: string;
-    image: string;
+    image?: string; // Made optional since we now support media array
+    media?: MediaItem[]; // New property for multiple media items
     likes: number;
     comments: number;
     datePosted: string;
@@ -19,7 +32,20 @@ export interface PostProps {
     onLikeClick?: () => void;
 }
 
-export function Post({ user, userId, avatar, caption, image, likes: initialLikes, comments, datePosted, isOwner = false, onCommentClick, onLikeClick }: PostProps) {
+export function Post({ 
+    user, 
+    userId, 
+    avatar, 
+    caption, 
+    image, 
+    media, 
+    likes: initialLikes, 
+    comments, 
+    datePosted, 
+    isOwner = false, 
+    onCommentClick, 
+    onLikeClick 
+}: PostProps) {
     const navigate = useNavigate();
     const [likes, setLikes] = useState(initialLikes);
     const [isLiked, setIsLiked] = useState(false);
@@ -35,6 +61,10 @@ export function Post({ user, userId, avatar, caption, image, likes: initialLikes
             onLikeClick?.();
         }
     };
+
+    // Determine if we should show a carousel or a single image
+    const hasMultipleMedia = media && media.length > 1;
+    const hasSingleMedia = (media && media.length === 1) || image;
 
     return (
         <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
@@ -60,15 +90,48 @@ export function Post({ user, userId, avatar, caption, image, likes: initialLikes
             </div>
             <CardContent className="p-4 pt-0">
                 <p className="text-card-foreground">{caption}</p>
-                {image && (
+                
+                {/* Carousel for multiple media items */}
+                {hasMultipleMedia && (
+                    <div className="mt-4 rounded-lg overflow-hidden">
+                        <Carousel className="w-full">
+                            <CarouselContent>
+                                {media!.map((item, index) => (
+                                    <CarouselItem key={`${userId}-media-${index}`}>
+                                        {item.type === "image" && (
+                                            <img
+                                                src={item.url}
+                                                alt={`Post media ${index + 1}`}
+                                                className="w-full max-h-[500px] object-contain bg-muted"
+                                            />
+                                        )}
+                                        {item.type === "video" && (
+                                            <video
+                                                src={item.url}
+                                                controls
+                                                className="w-full max-h-[500px] object-contain bg-muted"
+                                            />
+                                        )}
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2 bg-background/80" />
+                            <CarouselNext className="right-2 bg-background/80" />
+                        </Carousel>
+                    </div>
+                )}
+                
+                {/* Single media item (backward compatibility) */}
+                {!hasMultipleMedia && hasSingleMedia && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <img
-                            src={image}
+                            src={media ? media[0].url : image}
                             alt="Post"
                             className="w-full max-h-[500px] object-contain bg-muted"
                         />
                     </div>
                 )}
+                
                 <div className="flex items-center justify-between mt-4 text-muted-foreground">
                     <div className="flex items-center gap-3">
                         <button 

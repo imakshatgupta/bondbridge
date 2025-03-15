@@ -136,9 +136,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
       const handleReceiveMessage = (data: MessageResponse) => {
         console.log("Received message:", data);
         // Find sender info from participants
+        if (data.senderId === userId) {
+          return;
+        }
         const sender = chat?.participants.find(
           (p) => p.userId === data.senderId
         );
+
 
         const newMsg: Message = {
           id: data._id || `temp-${Date.now()}`,

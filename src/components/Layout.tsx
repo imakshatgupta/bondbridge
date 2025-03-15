@@ -1,6 +1,4 @@
-
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import SidebarAvatar from "./profile/SidebarAvatar";
 import Navbar from "./Navbar";
@@ -10,10 +8,11 @@ import { setActiveChat } from "@/store/chatSlice";
 import { Link, useLocation } from "react-router-dom";
 import mockUserData from "@/constants/users";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
-import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
-import SettingLayout from './settings/SettingLayout';
+import SettingLayout from "./settings/SettingLayout";
 import LeftSidebar from "./auth/LeftSidebar";
-import { setCurrentUser as setCurrentUserHandler } from "@/store/settingsSlice";
+import { updateCurrentUser } from "@/store/currentUserSlice";
+import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
+
 interface LayoutProps {
   children: React.ReactNode;
   showSidebars?: boolean; // Flag to control sidebar visibility
@@ -28,24 +27,37 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const activeChat = useAppSelector((state) => state.chat.activeChat);
-  const currentUserId = localStorage.getItem('userId') || "";
-  const currentUser = useAppSelector((state) => state.settings.currentUser);
-  const setCurrentUser = (user: UserProfileData) => {
-    dispatch(setCurrentUserHandler(user));
-  }
+  const currentUserId = localStorage.getItem("userId") || "";
+  const currentUser = useAppSelector((state) => state.currentUser);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  
   const location = useLocation();
 
   useEffect(() => {
     // console.log("location: ", location);
     const loadCurrentUser = async () => {
+      setIsLoadingProfile(true);
       const result = await fetchUserProfile(currentUserId, currentUserId);
       if (result.success) {
-        setCurrentUser(result.data);
+        dispatch(
+          updateCurrentUser({
+            username: result.data.username,
+            nickname: result.data.nickName,
+            email: result.data.email,
+            avatar: result.data.avatarSrc,
+            bio: result.data.bio,
+            privacyLevel: result.data.privacyLevel,
+          })
+        );
       }
+      setIsLoadingProfile(false);
     };
     loadCurrentUser();
-  }, [currentUserId,location]);
-  const isSettingsActive = useAppSelector((state) => state.settings.isSettingsActive);
+  }, [currentUserId,location, dispatch]);
+
+  const isSettingsActive = useAppSelector(
+    (state) => state.settings.isSettingsActive
+  );
 
   // Convert mockUserData to array and filter out current user
   const sidebarUsers = Object.entries(mockUserData)
@@ -97,45 +109,56 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
             ) : (
               <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl">
-                <div className="p-4 border-2 border-sidebar-border">
-                  <div className="flex flex-col items-center">
-                    <img
-                      src={currentUser?.avatarSrc || "/profile/avatars/1.png"}
-                      alt="Profile"
-                      className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
-                    />
-                    <h3 className="font-semibold text-xl text-sidebar-foreground">
-                      {currentUser?.username || "Loading..."}
-                    </h3>
-                    <p className="text-sidebar-foreground/60">
-                      {currentUser?.bio || ""}
-                    </p>
-                    <Link to={`/profile/${currentUserId}`}>
-                      <Button
-                        variant={"outline"}
-                        className="mt-2 cursor-pointer text-sidebar-primary text-sm font-medium border-primary w-full"
-                      >
-                        View Profile
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
+                {isLoadingProfile ? (
+                  // Show skeleton loaders when loading
+                  <>
+                    <SidebarProfileSkeleton />
+                    <SidebarPeopleSkeleton />
+                  </>
+                ) : (
+                  // Show actual content when loaded
+                  <>
+                    <div className="p-4 border-2 border-sidebar-border">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={currentUser?.avatar || "/profile/avatars/1.png"}
+                          alt="Profile"
+                          className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
+                        />
+                        <h3 className="font-semibold text-xl text-sidebar-foreground">
+                          {currentUser?.username || "Loading..."}
+                        </h3>
+                        <p className="text-sidebar-foreground/60">
+                          {currentUser?.bio || ""}
+                        </p>
+                        <Link to={`/profile/${currentUserId}`}>
+                          <Button
+                            variant={"outline"}
+                            className="mt-2 cursor-pointer text-sidebar-primary text-sm font-medium border-primary w-full"
+                          >
+                            View Profile
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
 
-                <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
-                  <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">
-                    People
-                  </h3>
-                  <ul className="space-y-3">
-                    {sidebarUsers.map((user) => (
-                      <SidebarAvatar
-                        key={user.id}
-                        id={user.id}
-                        username={user.username}
-                        avatarSrc={user.avatarSrc}
-                      />
-                    ))}
-                  </ul>
-                </div>
+                    <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
+                      <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">
+                        People
+                      </h3>
+                      <ul className="space-y-3">
+                        {sidebarUsers.map((user) => (
+                          <SidebarAvatar
+                            key={user.id}
+                            id={user.id}
+                            username={user.username}
+                            avatarSrc={user.avatarSrc}
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
