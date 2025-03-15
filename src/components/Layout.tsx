@@ -8,10 +8,9 @@ import { setActiveChat } from "@/store/chatSlice";
 import { Link, useLocation } from "react-router-dom";
 import mockUserData from "@/constants/users";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
-import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
-import SettingLayout from './settings/SettingLayout';
+import SettingLayout from "./settings/SettingLayout";
 import LeftSidebar from "./auth/LeftSidebar";
-import { setCurrentUser as setCurrentUserHandler } from "@/store/settingsSlice";
+import { updateCurrentUser } from "@/store/currentUserSlice";
 import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
 
 interface LayoutProps {
@@ -28,13 +27,10 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const activeChat = useAppSelector((state) => state.chat.activeChat);
-  const currentUserId = localStorage.getItem('userId') || "";
-  const currentUser = useAppSelector((state) => state.settings.currentUser);
+  const currentUserId = localStorage.getItem("userId") || "";
+  const currentUser = useAppSelector((state) => state.currentUser);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   
-  const setCurrentUser = (user: UserProfileData) => {
-    dispatch(setCurrentUserHandler(user));
-  }
   const location = useLocation();
 
   useEffect(() => {
@@ -43,13 +39,25 @@ const Layout: React.FC<LayoutProps> = ({
       setIsLoadingProfile(true);
       const result = await fetchUserProfile(currentUserId, currentUserId);
       if (result.success) {
-        setCurrentUser(result.data);
+        dispatch(
+          updateCurrentUser({
+            username: result.data.username,
+            nickname: result.data.nickName,
+            email: result.data.email,
+            avatar: result.data.avatarSrc,
+            bio: result.data.bio,
+            privacyLevel: result.data.privacyLevel,
+          })
+        );
       }
       setIsLoadingProfile(false);
     };
     loadCurrentUser();
-  }, [currentUserId,location]);
-  const isSettingsActive = useAppSelector((state) => state.settings.isSettingsActive);
+  }, [currentUserId,location, dispatch]);
+
+  const isSettingsActive = useAppSelector(
+    (state) => state.settings.isSettingsActive
+  );
 
   // Convert mockUserData to array and filter out current user
   const sidebarUsers = Object.entries(mockUserData)
@@ -113,7 +121,7 @@ const Layout: React.FC<LayoutProps> = ({
                     <div className="p-4 border-2 border-sidebar-border">
                       <div className="flex flex-col items-center">
                         <img
-                          src={currentUser?.avatarSrc || "/profile/avatars/1.png"}
+                          src={currentUser?.avatar || "/profile/avatars/1.png"}
                           alt="Profile"
                           className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
                         />

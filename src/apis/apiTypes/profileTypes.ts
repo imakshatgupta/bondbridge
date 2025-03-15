@@ -2,6 +2,7 @@ export interface UserProfileData {
   username: string;
   email: string;
   bio?: string;
+  nickName?: string;
   followers: number;
   following: number;
   avatarSrc: string;
@@ -9,10 +10,39 @@ export interface UserProfileData {
   privacyLevel?: number;
 }
 
+export interface PostData {
+  _id: string;
+  data: {
+    media: Array<{ url: string }>;
+    content: string;
+  };
+  createdAt: string;
+  name: string;
+  profilePic: string;
+  commentCount: number;
+  reactionCount: number;
+  reaction: {
+    hasReacted: boolean;
+    reactionType: string;
+  };
+}
+
 export interface UserPostsResponse {
   posts: Array<{
     id: number;
     imageSrc: string;
+    content: string;
+    createdAt: string;
+    author: {
+      name: string;
+      profilePic: string;
+    };
+    stats: {
+      commentCount: number;
+      reactionCount: number;
+      hasReacted: boolean;
+      reactionType: string;
+    };
   }>;
 }
 
