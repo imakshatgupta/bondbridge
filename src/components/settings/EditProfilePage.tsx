@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { X, ArrowLeft } from 'lucide-react';
-import { formDataApiClient } from '@/apis/apiClient';
 import { toast } from 'sonner';
+import { useApiCall } from '@/apis/globalCatchError';
+import { updateUserProfile } from '@/apis/commonApiCalls/profileApi';
 
 const AVAILABLE_INTERESTS = [
   'Design', 'Photography', 'Travel', 'Music', 'Art', 'Technology', 
@@ -36,7 +37,9 @@ const EditProfilePage: React.FC = () => {
   
   const [selectedAvatar, setSelectedAvatar] = useState(avatar);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(interests);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Use the useApiCall hook for the updateUserProfile API
+  const [executeUpdateProfile, isUpdatingProfile] = useApiCall(updateUserProfile);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -63,79 +66,38 @@ const EditProfilePage: React.FC = () => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     console.log('🚀 Starting profile update process...');
     
-    try {
-      // Create FormData object
-      const formDataObj = new FormData();
+    // Prepare the request data
+    const profileData = {
+      name: formData.username,
+      email: formData.email,
+      interests: selectedInterests,
+      privacyLevel: 1, // Set privacyLevel to 1 as requested
+      avatar: selectedAvatar
+    };
+    
+    console.log('📦 Form data prepared:', profileData);
+    
+    // Execute the API call using our hook
+    const { data, success } = await executeUpdateProfile(profileData);
+    
+    if (success && data) {
+      console.log('✅ Profile update successful, updating Redux store...');
       
-      // Append form data
-      formDataObj.append('name', formData.username);
-      formDataObj.append('email', formData.email);
-      formDataObj.append('interests', JSON.stringify(selectedInterests));
-      formDataObj.append('privacyLevel', '1'); // Set privacyLevel to 1 as requested
-      
-      // If avatar is a URL, we need to handle it differently than a File
-      if (selectedAvatar && selectedAvatar.startsWith('/')) {
-        // For pre-defined avatars, just send the path
-        formDataObj.append('avatar', selectedAvatar);
-      }
-      
-      // Get userId and token from localStorage
-      const userId = localStorage.getItem('userId') || '';
-      const token = localStorage.getItem('token') || '';
-      
-      console.log('📦 Form data prepared:', {
-        name: formData.username,
+      // Update Redux store
+      dispatch(updateProfile({
+        username: formData.username,
         email: formData.email,
-        interests: selectedInterests,
-        privacyLevel: 1,
         avatar: selectedAvatar,
-        userId,
-        token: token ? '✓ Token exists' : '✗ Token missing'
-      });
+      }));
+      dispatch(updateInterests(selectedInterests));
       
-      console.log('🔄 Sending API request to edit profile...');
-      
-      // Make the API call
-      const response = await formDataApiClient.put('http://18.144.2.16/api/edit-profile', formDataObj, {
-        headers: {
-          'userId': userId,
-          'token': token
-        }
-      });
-      
-      console.log('✅ API Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data
-      });
-      
-      if (response.status === 200) {
-        console.log('✅ Profile update successful, updating Redux store...');
-        // Update Redux store
-        dispatch(updateProfile({
-          username: formData.username,
-          email: formData.email,
-          avatar: selectedAvatar,
-        }));
-        dispatch(updateInterests(selectedInterests));
-        
-        console.log('🎉 Redux store updated successfully');
-        toast.success('Profile updated successfully');
-      } else {
-        console.error('❌ API returned non-200 status:', response.status);
-        toast.error('Failed to update profile');
-      }
-    } catch (error) {
-      console.error('❌ Error updating profile:', error);
-      
-      toast.error('An error occurred while updating your profile');
-    } finally {
-      console.log('🏁 Profile update process completed');
-      setIsSubmitting(false);
+      console.log('🎉 Redux store updated successfully');
+      toast.success('Profile updated successfully');
     }
+    
+    console.log('🏁 Profile update process completed');
   };
   
   const availableInterestsFiltered = AVAILABLE_INTERESTS.filter(
@@ -256,8 +218,8 @@ const EditProfilePage: React.FC = () => {
           </div>
         </div>
         
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
+        <Button type="submit" disabled={isUpdatingProfile}>
+          {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
         </Button>
       </form>
     </div>

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import axios from 'axios';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { Pencil, Trash2, Image, Smile, Plus } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+import { createPost } from '../apis/commonApiCalls/createPostApi';
+import { useApiCall } from '../apis/globalCatchError';
+import { toast } from 'sonner';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
@@ -16,6 +18,10 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Use the API call hook for the createPost function
+  const [executeCreatePost, isCreatingPost] = useApiCall(createPost);
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -44,48 +50,24 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
 
   const handleSubmit = async () => {
     if (content.trim() || mediaFiles.length > 0 || documentFiles.length > 0) {
-      try {
-        const formData = new FormData();
-        formData.append('content', content);
-        formData.append('whoCanComment', '1');
-        formData.append('privacy', '1');
+      setIsSubmitting(true);
+      
+      // Prepare the post data
+      const postData = {
+        content: content.trim(),
+        whoCanComment: 1, // Default value
+        privacy: 1, // Default value
+        image: mediaFiles,
+        document: documentFiles
+      };
+      
+      // Execute the API call with error handling
+      const { data, success } = await executeCreatePost(postData);
+      
+      if (success && data) {
+        // Show success message
+        toast.success('Post created successfully!');
         
-        // Append media files
-        mediaFiles.forEach((file, index) => {
-          formData.append('image', file);
-        });
-
-        const userId = localStorage.getItem('userId');
-        const token = localStorage.getItem('token');
-
-        console.log("userId from local storage: ", userId);
-        console.log("token from local storage: ", token);
-
-        if (!userId || !token) {
-          throw new Error('User not authenticated');
-        }
-
-        // Properly inspect FormData contents
-        for (let pair of formData.entries()) {
-          console.log(pair[0] + ': ' + pair[1]);
-        }
-
-        console.log("mediaFiles: ", mediaFiles);
-
-        const response = await axios.post('http://18.144.2.16/api/post', formData, {
-          headers: {
-            'userId': userId,
-            'token': token,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-
-        if (response.status !== 200) {
-          throw new Error('Failed to create post');
-        }
-
-        console.log('Post created successfully:', response.data);
-
         // Clear form after successful submission
         setContent('');
         setMediaFiles([]);
@@ -94,10 +76,11 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
         
         // Call the onSubmit prop if provided
         onSubmit?.(content, [...mediaFiles, ...documentFiles]);
-      } catch (error) {
-        console.error('Error creating post:', error);
-        // You might want to show an error message to the user here
       }
+      
+      setIsSubmitting(false);
+    } else {
+      toast.error('Please add some content to your post');
     }
   };
 
@@ -117,6 +100,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             size="sm"
             className="text-[var(--muted-foreground)] px-8 border"
             onClick={() => setContent('')}
+            disabled={isSubmitting || isCreatingPost}
           >
             Cancel
           </Button>
@@ -124,8 +108,9 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             size="sm"
             className="bg-[var(--primary)] px-10 hover:bg-[var(--primary-hover)] text-[var(--primary-foreground)]"
             onClick={handleSubmit}
+            disabled={isSubmitting || isCreatingPost}
           >
-            Post
+            {isSubmitting || isCreatingPost ? 'Posting...' : 'Post'}
           </Button>
         </div>
       </div>
