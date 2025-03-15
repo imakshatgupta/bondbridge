@@ -83,7 +83,7 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto p-4 text-center">
-        <div className="text-red-500 mb-4">{error}</div>
+        <div className="text-destructive mb-4">{error}</div>
         <button 
           onClick={() => window.location.reload()} 
           className="text-primary hover:underline"
@@ -104,11 +104,14 @@ export default function HomePage() {
               <Story
                 key={`story-${story.userId || index}`}
                 user={story.name}
+                userId={story.userId}
                 avatar={story.profilePic}
                 isLive={story.isLive}
                 hasStory={story.hasStory}
                 stories={story.stories}
                 latestStoryTime={story.latestStoryTime}
+                allStories={stories}
+                storyIndex={index}
               />
             ))}
           </div>
@@ -125,6 +128,7 @@ export default function HomePage() {
             <Post 
               user={post.name}
               avatar={post.profilePic}
+              userId={post.userId}
               caption={post.data.content}
               image={post.data.media[0].url}
               likes={post.reactionCount}

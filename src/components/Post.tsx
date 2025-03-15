@@ -7,6 +7,7 @@ import { useState } from "react";
 
 export interface PostProps {
     user: string;
+    userId: string;
     avatar: string;
     caption: string;
     image: string;
@@ -18,7 +19,7 @@ export interface PostProps {
     onLikeClick?: () => void;
 }
 
-export function Post({ user, avatar, caption, image, likes: initialLikes, comments, datePosted, isOwner = false, onCommentClick, onLikeClick }: PostProps) {
+export function Post({ user, userId, avatar, caption, image, likes: initialLikes, comments, datePosted, isOwner = false, onCommentClick, onLikeClick }: PostProps) {
     const navigate = useNavigate();
     const [likes, setLikes] = useState(initialLikes);
     const [isLiked, setIsLiked] = useState(false);
@@ -40,7 +41,7 @@ export function Post({ user, avatar, caption, image, likes: initialLikes, commen
             <div className="flex items-center justify-between p-4">
                 <div
                     className="flex items-center gap-3 cursor-pointer"
-                    onClick={() => navigate(`/profile/${user}`)}
+                    onClick={() => navigate(`/profile/${userId}`)}
                 >
                     <Avatar>
                         <AvatarImage src={avatar} alt={user} />

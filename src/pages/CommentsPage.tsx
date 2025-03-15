@@ -220,6 +220,7 @@ export default function CommentsPage() {
           {post && (
             <Post 
               user={post.name}
+              userId={post.userId}
               avatar={post.profilePic}
               caption={post.data.content}
               image={post.data.media[0]?.url}
