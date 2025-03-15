@@ -1,11 +1,12 @@
-import { configureStore } from '@reduxjs/toolkit';
-import chatReducer from './chatSlice';
-import createProfileReducer from './createProfileSlice';
-import createGroupReducer from './createGroupSlice';
-import { TypedUseSelectorHook } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { useSelector } from 'react-redux';
-import settingsReducer from './settingsSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import chatReducer from "./chatSlice";
+import createProfileReducer from "./createProfileSlice";
+import createGroupReducer from "./createGroupSlice";
+import { TypedUseSelectorHook } from "react-redux";
+import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import settingsReducer from "./settingsSlice";
+import currentUserReducer from "./currentUserSlice";
 
 export const store = configureStore({
   reducer: {
@@ -13,12 +14,13 @@ export const store = configureStore({
     createProfile: createProfileReducer,
     createGroup: createGroupReducer,
     settings: settingsReducer,
+    currentUser: currentUserReducer,
     // Add other reducers here
   },
 });
 
 export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch; 
+export type AppDispatch = typeof store.dispatch;
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch: () => AppDispatch = useDispatch;

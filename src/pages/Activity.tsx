@@ -16,10 +16,12 @@ import {
   setLoading,
   transformAndSetChats,
 } from "@/store/chatSlice";
-import { Plus, UserPlus } from "lucide-react";
+import { Plus, UserPlus, MessageSquare, Users, Building2 } from "lucide-react";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
 import { ChatRoom } from "@/apis/apiTypes/response";
 import UserSearchDialog from "@/components/common/UserSearchDialog";
+import { SuggestedCommunitiesSkeleton, ChatListSkeleton } from "@/components/skeletons/ActivitySkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Participant {
   userId: string;
@@ -30,6 +32,7 @@ interface Participant {
 export default function Activity() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const { filteredChats, isLoading } = useAppSelector((state) => state.chat);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
@@ -38,17 +41,26 @@ export default function Activity() {
   useEffect(() => {
     const loadChats = async () => {
       dispatch(setLoading(true));
-      const result = await executeFetchChats();
-      if (result.success && result.data) {
-        const currentUserId = localStorage.getItem("userId") || "";
-        dispatch(
-          transformAndSetChats({
-            chatRooms: result.data.chatRooms || [],
-            currentUserId,
-          })
-        );
+      try {
+        const result = await executeFetchChats();
+        if (result.success && result.data) {
+          const currentUserId = localStorage.getItem("userId") || "";
+          dispatch(
+            transformAndSetChats({
+              chatRooms: result.data.chatRooms || [],
+              currentUserId,
+            })
+          );
+          setError(null);
+        } else {
+          setError(result.data?.message || "Failed to load chats");
+        }
+      } catch (err) {
+        console.log("err: ", err);
+        setError("An error occurred while loading chats");
+      } finally {
+        dispatch(setLoading(false));
       }
-      dispatch(setLoading(false));
     };
     loadChats();
   }, [dispatch]);
@@ -118,10 +130,26 @@ export default function Activity() {
     }
   };
 
+  // Filter chats based on search query
+  const filteredDms = searchQuery 
+    ? filteredChats.dms.filter(chat => 
+        chat.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredChats.dms;
+    
+  const filteredGroups = searchQuery
+    ? filteredChats.groups.filter(group => 
+        group.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredChats.groups;
+    
+  const filteredCommunities = searchQuery
+    ? filteredChats.communities.filter(community => 
+        community.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredChats.communities;
+
   return (
     <div className="flex">
       {/* Main content area */}
-      <div className={`p-6 overflow-y-auto border-r border-border`}>
+      <div className={`p-6 overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-semibold">Activity</h1>
@@ -150,13 +178,20 @@ export default function Activity() {
             />
           </div>
         </div>
+        
+        {/* Suggested Communities Section */}
         <div className="mb-8">
           <h2 className="text-lg text-muted-foreground mb-4">
             Suggested Communities
           </h2>
-          <SuggestedCommunities />
+          {isLoading ? (
+            <SuggestedCommunitiesSkeleton />
+          ) : (
+            <SuggestedCommunities />
+          )}
         </div>
 
+        {/* Search Input */}
         <div className="relative mb-6">
           <Input
             type="search"
@@ -184,53 +219,101 @@ export default function Activity() {
           </div>
         </div>
 
+        {/* Error State */}
+        {error && !isLoading && (
+          <EmptyState
+            title="Failed to load activity"
+            description={error}
+            className="my-8"
+          />
+        )}
+
         {/* Chat Interface or Tabs */}
-        <Tabs defaultValue="chats" className="w-full">
-          <TabsList className="bg-transparent gap-4 *:px-5 *:py-1.5 mb-4">
-            <TabsTrigger
-              value="chats"
-              className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground"
-            >
-              Chats ({filteredChats.dms.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="my-groups"
-              className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground"
-            >
-              My groups ({filteredChats.groups.length})
-            </TabsTrigger>
-            <TabsTrigger
-              value="communities"
-              className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground"
-            >
-              Communities ({filteredChats.communities.length})
-            </TabsTrigger>
-          </TabsList>
+        {!error && (
+          <Tabs defaultValue="chats" className="w-full">
+            <TabsList className="bg-transparent gap-4 *:px-5 *:py-1.5 mb-4">
+              <TabsTrigger
+                value="chats"
+                className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground"
+              >
+                Chats ({filteredChats.dms.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="my-groups"
+                className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground"
+              >
+                My groups ({filteredChats.groups.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="communities"
+                className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground"
+              >
+                Communities ({filteredChats.communities.length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="chats">
-            <ChatList
-              chats={filteredChats.dms}
-              isLoading={isLoading}
-              onSelectChat={handleSelectChat}
-            />
-          </TabsContent>
+            <TabsContent value="chats">
+              {isLoading ? (
+                <ChatListSkeleton />
+              ) : filteredDms.length === 0 ? (
+                <EmptyState
+                  icon={MessageSquare}
+                  title="No chats yet"
+                  description={searchQuery ? `No chats matching "${searchQuery}"` : "Start a conversation to chat with friends"}
+                  actionLabel={searchQuery ? undefined : "Start Chat"}
+                  actionIcon={searchQuery ? undefined : UserPlus}
+                  onAction={searchQuery ? undefined : () => setDialogOpen(true)}
+                  className="my-8"
+                />
+              ) : (
+                <ChatList
+                  chats={filteredDms}
+                  isLoading={isLoading}
+                  onSelectChat={handleSelectChat}
+                />
+              )}
+            </TabsContent>
 
-          <TabsContent value="my-groups">
-            <GroupList
-              groups={filteredChats.groups}
-              isLoading={isLoading}
-              onSelectGroup={handleSelectChat}
-            />
-          </TabsContent>
+            <TabsContent value="my-groups">
+              {isLoading ? (
+                <ChatListSkeleton />
+              ) : filteredGroups.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  title="No groups yet"
+                  description={searchQuery ? `No groups matching "${searchQuery}"` : "Create or join a group to chat with multiple people"}
+                  actionLabel={searchQuery ? undefined : "Create Group"}
+                  className="my-8"
+                />
+              ) : (
+                <GroupList
+                  groups={filteredGroups}
+                  isLoading={isLoading}
+                  onSelectGroup={handleSelectChat}
+                />
+              )}
+            </TabsContent>
 
-          <TabsContent value="communities">
-            <CommunityList
-              communities={filteredChats.communities}
-              isLoading={isLoading}
-              onSelectCommunity={handleSelectChat}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="communities">
+              {isLoading ? (
+                <ChatListSkeleton />
+              ) : filteredCommunities.length === 0 ? (
+                <EmptyState
+                  icon={Building2}
+                  title="No communities yet"
+                  description={searchQuery ? `No communities matching "${searchQuery}"` : "Join a community to connect with people who share your interests"}
+                  className="my-8"
+                />
+              ) : (
+                <CommunityList
+                  communities={filteredCommunities}
+                  isLoading={isLoading}
+                  onSelectCommunity={handleSelectChat}
+                />
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </div>
   );

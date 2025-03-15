@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon, Loader2 } from "lucide-react";
+import { Search as SearchIcon, Loader2, Users, AlertCircle } from "lucide-react";
 import SearchResults from "@/components/SearchResults";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
 import { useApiCall } from "@/apis/globalCatchError";
+import { SearchResultsListSkeleton } from "@/components/skeletons/SearchSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
-  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const [executeSearch, isLoading] = useApiCall(searchPeople);
 
@@ -17,14 +20,25 @@ export default function Search() {
     const fetchPeople = async () => {
       if (!searchQuery.trim()) {
         setPeople([]);
+        setHasSearched(false);
         return;
       }
 
-      const result = await executeSearch(searchQuery);
+      try {
+        const result = await executeSearch(searchQuery);
+        setHasSearched(true);
 
-      console.log(result);
-      if (result.success) {
-        setPeople(result.data?.users || []);
+        if (result.success) {
+          setPeople(result.data?.users || []);
+          setError(null);
+        } else {
+          setError(result.data?.message || "Failed to search for people");
+          setPeople([]);
+        }
+      } catch (err) {
+        console.log("err: ", err);
+        setError("An error occurred while searching");
+        setPeople([]);
       }
     };
 
@@ -35,10 +49,6 @@ export default function Search() {
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
-
-  const handleProfileClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
-  };
 
   return (
     <>
@@ -59,19 +69,49 @@ export default function Search() {
             )}
           </div>
         </div>
-        {/* {searchQuery === "" && (
+        
+        {/* Recent Searches */}
+        {searchQuery === "" && !hasSearched && (
           <div className="text-sm text-muted-foreground mb-4">
             Recent Searches
           </div>
-        )} */}
+        )}
+        
+        {/* Loading State */}
+        {isLoading && searchQuery !== "" && (
+          <SearchResultsListSkeleton />
+        )}
+        
+        {/* Error State */}
+        {error && !isLoading && (
+          <EmptyState
+            icon={AlertCircle}
+            title="Search Error"
+            description={error}
+            className="my-8"
+          />
+        )}
+        
+        {/* Empty Results State */}
+        {!isLoading && hasSearched && people.length === 0 && !error && (
+          <EmptyState
+            icon={Users}
+            title="No results found"
+            description={`No users found matching "${searchQuery}"`}
+            className="my-8"
+          />
+        )}
+        
         {/* People List */}
-        <div className="space-y-4">
-          {people.map((person) => (
-            <div key={person.id} onClick={() => handleProfileClick(person.id)}>
-              <SearchResults person={person} />
-            </div>
-          ))}
-        </div>
+        {!isLoading && people.length > 0 && (
+          <div className="space-y-4">
+            {people.map((person) => (
+              <div key={person.id}>
+                <SearchResults person={person} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

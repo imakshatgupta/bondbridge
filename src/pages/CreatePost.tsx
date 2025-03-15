@@ -7,12 +7,14 @@ import EmojiPicker from 'emoji-picker-react';
 import { createPost } from '../apis/commonApiCalls/createPostApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
 }
 
 const CreatePost = ({ onSubmit }: CreatePostProps) => {
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
@@ -78,6 +80,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
         
         // Call the onSubmit prop if provided
         onSubmit?.(content, [...mediaFiles, ...documentFiles]);
+        navigate('/');
       }
       
       setIsSubmitting(false);
