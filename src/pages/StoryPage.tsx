@@ -31,6 +31,7 @@ export default function StoryPage() {
             
             if (passedStories && passedStories.length > 0) {
                 // Map the API story data to our StoryUser format
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const formattedStories = passedStories.map((story: any) => ({
                     user: story.name,
                     userId: story.userId,

@@ -1,3 +1,4 @@
+import { UserProfileData } from '@/apis/apiTypes/profileTypes';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export type SettingPage = 'profile' | 'privacy' | 'notifications' | 'blocked' | 'voice' | 'help' | 'account';
@@ -20,6 +21,7 @@ interface SettingsState {
   username: string;
   email: string;
   avatar: string;
+  currentUser: UserProfileData | null;
   interests: string[];
   selectedVoice: string;
   voiceOptions: VoiceOption[];
@@ -35,6 +37,7 @@ interface SettingsState {
 const initialState: SettingsState = {
   isSettingsActive: false,
   activePage: 'profile',
+  currentUser: null,
   username: 'Jo Hall',
   email: 'cloudysanfrancisco@gmail.com',
   avatar: '/profile/avatars/1.png',
@@ -66,6 +69,12 @@ const settingsSlice = createSlice({
   reducers: {
     setSettingsActive: (state, action: PayloadAction<boolean>) => {
       state.isSettingsActive = action.payload;
+    },
+    setCurrentUser: (state, action: PayloadAction<Partial<UserProfileData>>) => {
+      state.currentUser = {
+        ...state.currentUser,
+        ...action.payload
+      } as UserProfileData;
     },
     setActivePage: (state, action: PayloadAction<SettingPage>) => {
       state.activePage = action.payload;
@@ -108,6 +117,7 @@ export const {
   updatePrivacySettings,
   logout,
   deleteAccount,
+  setCurrentUser
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

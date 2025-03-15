@@ -72,12 +72,12 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
           )} */}
         </div>
         
-        <div className="hidden md:flex flex-col justify-center items-center p-8 pb-0">
-          <div className="">
-            <h1 className="text-6xl font-semibold mb-2 ">{title}</h1>
-            <p className="text-muted-foreground text-2xl mb-8">{subtitle}</p>
+        <div className="hidden md:flex flex-col justify-between p-8 pb-0 h-[calc(100vh-64px)]">
+
+            <h1 className="text-5xl 2xl:text-6xl font-semibold mb-2 ">{title}</h1>
+            <p className="text-muted-foreground text-xl 2xl:text-2xl mb-8">{subtitle}</p>
             <img src={image} alt="Illustration" className="-mt-20 mx-auto aspect-auto" />
-          </div>
+       
         </div>
       </div>
     </div>
