@@ -334,7 +334,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-6">
+      <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {isLoadingMessages ? (
           <div className="flex justify-center items-center h-full">
             <p>Loading messages...</p>
@@ -370,9 +370,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </Avatar>
                 )}
                 {/* Add a spacer when we don't show the avatar to keep alignment */}
-                {/* {(chat.type === "dm" || !isPreviousDifferentSender) && (
-                  <div className="w-8" />
-                )} */}
+                {!isPreviousDifferentSender && <div className="w-7" />}
 
                 <div
                   className={`max-w-[70%] p-3 rounded-lg ${
