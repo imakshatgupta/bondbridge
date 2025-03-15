@@ -23,6 +23,7 @@ interface StoryProps {
   latestStoryTime: number;
   liveRingColor?: string;
   defaultRingColor?: string;
+  unseenRingColor?: string;
   allStories?: Array<any>; // All stories from the homepage
   storyIndex?: number; // Index of this story in the allStories array
   usernameLengthLimit?: number; // Maximum length for username display
@@ -38,11 +39,15 @@ export const Story: FC<StoryProps> = ({
   latestStoryTime,
   liveRingColor = 'ring-primary',
   defaultRingColor = 'ring-muted',
+  unseenRingColor = 'ring-blue-500',
   allStories = [],
   storyIndex = 0,
   usernameLengthLimit = 10
 }) => {
   const navigate = useNavigate();
+
+  // Check if user has any unseen stories
+  const hasUnseenStories = stories.some(story => story.seen === 0);
 
   const handleStoryClick = () => {
     navigate('/story', { 
@@ -80,7 +85,9 @@ export const Story: FC<StoryProps> = ({
       <div className={`relative w-16 h-16 rounded-full ${
         isLive 
           ? `ring-2 ${liveRingColor}` 
-          : `ring-2 ${defaultRingColor}`
+          : hasUnseenStories
+            ? `ring-2 ${unseenRingColor}`
+            : `ring-2 ${defaultRingColor}`
       }`}>
         <img 
           src={avatar} 

@@ -99,3 +99,28 @@ export function validateFormData(formData: FormData): boolean {
   
   return hasRequiredFields && hasContent;
 }
+
+/**
+ * Function to mark a story as seen by the current user
+ * @param storyId - The ID of the story that was viewed
+ * @returns Promise with the API response
+ */
+export const saveStoryInteraction = async (storyId: string): Promise<{ success: boolean; message: string }> => {
+  if (!storyId) {
+    throw new Error('Story ID is required');
+  }
+  
+  const formData = new FormData();
+  formData.append('storyId', storyId);
+  
+  const response = await formDataApiClient.post('/save-interaction', formData);
+  
+  if (response.status === 200) {
+    return {
+      success: true,
+      message: response.data.message || 'Story interaction saved successfully'
+    };
+  } else {
+    throw new Error(response.data.message || 'Failed to save story interaction');
+  }
+};

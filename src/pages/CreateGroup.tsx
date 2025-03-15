@@ -62,6 +62,9 @@ const CreateGroup: React.FC = () => {
         return;
       }
 
+      console.log("selectedParticipants: ", selectedParticipants);
+      console.log("groupInfo: ", groupInfo);
+
       const result = await executeCreateGroup({
         groupName: groupInfo.name,
         participants: selectedParticipants,
@@ -72,6 +75,8 @@ const CreateGroup: React.FC = () => {
       if (result.success) {
         toast.success("Group created successfully!");
         navigate("/activity");
+      } else {
+        toast.error("Failed to create group. Please try again.");
       }
       return;
     }
