@@ -121,7 +121,7 @@ export default function Activity() {
   return (
     <div className="flex">
       {/* Main content area */}
-      <div className={`p-6 overflow-y-auto border-r border-border`}>
+      <div className={`p-6 overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-semibold">Activity</h1>
