@@ -83,7 +83,7 @@ export default function HomePage() {
   if (error) {
     return (
       <div className="max-w-2xl mx-auto p-4 text-center">
-        <div className="text-red-500 mb-4">{error}</div>
+        <div className="text-destructive mb-4">{error}</div>
         <button 
           onClick={() => window.location.reload()} 
           className="text-primary hover:underline"
