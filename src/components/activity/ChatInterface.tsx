@@ -15,7 +15,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages } from "@/apis/commonApiCalls/chatApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // Define types for socket responses
 interface MessageResponse {
