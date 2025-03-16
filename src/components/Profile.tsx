@@ -24,8 +24,8 @@ import {
   transformAndSetChats,
 } from "@/store/chatSlice";
 import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
-import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
-import type { StoryData } from "@/apis/apiTypes/response";
+// import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
+// import type { StoryData } from "@/apis/apiTypes/response";
 
 interface ProfileProps {
   userId: string;
@@ -56,7 +56,7 @@ const Profile: React.FC<ProfileProps> = ({
   const dispatch = useAppDispatch();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
-  const [userStories, setUserStories] = useState<StoryData | null>(null);
+  // const [userStories, setUserStories] = useState<StoryData | null>(null);
   const [localRequestSent, setLocalRequestSent] = useState(requestSent);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] =
@@ -252,11 +252,12 @@ const Profile: React.FC<ProfileProps> = ({
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
-          className={`relative w-24 h-24 cursor-pointer ${
-            userStories?.hasStory 
-              ? 'ring-2 ring-muted rounded-full'
-              : ''
-          }`}
+          className="relative w-24 h-24 cursor-pointer"
+          // className={`relative w-24 h-24 cursor-pointer ${
+          //   userStories?.hasStory 
+          //     ? 'ring-2 ring-muted rounded-full'
+          //     : ''
+          // }`}
           // onClick={handleStoryClick}
         >
           <img
