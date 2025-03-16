@@ -60,16 +60,12 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
       return;
     }
     
-    // Show a toast notification when rewriting starts
-    toast.info('Rewriting your text with BondChat...');
-    
     // Execute the API call with error handling
     const { data, success } = await executeRewriteWithBondChat(content);
     
     if (success && data) {
       // Update the content with the rewritten text
       setContent(data.rewritten);
-      toast.success('Text rewritten successfully!');
     }
   };
 
