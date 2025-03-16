@@ -15,6 +15,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages } from "@/apis/commonApiCalls/chatApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Define types for socket responses
 interface MessageResponse {
@@ -61,6 +62,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const userId = localStorage.getItem("userId") || "";
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [executeGetMessages] = useApiCall(getMessages);
+  const navigate = useNavigate();
 
   const dispatch = useAppDispatch();
   const {
@@ -252,6 +254,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     onClose();
   };
 
+  const handleProfileClick = () => {
+    if (chat?.type === "dm") {
+      // Find the other participant (not the current user)
+      const otherParticipant = chat.participants.find(p => p.userId !== userId);
+      if (otherParticipant) {
+        navigate(`/profile/${otherParticipant.userId}`);
+      }
+    }
+  };
+
   if (!chat) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -283,17 +295,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={avatar} alt={name} />
-            <AvatarFallback>{name?.[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-medium">{name}</h3>
-            <p className="text-xs text-muted-foreground">
-              {chat.type === "dm"
-                ? "online"
-                : `${chat.type} · ${chat.participants.length} members`}
-            </p>
+          <div 
+            className={`flex items-center gap-3 ${chat.type === "dm" ? "cursor-pointer" : ""}`} 
+            onClick={handleProfileClick}
+          >
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={avatar} alt={name} />
+              <AvatarFallback>{name?.[0]}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-medium">{name}</h3>
+              <p className="text-xs text-muted-foreground">
+                {chat.type === "dm"
+                  ? "online"
+                  : `${chat.type} · ${chat.participants.length} members`}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
