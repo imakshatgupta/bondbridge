@@ -77,7 +77,7 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/comments/:postId"
+              path="/post/:postId"
               element={
                 <Layout showSidebars={true}>
                   <CommentsPage />
@@ -133,7 +133,7 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/story"
+              path="/story/:userId"
               element={
                 <Layout showSidebars={true} className="!p-0">
                   <StoryPage />
