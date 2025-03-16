@@ -1,7 +1,9 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { setActiveChat, ChatItem } from "@/store/chatSlice";
+import { setActiveChat, ChatItem, markChatAsRead } from "@/store/chatSlice";
 import { useAppDispatch } from "../../store";
+import { markMessageAsSeen } from "@/apis/commonApiCalls/chatApi";
+import { useCallback } from "react";
 
 interface ChatListProps {
   chats: ChatItem[];
@@ -12,10 +14,26 @@ interface ChatListProps {
 const ChatList = ({ chats, isLoading, onSelectChat }: ChatListProps) => {
   const dispatch = useAppDispatch();
 
-  const handleChatSelect = (chat: ChatItem) => {
+  const handleChatSelect = useCallback(async (chat: ChatItem) => {
     dispatch(setActiveChat(chat));
     onSelectChat(chat);
-  };
+
+    // If the chat has unread messages, mark them as seen
+    if (chat.unread) {
+      try {
+        // Call the API to mark the message as seen
+        await markMessageAsSeen({
+          entityId: chat.id,
+          reactionType: "seen"
+        });
+        
+        // Update the Redux store to reflect the chat as read
+        dispatch(markChatAsRead(chat.id));
+      } catch (error) {
+        console.error("Error marking message as seen:", error);
+      }
+    }
+  }, [dispatch, onSelectChat]);
 
   if (isLoading) {
     return <div className="flex justify-center p-4">Loading chats...</div>;

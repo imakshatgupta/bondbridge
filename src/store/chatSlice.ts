@@ -196,6 +196,28 @@ const chatSlice = createSlice({
         ),
       };
     },
+    // Add a new reducer to mark a chat as read
+    markChatAsRead: (state, action: PayloadAction<string>) => {
+      const chatId = action.payload;
+      
+      // Update the chat in the main chats array
+      state.chats = state.chats.map(chat => 
+        chat.id === chatId ? { ...chat, unread: false } : chat
+      );
+      
+      // Update the chat in the filtered chats
+      Object.keys(state.filteredChats).forEach(key => {
+        const chatType = key as keyof typeof state.filteredChats;
+        state.filteredChats[chatType] = state.filteredChats[chatType].map(chat => 
+          chat.id === chatId ? { ...chat, unread: false } : chat
+        );
+      });
+      
+      // If this is the active chat, mark it as read
+      if (state.activeChat && state.activeChat.id === chatId) {
+        state.activeChat = { ...state.activeChat, unread: false };
+      }
+    },
   },
 });
 
@@ -208,6 +230,7 @@ export const {
   addMessage,
   setIsTyping,
   transformAndSetChats,
+  markChatAsRead,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

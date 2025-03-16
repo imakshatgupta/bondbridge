@@ -123,6 +123,12 @@ export interface CreateGroupRequest {
   participants: string[];
 }
 
+export interface EditGroupRequest {
+  groupId: string;
+  bio: string;
+  profileUrl?: string;
+}
+
 export interface StoryData {
   type: 'text' | 'photo' | 'video';
   content: string | File | Blob;
@@ -175,5 +181,11 @@ export interface CreatePostRequest {
 export interface ReactionRequest {
   entityId: string;
   entityType: string;
+  reactionType: string;
+}
+
+// Interface for message interaction (marking as seen)
+export interface MessageInteractionRequest {
+  entityId: string;
   reactionType: string;
 }

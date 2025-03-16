@@ -3,6 +3,25 @@ export interface ApiResponse<T = void> {
   success: boolean;
   message: string;
   data?: T;
+  groupId?: string;
+  chatRoom?: {
+    _id: string;
+    chatRoomId: string;
+    participants: Array<{
+      userId: string;
+      status: string;
+      createdAt: string;
+      updatedAt: string;
+      name: string;
+      profilePic: string;
+    }>;
+    roomType: string;
+    groupName: string;
+    profileUrl: string | null;
+    admin: string;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 // OTP response interfaces
