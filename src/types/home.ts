@@ -14,6 +14,10 @@ export interface CommentProps {
   comment: CommentData & {
     likes?: number;
     hasReplies?: boolean;
+    reaction?: {
+      hasReacted: boolean;
+      reactionType: string | null;
+    };
   };
   isReply?: boolean;
   postId?: string;

@@ -133,3 +133,24 @@ export const getSelfStories = async () => {
   const response = await formDataApiClient.get('/get-self-stories');
   return response.data;
 };
+
+/**
+ * Function to get stories for a specific user by userId
+ * @param userId - The ID of the user whose stories to fetch
+ * @returns Promise with the user's stories
+ */
+export const getStoryForUser = async (userId: string) => {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+  
+  const response = await formDataApiClient.get('/get-story-for-user', {
+    params: { userId }
+  });
+  
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to fetch user stories');
+  }
+};
