@@ -116,6 +116,10 @@ export interface CommentData {
   likes: number;
   hasReplies: boolean;
   replies?: CommentData[];
+  reaction?: {
+    hasReacted: boolean;
+    reactionType: string | null;
+  };
 }
 
 export interface PostData {
