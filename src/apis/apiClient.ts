@@ -35,8 +35,8 @@ apiClient.interceptors.request.use(
 //     return response;
 //   },
 //   (error) => {
-//     // Check if the error is due to unauthorized access (401) or bad request (400)
-//     if (error.response && (error.response.status === 401 || error.response.status === 400)) {
+//     // Check if the error is due to unauthorized access (401)
+//     if (error.response && (error.response.status === 401)) {
 //       // Clear all local storage
 //       localStorage.clear();
       
@@ -81,8 +81,8 @@ formDataApiClient.interceptors.request.use(
 //     return response;
 //   },
 //   (error) => {
-//     // Check if the error is due to unauthorized access (401) or bad request (400)
-//     if (error.response && (error.response.status === 401 || error.response.status === 400)) {
+//     // Check if the error is due to unauthorized access (401)
+//     if (error.response && (error.response.status === 401) {
 //       // Clear all local storage
 //       localStorage.clear();
       
