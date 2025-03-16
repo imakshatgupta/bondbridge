@@ -5,12 +5,13 @@ import SelectFriendsTab from "@/components/groups/SelectFriendsTab";
 import TabPageLayout from "@/components/layouts/TabPageLayout";
 import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
 import { useApiCall } from "@/apis/globalCatchError";
-import { createGroup } from "@/apis/commonApiCalls/activityApi";
+import { createGroup, editGroup } from "@/apis/commonApiCalls/activityApi";
 import { toast } from "sonner";
 
 interface GroupInfo {
   name: string;
   description: string;
+  profileUrl?: string | null;
 }
 
 // interface GroupSkills {
@@ -43,6 +44,7 @@ const CreateGroup: React.FC = () => {
   );
 
   const [executeCreateGroup, isCreatingGroup] = useApiCall(createGroup);
+  const [executeEditGroup] = useApiCall(editGroup);
 
   const handleNext = async () => {
     const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
@@ -73,6 +75,32 @@ const CreateGroup: React.FC = () => {
       console.log("result: ", result);
 
       if (result.success) {
+        // If we have a description or image, make an edit-group API call
+        if (groupInfo.description || groupInfo.profileUrl) {
+          try {
+            // Get the chatRoomId from the nested chatRoom object in the response
+            const chatRoomId = result.data?.chatRoom?.chatRoomId;
+            if (chatRoomId) {
+              const editResult = await executeEditGroup({
+                groupId: chatRoomId,
+                bio: groupInfo.description,
+                profileUrl: groupInfo.profileUrl || undefined,
+              });
+              
+              console.log("Edit group result:", editResult);
+              
+              if (!editResult.success) {
+                toast.error("Group created but failed to update details");
+              }
+            } else {
+              console.error("No chatRoomId returned from create group API");
+            }
+          } catch (error) {
+            console.error("Error updating group details:", error);
+            toast.error("Group created but failed to update details");
+          }
+        }
+        
         toast.success("Group created successfully!");
         navigate("/activity");
       } else {

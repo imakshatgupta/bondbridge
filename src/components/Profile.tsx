@@ -35,6 +35,9 @@ interface ProfileProps {
   following: number;
   avatarSrc: string;
   isCurrentUser?: boolean;
+  isFollowing?: boolean;
+  isFollower?: boolean;
+  requestSent?: boolean;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -45,12 +48,16 @@ const Profile: React.FC<ProfileProps> = ({
   following,
   avatarSrc,
   isCurrentUser = false,
+  isFollowing = false,
+  isFollower = false,
+  requestSent = false,
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
   const [userStories, setUserStories] = useState<StoryData | null>(null);
+  const [localRequestSent, setLocalRequestSent] = useState(requestSent);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] =
     useApiCall(sendFriendRequest);
@@ -106,12 +113,16 @@ const Profile: React.FC<ProfileProps> = ({
   //     }
   //   });
   // };
+  useEffect(() => {
+    setLocalRequestSent(requestSent);
+  }, [requestSent]);
 
   const handleSendFriendRequest = async () => {
     try {
       console.log("aksh user id", userId);
       const result = await executeSendFriendRequest({ userId: userId });
       if (result.success && result.data) {
+        setLocalRequestSent(true);
         toast.success("Friend request sent successfully!");
       } else {
         toast.error(result.data?.message || "Failed to send friend request");
@@ -299,12 +310,18 @@ const Profile: React.FC<ProfileProps> = ({
             <Button
               className="flex-1 cursor-pointer"
               onClick={handleSendFriendRequest}
-              disabled={isSendingFriendRequest}
+              disabled={isSendingFriendRequest || isFollowing || localRequestSent}
             >
               {isSendingFriendRequest ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              Add Friend
+              {isFollowing 
+                ? "Following" 
+                : localRequestSent 
+                  ? "Request Sent" 
+                  : isFollower 
+                    ? "Follow Back" 
+                    : "Follow"}
             </Button>
           </div>
         )}

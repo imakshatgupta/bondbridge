@@ -31,6 +31,9 @@ export const fetchUserProfile = async (
       avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
       isCurrentUser,
       privacyLevel: userData.privacyLevel || 0,
+      isFollowing: userData.isFollowing || false,
+      isFollower: userData.isFollower || false,
+      requestSent: userData.requestSent || false,
     },
   };
 };

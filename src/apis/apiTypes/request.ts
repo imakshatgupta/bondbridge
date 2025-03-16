@@ -123,6 +123,12 @@ export interface CreateGroupRequest {
   participants: string[];
 }
 
+export interface EditGroupRequest {
+  groupId: string;
+  bio: string;
+  profileUrl?: string;
+}
+
 export interface StoryData {
   type: 'text' | 'photo' | 'video';
   content: string | File | Blob;
