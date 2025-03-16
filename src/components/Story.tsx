@@ -23,11 +23,10 @@ export const Story: FC<StoryProps> = ({
   const hasUnseenStories = stories.some(story => story.seen === 0);
 
   const handleStoryClick = () => {
-    navigate('/story', { 
+    navigate(`/story/${userId}`, { 
       state: { 
         currentStory: {
           user,
-          userId,
           avatar,
           isLive,
           hasStory,

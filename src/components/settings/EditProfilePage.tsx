@@ -58,6 +58,19 @@ const EditProfilePage: React.FC = () => {
         if (female && female.length > 0) {
           setFemaleAvatars(female);
         }
+        
+        // Determine which tab should be active based on current avatar
+        if (avatar) {
+          const isMaleAvatar = male.some((item: AvatarData) => item.url === avatar);
+          const isFemaleAvatar = female.some((item: AvatarData) => item.url === avatar);
+          
+          if (isMaleAvatar) {
+            setActiveTab("male");
+          } else if (isFemaleAvatar) {
+            setActiveTab("female");
+          }
+          // If avatar doesn't match any in the lists, keep default tab
+        }
       }
     };
     
@@ -130,14 +143,14 @@ const EditProfilePage: React.FC = () => {
   
   const renderAvatarGrid = (avatars: AvatarData[], type: string) => {
     return (
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+      <div className="flex flex-wrap gap-2">
         {avatars.map((avatarItem, index) => {
           const avatarUrl = avatarItem.url;
           
           return (
             <div 
               key={`${type}-${index}`}
-              className={`relative cursor-pointer rounded-lg border-2 ${
+              className={`relative cursor-pointer rounded-lg border-2 w-fit ${
                 selectedAvatar === avatarUrl 
                   ? 'border-primary bg-muted' 
                   : 'border-border hover:border-muted-foreground'
@@ -194,7 +207,7 @@ const EditProfilePage: React.FC = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
             </div>
           ) : (
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="female">Female</TabsTrigger>
                 <TabsTrigger value="male">Male</TabsTrigger>
@@ -230,6 +243,7 @@ const EditProfilePage: React.FC = () => {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
+              disabled={privacyLevel == 1}
             />
           </div>
 
@@ -249,7 +263,7 @@ const EditProfilePage: React.FC = () => {
         <div className="space-y-4">
           <Label>Interests</Label>
 
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4 overflow-y-auto max-h-[20vh]">
             {selectedInterests.map((interest, index) => (
               <Badge key={`interest-${index}`} variant="secondary" className="flex items-center gap-1">
                 {interest}
@@ -270,9 +284,9 @@ const EditProfilePage: React.FC = () => {
           <div className="mt-4">
             <p className="text-sm text-muted-foreground mb-2">
               Suggested interests:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {availableInterestsFiltered.slice(0, 8).map((interest) => (
+            </p>  
+            <div className="flex flex-wrap gap-2 overflow-y-auto h-[20vh]">
+              {availableInterestsFiltered.map((interest) => (
                 <Badge 
                   key={`suggested-interest-${interest}`} 
                   variant="outline" 

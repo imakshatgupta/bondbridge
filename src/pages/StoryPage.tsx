@@ -1,15 +1,16 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ArrowLeft, Send, Pause, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { saveStoryInteraction } from '@/apis/commonApiCalls/storyApi';
+import { saveStoryInteraction, getStoryForUser } from '@/apis/commonApiCalls/storyApi';
 import { useApiCall } from '@/apis/globalCatchError';
 import { StoryItem, StoryUser } from '@/types/story';
 
 export default function StoryPage() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { userId } = useParams<{ userId: string }>();
     const [allStories, setAllStories] = useState<StoryUser[]>([]);
     const [currentUserIndex, setCurrentUserIndex] = useState(0);
     const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
@@ -23,67 +24,116 @@ export default function StoryPage() {
     
     // Use our custom hook for API calls
     const [executeSaveInteraction] = useApiCall(saveStoryInteraction);
+    const [executeGetStoryForUser] = useApiCall(getStoryForUser);
 
-    // Initialize with the story data passed from the HomePage
+    // Initialize with the story data passed from the HomePage or fetch from API
     useEffect(() => {
-        if (location.state) {
-            const { currentStory, allStories: passedStories, initialUserIndex } = location.state;
+        const initializeStories = async () => {
+            setIsLoading(true);
             
-            if (passedStories && passedStories.length > 0) {
-                // Map the API story data to our StoryUser format
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const formattedStories = passedStories.map((story: any) => ({
-                    user: story.name,
-                    userId: story.userId,
-                    avatar: story.profilePic,
-                    isLive: story.isLive,
-                    hasStory: story.hasStory,
-                    stories: story.stories,
-                    latestStoryTime: story.latestStoryTime
-                }));
+            if (location.state) {
+                const { currentStory, allStories: passedStories, initialUserIndex } = location.state;
                 
-                setAllStories(formattedStories);
-                
-                // Set the initial user index
-                const userIndex = initialUserIndex || 0;
-                setCurrentUserIndex(userIndex);
-                
-                // Find the first unseen story for this user
-                const firstUnseenIndex = formattedStories[userIndex]?.stories.findIndex(
-                    (story: StoryItem) => story.seen === 0
-                );
-                
-                // If there's an unseen story, start from there, otherwise start from the beginning
-                if (firstUnseenIndex !== -1) {
-                    setCurrentStoryIndex(firstUnseenIndex);
+                if (passedStories && passedStories.length > 0) {
+                    // Map the API story data to our StoryUser format
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const formattedStories = passedStories.map((story: any) => ({
+                        user: story.name,
+                        userId: story.userId,
+                        avatar: story.avatar || story.profilePic,
+                        isLive: story.isLive,
+                        hasStory: story.hasStory,
+                        stories: story.stories,
+                        latestStoryTime: story.latestStoryTime
+                    }));
+                    
+                    setAllStories(formattedStories);
+                    
+                    // Set the initial user index
+                    const userIndex = initialUserIndex || 0;
+                    setCurrentUserIndex(userIndex);
+                    
+                    // Find the first unseen story for this user
+                    const firstUnseenIndex = formattedStories[userIndex]?.stories.findIndex(
+                        (story: StoryItem) => story.seen === 0
+                    );
+                    
+                    // If there's an unseen story, start from there, otherwise start from the beginning
+                    if (firstUnseenIndex !== -1) {
+                        setCurrentStoryIndex(firstUnseenIndex);
+                    } else {
+                        setCurrentStoryIndex(0);
+                    }
+                } else if (currentStory) {
+                    // If only a single story was passed
+                    setAllStories([currentStory]);
+                    
+                    // Find the first unseen story for this user
+                    const firstUnseenIndex = currentStory.stories.findIndex(
+                        (story: StoryItem) => story.seen === 0
+                    );
+                    
+                    // If there's an unseen story, start from there, otherwise start from the beginning
+                    if (firstUnseenIndex !== -1) {
+                        setCurrentStoryIndex(firstUnseenIndex);
+                    } else {
+                        setCurrentStoryIndex(0);
+                    }
+                } else if (userId) {
+                    // If no story data is passed but we have userId, fetch from API
+                    await fetchStoryData(userId);
                 } else {
-                    setCurrentStoryIndex(0);
+                    // If no location state and no userId, navigate back to home
+                    navigate('/');
                 }
-            } else if (currentStory) {
-                // If only a single story was passed
-                setAllStories([currentStory]);
-                
-                // Find the first unseen story for this user
-                const firstUnseenIndex = currentStory.stories.findIndex(
-                    (story: StoryItem) => story.seen === 0
-                );
-                
-                // If there's an unseen story, start from there, otherwise start from the beginning
-                if (firstUnseenIndex !== -1) {
-                    setCurrentStoryIndex(firstUnseenIndex);
-                } else {
-                    setCurrentStoryIndex(0);
-                }
+            } else if (userId) {
+                // If no location state but we have userId, fetch from API
+                await fetchStoryData(userId);
             } else {
-                // If no story data is passed, navigate back to home
+                // If no location state and no userId, navigate back to home
                 navigate('/');
             }
+            
+            setIsLoading(false);
+        };
+        
+        initializeStories();
+    }, [location.state, navigate, userId]);
+    
+    // Function to fetch story data from API
+    const fetchStoryData = async (userId: string) => {
+        const { data, success } = await executeGetStoryForUser(userId);
+        
+        if (success && data && data.stories && data.stories.length > 0) {
+            // Format the API response to match our StoryUser format
+            const formattedStories = data.stories.map((story: any) => ({
+                user: story.name,
+                userId: story.userId,
+                avatar: story.profilePic,
+                isLive: story.isLive,
+                hasStory: story.hasStory,
+                stories: story.stories,
+                latestStoryTime: story.latestStoryTime
+            }));
+            
+            setAllStories(formattedStories);
+            
+            // Find the first unseen story for this user
+            const firstUnseenIndex = formattedStories[0]?.stories.findIndex(
+                (story: StoryItem) => story.seen === 0
+            );
+            
+            // If there's an unseen story, start from there, otherwise start from the beginning
+            if (firstUnseenIndex !== -1) {
+                setCurrentStoryIndex(firstUnseenIndex);
+            } else {
+                setCurrentStoryIndex(0);
+            }
         } else {
-            // If no location state, navigate back to home
-            navigate('/');
+            // If API call fails or returns no stories, navigate back to home
+            // navigate('/');
         }
-        setIsLoading(false);
-    }, [location.state, navigate]);
+    };
 
     // Define navigation functions with useCallback to prevent unnecessary re-renders
     const goToNextStory = useCallback(() => {
@@ -344,7 +394,6 @@ export default function StoryPage() {
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={currentUser.avatar} />
-                                {/* removing fallback for now because we can't fetch user data from the api yet */}
                                 <AvatarFallback>{currentUser?.user?.charAt(0) ?? "U"}</AvatarFallback>
                             </Avatar>
                             <div 

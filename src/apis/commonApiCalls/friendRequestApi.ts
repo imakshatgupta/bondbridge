@@ -111,8 +111,9 @@ export const sendFriendRequest = async (requestData: SendFriendRequestRequest): 
       sentTo: userId,
     }
   );
-  
-  if (response.status === 200 && response.data.success) {
+  console.log("response", response);
+  if (response.status === 200) {
+    console.log("response", response);
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to send friend request');

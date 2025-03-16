@@ -107,7 +107,7 @@ export default function HomePage() {
   };
 
   const handleCommentClick = (postId: string, postData: HomePostData) => {
-    navigate(`/comments/${postId}`, { state: { postData } });
+    navigate(`/post/${postId}`, { state: { postData } });
   };
   
   // Render loading skeletons
@@ -138,6 +138,35 @@ export default function HomePage() {
       </div>
     );
   }
+
+  // Prepare stories for display - format self story only once
+  const formattedSelfStory = selfStories ? {
+    user: currentUser.username || "Your Story",
+    userId: currentUserId || '',
+    avatar: currentUser.avatar || '/profile/avatars/1.png',
+    isLive: false,
+    hasStory: selfStories.stories && selfStories.stories.length > 0,
+    stories: selfStories.stories || [],
+    latestStoryTime: selfStories.latestStoryTime || Date.now(),
+    name: currentUser.username || "Your Story",
+    profilePic: currentUser.avatar || '/profile/avatars/1.png'
+  } : null;
+
+  // Format all stories for the StoryPage component
+  const allFormattedStories = [
+    ...(formattedSelfStory ? [formattedSelfStory] : []),
+    ...stories.map(story => ({
+      user: story.name,
+      userId: story.userId,
+      avatar: story.profilePic,
+      isLive: story.isLive,
+      hasStory: story.hasStory,
+      stories: story.stories,
+      latestStoryTime: story.latestStoryTime,
+      name: story.name,
+      profilePic: story.profilePic
+    }))
+  ].filter(Boolean);
   
   return (
     <div className="max-w-2xl mx-auto bg-background">
@@ -146,28 +175,27 @@ export default function HomePage() {
         <StoryRowSkeleton />
       ) : (
         <div className="mb-2 overflow-x-auto">
-          <div className="flex gap-4 pb-2">
+          <div className="flex gap-2 pb-2">
             {/* Self Story */}
             <div className="relative">
-              {selfStories && (
+              {formattedSelfStory && formattedSelfStory.stories && formattedSelfStory.stories.length > 0 ? (
                 <Story
                   key="self-story"
-                  user="Your Story"
-                  userId={currentUserId || ''}
-                  avatar={currentUser?.avatar || '/profile/avatars/1.png'}
-                  isLive={false}
-                  hasStory={selfStories.stories.length > 0}
-                  stories={selfStories.stories}
-                  latestStoryTime={selfStories.latestStoryTime}
-                  allStories={[selfStories, ...stories]}
+                  user={formattedSelfStory.user}
+                  userId={formattedSelfStory.userId}
+                  avatar={formattedSelfStory.avatar}
+                  isLive={formattedSelfStory.isLive}
+                  hasStory={formattedSelfStory.hasStory}
+                  stories={formattedSelfStory.stories}
+                  latestStoryTime={formattedSelfStory.latestStoryTime}
+                  allStories={allFormattedStories}
                   storyIndex={0}
                 />
-              )}
-              {(!selfStories || selfStories.stories.length === 0) && (
+              ) : (
                 <div className="flex flex-col items-center space-y-1 mx-2 my-1">
                   <div className="relative w-16 h-16 rounded-full ring-2 ring-muted">
                     <img 
-                      src={selfStories?.profilePic || ''} 
+                      src={currentUser.avatar || '/profile/avatars/1.png'} 
                       alt="Your Story" 
                       className="w-full h-full rounded-full object-cover p-[2px] bg-background"
                     />
@@ -178,7 +206,7 @@ export default function HomePage() {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <span className="text-xs text-muted-foreground">Your Story</span>
+                  <span className="text-xs text-muted-foreground">{currentUser.username || "Your Story"}</span>
                 </div>
               )}
             </div>
@@ -193,7 +221,7 @@ export default function HomePage() {
                 hasStory={story.hasStory}
                 stories={story.stories}
                 latestStoryTime={story.latestStoryTime}
-                allStories={[selfStories, ...stories].filter(Boolean)}
+                allStories={allFormattedStories}
                 storyIndex={index + 1}
               />
             ))}
