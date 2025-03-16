@@ -219,6 +219,7 @@ export default function HomePage() {
               isOwner={currentUserId === post.userId}
               onCommentClick={() => handleCommentClick(post.feedId, post)}
               onLikeClick={() => handleLikeClick(post._id)}
+              feedId={post.feedId}
             />
           </div>
         ))
