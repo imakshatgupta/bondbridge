@@ -1,6 +1,6 @@
-import apiClient from "@/apis/apiClient";
+import apiClient, { formDataApiClient } from "@/apis/apiClient";
 import { SearchResponse, ApiResponse, ChatRoomsResponse, FollowingsResponse } from "../apiTypes/response";
-import { CreateGroupRequest } from "../apiTypes/request";
+import { CreateGroupRequest, EditGroupRequest } from "../apiTypes/request";
 
 
 export const fetchChatRooms = async (): Promise<ChatRoomsResponse> => {
@@ -40,12 +40,39 @@ export const createGroup = async (
   console.log("response from create group: ", response);
 
   if (response.status === 200 || response.status === 201) {
-    // Ensure the response has a success property
+    // Return the full response structure including the chatRoom object
     return {
       ...response.data,
       success: true
     };
   } else {
     throw new Error(response.data.message || "Failed to create group");
+  }
+};
+
+export const editGroup = async (
+  data: EditGroupRequest
+): Promise<ApiResponse> => {
+  console.log("Editing group with data:", data);
+  
+  const formData = new FormData();
+  formData.append("chatRoomId", data.groupId);
+  formData.append("bio", data.bio);
+  
+  if (data.profileUrl) {
+    formData.append("profileUrl", data.profileUrl);
+  }
+  
+  const response = await formDataApiClient.put<ApiResponse>("/edit-group", formData);
+  
+  console.log("Response from edit group:", response);
+  
+  if (response.status === 200 || response.status === 201) {
+    return {
+      ...response.data,
+      success: true
+    };
+  } else {
+    throw new Error(response.data.message || "Failed to edit group");
   }
 };
