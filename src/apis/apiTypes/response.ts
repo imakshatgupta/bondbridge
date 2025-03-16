@@ -240,6 +240,12 @@ export interface SearchResponse {
   users: Person[];
 }
 
+export interface RewriteWithBondChatResponse {
+  original : string;
+  rewritten : string;
+}
+
+
 export interface Notification {
   id: number;
   title: string;

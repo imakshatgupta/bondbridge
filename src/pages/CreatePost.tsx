@@ -4,10 +4,11 @@ import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
 import { Pencil, Trash2, Image, Smile, Plus } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
-import { createPost } from '../apis/commonApiCalls/createPostApi';
+import { createPost, rewriteWithBondChat } from '../apis/commonApiCalls/createPostApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import TextareaAutosize from 'react-textarea-autosize';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
@@ -24,6 +25,8 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   
   // Use the API call hook for the createPost function
   const [executeCreatePost, isCreatingPost] = useApiCall(createPost);
+  // Use the API call hook for the rewriteWithBondChat function
+  const [executeRewriteWithBondChat, isRewritingWithBondChat] = useApiCall(rewriteWithBondChat);
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -48,6 +51,26 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const handleRemoveMedia = (index: number) => {
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
     setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRewriteWithBondChat = async () => {
+    // Only proceed if there's content to rewrite
+    if (!content.trim()) {
+      toast.error('Please add some text to rewrite');
+      return;
+    }
+    
+    // Show a toast notification when rewriting starts
+    toast.info('Rewriting your text with BondChat...');
+    
+    // Execute the API call with error handling
+    const { data, success } = await executeRewriteWithBondChat(content);
+    
+    if (success && data) {
+      // Update the content with the rewritten text
+      setContent(data.rewritten);
+      toast.success('Text rewritten successfully!');
+    }
   };
 
   const handleSubmit = async () => {
@@ -170,9 +193,20 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             variant="ghost"
             size="sm"
             className="text-xs flex items-center gap-1 bg-[var(--secondary)]"
+            onClick={handleRewriteWithBondChat}
+            disabled={isRewritingWithBondChat || !content.trim()}
           >
-            <img src="/bondchat.svg" alt="BondChat" className="w-4 h-4" />
-            <div className='text-[var(--foreground)]'>Re-write with <span className='text-[var(--primary)]'>BondChat </span></div>
+            {isRewritingWithBondChat ? (
+              <div className="flex items-center gap-1">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent"></div>
+                <span className="text-[var(--foreground)]">Rewriting...</span>
+              </div>
+            ) : (
+              <>
+                <img src="/bondchat.svg" alt="BondChat" className="w-4 h-4" />
+                <div className='text-[var(--foreground)]'>Re-write with <span className='text-[var(--primary)]'>BondChat </span></div>
+              </>
+            )}
           </Button>
         </div>
 
@@ -182,13 +216,21 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
       <Separator className="my-3 bg-[var(--border)]" />
 
       <div className="flex-1">
-          <textarea
-            placeholder="What's on your mind..."
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full bg-transparent outline-none resize-none text-sm"
-            rows={2}
-          />
+          {isRewritingWithBondChat ? (
+            <div className="w-full animate-pulse pb-2">
+              <div className="h-6 bg-[var(--secondary)] rounded mb-2 w-3/4"></div>
+              <div className="h-6 bg-[var(--secondary)] rounded mb-2 w-5/6"></div>
+              <div className="h-6 bg-[var(--secondary)] rounded w-2/3"></div>
+            </div>
+          ) : (
+            <TextareaAutosize
+              placeholder="What's on your mind..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full bg-transparent outline-none resize-none text-sm h-auto"
+              maxRows={20}
+            />
+          )}
 
           {mediaPreviews.length > 0 && (
             <div className="relative mt-2 rounded-md overflow-hidden">

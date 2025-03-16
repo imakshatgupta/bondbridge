@@ -13,6 +13,7 @@ import LeftSidebar from "./auth/LeftSidebar";
 import { updateCurrentUser } from "@/store/currentUserSlice";
 import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
 import { useLocation } from "react-router-dom";
+import { Toaster } from "./ui/sonner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -79,6 +80,7 @@ const Layout: React.FC<LayoutProps> = ({
       <div className="text-2xl font-bold">Please open on app</div>
     </div>
     <div className=" flex-col overflow-hidden h-screen w-screen overflow-x-hidden hidden md:flex">
+      <Toaster/>
       {/* Navbar */}
       <Navbar />
 

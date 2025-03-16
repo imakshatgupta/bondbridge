@@ -11,6 +11,7 @@ import { StoryRowSkeleton } from "@/components/skeletons/StorySkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RefreshCw, ImageIcon, AlertCircle, Plus } from "lucide-react";
 import { getSelfStories } from "@/apis/commonApiCalls/storyApi";
+import { useAppSelector } from "@/store";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -21,10 +22,11 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const currentUser = useAppSelector(state => state.currentUser);
   
   // Use our custom hook for API calls
   const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
-  const [executeGetSelfStories] = useApiCall(getSelfStories);
+  const [executeGetSelfStories, isLoadingSelfStories] = useApiCall(getSelfStories);
   
   // Get current user ID from localStorage
   useEffect(() => {
@@ -140,7 +142,7 @@ export default function HomePage() {
   return (
     <div className="max-w-2xl mx-auto bg-background">
       {/* Stories Section */}
-      {isLoading && stories.length === 0 ? (
+      {isLoading || isLoadingSelfStories ? (
         <StoryRowSkeleton />
       ) : (
         <div className="mb-2 overflow-x-auto">
@@ -152,7 +154,7 @@ export default function HomePage() {
                   key="self-story"
                   user="Your Story"
                   userId={currentUserId || ''}
-                  avatar={selfStories.profilePic}
+                  avatar={currentUser?.avatar || '/profile/avatars/1.png'}
                   isLive={false}
                   hasStory={selfStories.stories.length > 0}
                   stories={selfStories.stories}

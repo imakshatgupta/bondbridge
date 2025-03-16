@@ -12,6 +12,10 @@ export interface VerifyOTPRequest extends BasePhoneRequest {
   otp: string;
 }
 
+export interface RewriteWithBondChatRequest {
+  caption: string;
+}
+
 // Login request type
 export interface LoginRequest extends BasePhoneRequest {
   password: string;
