@@ -12,6 +12,10 @@ export interface VerifyOTPRequest extends BasePhoneRequest {
   otp: string;
 }
 
+export interface RewriteWithBondChatRequest {
+  caption: string;
+}
+
 // Login request type
 export interface LoginRequest extends BasePhoneRequest {
   password: string;
@@ -166,4 +170,10 @@ export interface CreatePostRequest {
   privacy: number;
   image?: File[];
   document?: File[];
+}
+
+export interface ReactionRequest {
+  entityId: string;
+  entityType: string;
+  reactionType: string;
 }

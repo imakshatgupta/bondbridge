@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { AVAILABLE_INTERESTS } from "@/lib/constants";
 
 // Define the Friend interface
 interface Friend {
@@ -14,15 +15,7 @@ interface Friend {
 const initialState = {
   description: "",
   name: "",
-  skillsAvailable: [
-    "NEWS",
-    "Music",
-    "Sports",
-    "Racing cars",
-    "Marketing",
-    "Science",  
-    "Chess",
-  ],
+  skillsAvailable: [...AVAILABLE_INTERESTS],
   skillSelected: [] as string[],
   image: null as File | null,
   selectedFriends: [] as Friend[],
@@ -41,11 +34,9 @@ export const createGroup = createSlice({
     addSkill: (state, action) => {
       const skill = action.payload;
       state.skillSelected.push(skill);
-      state.skillsAvailable = state.skillsAvailable.filter((s) => s !== skill);
     },
     removeSkill: (state, action) => {
       const skill = action.payload;
-      state.skillsAvailable.push(skill);
       state.skillSelected = state.skillSelected.filter((s) => s !== skill);
     },
     setImage: (state, action) => {

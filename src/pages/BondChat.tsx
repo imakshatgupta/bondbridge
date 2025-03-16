@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
-import { ArrowLeft, History, Plus } from "lucide-react";
+import { ArrowLeft, History,  } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useSocket } from "@/context/SocketContext";
@@ -69,7 +69,7 @@ const UserCard = ({ user }: { user: UserRecommendation }) => {
           <span className="font-medium">{user.name}</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {displayedInterests.map((interest, index) => (
-                <Badge variant="outline" className="text-xs border-primary">
+                <Badge key={index} variant="outline" className="text-xs border-primary">
                   {interest}
                 </Badge>
             ))}

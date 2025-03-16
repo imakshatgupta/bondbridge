@@ -7,7 +7,6 @@ import IntlTelInput from 'react-intl-tel-input';
 import 'react-intl-tel-input/dist/main.css';
 import { loginUser } from '../apis/commonApiCalls/authenticationApi';
 import { useApiCall } from '../apis/globalCatchError';
-import { Toaster } from "@/components/ui/sonner";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LoginResponse } from '../apis/apiTypes/response';
@@ -179,7 +178,6 @@ const Login: React.FC = () => {
                     </Button>
                 </form>
             </AuthLayout>
-            <Toaster />
         </>
     );
 };

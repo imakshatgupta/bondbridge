@@ -1,6 +1,6 @@
-import { formDataApiClient } from '../apiClient';
+import apiClient, { formDataApiClient } from '../apiClient';
 import { CreatePostRequest } from '../apiTypes/request';
-import { CreatePostResponse } from '../apiTypes/response';
+import { CreatePostResponse, RewriteWithBondChatResponse } from '../apiTypes/response';
 
 /**
  * Creates a new post with optional media attachments
@@ -35,3 +35,11 @@ export const createPost = async (postData: CreatePostRequest): Promise<CreatePos
   const response = await formDataApiClient.post<CreatePostResponse>('/post', formData);
   return response.data;
 };
+
+export const rewriteWithBondChat = async (caption : string)=>{
+  const response = await apiClient.post<RewriteWithBondChatResponse>('/rewriteWithBond', { caption });
+  const data = response.data;
+  data.rewritten = data.rewritten.replace(/^[^\w\s]+|[^\w\s]+$/g, '').trim();
+  
+  return data;
+}

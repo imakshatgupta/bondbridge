@@ -7,8 +7,6 @@ import LogoutDeletePage from './LogoutDeletePage';
 
 const SettingLayout: React.FC = () => {
   const { activePage } = useAppSelector((state) => state.settings);
-  
-
 
   return (
     <div className="w-full h-[calc(100vh-64px)] border-l border-border flex flex-col relative">

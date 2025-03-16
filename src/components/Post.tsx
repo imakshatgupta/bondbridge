@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Carousel,
     CarouselContent,
@@ -11,26 +11,14 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
-
-export interface MediaItem {
-    url: string;
-    type: string;
-}
-
-export interface PostProps {
-    user: string;
-    userId: string;
-    avatar: string;
-    caption: string;
-    image?: string; // Made optional since we now support media array
-    media?: MediaItem[]; // New property for multiple media items
-    likes: number;
-    comments: number;
-    datePosted: string;
-    isOwner?: boolean;
-    onCommentClick?: () => void;
-    onLikeClick?: () => void;
-}
+import { useApiCall } from "@/apis/globalCatchError";
+import { 
+    addReaction, 
+    deleteReaction, 
+    getAllReactions,
+} from "@/apis/commonApiCalls/reactionApi";
+import { toast } from "sonner";
+import { PostProps } from "@/types/post";
 
 export function Post({ 
     user, 
@@ -44,21 +32,84 @@ export function Post({
     datePosted, 
     isOwner = false, 
     onCommentClick, 
-    onLikeClick 
+    onLikeClick,
+    feedId,
+    isLiked: initialIsLiked = false
 }: PostProps) {
     const navigate = useNavigate();
     const [likes, setLikes] = useState(initialLikes);
-    const [isLiked, setIsLiked] = useState(false);
+    const [isLiked, setIsLiked] = useState(initialIsLiked);
+    const [isLikeLoading, setIsLikeLoading] = useState(false);
+    const [isLoadingReactions, setIsLoadingReactions] = useState(false);
 
-    const handleLikeClick = () => {
-        if (!isLiked) {
-            setLikes(prev => prev + 1);
-            setIsLiked(true);
-            onLikeClick?.();
-        } else {
-            setLikes(prev => prev - 1);
-            setIsLiked(false);
-            onLikeClick?.();
+    const [executeAddReaction] = useApiCall(addReaction);
+    const [executeDeleteReaction] = useApiCall(deleteReaction);
+    const [executeGetAllReactions] = useApiCall(getAllReactions);
+
+    useEffect(() => {
+        if (feedId) {
+            fetchReactions();
+        }
+    }, [feedId]);
+
+    const fetchReactions = async () => {
+        if (!feedId || isLoadingReactions) return;
+        
+        setIsLoadingReactions(true);
+        try {
+            const result = await executeGetAllReactions(feedId, 'feed');
+            
+            if (result.success && result.data) {
+                const likeReaction = result.data.reactions.find(r => r.reactionType === 'like');
+                
+                if (likeReaction) {
+                    // Get current user ID from localStorage or auth context
+                    const currentUserId = localStorage.getItem('userId'); // Adjust based on your auth implementation
+                    
+                    // Check if current user has liked the post
+                    const userHasLiked = likeReaction.users.some(u => u.userId === currentUserId);
+                    setIsLiked(userHasLiked);
+                    
+                    // Update likes count
+                    setLikes(likeReaction.count);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch reactions:', error);
+        } finally {
+            setIsLoadingReactions(false);
+        }
+    };
+
+    const handleLikeClick = async () => {
+        if (isLikeLoading || !feedId) return;
+
+        setIsLikeLoading(true);
+        try {
+            const reactionData = {
+                entityId: feedId,
+                entityType: 'feed',
+                reactionType: 'like'
+            };
+
+            let result;
+            if (isLiked) {
+                result = await executeDeleteReaction(reactionData);
+            } else {
+                result = await executeAddReaction(reactionData);
+            }
+
+            if (result.success && result.data) {
+                setIsLiked(!isLiked);
+                setLikes(prev => isLiked ? prev - 1 : prev + 1);
+                onLikeClick?.();
+            } else {
+                toast.error("Failed to update like status");
+            }
+        } catch (error) {
+            toast.error("Failed to update like status");
+        } finally {
+            setIsLikeLoading(false);
         }
     };
 
@@ -135,8 +186,9 @@ export function Post({
                 <div className="flex items-center justify-between mt-4 text-muted-foreground">
                     <div className="flex items-center gap-3">
                         <button 
-                            className={`flex items-center gap-1 ${isLiked ? 'text-destructive' : 'hover:text-destructive'}`}
+                            className={`flex items-center gap-1 ${isLiked ? 'text-destructive' : 'hover:text-destructive'} ${isLikeLoading || isLoadingReactions ? 'opacity-50 cursor-not-allowed' : ''}`}
                             onClick={handleLikeClick}
+                            disabled={isLikeLoading || isLoadingReactions}
                         >
                             <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} /> {likes}
                         </button>
