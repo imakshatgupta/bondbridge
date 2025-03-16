@@ -8,6 +8,9 @@ export interface UserProfileData {
   avatarSrc: string;
   isCurrentUser?: boolean;
   privacyLevel?: number;
+  isFollowing?: boolean;
+  isFollower?: boolean;
+  requestSent?: boolean;
 }
 
 export interface PostData {

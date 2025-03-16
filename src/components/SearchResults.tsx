@@ -1,9 +1,9 @@
 import { Person } from "@/apis/apiTypes/response";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
-import { useState } from "react";
-import { toast } from "sonner";
+// import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
+// import { useState } from "react";
+// import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
   
 type Props = {
@@ -11,19 +11,19 @@ type Props = {
 };
 
 const SearchResults = ({ person }: Props) => {
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const handleSendFriendRequest = async () => {
-    try {
-      setIsLoading(true);
-      await sendFriendRequest({ userId: person.id });
-      toast.success(`Friend request sent to ${person.name}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to send friend request");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // const handleSendFriendRequest = async () => {
+  //   try {
+  //     setIsLoading(true);
+  //     await sendFriendRequest({ userId: person.id });
+  //     toast.success(`Friend request sent to ${person.name}`);
+  //   } catch (error) {
+  //     toast.error(error instanceof Error ? error.message : "Failed to send friend request");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleProfileClick = (userId: string) => {
     navigate(`/profile/${userId}`);
@@ -46,13 +46,13 @@ const SearchResults = ({ person }: Props) => {
         <Button variant="outline" className="text-primary border-primary cursor-pointer"  onClick={() => handleProfileClick(person.id)}>
           View Profile
         </Button>
-        <Button 
+        {/* <Button 
           className="bg-primary hover:bg-primary/90 cursor-pointer"
           onClick={handleSendFriendRequest}
           disabled={isLoading}
         >
           {isLoading ? "Sending..." : "Follow"}
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
