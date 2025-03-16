@@ -51,6 +51,8 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   };
 
   const handleSubmit = async () => {
+    console.log("mediaFiles: ", mediaFiles);
+    console.log("documentFiles: ", documentFiles);
     if (content.trim() || mediaFiles.length > 0 || documentFiles.length > 0) {
       setIsSubmitting(true);
       

@@ -20,6 +20,7 @@ const Login: React.FC = () => {
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
 
+
     // Use our custom hook for API calls
     const [executeLogin, isLoggingIn] = useApiCall(loginUser);
 
@@ -73,6 +74,11 @@ const Login: React.FC = () => {
 
         if (result.success && result.data) {
             const data = result.data as LoginResponse;
+            // commenting because link will change to /home so it will call the api automatically there
+            // const userData = await fetchUserProfile(data.userDetails._id, data.userDetails._id);
+            // if (userData.success) {
+            //   dispatch(setCurrentUser(userData.data));
+            // }
             
             if (data.userDetails.statusCode != 0) {
                 navigate('/');

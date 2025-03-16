@@ -6,6 +6,10 @@ import { fetchHomepageData } from "@/apis/commonApiCalls/homepageApi";
 import { HomepageResponse, HomePostData, StoryData } from "@/apis/apiTypes/response";
 import { useApiCall } from "@/apis/globalCatchError";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { PostSkeleton } from "@/components/skeletons/PostSkeleton";
+import { StoryRowSkeleton } from "@/components/skeletons/StorySkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { RefreshCw, ImageIcon, AlertCircle } from "lucide-react";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -35,7 +39,25 @@ export default function HomePage() {
         const { postsData, storiesData } = result.data as HomepageResponse;
         
         setPosts(postsData.posts);
-        setStories(storiesData.stories);
+        
+        // Sort stories to show users with unseen stories first
+        const sortedStories = [...storiesData.stories].sort((a, b) => {
+          // Check if user A has any unseen stories
+          const aHasUnseenStories = a.stories.some(story => story.seen === 0);
+          // Check if user B has any unseen stories
+          const bHasUnseenStories = b.stories.some(story => story.seen === 0);
+          
+          if (aHasUnseenStories && !bHasUnseenStories) {
+            return -1; // A comes first
+          } else if (!aHasUnseenStories && bHasUnseenStories) {
+            return 1; // B comes first
+          } else {
+            // If both have the same seen status, sort by latest story time
+            return b.latestStoryTime - a.latestStoryTime;
+          }
+        });
+        
+        setStories(sortedStories);
         setHasMore(postsData.hasMore || false);
       } else {
         setError(result.data?.message || 'Failed to load homepage data');
@@ -76,20 +98,31 @@ export default function HomePage() {
     navigate(`/comments/${postId}`, { state: { postData } });
   };
   
+  // Render loading skeletons
   if (isLoading && posts.length === 0) {
-    return <div className="max-w-2xl mx-auto p-4">Loading posts...</div>;
+    return (
+      <div className="max-w-2xl mx-auto p-4">
+        <StoryRowSkeleton />
+        {Array.from({ length: 3 }).map((_, index) => (
+          <PostSkeleton key={index} />
+        ))}
+      </div>
+    );
   }
 
+  // Render error state
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto p-4 text-center">
-        <div className="text-destructive mb-4">{error}</div>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="text-primary hover:underline"
-        >
-          Try Again
-        </button>
+      <div className="max-w-2xl mx-auto p-4">
+        <EmptyState
+          icon={AlertCircle}
+          title="Couldn't load feed"
+          description={error}
+          actionLabel="Try Again"
+          actionIcon={RefreshCw}
+          onAction={() => window.location.reload()}
+          className="my-8"
+        />
       </div>
     );
   }
@@ -97,7 +130,9 @@ export default function HomePage() {
   return (
     <div className="max-w-2xl mx-auto bg-background">
       {/* Stories Section */}
-      {stories.length > 0 && (
+      {isLoading && stories.length === 0 ? (
+        <StoryRowSkeleton />
+      ) : stories.length > 0 ? (
         <div className="mb-2 overflow-x-auto">
           <div className="flex gap-4 pb-2">
             {stories.map((story, index) => (
@@ -116,7 +151,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Posts Section */}
       {posts.length > 0 ? (
@@ -130,7 +165,8 @@ export default function HomePage() {
               avatar={post.profilePic}
               userId={post.userId}
               caption={post.data.content}
-              image={post.data.media?.[0].url}
+              media={post.data.media}
+              image={post.data.media && post.data.media.length > 0 ? post.data.media[0].url : undefined}
               likes={post.reactionCount}
               comments={post.commentCount}
               datePosted={post.ago_time}
@@ -141,17 +177,27 @@ export default function HomePage() {
           </div>
         ))
       ) : (
-        <div className="text-center py-4">No posts available</div>
+        <EmptyState
+          icon={ImageIcon}
+          title="No posts yet"
+          description="There are no posts in your feed right now. Follow more people to see their posts here."
+          className="my-8"
+        />
       )}
       
       {/* Loading indicator for more posts */}
       {isLoading && posts.length > 0 && (
-        <div className="text-center py-4">Loading more posts...</div>
+        <div className="py-4">
+          <PostSkeleton />
+        </div>
       )}
       
       {/* End of content message */}
       {!hasMore && posts.length > 0 && (
-        <div className="text-center py-4 text-gray-500">No more posts to load</div>
+        <div className="text-center py-6 mb-4 text-muted-foreground border-t border-border">
+          <p className="text-sm font-medium">You're all caught up</p>
+          <p className="text-xs">No more posts to load</p>
+        </div>
       )}
     </div>
   );

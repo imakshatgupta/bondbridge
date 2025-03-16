@@ -49,7 +49,12 @@ interface ChatInterfaceProps {
   onClose: () => void;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onClose }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  chatId,
+  name,
+  avatar,
+  onClose,
+}) => {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket } = useSocket();
@@ -136,6 +141,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
       const handleReceiveMessage = (data: MessageResponse) => {
         console.log("Received message:", data);
         // Find sender info from participants
+        if (data.senderId === userId) {
+          return;
+        }
         const sender = chat?.participants.find(
           (p) => p.userId === data.senderId
         );
@@ -326,7 +334,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
       </div>
 
       {/* Chat messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-6">
+      <div className="flex-1 p-4 overflow-y-auto space-y-3">
         {isLoadingMessages ? (
           <div className="flex justify-center items-center h-full">
             <p>Loading messages...</p>
@@ -337,9 +345,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
           </div>
         ) : (
           messages.map((message, index) => {
-            // Check if this is the first message from this user or if the previous message was from a different user
-            const isPreviousDifferentUser =
-              index === 0 || messages[index - 1].isUser !== message.isUser;
+            // Check if this is the first message from this user or if the previous message was from a different sender
+            const isPreviousDifferentSender =
+              index === 0 ||
+              messages[index - 1].senderName !== message.senderName;
 
             return (
               <div
@@ -348,8 +357,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
                   message.isUser ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                {/* Only show avatar for the first message in a sequence from the same user */}
-                {isPreviousDifferentUser && (
+                {/* Only show avatar for group chats and for the first message in a sequence from each sender */}
+                {chat.type === "group" && isPreviousDifferentSender && (
                   <Avatar className="h-6 w-6 mt-1">
                     <AvatarImage
                       src={message.senderAvatar || ""}
@@ -361,7 +370,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
                   </Avatar>
                 )}
                 {/* Add a spacer when we don't show the avatar to keep alignment */}
-                {!isPreviousDifferentUser && <div className="w-8" />}
+                {(chat.type !== "dm" && !isPreviousDifferentSender) && <div className="w-7" />}
 
                 <div
                   className={`max-w-[70%] p-3 rounded-lg ${
@@ -370,10 +379,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
                       : "bg-muted text-foreground rounded-tl-none"
                   }`}
                 >
-                  {/* Show sender name for group chats */}
-                  {!message.isUser &&
-                    chat.type !== "dm" &&
-                    isPreviousDifferentUser && (
+                  {/* Show sender name only for group chats and first message from each sender */}
+                  {chat.type === "group" &&
+                    !message.isUser &&
+                    isPreviousDifferentSender && (
                       <p className="text-xs font-medium mb-1">
                         {message.senderName || "Unknown"}
                       </p>
@@ -394,9 +403,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, name, avatar, onC
                 src={typingUser?.profilePic || avatar}
                 alt={typingUser?.name || name}
               />
-              <AvatarFallback>
-                {(typingUser?.name || name)[0]}
-              </AvatarFallback>
+              <AvatarFallback>{(typingUser?.name || name)[0]}</AvatarFallback>
             </Avatar>
             <div className="bg-muted p-2 rounded-md text-sm rounded-tl-none">
               <span>typing...</span>

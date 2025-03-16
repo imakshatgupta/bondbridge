@@ -74,6 +74,7 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
       // Remove user
       onParticipantsChange(selectedParticipants.filter((id) => id !== user.id));
       setSelectedUsers((prev) => prev.filter((u) => u.id !== user.id));
+      console.log("selectedUsers: ", selectedUsers);
     } else {
       // Add user
       const newUser = {
@@ -84,15 +85,20 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
       };
       onParticipantsChange([...selectedParticipants, user.id]);
       setSelectedUsers((prev) => [...prev, newUser]);
+      console.log("selectedUsers: ", selectedUsers);
     }
   };
 
   const removeSelectedUser = (userId: string) => {
     onParticipantsChange(selectedParticipants.filter((id) => id !== userId));
     setSelectedUsers((users) => users.filter((user) => user.id !== userId));
+    console.log("selectedUsers: ", selectedUsers);
   };
 
-  const displayUsers = searchQuery.trim() ? searchResults : followings;
+  const displayUsers = searchQuery.trim()
+    ? searchResults // Don't filter selected users from search results
+    : followings.filter((user) => !selectedParticipants.includes(user.id)); // Only filter from followings list
+
   const isUserSelected = (userId: string) =>
     selectedParticipants.includes(userId);
 
@@ -114,8 +120,8 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
         )}
       </div>
 
-      {/* Selected Users Section */}
-      {selectedUsers.length > 0 && searchQuery.trim() === "" && (
+      {/* Selected Users Section - Only show when not searching */}
+      {selectedUsers.length > 0 && !searchQuery.trim() && (
         <div className="mb-4">
           <h3 className="text-sm font-medium mb-2">Selected Friends</h3>
           <div className="space-y-3">

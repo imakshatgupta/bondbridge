@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store';
-import { updateProfile, updateInterests, setSettingsActive } from '@/store/settingsSlice';
+import { setSettingsActive } from '@/store/settingsSlice';
+import { updateCurrentUser, updateInterests } from '@/store/currentUserSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,9 +15,24 @@ import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AVAILABLE_INTERESTS = [
-  'Design', 'Photography', 'Travel', 'Music', 'Art', 'Technology', 
-  'Cooking', 'Sports', 'Reading', 'Writing', 'Gaming', 'Fitness',
-  'Fashion', 'Movies', 'Nature', 'Science', 'History', 'Politics'
+  "Design",
+  "Photography",
+  "Travel",
+  "Music",
+  "Art",
+  "Technology",
+  "Cooking",
+  "Sports",
+  "Reading",
+  "Writing",
+  "Gaming",
+  "Fitness",
+  "Fashion",
+  "Movies",
+  "Nature",
+  "Science",
+  "History",
+  "Politics",
 ];
 
 interface AvatarData {
@@ -26,13 +42,15 @@ interface AvatarData {
 
 const EditProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { username, email, avatar, interests, privacyLevel } = useAppSelector((state) => state.settings);
-  
+  const { username, email, avatar, interests, privacyLevel } = useAppSelector(
+    (state) => state.currentUser
+  );
+
   const [formData, setFormData] = useState({
     username,
     email,
   });
-  
+
   const [selectedAvatar, setSelectedAvatar] = useState(avatar);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(interests);
   
@@ -73,23 +91,23 @@ const EditProfilePage: React.FC = () => {
       [name]: value,
     });
   };
-  
+
   const handleAvatarSelect = (avatarUrl: string) => {
     setSelectedAvatar(avatarUrl);
     console.log('Selected avatar URL:', avatarUrl);
   };
-  
+
   const handleAddInterest = (interest: string) => {
-    if (!selectedInterests.includes(interest) && interest.trim() !== '') {
+    if (!selectedInterests.includes(interest) && interest.trim() !== "") {
       setSelectedInterests([...selectedInterests, interest]);
     }
   };
-  
+
   const handleRemoveInterest = (interest: string) => {
-    const newInterests = selectedInterests.filter(i => i !== interest);
+    const newInterests = selectedInterests.filter((i) => i !== interest);
     setSelectedInterests(newInterests);
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🚀 Starting profile update process...');
@@ -112,17 +130,18 @@ const EditProfilePage: React.FC = () => {
     console.log('📦 Profile data being sent:', JSON.stringify(profileData));
     
     const { data, success } = await executeUpdateProfile(profileData);
-    
+
     if (success && data) {
       console.log('✅ API call successful, data:', data);
       
       // Update Redux store
-      dispatch(updateProfile({
-        username: formData.username,
-        email: formData.email,
-        avatar: selectedAvatar,
-        privacyLevel: privacyLevel ?? 0, // Provide default value of 0 if privacyLevel is undefined
-      }));
+      dispatch(
+        updateCurrentUser({
+          username: formData.username,
+          email: formData.email,
+          avatar: selectedAvatar,
+        })
+      );
       dispatch(updateInterests(selectedInterests));
       
       // Verify the Redux state after update
@@ -134,11 +153,11 @@ const EditProfilePage: React.FC = () => {
       toast.error('Failed to update profile');
     }
   };
-  
+
   const availableInterestsFiltered = AVAILABLE_INTERESTS.filter(
-    interest => !selectedInterests.includes(interest)
+    (interest) => !selectedInterests.includes(interest)
   );
-  
+
   const handleCloseSettings = () => {
     dispatch(setSettingsActive(false));
   };
@@ -179,9 +198,13 @@ const EditProfilePage: React.FC = () => {
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
-      <ArrowLeft className="h-4 w-4 mr-2 inline" onClick={handleCloseSettings} />
-      Edit Profile</h3>
-      
+        <ArrowLeft
+          className="h-4 w-4 mr-2 inline"
+          onClick={handleCloseSettings}
+        />
+        Edit Profile
+      </h3>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Avatar Selection */}
         <div className="space-y-4">
@@ -189,10 +212,14 @@ const EditProfilePage: React.FC = () => {
           <div className="flex items-center space-x-4 mb-4">
             <Avatar className="h-16 w-16">
               <AvatarImage src={selectedAvatar} alt="Profile" />
-              <AvatarFallback>{username?.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {username?.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm text-muted-foreground">Choose an avatar that represents you</p>
+              <p className="text-sm text-muted-foreground">
+                Choose an avatar that represents you
+              </p>
             </div>
           </div>
           
@@ -227,7 +254,7 @@ const EditProfilePage: React.FC = () => {
             </Tabs>
           )}
         </div>
-        
+
         {/* Basic Info */}
         <div className="space-y-4">
           <div className="space-y-2">
@@ -239,7 +266,7 @@ const EditProfilePage: React.FC = () => {
               onChange={handleInputChange}
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -251,16 +278,16 @@ const EditProfilePage: React.FC = () => {
             />
           </div>
         </div>
-        
+
         {/* Interests */}
         <div className="space-y-4">
           <Label>Interests</Label>
-          
+
           <div className="flex flex-wrap gap-2 mb-4">
             {selectedInterests.map((interest, index) => (
               <Badge key={`interest-${index}`} variant="secondary" className="flex items-center gap-1">
                 {interest}
-                <button 
+                <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -273,10 +300,11 @@ const EditProfilePage: React.FC = () => {
               </Badge>
             ))}
           </div>
-        
-          
+
           <div className="mt-4">
-            <p className="text-sm text-muted-foreground mb-2">Suggested interests:</p>
+            <p className="text-sm text-muted-foreground mb-2">
+              Suggested interests:
+            </p>
             <div className="flex flex-wrap gap-2">
               {availableInterestsFiltered.slice(0, 8).map((interest) => (
                 <Badge 
@@ -291,13 +319,13 @@ const EditProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <Button type="submit" disabled={isUpdatingProfile}>
-          {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
+          {isUpdatingProfile ? "Saving..." : "Save Changes"}
         </Button>
       </form>
     </div>
   );
 };
 
-export default EditProfilePage; 
+export default EditProfilePage;

@@ -24,47 +24,54 @@ const Signup: React.FC = () => {
   // Add effect to apply styles to the phone input after it's rendered
   useEffect(() => {
     const fixPhoneInputStyles = () => {
-      const container = document.querySelector('.intl-tel-input');
+      const container = document.querySelector(".intl-tel-input");
       if (container) {
         // Make width consistent
-        container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
-        
+        container.setAttribute(
+          "style",
+          "width: 100% !important; height: 40px !important;"
+        );
+
         // Fix flag container height
-        const flagContainer = container.querySelector('.flag-container');
+        const flagContainer = container.querySelector(".flag-container");
         if (flagContainer) {
-          flagContainer.setAttribute('style', 'height: 100% !important;');
+          flagContainer.setAttribute("style", "height: 100% !important;");
         }
-        
+
         // Fix selected flag height
-        const selectedFlag = container.querySelector('.selected-flag');
+        const selectedFlag = container.querySelector(".selected-flag");
         if (selectedFlag) {
-          selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
+          selectedFlag.setAttribute(
+            "style",
+            "height: 100% !important; display: flex !important; align-items: center !important;"
+          );
         }
-        
+
         // Fix input height
-        const input = container.querySelector('input');
+        const input = container.querySelector("input");
         if (input) {
-          input.setAttribute('style', 'height: 40px !important;');
+          input.setAttribute("style", "height: 40px !important;");
         }
       }
     };
-    
+
     // Run initially and after a small delay to ensure component is rendered
     fixPhoneInputStyles();
     const timeoutId = setTimeout(fixPhoneInputStyles, 100);
-    
+
     return () => clearTimeout(timeoutId);
   }, [showOTP]);
 
   interface CountryData {
     dialCode?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   }
 
   const handlePhoneChange = (
     isValid: boolean,
     value: string,
-    selectedCountryData: CountryData,
+    selectedCountryData: CountryData
   ) => {
     setIsValidPhone(isValid);
     if (selectedCountryData && selectedCountryData.dialCode) {
@@ -90,7 +97,7 @@ const Signup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validCountryCode = "+" + countryCode;
 
     const result = await executeSendOTP({
@@ -109,10 +116,15 @@ const Signup: React.FC = () => {
     const result = await executeVerifyOTP({
       phoneNumber: phone,
       otp,
-      countryCode: validCountryCode
+      countryCode: validCountryCode,
     });
-    
+
     if (result.success && result.data) {
+      // commenting because link will change to /home so it will call the api automatically there
+      // const userData = await fetchUserProfile(result.data?.userDetails._id, result.data?.userDetails._id);
+      // if (userData.success) {
+      //   dispatch(updateCurrentUser(userData.data));
+      // }
       navigate("/setup-profile");
     }
   };
@@ -135,7 +147,7 @@ const Signup: React.FC = () => {
               >
                 Phone
               </label>
-              <div className="mt-1 relative" style={{ height: '40px' }}>
+              <div className="mt-1 relative" style={{ height: "40px" }}>
                 <IntlTelInput
                   ref={phoneInputRef}
                   containerClassName="intl-tel-input"
@@ -151,7 +163,7 @@ const Signup: React.FC = () => {
                   separateDialCode={true}
                   telInputProps={{
                     className: "w-full",
-                    placeholder: "Enter phone number"
+                    placeholder: "Enter phone number",
                   }}
                 />
               </div>
@@ -160,7 +172,10 @@ const Signup: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox id="terms" required />
-                <label htmlFor="terms" className="text-xs text-muted-foreground">
+                <label
+                  htmlFor="terms"
+                  className="text-xs text-muted-foreground"
+                >
                   I agree to Bond's{" "}
                   <Link to="/terms" className="text-primary hover:underline">
                     Terms of Conditions
@@ -174,7 +189,10 @@ const Signup: React.FC = () => {
 
               <div className="flex items-center space-x-2">
                 <Checkbox id="newsletter" />
-                <label htmlFor="newsletter" className="text-xs text-muted-foreground">
+                <label
+                  htmlFor="newsletter"
+                  className="text-xs text-muted-foreground"
+                >
                   I would like to receive updates about products, services, and
                   promotions
                 </label>
@@ -204,7 +222,9 @@ const Signup: React.FC = () => {
               Back
             </button>
             {isVerifyingOTP && (
-              <p className="text-center text-sm text-muted-foreground">Verifying...</p>
+              <p className="text-center text-sm text-muted-foreground">
+                Verifying...
+              </p>
             )}
           </div>
         )}

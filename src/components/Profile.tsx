@@ -6,7 +6,10 @@ import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import AllPosts from "@/components/AllPosts";
 import { useEffect, useState } from "react";
-import { fetchUserPosts } from "@/apis/commonApiCalls/profileApi";
+import {
+  fetchUserPosts,
+  updateUserProfile,
+} from "@/apis/commonApiCalls/profileApi";
 import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
@@ -14,13 +17,14 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
 import { fetchChatRooms } from "@/apis/commonApiCalls/activityApi";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { ChatRoom } from "@/apis/apiTypes/response";
 import {
   ChatItem,
   setActiveChat,
   transformAndSetChats,
 } from "@/store/chatSlice";
+import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
 
 interface ProfileProps {
   userId: string;
@@ -46,9 +50,16 @@ const Profile: React.FC<ProfileProps> = ({
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
-  const [executeSendFriendRequest, isSendingFriendRequest] = useApiCall(sendFriendRequest);
+  const [executeSendFriendRequest, isSendingFriendRequest] =
+    useApiCall(sendFriendRequest);
   const [executeStartMessage] = useApiCall(startMessage);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
+  const [executeUpdateProfile] = useApiCall(updateUserProfile);
+
+  // Get user data from Redux store
+  const { privacyLevel, interests, nickname } = useAppSelector(
+    (state) => state.currentUser
+  );
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -77,11 +88,39 @@ const Profile: React.FC<ProfileProps> = ({
     }
   };
 
-  // const audios = [
-  //   { id: 1, title: "Nature sounds", duration: "2:34" },
-  //   { id: 2, title: "Morning birds", duration: "1:45" },
-  //   { id: 3, title: "Ocean waves", duration: "3:21" },
-  // ];
+  const handleAnonymousToggle = async (checked: boolean) => {
+    if (!isCurrentUser) return;
+
+    const newPrivacyLevel = checked ? 1 : 0;
+
+    // Optimistically update the UI
+    dispatch(setPrivacyLevel(newPrivacyLevel));
+
+    // Prepare the request data
+    const profileData = {
+      name: username,
+      email,
+      interests: interests,
+      privacyLevel: newPrivacyLevel,
+      avatar: avatarSrc,
+    };
+
+    // Execute the API call
+    const { success } = await executeUpdateProfile(profileData);
+
+    if (!success) {
+      // If the request fails, revert the change
+      dispatch(setPrivacyLevel(privacyLevel));
+      toast.error("Failed to update anonymous mode");
+    } else {
+      dispatch(
+        updateCurrentUser({
+          username: nickname,
+        })
+      );
+    }
+  };
+
   const handleStartConversation = async () => {
     try {
       setIsMessageLoading(true);
@@ -148,7 +187,10 @@ const Profile: React.FC<ProfileProps> = ({
         {isCurrentUser ? (
           <div className="flex items-center gap-2">
             <span className="text-sm">Go Anonymous</span>
-            <Switch />
+            <Switch
+              checked={privacyLevel == 1}
+              onCheckedChange={handleAnonymousToggle}
+            />
           </div>
         ) : (
           <ThreeDotsMenu
@@ -172,7 +214,13 @@ const Profile: React.FC<ProfileProps> = ({
             className="w-full h-full object-cover"
           />
         </div>
-        <h1 className="text-xl font-semibold">{username}</h1>
+        <h1 className="text-xl font-semibold">
+          {isCurrentUser
+            ? privacyLevel == 1
+              ? nickname
+              : username
+            : username}
+        </h1>
         <p className="text-muted-foreground text-sm space-y-4">{email}</p>
 
         <div className="flex gap-8 py-3 mt-4">
@@ -208,8 +256,8 @@ const Profile: React.FC<ProfileProps> = ({
                 "Message"
               )}
             </Button>
-            <Button 
-              className="flex-1 cursor-pointer" 
+            <Button
+              className="flex-1 cursor-pointer"
               onClick={handleSendFriendRequest}
               disabled={isSendingFriendRequest}
             >
@@ -246,7 +294,7 @@ const Profile: React.FC<ProfileProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <AllPosts posts={posts}/>
+            <AllPosts posts={posts} />
           )}
         </TabsContent>
 
