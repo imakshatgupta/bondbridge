@@ -1,11 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { INITIAL_PROFILE_STATE } from "@/lib/constants";
+import { INITIAL_PROFILE_STATE, AVAILABLE_INTERESTS } from "@/lib/constants";
 
 export const createProfile = createSlice({
   name: "createProfile",
   initialState: {
     ...INITIAL_PROFILE_STATE,
-    skillsAvailable: [...INITIAL_PROFILE_STATE.skillsAvailable],
+    skillsAvailable: [...AVAILABLE_INTERESTS],
     skillSelected: [...INITIAL_PROFILE_STATE.skillSelected],
     communitiesSelected: [...INITIAL_PROFILE_STATE.communitiesSelected],
     communitiesAvailable: [...INITIAL_PROFILE_STATE.communitiesAvailable],

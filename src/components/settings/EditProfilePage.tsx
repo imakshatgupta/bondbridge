@@ -249,7 +249,7 @@ const EditProfilePage: React.FC = () => {
         <div className="space-y-4">
           <Label>Interests</Label>
 
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2 mb-4 overflow-y-auto max-h-[20vh]">
             {selectedInterests.map((interest, index) => (
               <Badge key={`interest-${index}`} variant="secondary" className="flex items-center gap-1">
                 {interest}
@@ -270,9 +270,9 @@ const EditProfilePage: React.FC = () => {
           <div className="mt-4">
             <p className="text-sm text-muted-foreground mb-2">
               Suggested interests:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {availableInterestsFiltered.slice(0, 8).map((interest) => (
+            </p>  
+            <div className="flex flex-wrap gap-2 overflow-y-auto h-[20vh]">
+              {availableInterestsFiltered.map((interest) => (
                 <Badge 
                   key={`suggested-interest-${interest}`} 
                   variant="outline" 
