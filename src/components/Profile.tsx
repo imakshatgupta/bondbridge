@@ -24,6 +24,8 @@ import {
   transformAndSetChats,
 } from "@/store/chatSlice";
 import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
+import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
+import type { StoryData } from "@/apis/apiTypes/response";
 
 interface ProfileProps {
   userId: string;
@@ -48,12 +50,14 @@ const Profile: React.FC<ProfileProps> = ({
   const dispatch = useAppDispatch();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
+  const [userStories, setUserStories] = useState<StoryData | null>(null);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] =
     useApiCall(sendFriendRequest);
   const [executeStartMessage] = useApiCall(startMessage);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
+  // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
 
   // Get user data from Redux store
   const { privacyLevel, interests, nickname } = useAppSelector(
@@ -71,6 +75,37 @@ const Profile: React.FC<ProfileProps> = ({
 
     loadPosts();
   }, [userId]);
+
+  // useEffect(() => {
+  //   const loadStories = async () => {
+  //     const result = await executeGetStoryForUser(userId);
+  //     if (result.success && result.data && result.data.stories && result.data.stories.length > 0) {
+  //       setUserStories(result.data.stories[0]);
+  //     }
+  //   };
+
+  //   loadStories();
+  // }, [userId]);
+
+  // const handleStoryClick = () => {
+  //   if (!userStories) return;
+
+  //   navigate(`/story/${userId}`, {
+  //     state: {
+  //       currentStory: {
+  //         user: userStories.name,
+  //         userId: userStories.userId,
+  //         avatar: userStories.profilePic,
+  //         isLive: userStories.isLive,
+  //         hasStory: userStories.hasStory,
+  //         stories: userStories.stories,
+  //         latestStoryTime: userStories.latestStoryTime
+  //       },
+  //       allStories: [userStories],
+  //       initialUserIndex: 0
+  //     }
+  //   });
+  // };
 
   const handleSendFriendRequest = async () => {
     try {
@@ -205,11 +240,18 @@ const Profile: React.FC<ProfileProps> = ({
 
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
-        <div className="w-24 h-24 rounded-full overflow-hidden">
+        <div 
+          className={`relative w-24 h-24 cursor-pointer ${
+            userStories?.hasStory 
+              ? 'ring-2 ring-muted rounded-full'
+              : ''
+          }`}
+          // onClick={handleStoryClick}
+        >
           <img
             src={avatarSrc || "avatar.png"}
             alt={username}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-full"
           />
         </div>
         <h1 className="text-xl font-semibold">

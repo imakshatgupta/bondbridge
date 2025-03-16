@@ -141,7 +141,7 @@ export default function HomePage() {
 
   // Prepare stories for display - format self story only once
   const formattedSelfStory = selfStories ? {
-    user: currentUser.username || "Your Story",
+    user: "Your Story",
     userId: currentUserId || '',
     avatar: currentUser.avatar || '/profile/avatars/1.png',
     isLive: false,
