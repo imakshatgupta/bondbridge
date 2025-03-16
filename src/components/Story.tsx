@@ -54,7 +54,7 @@ export const Story: FC<StoryProps> = ({
       role="button"
       tabIndex={0}
     >
-      <div className={`relative w-16 h-16 rounded-full ${
+      <div className={`relative w-16 h-16 rounded-full cursor-pointer ${
         isLive 
           ? `ring-2 ${liveRingColor}` 
           : hasUnseenStories

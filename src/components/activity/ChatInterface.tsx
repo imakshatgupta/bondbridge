@@ -292,7 +292,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Chat header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleClose}>
+          <Button variant="ghost" size="icon" onClick={handleClose} className="cursor-pointer">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div 

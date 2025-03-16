@@ -23,14 +23,14 @@ export default function ThreeDotsMenu({ showDelete = true, onShare, onReport, on
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onShare}>
+        <DropdownMenuItem onClick={onShare} className="cursor-pointer">
           <Share2 className="w-4 h-4 mr-2" /> Share
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onReport}>
+        <DropdownMenuItem onClick={onReport} className="cursor-pointer">
           <Flag className="w-4 h-4 mr-2" /> Report
         </DropdownMenuItem>
         {showDelete && (
-          <DropdownMenuItem onClick={onDelete} className="text-destructive">
+          <DropdownMenuItem onClick={onDelete} className="text-destructive cursor-pointer">
             <Trash className="w-4 h-4 mr-2" /> Delete
           </DropdownMenuItem>
         )}

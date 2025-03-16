@@ -170,7 +170,7 @@ const Signup: React.FC = () => {
 
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <Checkbox id="terms" required />
+                <Checkbox id="terms" required className="cursor-pointer"/>
                 <label
                   htmlFor="terms"
                   className="text-xs text-muted-foreground"
@@ -187,7 +187,7 @@ const Signup: React.FC = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox id="newsletter" />
+                <Checkbox id="newsletter" className="cursor-pointer"/>
                 <label
                   htmlFor="newsletter"
                   className="text-xs text-muted-foreground"
@@ -200,7 +200,7 @@ const Signup: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary cursor-pointer"
               disabled={isSendingOTP}
             >
               {isSendingOTP ? "Sending OTP..." : "Sign Up"}

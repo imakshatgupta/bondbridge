@@ -7,8 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import { uploadStory } from '../apis/commonApiCalls/storyApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { Story, StoryData } from '../apis/apiTypes/request';
+import { useAppSelector } from '../store';
 
 const CreateStory = () => {
+  const { avatar, username } = useAppSelector((state) => state.currentUser);
   const [stories, setStories] = useState<Story[]>([{ 
     type: 'text', 
     content: '', 
@@ -407,22 +409,22 @@ const CreateStory = () => {
       {/* Top Controls */}
       <div className="flex items-center justify-between p-4">
         <Avatar className="h-8 w-8">
-          <AvatarImage src="/activity/cat.png" alt="Profile" />
-          <AvatarFallback>U</AvatarFallback>
+          <AvatarImage src={avatar} alt="Profile" />
+          <AvatarFallback>{username ? username.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
         </Avatar>
 
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
             onClick={handleCancel}
           >
             Cancel
           </Button>
           <Button
             size="sm"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 cursor-pointer"
             onClick={handleCreateStory}
             disabled={isUploading}
           >
@@ -440,7 +442,7 @@ const CreateStory = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground h-auto p-2"
+              className="text-foreground h-auto p-2 cursor-pointer"
               onClick={handleSetTextType}
             >
               <Type className="w-5 h-5" />
@@ -478,7 +480,7 @@ const CreateStory = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground h-auto p-2"
+              className="text-foreground h-auto p-2 cursor-pointer"
               onClick={() => {
                 setShowColorPicker(!showColorPicker);
               }}
@@ -501,7 +503,7 @@ const CreateStory = () => {
             <Button
               variant="ghost"
               size="icon"
-              className="text-foreground h-auto p-2"
+              className="text-foreground h-auto p-2 cursor-pointer"
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
             >
               <Smile className="w-5 h-5" />

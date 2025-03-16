@@ -186,14 +186,14 @@ export function Post({
                 <div className="flex items-center justify-between mt-4 text-muted-foreground">
                     <div className="flex items-center gap-3">
                         <button 
-                            className={`flex items-center gap-1 ${isLiked ? 'text-destructive' : 'hover:text-destructive'} ${isLikeLoading || isLoadingReactions ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-1 cursor-pointer ${isLiked ? 'text-destructive' : 'hover:text-destructive'} ${isLikeLoading || isLoadingReactions ? 'opacity-50 cursor-not-allowed' : ''}`}
                             onClick={handleLikeClick}
                             disabled={isLikeLoading || isLoadingReactions}
                         >
                             <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} /> {likes}
                         </button>
                         <button
-                            className="flex items-center gap-1 hover:text-primary"
+                            className="flex items-center gap-1 hover:text-primary cursor-pointer"
                             onClick={onCommentClick}
                         >
                             <MessageCircle className="w-5 h-5" /> {comments}

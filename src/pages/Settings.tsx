@@ -142,7 +142,7 @@ const Settings = () => {
       {/* Settings Options */}
       <div className="flex-1">
         <button
-          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 "
+          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
           onClick={() => handleSettingsClick("profile")}
         >
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
@@ -164,7 +164,7 @@ const Settings = () => {
         </button>
 
         <button
-          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 "
+          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
           onClick={() => handleSettingsClick("blocked")}
         >
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
@@ -186,7 +186,7 @@ const Settings = () => {
         </button>
 
         <button
-          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 "
+          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
           onClick={() => handleSettingsClick("voice")}
         >
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
@@ -210,7 +210,7 @@ const Settings = () => {
         </button>
 
         <button
-          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 "
+          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
           onClick={() => handleSettingsClick("account")}
         >
           <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">

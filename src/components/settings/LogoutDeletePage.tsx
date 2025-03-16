@@ -40,9 +40,9 @@ const LogoutDeletePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">
+      <h3 className="text-lg font-medium cursor-pointer">
         <ArrowLeft
-          className="h-4 w-4 mr-2 inline"
+          className="h-4 w-4 mr-2 inline cursor-pointer"
           onClick={handleCloseSettings}
         />
         Account Settings
@@ -61,7 +61,7 @@ const LogoutDeletePage: React.FC = () => {
             <Button
               variant="outline"
               onClick={handleLogout}
-              className="border-red-300 hover:bg-red-50 hover:text-red-600 text-red-500"
+              className="border-red-300 hover:bg-red-50 hover:text-red-600 text-red-500 cursor-pointer"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -81,6 +81,7 @@ const LogoutDeletePage: React.FC = () => {
             <Button
               variant="destructive"
               onClick={() => setDeleteDialogOpen(true)}
+              className="cursor-pointer"
             >
               Delete Account
             </Button>

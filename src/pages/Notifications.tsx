@@ -102,12 +102,12 @@ const Notifications = () => {
       ) : (
         <Tabs defaultValue="notifications" className="">
           <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="notifications">
+            <TabsTrigger value="notifications" className="cursor-pointer">
               Notifications{" "}
               {notifications.filter((n) => !n.seen).length > 0 &&
                 `(${notifications.filter((n) => !n.seen).length})`}
             </TabsTrigger>
-            <TabsTrigger value="friend-requests">
+            <TabsTrigger value="friend-requests" className="cursor-pointer">
               Friend Requests{" "}
               {friendRequests.length > 0 && `(${friendRequests.length})`}
             </TabsTrigger>
