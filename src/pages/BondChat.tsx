@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
-import { ArrowLeft, History,  } from "lucide-react";
+import { ArrowLeft, History, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useSocket } from "@/context/SocketContext";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setActiveChat } from "@/store/chatSlice";
 
 // Extend the Message type to support complex content
 interface ExtendedMessage extends Omit<Message, "text"> {
@@ -151,16 +153,23 @@ export default function BondChat() {
     "This is the for fast reply",
     "This is the suggestion for fast reply",
   ]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
   const [executeGetMessages] = useApiCall(getMessages);
   const userId = localStorage.getItem("userId") || "";
   const roomId = userId; // Using userId as the roomId for BondChat
+  const dispatch = useDispatch();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Set activeChat to null when component mounts
+  useEffect(() => {
+    dispatch(setActiveChat(null));
+  }, [dispatch]);
 
   useEffect(() => {
     scrollToBottom();
@@ -314,13 +323,83 @@ export default function BondChat() {
     });
   };
 
+  // Function to stop any ongoing speech
+  const stopSpeech = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  // Function to read the latest AI message aloud
+  const speakLatestAIMessage = () => {
+    // If already speaking, stop the speech and return
+    if (isSpeaking) {
+      stopSpeech();
+      return;
+    }
+    
+    if (messages.length === 0) return;
+    
+    // Find the latest non-user message (AI message)
+    const latestAIMessage = [...messages].reverse().find(msg => !msg.isUser);
+    
+    if (!latestAIMessage) return;
+    
+    // Extract the text content
+    let textToSpeak = "";
+    if (typeof latestAIMessage.text === "string") {
+      textToSpeak = latestAIMessage.text;
+    } else if (typeof latestAIMessage.text === "object" && "message" in latestAIMessage.text) {
+      textToSpeak = latestAIMessage.text.message;
+    }
+    
+    if (!textToSpeak) return;
+    
+    // Stop any ongoing speech before starting new one
+    stopSpeech();
+      
+    // Create a new speech synthesis utterance
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      
+      // Set speaking state
+      setIsSpeaking(true);
+      
+      // Event handlers
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+      
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        // toast.error("Speech synthesis failed");
+      };
+      
+      // Speak the text
+      window.speechSynthesis.speak(utterance);
+    } else {
+      toast.error("Text-to-speech is not supported in this browser");
+    }
+  };
+
+  // Clean up speech synthesis when navigating away
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+    };
+  }, []);
+
   return (
     <div className="flex flex-col bg-background relative h-[calc(100vh-64px)] overflow-hidden">
       <div className="flex items-center gap-3 p-4 border-b">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => window.history.back()}
+          onClick={() => {
+            stopSpeech();
+            window.history.back();
+          }}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -332,13 +411,22 @@ export default function BondChat() {
           </span>
         </div>
         <div className="ml-auto gap-2 flex items-center">
-          <Button size="sm" variant="default" className="rounded-full">
+          <Button size="sm" variant="default" className="rounded-full cursor-pointer">
             New +
           </Button>
           <Button
             size="icon"
             variant="ghost"
-            className="rounded-full text-muted-foreground"
+            className="rounded-full text-muted-foreground cursor-pointer"
+            onClick={speakLatestAIMessage}
+            disabled={messages.length === 0}
+          >
+            <Volume2 className={`h-5 w-5 ${isSpeaking ? 'text-primary' : ''}`} />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="rounded-full text-muted-foreground cursor-pointer"
           >
             <History />
           </Button>
