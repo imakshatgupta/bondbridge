@@ -12,6 +12,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { CommentData, HomePostData } from "@/apis/apiTypes/response";
 import { toast } from "react-hot-toast";
+import { useAppSelector } from "@/store";
 
 export default function CommentsPage() {
   const navigate = useNavigate();
@@ -27,6 +28,9 @@ export default function CommentsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [, setPendingComment] = useState<string | null>(null);
   
+  // Get current user from Redux store
+  const currentUser = useAppSelector(state => state.currentUser);
+  
   // Use our custom hook for API calls
   const [executeFetchComments, isLoading] = useApiCall(fetchComments);
   const [executePostComment, isPosting] = useApiCall(postComment);
@@ -36,6 +40,18 @@ export default function CommentsPage() {
     const userId = localStorage.getItem('userId');
     setCurrentUserId(userId);
   }, []);
+  
+  // Helper function to sort comments by creation time (newest first)
+  const sortCommentsByTime = (comments: CommentData[]): CommentData[] => {
+    return [...comments].sort((a, b) => {
+      // Try to parse the dates from createdAt
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      
+      // Sort in descending order (newest first)
+      return dateB - dateA;
+    });
+  };
   
   // Load initial data
   useEffect(() => {
@@ -54,7 +70,9 @@ export default function CommentsPage() {
       if (result.success && result.data) {
         // Map the API response to our expected format
         if (result.data.comments) {
-          setCommentsData(result.data.comments);
+          // Sort comments by time (newest first)
+          const sortedComments = sortCommentsByTime(result.data.comments);
+          setCommentsData(sortedComments);
         } else {
           setCommentsData([]);
         }
@@ -82,7 +100,9 @@ export default function CommentsPage() {
     if (result.success && result.data) {
       const data = result.data;
       if (data.comments) {
-        setCommentsData(prev => [...prev, ...data.comments]);
+        // Sort and merge with existing comments
+        const newComments = sortCommentsByTime([...commentsData, ...data.comments]);
+        setCommentsData(newComments);
       }
       setHasMore(data.hasMoreComments || false);
       setPage(nextPage);
@@ -103,6 +123,9 @@ export default function CommentsPage() {
     const commentText = newComment.trim();
     setPendingComment(commentText);
     
+    // Get user ID from localStorage
+    const userId = localStorage.getItem('userId') || '';
+    
     // Create a temporary comment with a unique ID
     const tempCommentId = `temp-${Date.now()}`;
     const tempComment: CommentData = {
@@ -113,15 +136,15 @@ export default function CommentsPage() {
       createdAt: new Date().toISOString(),
       agoTime: "Just now",
       user: {
-        userId: localStorage.getItem('userId') || '',
-        name: post.name,
-        profilePic: post.profilePic,
+        userId: userId,
+        name: currentUser.username || currentUser.nickname,
+        profilePic: currentUser.avatar || avatarImage,
       },
       likes: 0,
       hasReplies: false
     };
     
-    // Optimistically add the comment to the UI
+    // Optimistically add the comment to the UI (at the top since it's newest)
     setCommentsData(prevComments => [tempComment, ...prevComments]);
     setpost(prevPost => ({
       ...prevPost,
@@ -155,32 +178,53 @@ export default function CommentsPage() {
       toast.error("Failed to post comment. Please try again.");
     } else {
       // API call succeeded, update the temporary comment with the real data if available
-      if (result.data && result.data.comment) {
-        // If the API returns the actual comment data, update the temporary comment
-        
+      if (result.data) {
+        // Extract the insertedId from the response
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const realCommentData = result.data.comment as any; // Type assertion to avoid property access errors
-        setCommentsData(prevComments => 
-          prevComments.map(comment => 
-            comment.commentId === tempCommentId 
-              ? {
-                  ...comment,
-                  commentId: realCommentData.commentId || comment.commentId,
-                  // Update any other fields that come from the API
-                }
-              : comment
-          )
-        );
+        const commentData = result.data.comment as any;
+        const insertedId = commentData?.insertedId;
+        
+        if (insertedId) {
+          // Replace the temporary comment with the real one using the insertedId from the API
+          setCommentsData(prevComments => 
+            prevComments.map(comment => 
+              comment.commentId === tempCommentId 
+                ? {
+                    ...comment,
+                    commentId: insertedId, // Use the actual insertedId from the API
+                  }
+                : comment
+            )
+          );
+        } else {
+          // If for some reason insertedId is not available, use a fallback ID
+          const permanentId = `comment-${Date.now()}`;
+          
+          // Important: Replace the temp ID with a permanent one to remove the "sending" indicator
+          setCommentsData(prevComments => 
+            prevComments.map(comment => 
+              comment.commentId === tempCommentId 
+                ? {
+                    ...comment,
+                    commentId: permanentId, // Fallback ID
+                  }
+                : comment
+            )
+          );
+          
+          console.warn('Comment was added but no insertedId was returned from the API');
+        }
       } else {
-        // If the API doesn't return the actual comment data, just remove the temporary flag
-        // Generate a permanent ID based on the timestamp
+        // If the API doesn't return any data, just remove the temporary flag
         const permanentId = `comment-${Date.now()}`;
+        
+        // Important: Replace the temp ID with a permanent one to remove the "sending" indicator
         setCommentsData(prevComments => 
           prevComments.map(comment => 
             comment.commentId === tempCommentId 
               ? {
                   ...comment,
-                  commentId: permanentId,
+                  commentId: permanentId, // This ensures the "sending" indicator is removed
                 }
               : comment
           )
@@ -237,8 +281,8 @@ export default function CommentsPage() {
           {/* Comment Input */}
           <div className="p-4 border-b flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={avatarImage} alt="Your avatar" />
-              <AvatarFallback>YA</AvatarFallback>
+              <AvatarImage src={currentUser.avatar || avatarImage} alt="Your avatar" />
+              <AvatarFallback>{currentUser.nickname?.charAt(0) || currentUser.username?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-1 relative">
               <Input

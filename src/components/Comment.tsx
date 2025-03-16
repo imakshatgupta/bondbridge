@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageSquare, Reply, ArrowRight } from "lucide-react";
@@ -9,10 +9,12 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { CommentData } from "../apis/apiTypes/response";
 import { CommentProps } from "../types/home";
 import { deleteComment } from "@/apis/commonApiCalls/commentsApi";
+import { Link } from "react-router-dom";
+import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 
 // Memoized reply component to prevent unnecessary re-renders
 const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCommentDeleted, isPending }: 
-  { comment: CommentData & { likes?: number; hasReplies?: boolean }; postId?: string; currentUserId?: string; postAuthorId?: string; onCommentDeleted?: (commentId: string) => void; isPending?: boolean }) => (
+  { comment: CommentData & { likes?: number; hasReplies?: boolean; reaction?: { hasReacted: boolean; reactionType: string | null } }; postId?: string; currentUserId?: string; postAuthorId?: string; onCommentDeleted?: (commentId: string) => void; isPending?: boolean }) => (
   <Comment 
     comment={comment} 
     isReply={true} 
@@ -30,7 +32,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   const isCommentPending = isPending || comment.commentId.startsWith('temp-');
   
   const [showReplies, setShowReplies] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(comment.reaction?.hasReacted || false);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState<CommentData[]>([]);
@@ -44,32 +46,99 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   // Show delete option if user is either comment owner or post owner
   const canDelete = isCommentOwner || isPostOwner;
   
-  // Use the useApiCall hook for the delete comment API
+  // Use the useApiCall hook for API calls
   const [executeDeleteComment] = useApiCall(deleteComment);
+  const [executeAddReaction, isAddingReaction] = useApiCall(addReaction);
+  const [executeDeleteReaction, isDeletingReaction] = useApiCall(deleteReaction);
+  const [executeGetAllReactions, isLoadingReactions] = useApiCall(getAllReactions);
 
   // Default likes to 0 if not provided
   const likes = comment.likes || 0;
-  // const formattedLikes = likes >= 1000
-  //   ? `${(likes / 1000).toFixed(1)}k`
-  //   : likes.toString();
+  
+  // Initialize like count from props
+  const [likeCount, setLikeCount] = useState(likes);
+  
+  // Check if the current user has already reacted to this comment
+  useEffect(() => {
+    const checkUserReaction = async () => {
+      if (isCommentPending || !currentUserId || !comment.commentId) return;
+      
+      try {
+        const result = await executeGetAllReactions(comment.commentId, 'comment');
+        
+        if (result.success && result.data) {
+          // Find like reactions
+          const likeReaction = result.data.reactions.find((r: { reactionType: string }) => r.reactionType === 'like');
+          
+          if (likeReaction) {
+            // Update like count from the API response
+            setLikeCount(likeReaction.count);
+            
+            // Check if current user has reacted
+            const hasUserReacted = likeReaction.users.some((user: { userId: string }) => user.userId === currentUserId);
+            setLiked(hasUserReacted);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking reactions:', error);
+      }
+    };
+    
+    // Only check reactions if we don't already know the reaction state
+    if (comment.reaction === undefined && !isCommentPending) {
+      checkUserReaction();
+    } else {
+      // Use the reaction data from the comment if available
+      setLiked(comment.reaction?.hasReacted || false);
+    }
+  }, [comment.commentId, comment.reaction, currentUserId, isCommentPending]);
+  
+  // Update liked state and like count when comment props change
+  useEffect(() => {
+    if (comment.reaction !== undefined) {
+      setLiked(comment.reaction.hasReacted || false);
+    }
+    setLikeCount(comment.likes || 0);
+  }, [comment.reaction?.hasReacted, comment.likes]);
 
   // Memoize handlers to prevent recreation on each render
   const toggleReplies = useCallback(() => setShowReplies(prev => !prev), []);
   
-  // Update the toggleLiked function to also update the likes count
-  const [likeCount, setLikeCount] = useState(likes);
-  const toggleLiked = useCallback(() => {
-    // First update the liked state
+  // Handle like/unlike functionality
+  const toggleLiked = useCallback(async () => {
+    if (isCommentPending || !currentUserId || isAddingReaction || isDeletingReaction) return;
+    
+    // Optimistic update
     const newLikedState = !liked;
     setLiked(newLikedState);
+    setLikeCount(prev => newLikedState ? prev + 1 : prev - 1);
     
-    // Then update the like count based on the new liked state
-    if (newLikedState) {
-      setLikeCount(prev => prev + 1);
-    } else {
-      setLikeCount(prev => prev - 1);
+    try {
+      // Prepare request data
+      const reactionData = {
+        entityId: comment.commentId,
+        entityType: 'comment',
+        reactionType: 'like'
+      };
+      
+      // Call the appropriate API based on the new liked state
+      const result = newLikedState 
+        ? await executeAddReaction(reactionData)
+        : await executeDeleteReaction(reactionData);
+      
+      if (!result.success) {
+        // Revert optimistic update if API call fails
+        setLiked(!newLikedState);
+        setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
+        toast.error(`Failed to ${newLikedState ? 'like' : 'unlike'} comment`);
+      }
+    } catch (error) {
+      // Revert optimistic update if there's an error
+      setLiked(!newLikedState);
+      setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
+      toast.error(`Error: ${newLikedState ? 'Liking' : 'Unliking'} comment failed`);
     }
-  }, [liked]); // Add liked as a dependency
+  }, [liked, comment.commentId, currentUserId, executeAddReaction, executeDeleteReaction, isAddingReaction, isDeletingReaction, isCommentPending]);
   
   // Format like count for display
   const formattedLikeCount = likeCount >= 1000
@@ -97,7 +166,11 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
           profilePic: "/path/to/avatar.jpg"
         },
         likes: 0,
-        hasReplies: false
+        hasReplies: false,
+        reaction: {
+          hasReacted: false,
+          reactionType: null
+        }
       };
 
       // Optimistically add the reply
@@ -142,15 +215,22 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   return (
     <div className={`p-4 ${isReply ? "pl-12" : ""} ${isCommentPending ? "opacity-70" : ""}`}>
       <div className="flex gap-2">
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={comment.user.profilePic} alt={comment.user.name} />
-          <AvatarFallback>{comment.user.name[0] || 'U'}</AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${comment.user.userId}`}>
+          <Avatar className="h-8 w-8 cursor-pointer">
+            <AvatarImage src={comment.user.profilePic} alt={comment.user.name} />
+            <AvatarFallback>{comment.user.name[0] || 'U'}</AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex-1">
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-medium text-sm">{comment.user.name}</span>
+                <Link 
+                  to={`/profile/${comment.user.userId}`}
+                  className="font-medium text-sm cursor-pointer"
+                >
+                  {comment.user.name}
+                </Link>
                 <span className="text-xs text-muted-foreground">{comment.agoTime}</span>
                 {isCommentPending && (
                   <span className="text-xs text-muted-foreground italic">Sending...</span>
@@ -188,8 +268,13 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
               size="sm"
               className="h-8 px-2 text-muted-foreground"
               onClick={toggleLiked}
+              disabled={isAddingReaction || isDeletingReaction || isCommentPending || !currentUserId || isLoadingReactions}
             >
-              <Heart className={`h-4 w-4 mr-1 ${liked ? "text-destructive fill-destructive" : ""}`} />
+              {isAddingReaction || isDeletingReaction || isLoadingReactions ? (
+                <div className="h-4 w-4 mr-1 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              ) : (
+                <Heart className={`h-4 w-4 mr-1 ${liked ? "text-destructive fill-destructive" : ""}`} />
+              )}
               {formattedLikeCount}
             </Button>
 
