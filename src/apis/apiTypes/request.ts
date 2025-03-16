@@ -183,9 +183,3 @@ export interface ReactionRequest {
   entityType: string;
   reactionType: string;
 }
-
-// Interface for message interaction (marking as seen)
-export interface MessageInteractionRequest {
-  entityId: string;
-  reactionType: string;
-}

@@ -1,9 +1,10 @@
 import apiClient from "../apiClient";
-import { GetMessagesRequest, StartMessageRequest, MessageInteractionRequest } from "../apiTypes/request";
+import { GetMessagesRequest } from "../apiTypes/request";
 import {
   GetMessagesResponse,
   StartMessageResponse,
 } from "../apiTypes/response";
+import { StartMessageRequest } from "../apiTypes/request";
 
 export const getMessages = async (
   request: GetMessagesRequest
@@ -25,19 +26,6 @@ export const startMessage = async (
     return response.data;
   } catch (error) {
     console.error("Error starting conversation:", error);
-    throw error;
-  }
-};
-
-// Function to mark a message as seen
-export const markMessageAsSeen = async (
-  request: MessageInteractionRequest
-): Promise<any> => {
-  try {
-    const response = await apiClient.post("/messages/interact", request);
-    return response.data;
-  } catch (error) {
-    console.error("Error marking message as seen:", error);
     throw error;
   }
 };
