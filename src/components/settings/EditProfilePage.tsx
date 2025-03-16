@@ -193,6 +193,7 @@ const EditProfilePage: React.FC = () => {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
+              disabled={privacyLevel == 1}
             />
           </div>
 
