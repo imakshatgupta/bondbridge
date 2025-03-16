@@ -250,7 +250,7 @@ export default function CommentsPage() {
           variant="ghost" 
           size="icon" 
           onClick={() => navigate(-1)}
-          className="mr-2"
+          className="mr-2 cursor-pointer"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

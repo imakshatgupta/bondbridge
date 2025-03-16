@@ -131,6 +131,7 @@ const VoiceSettingsPage: React.FC = () => {
         <Button 
           onClick={handleSaveVoice}
           disabled={currentVoice === selectedVoice}
+          className="cursor-pointer"
         >
           <Check className="h-4 w-4 mr-2" />
           Save Voice Setting

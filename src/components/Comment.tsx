@@ -266,7 +266,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 px-2 text-muted-foreground"
+              className="h-8 px-2 text-muted-foreground cursor-pointer"
               onClick={toggleLiked}
               disabled={isAddingReaction || isDeletingReaction || isCommentPending || !currentUserId || isLoadingReactions}
             >
@@ -282,7 +282,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-muted-foreground"
+                className="h-8 px-2 text-muted-foreground cursor-pointer"
                 onClick={toggleReplies}
               >
                 <MessageSquare className="h-4 w-4 mr-1" />
@@ -294,7 +294,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 text-muted-foreground"
+                className="h-8 px-2 text-muted-foreground cursor-pointer"
                 onClick={toggleReplyInput}
               >
                 <Reply className="h-4 w-4 mr-1" />

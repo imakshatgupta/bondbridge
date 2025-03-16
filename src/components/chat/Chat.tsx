@@ -30,7 +30,7 @@ export const Chat = ({
       {showHeader && (
         <div className="flex items-center gap-3 p-4 border-b">
           {onClose && (
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            <Button variant="ghost" size="icon" onClick={onClose} className="cursor-pointer">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}

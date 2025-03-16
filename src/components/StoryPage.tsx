@@ -136,13 +136,13 @@ const StoryPage: React.FC<StoryPageProps> = ({
         {/* Navigation arrows */}
         <button 
           onClick={handlePrevStory}
-          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/30 flex items-center justify-center text-foreground hover:bg-background/50"
+          className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/30 flex items-center justify-center text-foreground hover:bg-background/50 cursor-pointer"
         >
           <ArrowLeft size={20} />
         </button>
         <button 
           onClick={handleNextStory}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/30 flex items-center justify-center text-foreground hover:bg-background/50"
+          className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background/30 flex items-center justify-center text-foreground hover:bg-background/50 cursor-pointer"
         >
           <ArrowRight size={20} />
         </button>
@@ -162,7 +162,7 @@ const StoryPage: React.FC<StoryPageProps> = ({
               />
               <Button 
                 size="icon" 
-                className="bg-primary text-primary-foreground rounded-full"
+                className="bg-primary text-primary-foreground rounded-ful cursor-pointer"
                 onClick={handleSendReply}
               >
                 <Send className="h-4 w-4" />
@@ -173,11 +173,11 @@ const StoryPage: React.FC<StoryPageProps> = ({
 
         {/* Emoji reactions */}
         <div className="absolute bottom-20 left-0 right-0 flex justify-center gap-2 p-2">
-          <button className="text-xl">🔥</button>
-          <button className="text-xl">😍</button>
-          <button className="text-xl">😮</button>
-          <button className="text-xl">❤️</button>
-          <button className="text-xl">➕</button>
+          <button className="text-xl cursor-pointer">🔥</button>
+          <button className="text-xl cursor-pointer">😍</button>
+          <button className="text-xl cursor-pointer">😮</button>
+          <button className="text-xl cursor-pointer">❤️</button>
+          <button className="text-xl cursor-pointer">➕</button>
         </div>
       </div>
     </div>

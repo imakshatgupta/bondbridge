@@ -9,6 +9,7 @@ import { useApiCall } from '../apis/globalCatchError';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
+import { useAppSelector } from '../store';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
@@ -22,6 +23,9 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Get the current user's avatar from Redux store
+  const { avatar, nickname } = useAppSelector(state => state.currentUser);
   
   // Use the API call hook for the createPost function
   const [executeCreatePost, isCreatingPost] = useApiCall(createPost);
@@ -112,8 +116,8 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
       <div className="flex items-start gap-3 pb-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src="/activity/cat.png" alt="Profile" />
-          <AvatarFallback>U</AvatarFallback>
+          <AvatarImage src={avatar || "/activity/cat.png"} alt={nickname || "Profile"} />
+          <AvatarFallback>{nickname ? nickname[0].toUpperCase() : "U"}</AvatarFallback>
         </Avatar>
 
         
@@ -122,7 +126,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-[var(--muted-foreground)] px-8 border"
+            className="text-[var(--muted-foreground)] px-8 border cursor-pointer"
             onClick={() => setContent('')}
             disabled={isSubmitting || isCreatingPost}
           >
@@ -130,7 +134,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           </Button>
           <Button
             size="sm"
-            className="bg-[var(--primary)] px-10 hover:bg-[var(--primary-hover)] text-[var(--primary-foreground)]"
+            className="bg-[var(--primary)] px-10 hover:bg-[var(--primary-hover)] text-[var(--primary-foreground)] cursor-pointer"
             onClick={handleSubmit}
             disabled={isSubmitting || isCreatingPost}
           >
@@ -156,7 +160,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             <button 
               onClick={() => setShowPicker(!showPicker)}
               type="button"
-              className="hover:opacity-75 transition-opacity"
+              className="hover:opacity-75 transition-opacity cursor-pointer"
             >
               <Smile size={20} className="text-[var(--foreground)]" />
             </button>

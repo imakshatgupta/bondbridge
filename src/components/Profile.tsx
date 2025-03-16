@@ -225,7 +225,7 @@ const Profile: React.FC<ProfileProps> = ({
     <div className="mx-auto bg-background">
       {/* Header */}
       <div className="flex items-center justify-between p-4 pt-0">
-        <button onClick={() => navigate(-1)} className="p-1">
+        <button onClick={() => navigate(-1)} className="p-1 cursor-pointer">
           <ArrowLeft size={24} />
         </button>
         {isCurrentUser ? (
@@ -334,12 +334,12 @@ const Profile: React.FC<ProfileProps> = ({
           className="grid w-full grid-cols-2 bg-transparent *:rounded-none *:border-transparent 
         *:data-[state=active]:text-primary"
         >
-          <TabsTrigger value="posts" className="group">
+          <TabsTrigger value="posts" className="group cursor-pointer">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
               Posts
             </span>
           </TabsTrigger>
-          <TabsTrigger value="community" className="group">
+          <TabsTrigger value="community" className="group cursor-pointer">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
               Community
             </span>

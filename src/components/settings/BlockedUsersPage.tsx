@@ -46,7 +46,7 @@ const BlockedUsersPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium">
+        <h3 className="text-lg font-medium cursor-pointer">
           <ArrowLeft
             className="h-4 w-4 mr-2 inline"
             onClick={handleCloseSettings}

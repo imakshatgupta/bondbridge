@@ -149,7 +149,7 @@ const Login: React.FC = () => {
                             <Button
                                 type="button"
                                 variant={"ghost"}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground"
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground cursor-pointer"
                                 style={{ top: '4px' }}
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -171,7 +171,7 @@ const Login: React.FC = () => {
 
                     <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full cursor-pointer"
                         disabled={isLoggingIn}
                     >
                         {isLoggingIn ? "Logging In..." : "Log In"}
