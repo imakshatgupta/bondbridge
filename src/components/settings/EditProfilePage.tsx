@@ -13,27 +13,7 @@ import { useApiCall } from '@/apis/globalCatchError';
 import { updateUserProfile } from '@/apis/commonApiCalls/profileApi';
 import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const AVAILABLE_INTERESTS = [
-  "Design",
-  "Photography",
-  "Travel",
-  "Music",
-  "Art",
-  "Technology",
-  "Cooking",
-  "Sports",
-  "Reading",
-  "Writing",
-  "Gaming",
-  "Fitness",
-  "Fashion",
-  "Movies",
-  "Nature",
-  "Science",
-  "History",
-  "Politics",
-];
+import { AVAILABLE_INTERESTS } from '@/lib/constants';
 
 interface AvatarData {
   url: string;
@@ -94,7 +74,6 @@ const EditProfilePage: React.FC = () => {
 
   const handleAvatarSelect = (avatarUrl: string) => {
     setSelectedAvatar(avatarUrl);
-    console.log('Selected avatar URL:', avatarUrl);
   };
 
   const handleAddInterest = (interest: string) => {
@@ -110,9 +89,6 @@ const EditProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 Starting profile update process...');
-    console.log('Current selected avatar:', selectedAvatar);
-    
     // Ensure we have a valid avatar URL before sending
     if (!selectedAvatar) {
       console.warn('No avatar selected, using default avatar');
@@ -127,13 +103,10 @@ const EditProfilePage: React.FC = () => {
       avatar: selectedAvatar
     };
     
-    console.log('📦 Profile data being sent:', JSON.stringify(profileData));
-    
     const { data, success } = await executeUpdateProfile(profileData);
 
     if (success && data) {
       console.log('✅ API call successful, data:', data);
-      
       // Update Redux store
       dispatch(
         updateCurrentUser({
@@ -143,14 +116,7 @@ const EditProfilePage: React.FC = () => {
         })
       );
       dispatch(updateInterests(selectedInterests));
-      
-      // Verify the Redux state after update
-      console.log('Current Redux avatar state:', selectedAvatar);
-      
       toast.success('Profile updated successfully');
-    } else {
-      console.error('❌ API call failed:', data);
-      toast.error('Failed to update profile');
     }
   };
 

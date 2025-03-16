@@ -75,3 +75,24 @@ export const GET_AUTH_HEADERS = () => ({
   'userId': localStorage.getItem('userId') || '',
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 });
+
+export const AVAILABLE_INTERESTS = [
+  "Design",
+  "Photography",
+  "Travel",
+  "Music",
+  "Art",
+  "Technology",
+  "Cooking",
+  "Sports",
+  "Reading",
+  "Writing",
+  "Gaming",
+  "Fitness",
+  "Fashion",
+  "Movies",
+  "Nature",
+  "Science",
+  "History",
+  "Politics",
+];
