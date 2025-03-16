@@ -78,10 +78,7 @@ export const updateUserProfile = async (
 
   // Handle avatar - could be a string URL or a File
   if (profileData.avatar) {
-    if (
-      typeof profileData.avatar === "string" &&
-      profileData.avatar.startsWith("/")
-    ) {
+    if (typeof profileData.avatar === 'string') {
       // For pre-defined avatars, just send the path
       formDataObj.append("avatar", profileData.avatar);
     } else if (profileData.avatar instanceof File) {

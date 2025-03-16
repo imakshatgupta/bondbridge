@@ -1,46 +1,24 @@
-import React, { useState } from "react";
-import { useAppSelector, useAppDispatch } from "@/store";
-import { setSettingsActive } from "@/store/settingsSlice";
-import { updateCurrentUser, updateInterests } from "@/store/currentUserSlice";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { X, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
-import { useApiCall } from "@/apis/globalCatchError";
-import { updateUserProfile } from "@/apis/commonApiCalls/profileApi";
+import React, { useState, useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { setSettingsActive } from '@/store/settingsSlice';
+import { updateCurrentUser, updateInterests } from '@/store/currentUserSlice';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { X, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import { useApiCall } from '@/apis/globalCatchError';
+import { updateUserProfile } from '@/apis/commonApiCalls/profileApi';
+import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AVAILABLE_INTERESTS } from '@/lib/constants';
 
-const AVAILABLE_INTERESTS = [
-  "Design",
-  "Photography",
-  "Travel",
-  "Music",
-  "Art",
-  "Technology",
-  "Cooking",
-  "Sports",
-  "Reading",
-  "Writing",
-  "Gaming",
-  "Fitness",
-  "Fashion",
-  "Movies",
-  "Nature",
-  "Science",
-  "History",
-  "Politics",
-];
-
-const AVAILABLE_AVATARS = [
-  "/profile/avatars/1.png",
-  "/profile/avatars/2.png",
-  "/profile/avatars/3.png",
-  "/profile/avatars/4.png",
-  "/profile/avatars/5.png",
-  "/profile/avatars/6.png",
-];
+interface AvatarData {
+  url: string;
+  type: string;
+}
 
 const EditProfilePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -54,12 +32,38 @@ const EditProfilePage: React.FC = () => {
   });
 
   const [selectedAvatar, setSelectedAvatar] = useState(avatar);
-  const [selectedInterests, setSelectedInterests] =
-    useState<string[]>(interests);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(interests);
+  
+  const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);
+  const [femaleAvatars, setFemaleAvatars] = useState<AvatarData[]>([]);
+  
+  // Use the useApiCall hook for both API calls
+  const [executeUpdateProfile, isUpdatingProfile] = useApiCall(updateUserProfile);
+  const [executeFetchAvatars, isLoadingAvatars] = useApiCall(fetchAvatars);
 
-  const [executeUpdateProfile, isUpdatingProfile] =
-    useApiCall(updateUserProfile);
+  const [activeTab, setActiveTab] = useState<string>("female");
 
+  // Add useEffect to fetch avatars
+  useEffect(() => {
+    const getAvatars = async () => {
+      const result = await executeFetchAvatars();
+      
+      if (result.success && result.data) {
+        const { male, female } = result.data;
+        
+        if (male && male.length > 0) {
+          setMaleAvatars(male);
+        }
+        
+        if (female && female.length > 0) {
+          setFemaleAvatars(female);
+        }
+      }
+    };
+    
+    getAvatars();
+  }, []);
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -85,20 +89,24 @@ const EditProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    // Ensure we have a valid avatar URL before sending
+    if (!selectedAvatar) {
+      console.warn('No avatar selected, using default avatar');
+    }
+    
     // Prepare the request data
     const profileData = {
       name: formData.username,
       email: formData.email,
       interests: selectedInterests,
-      privacyLevel: privacyLevel,
-      avatar: selectedAvatar,
+      privacyLevel: privacyLevel ?? 0,
+      avatar: selectedAvatar
     };
-
-    // Execute the API call using our hook
+    
     const { data, success } = await executeUpdateProfile(profileData);
 
     if (success && data) {
+      console.log('✅ API call successful, data:', data);
       // Update Redux store
       dispatch(
         updateCurrentUser({
@@ -108,8 +116,7 @@ const EditProfilePage: React.FC = () => {
         })
       );
       dispatch(updateInterests(selectedInterests));
-
-      toast.success("Profile updated successfully");
+      toast.success('Profile updated successfully');
     }
   };
 
@@ -119,6 +126,39 @@ const EditProfilePage: React.FC = () => {
 
   const handleCloseSettings = () => {
     dispatch(setSettingsActive(false));
+  };
+  
+  const renderAvatarGrid = (avatars: AvatarData[], type: string) => {
+    return (
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+        {avatars.map((avatarItem, index) => {
+          const avatarUrl = avatarItem.url;
+          
+          return (
+            <div 
+              key={`${type}-${index}`}
+              className={`relative cursor-pointer rounded-lg border-2 ${
+                selectedAvatar === avatarUrl 
+                  ? 'border-primary bg-muted' 
+                  : 'border-border hover:border-muted-foreground'
+              }`}
+              onClick={() => handleAvatarSelect(avatarUrl)}
+            >
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={avatarUrl} alt={`${type} Avatar ${index + 1}`} />
+              </Avatar>
+              {selectedAvatar === avatarUrl && (
+                <div className="absolute -top-2 -right-2 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary-foreground" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -148,40 +188,37 @@ const EditProfilePage: React.FC = () => {
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-6 gap-2">
-            {AVAILABLE_AVATARS.map((avatarUrl, index) => (
-              <div
-                key={index}
-                className={`relative cursor-pointer rounded-lg border-2 ${
-                  selectedAvatar === avatarUrl
-                    ? "border-primary"
-                    : "border-border hover:border-muted-foreground"
-                }`}
-                onClick={() => handleAvatarSelect(avatarUrl)}
-              >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={avatarUrl} alt={`Avatar ${index + 1}`} />
-                </Avatar>
-                {selectedAvatar === avatarUrl && (
-                  <div className="absolute -top-2 -right-2 h-5 w-5 bg-primary rounded-full flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-3 w-3 text-primary-foreground"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                )}
+          
+          {isLoadingAvatars ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+            </div>
+          ) : (
+            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="female">Female</TabsTrigger>
+                <TabsTrigger value="male">Male</TabsTrigger>
+              </TabsList>
+              
+              <div className="mt-4 max-h-[50vh] overflow-y-auto p-1">
+                <TabsContent value="female" className="space-y-4">
+                  {femaleAvatars.length > 0 ? (
+                    renderAvatarGrid(femaleAvatars, "female")
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">No female avatars available</p>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="male" className="space-y-4">
+                  {maleAvatars.length > 0 ? (
+                    renderAvatarGrid(maleAvatars, "male")
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8">No male avatars available</p>
+                  )}
+                </TabsContent>
               </div>
-            ))}
-          </div>
+            </Tabs>
+          )}
         </div>
 
         {/* Basic Info */}
@@ -214,11 +251,7 @@ const EditProfilePage: React.FC = () => {
 
           <div className="flex flex-wrap gap-2 mb-4">
             {selectedInterests.map((interest, index) => (
-              <Badge
-                key={index}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
+              <Badge key={`interest-${index}`} variant="secondary" className="flex items-center gap-1">
                 {interest}
                 <button
                   type="button"
@@ -240,9 +273,9 @@ const EditProfilePage: React.FC = () => {
             </p>
             <div className="flex flex-wrap gap-2">
               {availableInterestsFiltered.slice(0, 8).map((interest) => (
-                <Badge
-                  key={interest}
-                  variant="outline"
+                <Badge 
+                  key={`suggested-interest-${interest}`} 
+                  variant="outline" 
                   className="cursor-pointer hover:bg-secondary"
                   onClick={() => handleAddInterest(interest)}
                 >

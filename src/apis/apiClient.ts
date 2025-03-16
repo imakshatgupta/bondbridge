@@ -29,6 +29,25 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Response interceptor to handle authentication errors
+// apiClient.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   (error) => {
+//     // Check if the error is due to unauthorized access (401)
+//     if (error.response && (error.response.status === 401)) {
+//       // Clear all local storage
+//       localStorage.clear();
+      
+//       // Redirect to login page
+//       window.location.href = '/login'; // Adjust the login route as needed
+//     }
+    
+//     return Promise.reject(error);
+//   }
+// );
+
 // For multipart form data requests
 export const formDataApiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://18.144.2.16/api',
@@ -55,5 +74,24 @@ formDataApiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// Add the same response interceptor to formDataApiClient
+// formDataApiClient.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   (error) => {
+//     // Check if the error is due to unauthorized access (401)
+//     if (error.response && (error.response.status === 401) {
+//       // Clear all local storage
+//       localStorage.clear();
+      
+//       // Redirect to login page
+//       window.location.href = '/login'; // Adjust the login route as needed
+//     }
+    
+//     return Promise.reject(error);
+//   }
+// );
 
 export default apiClient;
