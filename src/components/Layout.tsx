@@ -12,7 +12,6 @@ import SettingLayout from "./settings/SettingLayout";
 import LeftSidebar from "./auth/LeftSidebar";
 import { updateCurrentUser } from "@/store/currentUserSlice";
 import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
-import { useLocation } from "react-router-dom";
 import { Toaster } from "./ui/sonner";
 
 interface LayoutProps {
@@ -32,11 +31,8 @@ const Layout: React.FC<LayoutProps> = ({
   const currentUserId = localStorage.getItem("userId") || "";
   const currentUser = useAppSelector((state) => state.currentUser);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  
-  const location = useLocation();
 
   useEffect(() => {
-    // console.log("location: ", location);
     const loadCurrentUser = async () => {
       setIsLoadingProfile(true);
       const result = await fetchUserProfile(currentUserId, currentUserId);
@@ -54,8 +50,12 @@ const Layout: React.FC<LayoutProps> = ({
       }
       setIsLoadingProfile(false);
     };
-    loadCurrentUser();
-  }, [currentUserId,location, dispatch]);
+    if (!currentUser.username) {
+      loadCurrentUser();
+    } else {
+      setIsLoadingProfile(false);
+    }
+  }, [currentUserId, dispatch,currentUser.username]);
 
   const isSettingsActive = useAppSelector(
     (state) => state.settings.isSettingsActive
