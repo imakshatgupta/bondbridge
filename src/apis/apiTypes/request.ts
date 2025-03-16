@@ -167,3 +167,9 @@ export interface CreatePostRequest {
   image?: File[];
   document?: File[];
 }
+
+export interface ReactionRequest {
+  entityId: string;
+  entityType: string;
+  reactionType: string;
+}

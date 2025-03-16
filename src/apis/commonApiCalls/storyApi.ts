@@ -124,3 +124,12 @@ export const saveStoryInteraction = async (storyId: string): Promise<{ success: 
     throw new Error(response.data.message || 'Failed to save story interaction');
   }
 };
+
+/**
+ * Function to get self stories
+ * @returns Promise with the self stories response
+ */
+export const getSelfStories = async () => {
+  const response = await formDataApiClient.get('/get-self-stories');
+  return response.data;
+};

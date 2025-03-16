@@ -152,6 +152,7 @@ export interface HomePostData {
   };
   name: string;
   profilePic: string;
+  isLiked?: boolean;
 }
 
 export interface StoryData {
@@ -435,4 +436,27 @@ export interface CreatePostResponse {
     }>;
     createdAt: string;
   };
+}
+
+export interface ReactionResponse {
+  success: boolean;
+  message?: string;
+  reactionCount?: number;
+}
+
+export interface ReactionUser {
+  userId: string;
+  name: string;
+  profilePic: string;
+}
+
+export interface Reaction {
+  reactionType: string;
+  count: number;
+  users: ReactionUser[];
+}
+
+export interface GetAllReactionsResponse {
+  message: string;
+  reactions: Reaction[];
 }
