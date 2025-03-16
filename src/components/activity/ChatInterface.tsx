@@ -186,6 +186,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       socket.on("receiveMessage", handleReceiveMessage);
       socket.on("typing", handleTypingEvent);
 
+      socket.on("success", (data) => {
+        console.log("Message sent successfully", data);
+      });
+
       // Clean up function
       return () => {
         socket.off("receiveMessage", handleReceiveMessage);
@@ -373,7 +377,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {(chat.type !== "dm" && !isPreviousDifferentSender) && <div className="w-7" />}
 
                 <div
-                  className={`max-w-[70%] p-3 rounded-lg ${
+                  className={`max-w-[70%] p-3 rounded-lg break-words ${
                     message.isUser
                       ? "bg-primary text-primary-foreground rounded-tr-none"
                       : "bg-muted text-foreground rounded-tl-none"
