@@ -345,7 +345,7 @@ export default function StoryPage() {
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={currentUser.avatar} />
                                 {/* removing fallback for now because we can't fetch user data from the api yet */}
-                                {/* <AvatarFallback>{currentUser.user[0]}</AvatarFallback> */}
+                                <AvatarFallback>{currentUser?.user?.charAt(0) ?? "U"}</AvatarFallback>
                             </Avatar>
                             <div 
                                 className="cursor-pointer" 

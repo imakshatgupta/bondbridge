@@ -5,7 +5,6 @@ import { Loader2 } from "lucide-react";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
-import { Toaster } from "@/components/ui/sonner";
 
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -62,7 +61,6 @@ const ProfilePage: React.FC = () => {
         avatarSrc={userData.avatarSrc}
         isCurrentUser={userData.isCurrentUser}
       />
-      <Toaster />
     </>
   );
 };

@@ -14,7 +14,6 @@ import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
 import { fetchChatRooms } from "@/apis/commonApiCalls/activityApi";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -178,7 +177,6 @@ const Profile: React.FC<ProfileProps> = ({
 
   return (
     <div className="mx-auto bg-background">
-      <Toaster />
       {/* Header */}
       <div className="flex items-center justify-between p-4 pt-0">
         <button onClick={() => navigate(-1)} className="p-1">

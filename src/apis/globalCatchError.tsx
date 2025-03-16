@@ -71,6 +71,7 @@ export const useApiCall = <T, Args extends unknown[]>(
     setIsLoading(true);
     try {
       const result = await apiFunction(...args);
+      console.log('result', result);
       return { data: result, success: true };
     } catch (error) {
       handleApiError(error);

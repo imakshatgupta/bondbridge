@@ -227,6 +227,7 @@ export default function CommentsPage() {
               likes={post.reactionCount}
               comments={post.commentCount}
               datePosted={post.ago_time}
+              feedId={post.feedId}
               isOwner={currentUserId === post.userId}
               onCommentClick={() => {}}
               onLikeClick={() => {}}

@@ -10,7 +10,6 @@ import { useAppSelector } from "../store";
 import { submitProfile } from "../apis/commonApiCalls/createProfileApi";
 import { setPassword } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
-import { Toaster } from "@/components/ui/sonner";
 
 const tabs = [
   { id: "personal", label: "Personal Information" },
@@ -113,7 +112,6 @@ const SetupProfile: React.FC = () => {
         {currentTab === "photos" && <CoverProfilePhotosTab />}
         {currentTab === "communities" && <SelectCommunitiesTab />}
       </TabPageLayout>
-      <Toaster />
     </div>
   );
 };
