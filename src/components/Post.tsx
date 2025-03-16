@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     Carousel,
     CarouselContent,
@@ -41,6 +41,8 @@ export function Post({
     const [isLiked, setIsLiked] = useState(initialIsLiked);
     const [isLikeLoading, setIsLikeLoading] = useState(false);
     const [isLoadingReactions, setIsLoadingReactions] = useState(false);
+    const [showHeartAnimation, setShowHeartAnimation] = useState(false);
+    const [heartPosition, setHeartPosition] = useState({ x: 0, y: 0 });
 
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
@@ -113,9 +115,56 @@ export function Post({
         }
     };
 
+    const handleDoubleClick = useCallback(async (e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent any default double-click behavior
+        
+        // Set the heart position to the mouse coordinates
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left + 20;
+        const y = e.clientY - rect.top + 20;
+        
+        // Reset animation state before showing new heart
+        setShowHeartAnimation(false);
+        // Use requestAnimationFrame to ensure the state is reset before showing new animation
+        requestAnimationFrame(() => {
+            setHeartPosition({ x, y });
+            setShowHeartAnimation(true);
+        });
+
+        // Hide the heart after animation and then trigger like
+        setTimeout(async () => {
+            setShowHeartAnimation(false);
+            // Only trigger like if not already liked
+            if (!isLiked) {
+                await handleLikeClick();
+            }
+        }, 700);
+    }, [isLiked, handleLikeClick]);
+
     // Determine if we should show a carousel or a single image
     const hasMultipleMedia = media && media.length > 1;
     const hasSingleMedia = (media && media.length === 1) || image;
+
+    const MediaWrapper = ({ children }: { children: React.ReactNode }) => (
+        <div className="relative" onDoubleClick={handleDoubleClick}>
+            {children}
+            {showHeartAnimation && (
+                <div
+                    className="absolute pointer-events-none"
+                    style={{
+                        left: `${heartPosition.x}px`,
+                        top: `${heartPosition.y}px`,
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                >
+                    <Heart
+                        className="text-red-500 fill-red-500 animate-heart-burst"
+                        size={64}
+                    />
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
@@ -150,18 +199,22 @@ export function Post({
                                 {media!.map((item, index) => (
                                     <CarouselItem key={`${userId}-media-${index}`}>
                                         {item.type === "image" && (
-                                            <img
-                                                src={item.url}
-                                                alt={`Post media ${index + 1}`}
-                                                className="w-full max-h-[500px] object-contain bg-muted"
-                                            />
+                                            <MediaWrapper>
+                                                <img
+                                                    src={item.url}
+                                                    alt={`Post media ${index + 1}`}
+                                                    className="w-full max-h-[500px] object-contain bg-muted"
+                                                />
+                                            </MediaWrapper>
                                         )}
                                         {item.type === "video" && (
-                                            <video
-                                                src={item.url}
-                                                controls
-                                                className="w-full max-h-[500px] object-contain bg-muted"
-                                            />
+                                            <MediaWrapper>
+                                                <video
+                                                    src={item.url}
+                                                    controls
+                                                    className="w-full max-h-[500px] object-contain bg-muted"
+                                                />
+                                            </MediaWrapper>
                                         )}
                                     </CarouselItem>
                                 ))}
@@ -175,11 +228,13 @@ export function Post({
                 {/* Single media item (backward compatibility) */}
                 {!hasMultipleMedia && hasSingleMedia && (
                     <div className="mt-4 rounded-lg overflow-hidden">
-                        <img
-                            src={media ? media[0].url : image}
-                            alt="Post"
-                            className="w-full max-h-[500px] object-contain bg-muted"
-                        />
+                        <MediaWrapper>
+                            <img
+                                src={media ? media[0].url : image}
+                                alt="Post"
+                                className="w-full max-h-[500px] object-contain bg-muted"
+                            />
+                        </MediaWrapper>
                     </div>
                 )}
                 
