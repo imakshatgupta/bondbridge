@@ -15,7 +15,7 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
   return (
     <div className="grid grid-cols-3 gap-1">
       {posts.map(post => (
-        <div key={post.id} className="aspect-square overflow-hidden" onClick={() => {
+        <div key={post.id} className="aspect-square overflow-hidden rounded-md" onClick={() => {
           navigate(`/comments/${post.id}`, { state: { post } });
         }}>
           <img src={post.imageSrc} alt="" className="w-full h-full object-cover" />

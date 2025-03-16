@@ -1,10 +1,11 @@
 import React from "react";
 import { addSkill, removeSkill } from "../../store/createProfileSlice";
 import { useAppDispatch, useAppSelector } from "../../store";
+import { AVAILABLE_INTERESTS } from "@/lib/constants";
 
 const SkillsInterestsTab: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { skillSelected, skillsAvailable } = useAppSelector(
+  const { skillSelected } = useAppSelector(
     (state) => state.createProfile
   );
 
@@ -16,13 +17,14 @@ const SkillsInterestsTab: React.FC = () => {
     dispatch(removeSkill(skill));
   };
 
-  // useEffect(() => {
-  //   console.log("Selected Skills:", skillSelected);
-  // }, [skillSelected]);
+  // Filter available interests to exclude already selected ones
+  const availableInterests = AVAILABLE_INTERESTS.filter(
+    (interest) => !skillSelected.includes(interest)
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[20vh]">
         {skillSelected.map((selectedSkill) => (
           <button
             key={selectedSkill}
@@ -34,14 +36,14 @@ const SkillsInterestsTab: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {skillsAvailable.map((skill) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto h-[30vh]">
+        {availableInterests.map((interest) => (
           <button
-            key={skill}
+            key={interest}
             className="border-2 border-border text-foreground px-3 py-1 rounded-full flex items-center cursor-pointer hover:bg-secondary"
-            onClick={() => handleAddSkill(skill)}
+            onClick={() => handleAddSkill(interest)}
           >
-            + {skill}
+            + {interest}
           </button>
         ))}
       </div>

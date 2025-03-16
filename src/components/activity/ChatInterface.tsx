@@ -297,7 +297,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
+          {/* <Button variant="ghost" size="icon">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="20"
@@ -312,7 +312,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <path d="M23 7l-7 5 7 5V7z" />
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
-          </Button>
+          </Button> */}
           <Button variant="ghost" size="icon">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -415,7 +415,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Message input */}
       <div className="p-3 border-t border-border flex items-center gap-2 py-6">
-        <Button variant="ghost" size="icon">
+        {/* <Button variant="ghost" size="icon">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -430,7 +430,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
             <circle cx="12" cy="13" r="3" />
           </svg>
-        </Button>
+        </Button> */}
         <Input
           value={newMessage}
           onChange={(e) => {
