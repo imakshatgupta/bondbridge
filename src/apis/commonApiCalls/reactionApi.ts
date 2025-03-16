@@ -1,6 +1,6 @@
 import apiClient from '@/apis/apiClient';
 import { ReactionRequest } from '@/apis/apiTypes/request';
-import { ReactionResponse, ReactionUser, Reaction, GetAllReactionsResponse } from '@/apis/apiTypes/response';
+import { ReactionResponse, GetAllReactionsResponse } from '@/apis/apiTypes/response';
 
 export const addReaction = async (data: ReactionRequest): Promise<ReactionResponse> => {
   try {
