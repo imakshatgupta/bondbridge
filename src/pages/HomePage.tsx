@@ -9,12 +9,14 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { PostSkeleton } from "@/components/skeletons/PostSkeleton";
 import { StoryRowSkeleton } from "@/components/skeletons/StorySkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RefreshCw, ImageIcon, AlertCircle } from "lucide-react";
+import { RefreshCw, ImageIcon, AlertCircle, Plus } from "lucide-react";
+import { getSelfStories } from "@/apis/commonApiCalls/storyApi";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<HomePostData[]>([]);
   const [stories, setStories] = useState<StoryData[]>([]);
+  const [selfStories, setSelfStories] = useState<StoryData | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +24,7 @@ export default function HomePage() {
   
   // Use our custom hook for API calls
   const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
+  const [executeGetSelfStories] = useApiCall(getSelfStories);
   
   // Get current user ID from localStorage
   useEffect(() => {
@@ -32,6 +35,13 @@ export default function HomePage() {
   // Load initial data
   useEffect(() => {
     const loadHomepageData = async () => {
+      // Fetch self stories first
+      const selfStoriesResult = await executeGetSelfStories();
+      if (selfStoriesResult.success && selfStoriesResult.data) {
+        setSelfStories(selfStoriesResult.data);
+      }
+
+      // Then fetch homepage data
       const result = await executeFetchHomepageData(1);
       console.log(result.data);
       
@@ -132,9 +142,45 @@ export default function HomePage() {
       {/* Stories Section */}
       {isLoading && stories.length === 0 ? (
         <StoryRowSkeleton />
-      ) : stories.length > 0 ? (
+      ) : (
         <div className="mb-2 overflow-x-auto">
           <div className="flex gap-4 pb-2">
+            {/* Self Story */}
+            <div className="relative">
+              {selfStories && (
+                <Story
+                  key="self-story"
+                  user="Your Story"
+                  userId={currentUserId || ''}
+                  avatar={selfStories.profilePic}
+                  isLive={false}
+                  hasStory={selfStories.stories.length > 0}
+                  stories={selfStories.stories}
+                  latestStoryTime={selfStories.latestStoryTime}
+                  allStories={[selfStories, ...stories]}
+                  storyIndex={0}
+                />
+              )}
+              {(!selfStories || selfStories.stories.length === 0) && (
+                <div className="flex flex-col items-center space-y-1 mx-2 my-1">
+                  <div className="relative w-16 h-16 rounded-full ring-2 ring-muted">
+                    <img 
+                      src={selfStories?.profilePic || ''} 
+                      alt="Your Story" 
+                      className="w-full h-full rounded-full object-cover p-[2px] bg-background"
+                    />
+                    <button
+                      onClick={() => navigate('/create-story')}
+                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 border-2 border-background"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Your Story</span>
+                </div>
+              )}
+            </div>
+            {/* Other Stories */}
             {stories.map((story, index) => (
               <Story
                 key={`story-${story.userId || index}`}
@@ -145,13 +191,13 @@ export default function HomePage() {
                 hasStory={story.hasStory}
                 stories={story.stories}
                 latestStoryTime={story.latestStoryTime}
-                allStories={stories}
-                storyIndex={index}
+                allStories={[selfStories, ...stories].filter(Boolean)}
+                storyIndex={index + 1}
               />
             ))}
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* Posts Section */}
       {posts.length > 0 ? (

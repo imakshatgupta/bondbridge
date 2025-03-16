@@ -344,7 +344,8 @@ export default function StoryPage() {
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src={currentUser.avatar} />
-                                <AvatarFallback>{currentUser.user[0]}</AvatarFallback>
+                                {/* removing fallback for now because we can't fetch user data from the api yet */}
+                                {/* <AvatarFallback>{currentUser.user[0]}</AvatarFallback> */}
                             </Avatar>
                             <div 
                                 className="cursor-pointer" 
