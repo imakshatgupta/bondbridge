@@ -2,30 +2,33 @@ import { useState } from "react";
 import { getRelativeTime } from "../../lib/utils";
 
 interface NotificationProps {
-  id: number;
+  _id: number;
   title: string;
-  description: string;
-  avatar: string;
+  profilePic: string;
   timestamp: string;
   seen: boolean;
   onMarkAsSeen: (id: number) => void;
 }
 
 const Notification = ({
-  id,
+  _id,
   title,
-  description,
-  avatar,
+  profilePic,
   timestamp,
   seen,
   onMarkAsSeen,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
+  // console.log("notifi data: ",_id,
+  //   title,
+  //   profilePic,
+  //   timestamp,
+  //   seen);
 
   const handleClick = async () => {
     if (seen) return;
     setLocalSeen(true);
-    onMarkAsSeen(id);
+    onMarkAsSeen(_id);
   };
 
   return (
@@ -35,14 +38,13 @@ const Notification = ({
     >
       <div className="w-12 h-12">
         <img
-          src={avatar}
+          src={profilePic}
           alt="User avatar"
           className="w-full h-full rounded-full object-cover"
         />
       </div>
       <div className="flex-1">
         <h3 className="font-medium text-xl text-foreground">{title}</h3>
-        <p className="text-muted-foreground">{description}</p>
       </div>
       <div className="text-sm text-muted-foreground">
         {getRelativeTime(new Date(timestamp))}
