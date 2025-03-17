@@ -3,7 +3,6 @@ import FriendRequest from "@/components/notifications/FriendRequest";
 import Notification from "@/components/notifications/Notification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Notification as NotificationType,
   FollowRequest,
   fetchNotifications,
   fetchFollowRequests,
@@ -13,8 +12,31 @@ import { NotificationsListSkeleton } from "@/components/skeletons/NotificationSk
 import { EmptyState } from "@/components/ui/empty-state";
 import { Bell, UserPlus, AlertCircle } from "lucide-react";
 
+// Define the actual notification structure from the API
+interface ApiNotification {
+  _id: string;
+  type: string;
+  sender: {
+    id: string;
+    name: string;
+    profilePic: string;
+  };
+  receiverId: string;
+  details: {
+    notificationText: string;
+    notificationImage: string;
+    entityType: string;
+    entityId: string;
+    headerId: string;
+    entity: any;
+    content: any;
+  };
+  timestamp: string;
+  seen: boolean;
+}
+
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [friendRequests, setFriendRequests] = useState<FollowRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +50,7 @@ const Notifications = () => {
   const handleMarkAsSeen = (notificationId: number) => {
     setNotifications((prevNotifications) =>
       prevNotifications.map((notification) =>
-        notification.id === notificationId
+        notification._id === notificationId.toString()
           ? { ...notification, seen: true }
           : notification
       )
@@ -39,8 +61,9 @@ const Notifications = () => {
     try {
       // Fetch notifications
       const notificationsResult = await executeNotificationsFetch();
+      console.log("notificationsResult: ", notificationsResult);
       if (notificationsResult.success && notificationsResult.data?.success) {
-        setNotifications(notificationsResult.data.notifications);
+        setNotifications(notificationsResult.data.notifications as unknown as ApiNotification[]);
         setError(null);
       } else {
         setError(notificationsResult.data?.message || "Failed to load notifications");
@@ -118,8 +141,12 @@ const Notifications = () => {
               {notifications.length > 0 ? (
                 notifications.map((notification) => (
                   <Notification
-                    key={notification.id}
-                    {...notification}
+                    key={notification._id}
+                    _id={parseInt(notification._id)}
+                    title={notification.details.notificationText}
+                    profilePic={notification.sender.profilePic}
+                    timestamp={notification.timestamp}
+                    seen={notification.seen}
                     onMarkAsSeen={handleMarkAsSeen}
                   />
                 ))
