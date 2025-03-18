@@ -51,7 +51,10 @@ export type LoginResponse = {
     _id: string;
     phoneNumber: string;
     countryCode: string;
-    // Add other user fields as needed
+    name?: string;
+    email?: string;
+    avatar?: string;
+    profilePic?: string;
   };
 };
 

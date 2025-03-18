@@ -8,6 +8,8 @@ interface CurrentUserState {
   bio?: string;
   interests: string[];
   privacyLevel: number;
+  token: string;
+  userId: string;
 }
 
 const initialState: CurrentUserState = {
@@ -18,6 +20,8 @@ const initialState: CurrentUserState = {
   bio: "",
   interests: [],
   privacyLevel: 0,
+  token: "",
+  userId: "",
 };
 
 const currentUserSlice = createSlice({

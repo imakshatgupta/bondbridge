@@ -10,6 +10,8 @@ import { useApiCall } from '../apis/globalCatchError';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LoginResponse } from '../apis/apiTypes/response';
+import { useDispatch } from 'react-redux';
+import { updateCurrentUser } from '../store/currentUserSlice';
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,6 +20,7 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
 
     // Use our custom hook for API calls
@@ -73,11 +76,20 @@ const Login: React.FC = () => {
 
         if (result.success && result.data) {
             const data = result.data as LoginResponse;
-            // commenting because link will change to /home so it will call the api automatically there
-            // const userData = await fetchUserProfile(data.userDetails._id, data.userDetails._id);
-            // if (userData.success) {
-            //   dispatch(setCurrentUser(userData.data));
-            // }
+            
+            // Store user data in localStorage
+            localStorage.setItem("userId", data.userDetails._id);
+            localStorage.setItem("token", data.token);
+            
+            // Store the same data in Redux
+            dispatch(updateCurrentUser({
+                userId: data.userDetails._id,
+                token: data.token,
+                // You may want to add other user details here as well
+                username: data.userDetails.name || "",
+                email: data.userDetails.email || "",
+                avatar: data.userDetails.avatar || data.userDetails.profilePic || "",
+            }));
             
             if (data.userDetails.statusCode != 0) {
                 navigate('/');

@@ -78,7 +78,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const userAvatar = currentUserInfo?.profilePic || "";
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth",block: "end" });
   };
 
   useEffect(() => {
