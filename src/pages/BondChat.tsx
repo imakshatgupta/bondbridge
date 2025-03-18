@@ -16,6 +16,7 @@ import { setActiveChat } from "@/store/chatSlice";
 // Extend the Message type to support complex content
 interface ExtendedMessage extends Omit<Message, "text"> {
   text: string | MessageContent;
+  media?: string;
 }
 
 interface UserRecommendation {
@@ -42,6 +43,7 @@ interface MessageResponse {
   senderName?: string;
   senderAvatar?: string;
   isBot?: boolean;
+  media?: string;
 }
 
 interface SendMessageResponse {
@@ -112,9 +114,9 @@ const BotMessage = ({ message }: { message: ExtendedMessage }) => {
         <AvatarImage src="/bondchat.svg" alt="Bond Chat" />
         <AvatarFallback>BC</AvatarFallback>
       </Avatar>
-      <div className="flex-1">
+      <div className="flex-1 max-w-[80%]">
         <div className="bg-muted p-3 rounded-lg text-foreground rounded-tl-none">
-          <p>{messageText}</p>
+          <p className="break-all">{messageText}</p>
           <span className="text-xs opacity-70 block text-right mt-1">
             {message.timestamp}
           </span>
@@ -137,8 +139,8 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
   return (
     <div className="flex items-start gap-2 mb-4 flex-row-reverse">
       <div className="bg-primary p-3 rounded-lg text-primary-foreground rounded-tr-none max-w-[70%]">
-        <p>{typeof message.text === "string" ? message.text : ""}</p>
-        <span className="text-xs opacity-70 block text-right mt-1">
+        <p className="break-all">{typeof message.text === "string" ? message.text : ""}</p>
+        <span className="text-xs opacity-70 block text-right mt-1  ">
           {message.timestamp}
         </span>
       </div>
@@ -154,6 +156,7 @@ export default function BondChat() {
     "This is the suggestion for fast reply",
   ]);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
@@ -270,6 +273,7 @@ export default function BondChat() {
         isUser: false,
         avatar: "/bondchat.svg",
         username: "Bond Chat",
+        media: data.media // Store audio data from Polly if available
       };
       setMessages((prev) => [...prev, newMsg]);
     };
@@ -325,7 +329,11 @@ export default function BondChat() {
 
   // Function to stop any ongoing speech
   const stopSpeech = () => {
-    if ('speechSynthesis' in window) {
+    if (audioRef) {
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      setIsSpeaking(false);
+    } else if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
@@ -346,40 +354,91 @@ export default function BondChat() {
     
     if (!latestAIMessage) return;
     
-    // Extract the text content
-    let textToSpeak = "";
-    if (typeof latestAIMessage.text === "string") {
-      textToSpeak = latestAIMessage.text;
-    } else if (typeof latestAIMessage.text === "object" && "message" in latestAIMessage.text) {
-      textToSpeak = latestAIMessage.text.message;
-    }
+    // Check if the message has an audio attachment from Polly
+    const messageData = typeof latestAIMessage === 'object' ? latestAIMessage : null;
+    const audioData = messageData?.media;
     
-    if (!textToSpeak) return;
-    
-    // Stop any ongoing speech before starting new one
-    stopSpeech();
-      
-    // Create a new speech synthesis utterance
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      
-      // Set speaking state
-      setIsSpeaking(true);
-      
-      // Event handlers
-      utterance.onend = () => {
-        setIsSpeaking(false);
-      };
-      
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-        // toast.error("Speech synthesis failed");
-      };
-      
-      // Speak the text
-      window.speechSynthesis.speak(utterance);
+    if (audioData) {
+      // Handle base64 audio data from AWS Polly
+      playAudioFromBase64(audioData);
     } else {
-      toast.error("Text-to-speech is not supported in this browser");
+      // Fallback to browser's speech synthesis if no Polly audio is available
+      // Extract the text content
+      let textToSpeak = "";
+      if (typeof latestAIMessage.text === "string") {
+        textToSpeak = latestAIMessage.text;
+      } else if (typeof latestAIMessage.text === "object" && "message" in latestAIMessage.text) {
+        textToSpeak = latestAIMessage.text.message;
+      }
+      
+      if (!textToSpeak) return;
+      
+      // Stop any ongoing speech before starting new one
+      stopSpeech();
+        
+      // Create a new speech synthesis utterance
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        
+        // Set speaking state
+        setIsSpeaking(true);
+        
+        // Event handlers
+        utterance.onend = () => {
+          setIsSpeaking(false);
+        };
+        
+        utterance.onerror = () => {
+          setIsSpeaking(false);
+          toast.error("Speech synthesis failed");
+        };
+        
+        // Speak the text
+        window.speechSynthesis.speak(utterance);
+      } else {
+        toast.error("Text-to-speech is not supported in this browser");
+      }
+    }
+  };
+
+  // Function to play audio from base64 string
+  const playAudioFromBase64 = (base64Audio: string) => {
+    try {
+      // Stop any current audio
+      stopSpeech();
+      
+      // Create audio source from base64
+      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+      setAudioRef(audio);
+      
+      // Set up event handlers
+      audio.onplay = () => {
+        setIsSpeaking(true);
+      };
+      
+      audio.onended = () => {
+        setIsSpeaking(false);
+        setAudioRef(null);
+      };
+      
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        setAudioRef(null);
+        toast.error("Audio playback failed");
+      };
+      
+      // Play the audio
+      audio.play()
+        .catch(error => {
+          console.error("Audio playback error:", error);
+          toast.error("Failed to play audio");
+          setIsSpeaking(false);
+          setAudioRef(null);
+        });
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      toast.error("Failed to process audio data");
+      setIsSpeaking(false);
     }
   };
 

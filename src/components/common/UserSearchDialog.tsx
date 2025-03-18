@@ -19,7 +19,7 @@ import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
 interface UserSearchDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectUser: (userId: string) => void;
+  onSelectUser: (user: Person) => void;
   triggerButton: React.ReactNode;
   title: string;
   description: string;
@@ -118,7 +118,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
               <div
                 key={user.id}
                 className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer"
-                onClick={() => onSelectUser(user.id)}
+                onClick={() => onSelectUser(user)}
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
@@ -141,7 +141,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelectUser(user.id);
+                    onSelectUser(user);
                   }}
                 >
                   {actionIcon}

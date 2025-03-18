@@ -29,12 +29,13 @@ const ChatList = ({ chats, isLoading, onSelectChat }: ChatListProps) => {
           className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer"
           onClick={() => handleChatSelect(chat)}
         >
-          <div className="flex items-center gap-3 max-w-[calc(100%-130px)]">
-            <Avatar className="h-12 w-12 ">
+
+          <div className="flex items-center gap-3 max-w-[calc(100%-70px)]">
+            <Avatar className="h-12 w-12">
               <AvatarImage src={chat.avatar} alt={chat.name} />
               <AvatarFallback>{chat.name?.[0]}</AvatarFallback>
             </Avatar>
-            <div className="max-w-full">
+            <div className="truncate">
               <div className="flex items-center gap-2">
                 <h3
                   className={cn("font-medium", chat.unread && "font-semibold")}

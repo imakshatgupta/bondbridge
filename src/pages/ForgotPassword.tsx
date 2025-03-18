@@ -1,0 +1,371 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import AuthLayout from '../components/auth/AuthLayout';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import IntlTelInput from 'react-intl-tel-input';
+import 'react-intl-tel-input/dist/main.css';
+import { useApiCall } from '../apis/globalCatchError';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import OTPForm from "../components/auth/OTPForm";
+
+// Import the API function (you'll need to create this)
+import { sendOTP, verifyOTP, setPassword } from "../apis/commonApiCalls/authenticationApi";
+import { BasePhoneRequest } from '@/apis/apiTypes/request';
+
+// Assuming BasePhoneRequest is defined somewhere, extend it to include 'forgot'
+export type VerifyOTPRequest = BasePhoneRequest & {
+  otp: string;
+  forgot?: string;
+};
+
+// Custom styles for the phone input component that change with theme
+const customPhoneInputStyles = `
+  /* Light Theme Styles */
+  .intl-tel-input .country-list {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-color: var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .intl-tel-input .country-list .country {
+    color: var(--foreground);
+  }
+  
+  .intl-tel-input .country-list .country.highlight {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input .country-list .country .dial-code {
+    color: var(--muted-foreground);
+  }
+  
+  .intl-tel-input .selected-flag {
+    background-color: transparent;
+  }
+
+  .intl-tel-input.allow-dropdown .flag-container:hover .selected-flag {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input.allow-dropdown.separate-dial-code .selected-flag {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input .selected-dial-code {
+    color: var(--foreground);
+  }
+  
+  .intl-tel-input input {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-color: var(--border);
+  }
+  
+  .intl-tel-input input:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  .intl-tel-input .country-list .divider {
+    border-bottom-color: var(--border);
+  }
+`;
+
+const ForgotPassword: React.FC = () => {
+    const [step, setStep] = useState<'phone' | 'otp' | 'newPassword'>('phone');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [countryCode, setCountryCode] = useState('1'); // Default to US (+1)
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const phoneInputRef = useRef(null);
+    const navigate = useNavigate();
+
+    // Use our custom hooks for API calls
+    const [executeSendOTP, isSendingOTP] = useApiCall(sendOTP);
+    const [executeVerifyOTP, isVerifyingOTP] = useApiCall(verifyOTP);
+    const [executeSetPassword, isSettingPassword] = useApiCall(setPassword);
+
+    // Add effect to apply styles to the phone input after it's rendered
+    useEffect(() => {
+        // Apply custom theme styles
+        const styleElement = document.createElement('style');
+        styleElement.textContent = customPhoneInputStyles;
+        document.head.appendChild(styleElement);
+
+        const fixPhoneInputStyles = () => {
+            const container = document.querySelector('.intl-tel-input');
+            if (container) {
+                container.setAttribute('style', 'width: 100% !important; height: 40px !important;');
+                const flagContainer = container.querySelector('.flag-container');
+                if (flagContainer) {
+                    flagContainer.setAttribute('style', 'height: 100% !important;');
+                }
+                const selectedFlag = container.querySelector('.selected-flag');
+                if (selectedFlag) {
+                    selectedFlag.setAttribute('style', 'height: 100% !important; display: flex !important; align-items: center !important;');
+                }
+                const input = container.querySelector('input');
+                if (input) {
+                    input.setAttribute('style', 'height: 40px !important; background-color: var(--background) !important; color: var(--foreground) !important; border-color: var(--border) !important;');
+                    input.classList.add('border', 'border-input', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-ring', 'focus:border-ring');
+                }
+            }
+        };
+
+        fixPhoneInputStyles();
+        const timeoutId = setTimeout(fixPhoneInputStyles, 100);
+
+        return () => {
+            clearTimeout(timeoutId);
+            document.head.removeChild(styleElement);
+        };
+    }, [step]);
+
+    const handlePhoneChange = (
+        _isValid: boolean,
+        value: string,
+        selectedCountryData: { dialCode?: string }
+    ) => {
+        if (selectedCountryData && selectedCountryData.dialCode) {
+            setCountryCode(selectedCountryData.dialCode);
+        }
+
+        if (selectedCountryData && selectedCountryData.dialCode) {
+            const dialCode = String(selectedCountryData.dialCode);
+            let cleanNumber = value.replace(/\D/g, '');
+
+            if (cleanNumber.startsWith(dialCode)) {
+                cleanNumber = cleanNumber.substring(dialCode.length);
+            }
+
+            setPhoneNumber(cleanNumber);
+        } else {
+            setPhoneNumber(value.replace(/\D/g, ''));
+        }
+    };
+
+    const handleSendOTP = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const validCountryCode = "+" + countryCode;
+
+        const result = await executeSendOTP({
+            phoneNumber,
+            countryCode: validCountryCode,
+            forgot: '1'
+        });
+
+        if (result.success && result.data) {
+            setStep('otp');
+        }
+    };
+
+    const handleVerifyOTP = async (otp: string) => {
+        const validCountryCode = "+" + countryCode;
+
+        const result = await executeVerifyOTP({
+            phoneNumber,
+            otp,
+            countryCode: validCountryCode,
+            forgot: '1'
+        });
+
+        if (result.success && result.data) {
+            setStep('newPassword');
+        }
+    };
+
+    const handleSetNewPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (newPassword !== confirmPassword) {
+            setPasswordError("Passwords don't match");
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            setPasswordError("Password should be at least 6 characters");
+            return;
+        }
+
+        setPasswordError('');
+
+        // Call the setPassword function to set the new password
+        const result = await executeSetPassword({
+            password: newPassword
+        });
+
+        if (result.success) {
+            // Password reset successful, redirect to login
+            navigate('/login');
+        }
+    };
+
+    const renderForm = () => {
+        switch (step) {
+            case 'phone':
+                return (
+                    <form onSubmit={handleSendOTP} className="space-y-4">
+                        <div>
+                            <Label htmlFor="phoneNumber" className="block text-sm font-medium text-foreground">Phone</Label>
+                            <div className="mt-1 relative" style={{ height: '40px' }}>
+                                <IntlTelInput
+                                    ref={phoneInputRef}
+                                    containerClassName="intl-tel-input"
+                                    inputClassName="form-control w-full h-10 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
+                                    defaultCountry={'us'}
+                                    preferredCountries={['us']}
+                                    onPhoneNumberChange={handlePhoneChange}
+                                    onPhoneNumberBlur={handlePhoneChange}
+                                    format={true}
+                                    formatOnInit={true}
+                                    autoPlaceholder={true}
+                                    nationalMode={false}
+                                    separateDialCode={true}
+                                />
+                            </div>
+                        </div>
+
+                        <Button
+                            type="submit"
+                            className="w-full cursor-pointer"
+                            disabled={isSendingOTP}
+                        >
+                            {isSendingOTP ? "Sending OTP..." : "Send OTP"}
+                        </Button>
+                    </form>
+                );
+            case 'otp':
+                return (
+                    <div className="space-y-4">
+                        <div className="text-center mb-4">
+                            <p className="text-sm text-muted-foreground">
+                                We've sent a verification code to your phone
+                            </p>
+                        </div>
+                        <OTPForm onVerify={handleVerifyOTP} />
+                        <Button
+                            onClick={() => setStep('phone')}
+                            variant="link"
+                            className="mt-4 text-primary hover:underline w-full text-center"
+                        >
+                            Back
+                        </Button>
+                        {isVerifyingOTP && (
+                            <p className="text-center text-sm text-muted-foreground">
+                                Verifying...
+                            </p>
+                        )}
+                    </div>
+                );
+            case 'newPassword':
+                return (
+                    <form onSubmit={handleSetNewPassword} className="space-y-4">
+                        <div>
+                            <Label htmlFor="newPassword" className="block text-sm font-medium text-foreground">
+                                New Password
+                            </Label>
+                            <div className="relative">
+                                <Input
+                                    type="password"
+                                    id="newPassword"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    className="mt-1 block w-full h-10 pr-7 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
+                                    required
+                                />
+                                <Button
+                                    type="button"
+                                    variant={"ghost"}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground cursor-pointer"
+                                    style={{ top: '4px' }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const passwordInput = document.getElementById('newPassword') as HTMLInputElement;
+                                        passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </Button>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
+                                Confirm Password
+                            </Label>
+                            <div className="relative">
+                                <Input
+                                    type="password"
+                                    id="confirmPassword"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    className="mt-1 block w-full h-10 pr-7 px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-ring focus:border-ring"
+                                    required
+                                />
+                                <Button
+                                    type="button"
+                                    variant={"ghost"}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted-foreground cursor-pointer"
+                                    style={{ top: '4px' }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const passwordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+                                        passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </Button>
+                            </div>
+                        </div>
+
+                        {passwordError && (
+                            <p className="text-destructive text-sm">{passwordError}</p>
+                        )}
+
+                        <Button
+                            type="submit"
+                            className="w-full cursor-pointer"
+                            disabled={isSettingPassword}
+                        >
+                            {isSettingPassword ? "Resetting Password..." : "Set New Password"}
+                        </Button>
+                    </form>
+                );
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <>
+            <AuthLayout
+                title="Reset Your Password"
+                subtitle="Follow the steps to securely reset your password"
+                image="/auth/signup.png"
+                showOTP={step === 'otp'}
+                otpMessage="Verify your identity"
+                isForgotPassword={true}
+            >
+                {renderForm()}
+                <div className="mt-4 text-center">
+                    <Link to="/login" className="text-primary hover:underline">
+                        Back to Login
+                    </Link>
+                </div>
+            </AuthLayout>
+        </>
+    );
+};
+
+export default ForgotPassword;

@@ -26,6 +26,7 @@ export interface Message {
   isUser: boolean;
   senderName?: string;
   senderAvatar?: string;
+  senderId?: string;
 }
 
 // export interface GroupItem {

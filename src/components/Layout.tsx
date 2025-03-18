@@ -98,11 +98,11 @@ const Layout: React.FC<LayoutProps> = ({
 
             {/* Right Sidebar */}
             {isSettingsActive ? (
-              <div className="w-2/3">
+              <div className="min-w-2/5 max-w-2/5">
                 <SettingLayout />
               </div>
             ) : activeChat ? (
-              <div className="w-2/3">
+              <div className="min-w-2/5 max-w-2/5">
                 <ChatInterface
                   chatId={activeChat.id}
                   name={activeChat.name}
