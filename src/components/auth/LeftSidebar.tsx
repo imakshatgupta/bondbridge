@@ -70,7 +70,7 @@ const LeftSidebar: React.FC = () => {
                                 }`}
                         >
                             <img src="/bondchat.svg" alt="" />
-                            <span className="grad">BondChat</span>
+                            <span className="grad font-bold">BondChat</span>
                         </Link>
                     </li>
                     <li>

@@ -6,6 +6,7 @@ import { SocketProvider } from "./context/SocketContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import SetupProfile from "./pages/SetupProfile";
+import ForgotPassword from "./pages/ForgotPassword";
 import "./App.css";
 import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
@@ -41,6 +42,14 @@ const App: React.FC = () => {
               element={
                 <Layout>
                   <Signup />
+                </Layout>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <Layout>
+                  <ForgotPassword />
                 </Layout>
               }
             />

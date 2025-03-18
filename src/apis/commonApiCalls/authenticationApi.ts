@@ -12,19 +12,36 @@ import {
   SetPasswordResponse,
 } from '../apiTypes/response';
 
-// Function to send OTP for signup
+// Define proper types for request bodies
+type SendOTPRequestBody = {
+  phoneNumber: string;
+  countryCode: string;
+  forgot?: string;
+};
+
+type VerifyOTPRequestBody = {
+  phoneNumber: string;
+  countryCode: string;
+  otp: string;
+  forgot?: string;
+};
+
+// Function to send OTP for signup or forgot password
 export const sendOTP = async (phoneData: SendOTPRequest): Promise<SendOTPResponse> => {
-  const { phoneNumber, countryCode } = phoneData;
+  const { phoneNumber, countryCode, forgot } = phoneData;
   
   // Validate required fields
   if (!phoneNumber || !countryCode) {
     throw new Error('Phone number and country code are required');
   }
   
-  const response = await apiClient.post<SendOTPResponse>(`/send-otp`, {
-    phoneNumber,
-    countryCode,
-  });
+  // Include forgot parameter if provided
+  const requestBody: SendOTPRequestBody = { phoneNumber, countryCode };
+  if (forgot) {
+    requestBody.forgot = forgot;
+  }
+  
+  const response = await apiClient.post<SendOTPResponse>(`/send-otp`, requestBody);
   
   if (response.status === 200) {
     console.log(response.data);
@@ -36,18 +53,20 @@ export const sendOTP = async (phoneData: SendOTPRequest): Promise<SendOTPRespons
 
 // Function to verify OTP
 export const verifyOTP = async (otpData: VerifyOTPRequest): Promise<VerifyOTPResponse> => {
-  const { phoneNumber, countryCode, otp } = otpData;
+  const { phoneNumber, countryCode, otp, forgot } = otpData;
   
   // Validate required fields
   if (!phoneNumber || !countryCode || !otp) {
     throw new Error('Phone number, country code, and OTP are required');
   }
   
-  const response = await apiClient.post<VerifyOTPResponse>(`/verify-otp`, {
-    phoneNumber,
-    countryCode,
-    otp
-  });
+  // Include forgot parameter if provided
+  const requestBody: VerifyOTPRequestBody = { phoneNumber, countryCode, otp };
+  if (forgot) {
+    requestBody.forgot = forgot;
+  }
+  
+  const response = await apiClient.post<VerifyOTPResponse>(`/verify-otp`, requestBody);
   
   if (response.status === 200) {
     console.log(response.data);

@@ -197,7 +197,7 @@ const EditProfilePage: React.FC = () => {
             </Avatar>
             <div>
               <p className="text-sm text-muted-foreground">
-                Choose an avatar that represents you
+                Choose an Avatar that represents you
               </p>
             </div>
           </div>
