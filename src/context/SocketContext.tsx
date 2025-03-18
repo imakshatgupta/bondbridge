@@ -21,6 +21,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const socketToken = localStorage.getItem("socketToken");
 
   useEffect(() => {
+    // Only attempt to connect if socketToken exists
+    if (!socketToken) {
+      console.log("No socket token available, skipping socket connection");
+      return;
+    }
+
+    console.log("Connecting to socket with token");
     const newSocket = io(`${import.meta.env.VITE_API_SOCKET_URL}`, {
       auth: {
         token: socketToken,
