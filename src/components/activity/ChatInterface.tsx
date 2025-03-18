@@ -293,7 +293,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     : null;
 
   return (
-    <div className="flex flex-col h-[90vh] overflow-auto">
+    <div className="flex flex-col h-[90vh] overflow-auto ">
       {/* Chat header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">

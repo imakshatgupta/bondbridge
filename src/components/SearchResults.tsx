@@ -42,7 +42,7 @@ const SearchResults = ({ person }: Props) => {
           <p className="text-sm text-muted-foreground">{person.bio}</p>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 ">
         <Button variant="outline" className="text-primary border-primary cursor-pointer"  onClick={() => handleProfileClick(person.id)}>
           View Profile
         </Button>
