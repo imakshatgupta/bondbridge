@@ -143,21 +143,21 @@ const EditProfilePage: React.FC = () => {
   
   const renderAvatarGrid = (avatars: AvatarData[], type: string) => {
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-5 gap-4 p-1">
         {avatars.map((avatarItem, index) => {
           const avatarUrl = avatarItem.url;
           
           return (
             <div 
               key={`${type}-${index}`}
-              className={`relative cursor-pointer rounded-lg border-2 w-fit ${
+              className={`relative cursor-pointer rounded-lg border-2 w-full h-full aspect-square ${
                 selectedAvatar === avatarUrl 
                   ? 'border-primary bg-muted' 
                   : 'border-border hover:border-muted-foreground'
               }`}
               onClick={() => handleAvatarSelect(avatarUrl)}
             >
-              <Avatar className="h-12 w-12">
+              <Avatar className="h-full w-full">
                 <AvatarImage src={avatarUrl} alt={`${type} Avatar ${index + 1}`} />
               </Avatar>
               {selectedAvatar === avatarUrl && (
