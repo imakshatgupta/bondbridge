@@ -137,26 +137,19 @@ const Login: React.FC = () => {
 
         console.log("result", result);
 
-        if (result.success && result.data) {
-            const data = result.data as LoginResponse;
-            
-            // Store user data in localStorage
-            localStorage.setItem("userId", data.userDetails._id);
-            localStorage.setItem("token", data.token);
-            
-            // Store the same data in Redux
-            dispatch(updateCurrentUser({
-                userId: data.userDetails._id,
-                token: data.token,
-                // You may want to add other user details here as well
-                username: data.userDetails.name || "",
-                email: data.userDetails.email || "",
-                avatar: data.userDetails.avatar || data.userDetails.profilePic || "",
-            }));
-            
-            if (data.userDetails.statusCode != 0) {
-                navigate('/');
-            }
+        const data = result.data as LoginResponse;
+                    
+        // Store the same data in Redux
+        dispatch(updateCurrentUser({
+            userId: data.userDetails._id,
+            token: data.token,
+            username: data.userDetails.name || "",
+            email: data.userDetails.email || "",
+            avatar: data.userDetails.avatar || data.userDetails.profilePic || "",
+        }));
+        
+        if (data.userDetails.statusCode != 0) {
+            navigate('/');
         }
     };
 

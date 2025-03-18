@@ -128,6 +128,24 @@ export const setPassword = async (data: SetPasswordRequest): Promise<SetPassword
   
   if (response.status === 200) {
     console.log("Password set successfully:", response.data);
+    
+    // Check if response has token and userDetails properties (might be present but not in type)
+    interface ExtendedPasswordResponse extends SetPasswordResponse {
+      token?: string;
+      userDetails?: { _id: string };
+      socketToken?: string;
+    }
+    const extendedResponse = response.data as ExtendedPasswordResponse;
+    if (extendedResponse.token && extendedResponse.userDetails?._id) {
+      localStorage.setItem('token', extendedResponse.token);
+      localStorage.setItem('userId', extendedResponse.userDetails._id);
+      
+      // Set socketToken if available
+      if (extendedResponse.socketToken) {
+        localStorage.setItem('socketToken', extendedResponse.socketToken);
+      }
+    }
+    
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to set password');
