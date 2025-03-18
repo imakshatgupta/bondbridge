@@ -53,9 +53,9 @@ export default function Search() {
   return (
     <>
       <div className="max-w-2xl mx-auto bg-background px-4 pb-4">
-        <div className="sticky top-0 bg-background py-4 z-10">
+        <div className="sticky bg-background py-4 z-10 -top-10 ">
           {/* Search Bar */}
-          <div className="relative">
+          <div className="relative ">
             <Input
               placeholder="Search"
               className="w-full bg-muted border-none"

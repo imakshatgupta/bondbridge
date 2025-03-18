@@ -22,19 +22,19 @@ const ChatList = ({ chats, isLoading, onSelectChat }: ChatListProps) => {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 ">
       {chats.map((chat) => (
         <div
           key={chat.id}
           className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer"
           onClick={() => handleChatSelect(chat)}
         >
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
+          <div className="flex items-center gap-3 max-w-[calc(100%-130px)]">
+            <Avatar className="h-12 w-12 ">
               <AvatarImage src={chat.avatar} alt={chat.name} />
               <AvatarFallback>{chat.name?.[0]}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="max-w-full">
               <div className="flex items-center gap-2">
                 <h3
                   className={cn("font-medium", chat.unread && "font-semibold")}
@@ -45,7 +45,7 @@ const ChatList = ({ chats, isLoading, onSelectChat }: ChatListProps) => {
                   <div className="w-2 h-2 rounded-full bg-primary"></div>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground line-clamp-1">
+              <p className="text-sm text-muted-foreground truncate">
                 {chat.lastMessage}
               </p>
             </div>

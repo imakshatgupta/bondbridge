@@ -123,15 +123,17 @@ const Layout: React.FC<LayoutProps> = ({
                   <>
                     <div className="p-4 border-2 border-sidebar-border">
                       <div className="flex flex-col items-center">
-                        <img
-                          src={currentUser?.avatar || "/profile/avatars/1.png"}
-                          alt="Profile"
-                          className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
-                        />
-                        <h3 className="font-semibold text-xl text-sidebar-foreground">
+                        <Link to={`/profile/${currentUserId}`}>
+                          <img
+                            src={currentUser?.avatar || "/profile/avatars/1.png"}
+                            alt="Profile"
+                            className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
+                          />
+                        </Link>
+                        <h3 className="font-semibold text-xl text-sidebar-foreground truncate max-w-full">
                           {currentUser?.username || "Loading..."}
                         </h3>
-                        <p className="text-sidebar-foreground/60">
+                        <p className="text-sidebar-foreground/60 text-center break-words w-full overflow-hidden">
                           {currentUser?.bio || ""}
                         </p>
                         <Link to={`/profile/${currentUserId}`}>
