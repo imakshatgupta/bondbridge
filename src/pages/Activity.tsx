@@ -22,6 +22,7 @@ import { ChatRoom } from "@/apis/apiTypes/response";
 import UserSearchDialog from "@/components/common/UserSearchDialog";
 import { SuggestedCommunitiesSkeleton, ChatListSkeleton } from "@/components/skeletons/ActivitySkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Person } from "@/apis/apiTypes/response";
 
 interface Participant {
   userId: string;
@@ -69,9 +70,9 @@ export default function Activity() {
     dispatch(setActiveChat(chat));
   };
 
-  const handleStartConversation = async (userId: string) => {
+  const handleStartConversation = async (user: Person) => {
     try {
-      const result = await executeStartMessage({ userId2: userId });
+      const result = await executeStartMessage({ userId2: user.id });
       if (result.success && result.data) {
         // Close the dialog
         setDialogOpen(false);
