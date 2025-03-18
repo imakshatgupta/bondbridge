@@ -10,6 +10,62 @@ import { useApiCall } from '../apis/globalCatchError';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { LoginResponse } from '../apis/apiTypes/response';
+import { useDispatch } from 'react-redux';
+import { updateCurrentUser } from '../store/currentUserSlice';
+
+// Custom styles for the phone input component that change with theme
+const customPhoneInputStyles = `
+  /* Theme Styles */
+  .intl-tel-input .country-list {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-color: var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .intl-tel-input .country-list .country {
+    color: var(--foreground);
+  }
+  
+  .intl-tel-input .country-list .country.highlight {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input .country-list .country .dial-code {
+    color: var(--muted-foreground);
+  }
+  
+  .intl-tel-input .selected-flag {
+    background-color: transparent;
+  }
+
+  .intl-tel-input.allow-dropdown .flag-container:hover .selected-flag {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input.allow-dropdown.separate-dial-code .selected-flag {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input .selected-dial-code {
+    color: var(--foreground);
+  }
+  
+  .intl-tel-input input {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-color: var(--border);
+  }
+  
+  .intl-tel-input input:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  .intl-tel-input .country-list .divider {
+    border-bottom-color: var(--border);
+  }
+`;
 
 const Login: React.FC = () => {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -18,6 +74,7 @@ const Login: React.FC = () => {
     const [password, setPassword] = useState('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
 
     // Use our custom hook for API calls
@@ -25,6 +82,11 @@ const Login: React.FC = () => {
 
     // Add effect to apply styles to the phone input after it's rendered
     useEffect(() => {
+        // Apply custom theme styles
+        const styleElement = document.createElement('style');
+        styleElement.textContent = customPhoneInputStyles;
+        document.head.appendChild(styleElement);
+
         const fixPhoneInputStyles = () => {
             const container = document.querySelector('.intl-tel-input');
             if (container) {
@@ -46,7 +108,8 @@ const Login: React.FC = () => {
                 // Fix input height
                 const input = container.querySelector('input');
                 if (input) {
-                    input.setAttribute('style', 'height: 40px !important;');
+                    input.setAttribute('style', 'height: 40px !important; background-color: var(--background) !important; color: var(--foreground) !important; border-color: var(--border) !important;');
+                    input.classList.add('border', 'border-input', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-ring', 'focus:border-ring');
                 }
             }
         };
@@ -55,7 +118,10 @@ const Login: React.FC = () => {
         fixPhoneInputStyles();
         const timeoutId = setTimeout(fixPhoneInputStyles, 100);
 
-        return () => clearTimeout(timeoutId);
+        return () => {
+            clearTimeout(timeoutId);
+            document.head.removeChild(styleElement);
+        };
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -71,17 +137,19 @@ const Login: React.FC = () => {
 
         console.log("result", result);
 
-        if (result.success && result.data) {
-            const data = result.data as LoginResponse;
-            // commenting because link will change to /home so it will call the api automatically there
-            // const userData = await fetchUserProfile(data.userDetails._id, data.userDetails._id);
-            // if (userData.success) {
-            //   dispatch(setCurrentUser(userData.data));
-            // }
-            
-            if (data.userDetails.statusCode != 0) {
-                navigate('/');
-            }
+        const data = result.data as LoginResponse;
+                    
+        // Store the same data in Redux
+        dispatch(updateCurrentUser({
+            userId: data.userDetails._id,
+            token: data.token,
+            username: data.userDetails.name || "",
+            email: data.userDetails.email || "",
+            avatar: data.userDetails.avatar || data.userDetails.profilePic || "",
+        }));
+        
+        if (data.userDetails.statusCode != 0) {
+            navigate('/');
         }
     };
 
