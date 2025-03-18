@@ -163,7 +163,7 @@ export default function BondChat() {
   const dispatch = useDispatch();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   // Set activeChat to null when component mounts
