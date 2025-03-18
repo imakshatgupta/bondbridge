@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/store";
 import {
   blockUser,
@@ -9,16 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserX, UserPlus, ArrowLeft } from "lucide-react";
 import UserSearchDialog from "@/components/common/UserSearchDialog";
+import { Person } from "@/apis/commonApiCalls/searchApi";
 
 // Mock user data for search
-const MOCK_USERS = [
-  { id: "user3", name: "Alex Johnson", avatar: "/profile/avatars/3.png" },
-  { id: "user4", name: "Sam Wilson", avatar: "/profile/avatars/4.png" },
-  { id: "user5", name: "Taylor Swift", avatar: "/profile/avatars/5.png" },
-  { id: "user6", name: "Jordan Peterson", avatar: "/profile/avatars/6.png" },
-  { id: "user7", name: "Morgan Freeman", avatar: "/profile/avatars/1.png" },
-  { id: "user8", name: "Emma Watson", avatar: "/profile/avatars/2.png" },
-];
+// const MOCK_USERS = [
+//   { id: "user3", name: "Alex Johnson", avatar: "/profile/avatars/3.png" },
+//   { id: "user4", name: "Sam Wilson", avatar: "/profile/avatars/4.png" },
+//   { id: "user5", name: "Taylor Swift", avatar: "/profile/avatars/5.png" },
+//   { id: "user6", name: "Jordan Peterson", avatar: "/profile/avatars/6.png" },
+//   { id: "user7", name: "Morgan Freeman", avatar: "/profile/avatars/1.png" },
+//   { id: "user8", name: "Emma Watson", avatar: "/profile/avatars/2.png" },
+// ];
 
 const BlockedUsersPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -26,17 +27,28 @@ const BlockedUsersPage: React.FC = () => {
 
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Log blocked users whenever they change
+  useEffect(() => {
+    console.log("Current blocked users:", blockedUsers);
+  }, [blockedUsers]);
+
   const handleUnblock = (userId: string) => {
+    console.log("Unblocking user:", userId);
     dispatch(unblockUser(userId));
   };
 
-  const handleBlock = (userId: string) => {
-    // Find the user in MOCK_USERS
-    const user = MOCK_USERS.find((user) => user.id === userId);
-    if (user) {
-      dispatch(blockUser(user));
-      setDialogOpen(false);
-    }
+  const handleBlock = (user: Person) => {
+    console.log("Attempting to block user:", user);
+    
+    const userToBlock = {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar
+    };
+    console.log("Dispatching block action with user:", userToBlock);
+    
+    dispatch(blockUser(userToBlock));
+    setDialogOpen(false);
   };
 
   const handleCloseSettings = () => {

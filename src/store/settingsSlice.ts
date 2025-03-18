@@ -46,10 +46,7 @@ const initialState: SettingsState = {
     { id: "voice5", name: "Calm Voice", preview: "/audio/sample.mp3" },
     { id: "voice6", name: "Professional Voice", preview: "/audio/sample.mp3" },
   ],
-  blockedUsers: [
-    { id: "user1", name: "John Doe", avatar: "/profile/avatars/3.png" },
-    { id: "user2", name: "Jane Smith", avatar: "/profile/avatars/4.png" },
-  ],
+  blockedUsers: [],
   privacySettings: {
     isProfilePublic: true,
     showOnlineStatus: true,

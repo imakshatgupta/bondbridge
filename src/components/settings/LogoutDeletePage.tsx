@@ -11,12 +11,14 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { LogOut, AlertTriangle, ArrowLeft } from "lucide-react";
+import { LogOut, AlertTriangle, ArrowLeft, KeyRound } from "lucide-react";
 import { toast } from "sonner";
+import ResetPasswordDialog from "./ResetPasswordDialog";
 
 const LogoutDeletePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(resetUser());
@@ -49,6 +51,26 @@ const LogoutDeletePage: React.FC = () => {
       </h3>
 
       <div className="space-y-6">
+        {/* Reset Password Section */}
+        <div className="p-4 border border-border rounded-md">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Reset Password</h4>
+              <p className="text-sm text-muted-foreground">
+                Change your account password
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setResetPasswordOpen(true)}
+              className="border-primary hover:bg-primary/10 hover:text-primary text-primary cursor-pointer"
+            >
+              <KeyRound className="h-4 w-4 mr-2" />
+              Reset Password
+            </Button>
+          </div>
+        </div>
+
         {/* Logout Section */}
         <div className="p-4 border border-border rounded-md">
           <div className="flex items-center justify-between">
@@ -87,6 +109,12 @@ const LogoutDeletePage: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {/* Reset Password Dialog */}
+        <ResetPasswordDialog
+          open={resetPasswordOpen}
+          onOpenChange={setResetPasswordOpen}
+        />
 
         {/* Delete Account Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
