@@ -256,9 +256,11 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
 
             <ThreeDotsMenu
               showDelete={!!canDelete}
-              onShare={() => console.log('Share clicked')}
-              onReport={() => console.log('Report clicked')}
+              showShare={false}
+              showReport={true}
+              showBlock={false}
               onDelete={handleDeleteComment}
+              onReport={() => console.log('Report clicked')}
             />
           </div>
 

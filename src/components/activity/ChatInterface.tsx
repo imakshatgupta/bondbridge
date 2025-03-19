@@ -16,6 +16,9 @@ import { getMessages } from "@/apis/commonApiCalls/chatApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
+import { toast } from "sonner";
+import { blockUser as blockUserApi } from "@/apis/commonApiCalls/activityApi";
 
 // Define types for socket responses
 interface MessageResponse {
@@ -63,6 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [executeGetMessages] = useApiCall(getMessages);
   const navigate = useNavigate();
+  const [executeBlockUser, isBlockingUser] = useApiCall(blockUserApi);
 
   const dispatch = useAppDispatch();
   const {
@@ -268,6 +272,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const handleBlock = async () => {
+    if (chat?.type === "dm") {
+      const otherParticipant = chat.participants.find(p => p.userId !== userId);
+      if (otherParticipant) {
+        await executeBlockUser(otherParticipant.userId);
+        toast.success(`${otherParticipant.name} has been blocked`);
+        onClose(); 
+      }
+    }
+  };
+
   if (!chat) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -318,39 +333,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* <Button variant="ghost" size="icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M23 7l-7 5 7 5V7z" />
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-          </Button> */}
-          <Button variant="ghost" size="icon">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="19" cy="12" r="1" />
-              <circle cx="5" cy="12" r="1" />
-            </svg>
-          </Button>
+          <ThreeDotsMenu 
+            showBlock={chat.type === "dm"}
+            onBlock={handleBlock}
+          />
         </div>
       </div>
 
@@ -436,22 +422,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Message input */}
       <div className="p-3 border-t border-border flex items-center gap-2 py-6">
-        {/* <Button variant="ghost" size="icon">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-            <circle cx="12" cy="13" r="3" />
-          </svg>
-        </Button> */}
         <Input
           value={newMessage}
           onChange={(e) => {

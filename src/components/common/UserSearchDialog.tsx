@@ -15,6 +15,8 @@ import { Search, Loader2 } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import { searchPeople, Person } from "@/apis/commonApiCalls/searchApi";
 import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
+import { blockUser, unblockUser } from "@/apis/commonApiCalls/activityApi";
+import { toast } from "sonner";
 
 interface UserSearchDialogProps {
   isOpen: boolean;
@@ -25,6 +27,8 @@ interface UserSearchDialogProps {
   description: string;
   actionIcon: React.ReactNode;
   actionLabel?: string;
+  isBlockAction?: boolean;
+  isUnblockAction?: boolean;
 }
 
 const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
@@ -36,6 +40,8 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
   description,
   actionIcon,
   actionLabel,
+  isBlockAction = false,
+  isUnblockAction = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Person[]>([]);
@@ -43,6 +49,9 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
   const [executeSearch, isSearching] = useApiCall(searchPeople);
   const [executeFetchFollowings, isLoadingFollowings] =
     useApiCall(fetchFollowings);
+  const [executeBlockUser, isBlockingUser] = useApiCall(blockUser);
+  const [executeUnblockUser, isUnblockingUser] = useApiCall(unblockUser);
+  const [processingUsers, setProcessingUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const loadFollowings = async () => {
@@ -87,6 +96,28 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
     onOpenChange(false);
   };
 
+  const handleUserAction = async (user: Person, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    
+    // Set the user as processing
+    setProcessingUsers(prev => ({ ...prev, [user.id]: true }));
+  
+      if (isBlockAction) {
+        console.log("Attempting to block user:", user.id);
+        const result = await executeBlockUser(user.id);
+        console.log("Block user result:", result);
+      } else if (isUnblockAction) {
+        console.log("Attempting to unblock user:", user.id);
+        const result = await executeUnblockUser(user.id);
+        console.log("Unblock user result:", result);
+      }
+      
+      // Call the parent component's onSelectUser callback
+      onSelectUser(user);
+  };
+
   const displayUsers = searchQuery.trim() ? searchResults : followings;
 
   return (
@@ -118,7 +149,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
               <div
                 key={user.id}
                 className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer"
-                onClick={() => onSelectUser(user)}
+                onClick={() => handleUserAction(user)}
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
@@ -139,12 +170,14 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectUser(user);
-                  }}
+                  onClick={(e) => handleUserAction(user, e)}
+                  disabled={isBlockingUser || isUnblockingUser || processingUsers[user.id]}
                 >
-                  {actionIcon}
+                  {processingUsers[user.id] ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    actionIcon
+                  )}
                   {actionLabel && <span className="ml-2">{actionLabel}</span>}
                 </Button>
               </div>

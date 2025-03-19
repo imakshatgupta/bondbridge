@@ -183,6 +183,9 @@ export function Post({
                 </div>
                 <ThreeDotsMenu
                     showDelete={isOwner}
+                    showBlock={false}
+                    showShare={true}
+                    showReport={!isOwner}
                     onShare={() => console.log('Share clicked')}
                     onReport={() => console.log('Report clicked')}
                     onDelete={() => console.log('Delete clicked')}

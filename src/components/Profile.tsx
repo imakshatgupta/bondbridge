@@ -15,7 +15,7 @@ import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
-import { fetchChatRooms } from "@/apis/commonApiCalls/activityApi";
+import { fetchChatRooms, blockUser as blockUserApi } from "@/apis/commonApiCalls/activityApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { ChatRoom } from "@/apis/apiTypes/response";
 import {
@@ -64,6 +64,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [executeStartMessage] = useApiCall(startMessage);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
+  const [executeBlockUser, isBlockingUser] = useApiCall(blockUserApi);
   // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
 
   // Get user data from Redux store
@@ -221,6 +222,12 @@ const Profile: React.FC<ProfileProps> = ({
     }
   };
 
+  const handleBlockUser = async () => {
+    await executeBlockUser(userId);   
+    toast.success(`${username} has been blocked`);
+    navigate('/');
+  };
+
   return (
     <div className="mx-auto bg-background">
       {/* Header */}
@@ -238,13 +245,13 @@ const Profile: React.FC<ProfileProps> = ({
           </div>
         ) : (
           <ThreeDotsMenu
+            showBlock={!isCurrentUser}
+            showShare={true}
+            showReport={!isCurrentUser}
             showDelete={false}
-            onShare={() => {
-              /* handle share */
-            }}
-            onReport={() => {
-              /* handle report */
-            }}
+            onBlock={handleBlockUser}
+            onShare={() => console.log('Share clicked')}
+            onReport={() => console.log('Report clicked')}
           />
         )}
       </div>
