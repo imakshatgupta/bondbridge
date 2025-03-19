@@ -124,8 +124,8 @@ const Notifications = () => {
         />
       ) : (
         <Tabs defaultValue="notifications" className="">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="notifications" className="cursor-pointer">
+          <TabsList className="grid grid-cols-2  ">
+            <TabsTrigger value="notifications" className="cursor-pointer ">
               Notifications{" "}
               {notifications.filter((n) => !n.seen).length > 0 &&
                 `(${notifications.filter((n) => !n.seen).length})`}
@@ -136,8 +136,8 @@ const Notifications = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="notifications" className="mt-4">
-            <div className="space-y-4">
+          <TabsContent value="notifications" className="mt-4 ">
+            <div className="space-y-4 ">
               {notifications.length > 0 ? (
                 notifications.map((notification) => (
                   <Notification
