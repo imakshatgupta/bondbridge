@@ -67,6 +67,7 @@ const ProfilePage: React.FC = () => {
         isFollowing={userData.isFollowing}
         isFollower={userData.isFollower}
         requestSent={userData.requestSent}
+        compatibility={userData.compatibility}
       />
     </>
   );

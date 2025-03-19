@@ -38,6 +38,7 @@ interface ProfileProps {
   isFollowing?: boolean;
   isFollower?: boolean;
   requestSent?: boolean;
+  compatibility?: number;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -51,6 +52,7 @@ const Profile: React.FC<ProfileProps> = ({
   isFollowing = false,
   isFollower = false,
   requestSent = false,
+  compatibility = 0,
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -71,6 +73,11 @@ const Profile: React.FC<ProfileProps> = ({
     (state) => state.currentUser
   );
 
+  // Function to get compatibility ring color - keeping this in case we need different colors later
+  const getCompatibilityColor = () => {
+    return "var(--primary)"; // Use the primary color variable from index.css
+  };
+
   useEffect(() => {
     const loadPosts = async () => {
       const result = await executePostsFetch(userId, isCurrentUser);
@@ -82,6 +89,7 @@ const Profile: React.FC<ProfileProps> = ({
 
     loadPosts();
   }, [userId]);
+
 
   // useEffect(() => {
   //   const loadStories = async () => {
@@ -253,17 +261,36 @@ const Profile: React.FC<ProfileProps> = ({
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
           className="relative w-24 h-24 cursor-pointer"
-          // className={`relative w-24 h-24 cursor-pointer ${
-          //   userStories?.hasStory 
-          //     ? 'ring-2 ring-muted rounded-full'
-          //     : ''
-          // }`}
-          // onClick={handleStoryClick}
         >
+          {!isCurrentUser && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              {/* SVG for the ring */}
+              <svg viewBox="0 0 110 110" className="absolute">
+                <circle 
+                  cx="55" 
+                  cy="55" 
+                  r="52" 
+                  fill="none" 
+                  stroke={getCompatibilityColor()} 
+                  strokeWidth="4"
+                />
+              </svg>
+              {/* Compatibility percentage badge */}
+              <div className="absolute -bottom-2 -right-2 bg-background rounded-full shadow-sm">
+                <div 
+                  className="text-xs font-medium rounded-full w-8 h-8 flex items-center justify-center text-white"
+                  style={{ backgroundColor: "var(--primary)" }}
+                >
+                  {compatibility}%
+                </div>
+              </div>
+            </div>
+          )}
           <img
             src={avatarSrc || "avatar.png"}
             alt={username}
-            className="w-full h-full object-cover rounded-full"
+            className="w-20 h-20 object-cover rounded-full absolute z-10"
+            style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
         </div>
         <h1 className="text-xl font-semibold">
