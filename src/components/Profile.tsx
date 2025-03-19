@@ -48,7 +48,7 @@ const Profile: React.FC<ProfileProps> = ({
   followers,
   following,
   avatarSrc,
-  isCurrentUser = false,
+  isCurrentUser: propsIsCurrentUser = false,
   isFollowing = false,
   isFollower = false,
   requestSent = false,
@@ -72,11 +72,10 @@ const Profile: React.FC<ProfileProps> = ({
   const { privacyLevel, interests, nickname } = useAppSelector(
     (state) => state.currentUser
   );
-
-  // Function to get compatibility ring color - keeping this in case we need different colors later
-  const getCompatibilityColor = () => {
-    return "var(--primary)"; // Use the primary color variable from index.css
-  };
+  
+  // Check if current user by comparing with userId in localStorage
+  const localStorageUserId = localStorage.getItem("userId");
+  const isCurrentUser = userId === localStorageUserId || propsIsCurrentUser;
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -89,7 +88,6 @@ const Profile: React.FC<ProfileProps> = ({
 
     loadPosts();
   }, [userId]);
-
 
   // useEffect(() => {
   //   const loadStories = async () => {
@@ -271,7 +269,7 @@ const Profile: React.FC<ProfileProps> = ({
                   cy="55" 
                   r="52" 
                   fill="none" 
-                  stroke={getCompatibilityColor()} 
+                  stroke="var(--primary)" 
                   strokeWidth="4"
                 />
               </svg>
