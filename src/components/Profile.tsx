@@ -261,7 +261,7 @@ const Profile: React.FC<ProfileProps> = ({
           className="relative w-24 h-24 cursor-pointer"
         >
           {!isCurrentUser && compatibility >= 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute -inset-1 flex items-center justify-center z-20">
               {/* SVG for the ring */}
               <svg viewBox="0 0 110 110" className="absolute">
                 <circle 
@@ -276,8 +276,7 @@ const Profile: React.FC<ProfileProps> = ({
               {/* Compatibility percentage badge */}
               <div className="absolute -bottom-2 -right-2 bg-background rounded-full shadow-sm">
                 <div 
-                  className="text-xs font-medium rounded-full w-8 h-8 flex items-center justify-center text-white"
-                  style={{ backgroundColor: "var(--primary)" }}
+                  className="text-xs font-medium rounded-full w-8 h-8 flex items-center justify-center text-white bg-primary"
                 >
                   {compatibility}%
                 </div>
@@ -287,7 +286,7 @@ const Profile: React.FC<ProfileProps> = ({
           <img
             src={avatarSrc || "avatar.png"}
             alt={username}
-            className="w-20 h-20 object-cover rounded-full absolute z-10"
+            className="w-full h-full object-cover rounded-full absolute z-10"
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
         </div>
