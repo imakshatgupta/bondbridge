@@ -23,7 +23,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const loadUserData = async () => {
-      console.log("userIdsxns", userId);
+      console.log("userId", userId);
       if (!userId) return;
       
       // Use currentUserId from Redux instead of localStorage
@@ -36,7 +36,7 @@ const ProfilePage: React.FC = () => {
     };
 
     loadUserData();
-  }, [currentUserId]); // Added currentUserId to dependency list
+  }, [userId,currentUserId]);
 
   if (isLoading) {
     return (
