@@ -64,7 +64,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [executeStartMessage] = useApiCall(startMessage);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
-  const [executeBlockUser, isBlockingUser] = useApiCall(blockUserApi);
+  const [executeBlockUser] = useApiCall(blockUserApi);
   // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
 
   // Get user data from Redux store
@@ -226,6 +226,7 @@ const Profile: React.FC<ProfileProps> = ({
     await executeBlockUser(userId);   
     toast.success(`${username} has been blocked`);
     navigate('/');
+    dispatch(setActiveChat(null));
   };
 
   return (

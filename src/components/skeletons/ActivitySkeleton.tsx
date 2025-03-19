@@ -24,7 +24,7 @@ export function SuggestedCommunitiesSkeleton() {
 export function ChatItemSkeleton() {
   return (
     <div className="flex items-center gap-3 p-3 border-b">
-      <Skeleton className="h-12 w-12 rounded-full" />
+      <Skeleton className="h-12 w-12 rounded-full " />
       <div className="flex-1">
         <Skeleton className="h-5 w-32 mb-1" />
         <Skeleton className="h-4 w-48" />

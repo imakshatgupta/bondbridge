@@ -9,6 +9,7 @@ interface AuthLayoutProps {
   isLogin?: boolean;
   showOTP?: boolean;
   otpMessage?: string;
+  isForgotPassword?: boolean;
 }
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ 
@@ -18,14 +19,15 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   image,
   isLogin = false,
   showOTP = false,
-  otpMessage = "Welcome, We are glad to see you!"
+  otpMessage = "Welcome, We are glad to see you!",
+  isForgotPassword = false
 }) => {
   return (
     <div className="md:px-40">
       <div className="mx-auto grid grid-cols-1 md:grid-cols-2">
         <div className="flex flex-col p-8">
           
-          {!showOTP && (
+          {!showOTP && !isForgotPassword && (
             <>
               <div className="flex space-x-6 mb-8 text-3xl font-bold">
                 <Link 
@@ -50,6 +52,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
                 <p className="text-sm text-muted-foreground mb-4">Welcome, we are glad to see you!</p>
               )}
             </>
+          )}
+          
+          {isForgotPassword && !showOTP && (
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-1">Forgot Password</h1>
+              <p className="text-sm text-muted-foreground">Enter your phone number to reset your password</p>
+            </div>
           )}
           
           {showOTP && (

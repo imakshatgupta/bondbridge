@@ -19,9 +19,9 @@ export function Comments({
   const [newComment, setNewComment] = useState("");
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col ">
       {/* Post Summary */}
-      <div className="flex-none">
+      <div className="flex-none ">
         <div className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">

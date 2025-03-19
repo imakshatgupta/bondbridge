@@ -15,10 +15,10 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages } from "@/apis/commonApiCalls/chatApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { toast } from "sonner";
 import { blockUser as blockUserApi } from "@/apis/commonApiCalls/activityApi";
+import { Link, useNavigate } from "react-router-dom";
 
 // Define types for socket responses
 interface MessageResponse {
@@ -66,7 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [executeGetMessages] = useApiCall(getMessages);
   const navigate = useNavigate();
-  const [executeBlockUser, isBlockingUser] = useApiCall(blockUserApi);
+  const [executeBlockUser] = useApiCall(blockUserApi);
 
   const dispatch = useAppDispatch();
   const {
@@ -82,7 +82,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const userAvatar = currentUserInfo?.profilePic || "";
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth",block: "end"});
   };
 
   useEffect(() => {
@@ -119,6 +119,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 hour: "2-digit",
                 minute: "2-digit",
               }),
+              senderId: msg.senderId,
               isUser: msg.senderId === userId,
               senderName:
                 msg.senderId === userId ? userName : sender?.name || "Unknown",
@@ -307,7 +308,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     : null;
 
   return (
-    <div className="flex flex-col h-[90vh] overflow-auto">
+    <div className="flex flex-col h-[90vh] overflow-auto ">
       {/* Chat header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
@@ -366,6 +367,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               >
                 {/* Only show avatar for group chats and for the first message in a sequence from each sender */}
                 {chat.type === "group" && isPreviousDifferentSender && (
+                  <Link to={`/profile/${message.isUser ? userId : message.senderId}`}>
                   <Avatar className="h-6 w-6 mt-1">
                     <AvatarImage
                       src={message.senderAvatar || ""}
@@ -375,10 +377,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       {(message.senderName || "?")[0]}
                     </AvatarFallback>
                   </Avatar>
+                  </Link>
                 )}
                 {/* Add a spacer when we don't show the avatar to keep alignment */}
                 {(chat.type !== "dm" && !isPreviousDifferentSender) && <div className="w-7" />}
-
                 <div
                   className={`max-w-[70%] p-3 rounded-lg break-words ${
                     message.isUser

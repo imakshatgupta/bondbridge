@@ -16,7 +16,6 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { searchPeople, Person } from "@/apis/commonApiCalls/searchApi";
 import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
 import { blockUser, unblockUser } from "@/apis/commonApiCalls/activityApi";
-import { toast } from "sonner";
 
 interface UserSearchDialogProps {
   isOpen: boolean;

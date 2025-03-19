@@ -21,6 +21,7 @@ import StoryPage from "@/pages/StoryPage";
 import CreatePost from "./pages/CreatePost";
 import CreateStory from "./pages/CreateStory";
 import Settings from "./pages/Settings";
+import ForgotPassword from "./pages/ForgotPassword";
 
 // Component for routes that require authentication and socket connection
 const AuthenticatedRoutes: React.FC = () => {
@@ -166,7 +167,14 @@ const App: React.FC = () => {
               </Layout>
             }
           />
-          
+          <Route
+          path="/forgot-password"
+          element={
+              <Layout>
+                <ForgotPassword />
+              </Layout>
+            }
+          />
           {/* All other routes with SocketProvider */}
           <Route path="/*" element={<AuthenticatedRoutes />} />
         </Routes>
