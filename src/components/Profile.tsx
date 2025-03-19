@@ -262,7 +262,7 @@ const Profile: React.FC<ProfileProps> = ({
         <div 
           className="relative w-24 h-24 cursor-pointer"
         >
-          {!isCurrentUser && (
+          {!isCurrentUser && compatibility >= 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
               {/* SVG for the ring */}
               <svg viewBox="0 0 110 110" className="absolute">
