@@ -6,6 +6,7 @@ import {
   FollowRequest,
   fetchNotifications,
   fetchFollowRequests,
+  markNotificationAsSeen,
 } from "@/apis/commonApiCalls/notificationsApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { NotificationsListSkeleton } from "@/components/skeletons/NotificationSkeleton";
@@ -28,8 +29,8 @@ interface ApiNotification {
     entityType: string;
     entityId: string;
     headerId: string;
-    entity: any;
-    content: any;
+    entity: Record<string, unknown>;
+    content: Record<string, unknown>;
   };
   timestamp: string;
   seen: boolean;
@@ -44,42 +45,42 @@ const Notifications = () => {
     useApiCall(fetchNotifications);
   const [executeFollowRequestsFetch, isLoadingFollowRequests] =
     useApiCall(fetchFollowRequests);
+  const [executeMarkAsSeen] = useApiCall(markNotificationAsSeen);
 
   const isLoading = isLoadingNotifications || isLoadingFollowRequests;
 
-  const handleMarkAsSeen = (notificationId: number) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.map((notification) =>
-        notification._id === notificationId.toString()
-          ? { ...notification, seen: true }
-          : notification
-      )
-    );
+  const handleMarkAsSeen = async (notificationId: string) => {
+    const result = await executeMarkAsSeen(notificationId);
+    
+    if (result.success) {
+      setNotifications((prevNotifications) =>
+        prevNotifications.map((n) =>
+          n._id === notificationId
+            ? { ...n, seen: true }
+            : n
+        )
+      );
+    }
   };
 
   const loadData = async () => {
-    try {
-      // Fetch notifications
-      const notificationsResult = await executeNotificationsFetch();
-      console.log("notificationsResult: ", notificationsResult);
-      if (notificationsResult.success && notificationsResult.data?.success) {
-        setNotifications(notificationsResult.data.notifications as unknown as ApiNotification[]);
-        setError(null);
-      } else {
-        setError(notificationsResult.data?.message || "Failed to load notifications");
-      }
+    // Fetch notifications
+    const notificationsResult = await executeNotificationsFetch();
+    console.log("notificationsResult: ", notificationsResult);
+    if (notificationsResult.success && notificationsResult.data?.success) {
+      setNotifications(notificationsResult.data.notifications as unknown as ApiNotification[]);
+      setError(null);
+    } else {
+      setError(notificationsResult.data?.message || "Failed to load notifications");
+    }
 
-      // Fetch follow requests with pagination
-      const followRequestsResult = await executeFollowRequestsFetch({
-        page: 1,
-        limit: 10,
-      });
-      if (followRequestsResult.success && followRequestsResult.data) {
-        setFriendRequests(followRequestsResult.data.result || []);
-      }
-    } catch (err) {
-      console.log("err: ", err);
-      setError("An error occurred while loading notifications");
+    // Fetch follow requests with pagination
+    const followRequestsResult = await executeFollowRequestsFetch({
+      page: 1,
+      limit: 10,
+    });
+    if (followRequestsResult.success && followRequestsResult.data) {
+      setFriendRequests(followRequestsResult.data.result || []);
     }
   };
 
@@ -139,17 +140,24 @@ const Notifications = () => {
           <TabsContent value="notifications" className="mt-4 ">
             <div className="space-y-4 ">
               {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <Notification
-                    key={notification._id}
-                    _id={parseInt(notification._id)}
-                    title={notification.details.notificationText}
-                    profilePic={notification.sender.profilePic}
-                    timestamp={notification.timestamp}
-                    seen={notification.seen}
-                    onMarkAsSeen={handleMarkAsSeen}
-                  />
-                ))
+                notifications
+                  .filter(notification => !notification.seen)
+                  .concat(
+                    notifications
+                      .filter(notification => notification.seen)
+                      .slice(0, 5)
+                  )
+                  .map((notification) => (
+                    <Notification
+                      key={notification._id}
+                      _id={notification._id}
+                      title={notification.details.notificationText}
+                      profilePic={notification.sender.profilePic}
+                      timestamp={notification.timestamp}
+                      seen={notification.seen}
+                      onMarkAsSeen={handleMarkAsSeen}
+                    />
+                  ))
               ) : (
                 <EmptyState
                   icon={Bell}
