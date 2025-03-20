@@ -34,6 +34,7 @@ export const fetchUserProfile = async (
       isFollowing: userData.isFollowing || false,
       isFollower: userData.isFollower || false,
       requestSent: userData.requestSent || false,
+      compatibility: userData.compatibility || 0,
     },
   };
 };

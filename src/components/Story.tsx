@@ -27,6 +27,7 @@ export const Story: FC<StoryProps> = ({
       state: { 
         currentStory: {
           user,
+          userId,
           avatar,
           isLive,
           hasStory,
@@ -34,7 +35,8 @@ export const Story: FC<StoryProps> = ({
           latestStoryTime
         },
         allStories,
-        initialUserIndex: storyIndex
+        initialUserIndex: storyIndex,
+        preloaded: true // Indicate that media should be already preloaded
       }
     });
   };

@@ -344,7 +344,7 @@ export default function StoryPage() {
         <div className="max-w-sm mx-auto py-5 h-[calc(100vh-64px)] relative">
             {/* Left Navigation Arrow */}
             <button
-                className="absolute left-[-80px] top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-background shadow-md border border-border hover:bg-muted transition-colors duration-200"
+                className="absolute left-[-80px] top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-background shadow-md border border-border hover:bg-muted transition-colors duration-200 cursor-pointer"
                 onClick={goToPreviousStory}
             >
                 <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -352,7 +352,7 @@ export default function StoryPage() {
 
             {/* Right Navigation Arrow */}
             <button
-                className="absolute right-[-80px] top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-background shadow-md border border-border hover:bg-muted transition-colors duration-200"
+                className="absolute right-[-80px] top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-background shadow-md border border-border hover:bg-muted transition-colors duration-200 cursor-pointer"
                 onClick={goToNextStory}
             >
                 <ArrowLeft className="h-5 w-5 text-foreground rotate-180" />
@@ -389,7 +389,7 @@ export default function StoryPage() {
                 <div className="absolute top-5 left-0 right-0 z-10 flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                         <button onClick={() => navigate(-1)} className="p-1">
-                            <ArrowLeft className="h-5 w-5 text-foreground" />
+                            <ArrowLeft className="h-5 w-5 text-foreground cursor-pointer" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
