@@ -17,6 +17,7 @@ import {
     deleteReaction, 
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
+import { deletePost } from "@/apis/commonApiCalls/createPostApi";
 import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 
@@ -47,6 +48,7 @@ export function Post({
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
     const [executeGetAllReactions] = useApiCall(getAllReactions);
+    const [executeDeletePost] = useApiCall(deletePost);
 
     useEffect(() => {
         if (feedId) {
@@ -166,6 +168,23 @@ export function Post({
         </div>
     );
 
+    const handleDeletePost = async () => {
+        if (!feedId) return;
+        
+        try {
+            const result = await executeDeletePost(feedId);
+            
+            if (result.success) {
+                toast.success("Post deleted successfully");
+                // You might want to add a callback prop to handle post deletion
+                // For now, we'll just refresh the page
+                window.location.reload();
+            }
+        } catch (error) {
+            toast.error("Failed to delete post");
+        }
+    };
+
     return (
         <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
             <div className="flex items-center justify-between p-4">
@@ -185,7 +204,7 @@ export function Post({
                     showDelete={isOwner}
                     onShare={() => console.log('Share clicked')}
                     onReport={() => console.log('Report clicked')}
-                    onDelete={() => console.log('Delete clicked')}
+                    onDelete={handleDeletePost}
                 />
             </div>
             <CardContent className="p-4 pt-0">
