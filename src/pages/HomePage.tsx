@@ -148,7 +148,7 @@ export default function HomePage() {
     hasStory: selfStories.stories && selfStories.stories.length > 0,
     stories: selfStories.stories || [],
     latestStoryTime: selfStories.latestStoryTime || Date.now(),
-    name: currentUser.username || "Your Story",
+    name: "Your Story",
     profilePic: currentUser.avatar || '/profile/avatars/1.png'
   } : null;
 
@@ -206,7 +206,7 @@ export default function HomePage() {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <span className="text-xs text-muted-foreground">{currentUser.username || "Your Story"}</span>
+                  <span className="text-xs text-muted-foreground">Your Story</span>
                 </div>
               )}
             </div>
