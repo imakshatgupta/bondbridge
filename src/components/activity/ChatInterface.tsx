@@ -151,28 +151,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     const fetchSuggestions = async () => {
       setLoadingSuggestions(true);
-      try {
-        const result = await executeGetRandomText(otherUserId as string);
-        if (result.success && result.data?.topic) {
-          // Parse the topic string into individual suggestions
-          // Format is like: '1. "Suggestion one"\n2. "Suggestion two"\n3. "Suggestion three"'
-          const suggestionText = result.data.topic;
-          const parsedSuggestions = suggestionText
-            .split("\n")
-            .map((line: string) => {
-              // Extract the text between quotes
-              const match = line.match(/"([^"]+)"/);
-              return match ? match[1] : "";
-            })
-            .filter(Boolean);
+      const result = await executeGetRandomText(otherUserId as string);
+      if (result.success && result.data?.topic) {
+        // Parse the topic string into individual suggestions
+        // Format is like: '1. "Suggestion one"\n2. "Suggestion two"\n3. "Suggestion three"'
+        const suggestionText = result.data.topic;
+        const parsedSuggestions = suggestionText
+          .split("\n")
+          .map((line: string) => {
+            // Extract the text between quotes
+            const match = line.match(/"([^"]+)"/);
+            return match ? match[1] : "";
+          })
+          .filter(Boolean);
 
-          setSuggestions(parsedSuggestions);
-        }
-      } catch (error) {
-        console.error("Error loading suggestions:", error);
-      } finally {
-        setLoadingSuggestions(false);
+        setSuggestions(parsedSuggestions);
       }
+      setLoadingSuggestions(false);
     };
 
     console.log("Socket", socket);
@@ -453,10 +448,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <div className="w-7" />
                 )}
                 <div
-                  className={`max-w-[70%] p-3 rounded-lg break-words ${
+                  className={`max-w-[70%] p-3 break-words ${
                     message.isUser
-                      ? "bg-primary text-primary-foreground rounded-tr-none"
-                      : "bg-muted text-foreground rounded-tl-none"
+                      ? `bg-primary text-primary-foreground ${
+                          isPreviousDifferentSender
+                            ? "rounded-sm rounded-tr-2xl"
+                            : "rounded-sm"
+                        }`
+                      : `bg-muted text-foreground ${
+                          isPreviousDifferentSender
+                            ? "rounded-sm rounded-tl-2xl"
+                            : "rounded-sm"
+                        }`
                   }`}
                 >
                   {/* Show sender name only for group chats and first message from each sender */}
