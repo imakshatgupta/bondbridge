@@ -352,7 +352,7 @@ const ForgotPassword: React.FC = () => {
             <AuthLayout
                 title="Reset Your Password"
                 subtitle="Follow the steps to securely reset your password"
-                image="/auth/signup.png"
+                image="/auth/login.png"
                 showOTP={step === 'otp'}
                 otpMessage="Verify your identity"
                 isForgotPassword={true}
