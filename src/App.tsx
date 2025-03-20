@@ -22,6 +22,7 @@ import CreatePost from "./pages/CreatePost";
 import CreateStory from "./pages/CreateStory";
 import Settings from "./pages/Settings";
 import ForgotPassword from "./pages/ForgotPassword";
+import FollowingFollowers from "@/components/FollowingFollowers";
 
 // Component for routes that require authentication and socket connection
 const AuthenticatedRoutes: React.FC = () => {
@@ -89,6 +90,14 @@ const AuthenticatedRoutes: React.FC = () => {
           element={
             <Layout showSidebars={true}>
               <ProfilePage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/following-followers"
+          element={
+            <Layout showSidebars={true}>
+              <FollowingFollowers />
             </Layout>
           }
         />
