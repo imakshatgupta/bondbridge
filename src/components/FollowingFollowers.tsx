@@ -9,15 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useAppSelector } from "@/store";
 
 const FollowingFollowers = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "following";
-  
-  // Get current user ID from Redux store
-  const currentUserId = useAppSelector(state => state.currentUser.userId);
   
   const [following, setFollowing] = useState<FollowingFollowerUser[]>([]);
   const [followers, setFollowers] = useState<FollowingFollowerUser[]>([]);
