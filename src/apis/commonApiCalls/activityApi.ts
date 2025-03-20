@@ -62,6 +62,10 @@ export const editGroup = async (
   if (data.profileUrl) {
     formData.append("profileUrl", data.profileUrl);
   }
+
+  if (data.groupName) {
+    formData.append("groupName", data.groupName);
+  }
   
   const response = await formDataApiClient.put<ApiResponse>("/edit-group", formData);
   

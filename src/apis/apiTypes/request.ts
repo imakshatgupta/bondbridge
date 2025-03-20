@@ -130,6 +130,7 @@ export interface EditGroupRequest {
   groupId: string;
   bio: string;
   profileUrl?: string;
+  groupName?: string;
 }
 
 export interface StoryData {
@@ -170,6 +171,7 @@ export interface UpdateProfileRequest {
   interests: string[];
   privacyLevel: number;
   avatar?: string | File;
+  bio?: string;
 }
 
 // Post creation request type

@@ -338,7 +338,7 @@ export default function CommentsPage() {
                   }}
                   postId={postId}
                   currentUserId={localStorage.getItem('userId') || undefined}
-                  postAuthorId={post.name}
+                  postAuthorId={post.userId}
                   onCommentDeleted={(commentId) => {
                     setCommentsData(prev => prev.filter(c => c.commentId !== commentId));
                     setpost(prevPost => ({

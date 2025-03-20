@@ -15,8 +15,13 @@ export interface ChatItem {
   timestamp: string;
   unread: boolean;
   type: "dm" | "group" | "community";
+  bio?: string;
   admin?: string;
-  participants: ChatParticipantInfo[]; // Store all participants
+  participants: {
+    userId: string;
+    name: string;
+    profilePic: string;
+  }[];
 }
 
 export interface Message {
@@ -167,6 +172,7 @@ const chatSlice = createSlice({
               }),
               unread: chatRoom.unseenCount > 0,
               type: "dm" as const,
+              bio: chatRoom.bio,
               participants,
             };
           } else {
@@ -181,6 +187,7 @@ const chatSlice = createSlice({
               }),
               unread: chatRoom.unseenCount > 0,
               type: chatRoom.roomType,
+              bio: chatRoom.bio,
               admin: chatRoom.admin,
               participants,
             };

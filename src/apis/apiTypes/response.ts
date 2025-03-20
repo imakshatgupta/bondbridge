@@ -321,22 +321,48 @@ interface BaseChatRoom {
     | string;
 }
 
-interface DMChatRoom extends BaseChatRoom {
+export interface ChatParticipantInfo {
+  userId: string;
+  name: string;
+  profilePic: string;
+}
+
+export interface Message {
+  _id: string;
+  content: string;
+  senderId: string;
+  timestamp: number;
+  senderName?: string;
+  senderAvatar?: string;
+}
+
+export interface DMChatRoom {
+  chatRoomId: string;
   roomType: "dm";
+  participants: ChatParticipantInfo[];
+  lastMessage?: Message;
+  unseenCount: number;
+  bio?: string;
 }
 
-interface GroupChatRoom extends BaseChatRoom {
+export interface GroupChatRoom {
+  chatRoomId: string;
   roomType: "group";
-  groupName: string;
-  profileUrl: string | null;
+  participants: ChatParticipantInfo[];
+  lastMessage?: Message;
+  unseenCount: number;
   admin: string;
+  bio?: string;
 }
 
-interface CommunityChatRoom extends BaseChatRoom {
+export interface CommunityChatRoom {
+  chatRoomId: string;
   roomType: "community";
-  groupName: string;
-  profileUrl: string | null;
+  participants: ChatParticipantInfo[];
+  lastMessage?: Message;
+  unseenCount: number;
   admin: string;
+  bio?: string;
 }
 
 export type ChatRoom = DMChatRoom | GroupChatRoom | CommunityChatRoom;
@@ -451,6 +477,7 @@ export interface UpdateProfileResponse {
     avatar: string;
     interests: string[];
     privacyLevel: number;
+    bio?: string;
   };
 }
 

@@ -15,10 +15,15 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages } from "@/apis/commonApiCalls/chatApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { useState } from "react";
-import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
+import ThreeDotsMenu, { 
+  BlockMenuItem,
+  ReportMenuItem,
+  EditGroupMenuItem 
+} from "@/components/global/ThreeDotsMenu";
 import { toast } from "sonner";
 import { blockUser as blockUserApi } from "@/apis/commonApiCalls/activityApi";
 import { Link, useNavigate } from "react-router-dom";
+import { EditGroupModal } from "./EditGroupModal";
 
 // Define types for socket responses
 interface MessageResponse {
@@ -67,6 +72,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [executeGetMessages] = useApiCall(getMessages);
   const navigate = useNavigate();
   const [executeBlockUser] = useApiCall(blockUserApi);
+  const [isEditGroupModalOpen, setIsEditGroupModalOpen] = useState(false);
 
   const dispatch = useAppDispatch();
   const {
@@ -284,6 +290,36 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const handleEditGroup = () => {
+    setIsEditGroupModalOpen(true);
+  };
+
+  const handleGroupUpdated = () => {
+    // Refresh chat data or update local state as needed
+    // This will be called after successful group update
+  };
+
+  // Prepare menu items based on chat type
+  const menuItems = [];
+  
+  if (chat?.type === "dm") {
+    // For DM chats -> block
+    menuItems.push({
+      ...BlockMenuItem,
+      onClick: handleBlock
+    });
+  } else if (chat?.type === "group") {
+    // For group chats -> report, edit group
+    menuItems.push({
+      ...ReportMenuItem,
+      onClick: () => console.log('Report clicked')
+    });
+    menuItems.push({
+      ...EditGroupMenuItem,
+      onClick: handleEditGroup
+    });
+  }
+
   if (!chat) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -308,15 +344,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     : null;
 
   return (
-    <div className="flex flex-col h-[90vh] overflow-auto ">
+    <div className="h-full flex flex-col bg-background border-l">
       {/* Chat header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={handleClose} className="cursor-pointer">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div 
-            className={`flex items-center gap-3 ${chat.type === "dm" ? "cursor-pointer" : ""}`} 
+          <button onClick={handleClose} className="p-1 cursor-pointer">
+            <ArrowLeft size={24} />
+          </button>
+          <div
+            className="flex items-center gap-3 cursor-pointer"
             onClick={handleProfileClick}
           >
             <Avatar className="h-10 w-10">
@@ -334,10 +370,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ThreeDotsMenu 
-            showBlock={chat.type === "dm"}
-            onBlock={handleBlock}
-          />
+          <ThreeDotsMenu items={menuItems} />
         </div>
       </div>
 
@@ -454,6 +487,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </svg>
         </Button>
       </div>
+
+      <EditGroupModal
+        isOpen={isEditGroupModalOpen}
+        onClose={() => setIsEditGroupModalOpen(false)}
+        groupName={name}
+        bio={chat?.bio || ""}
+        profileUrl={avatar}
+        groupId={chatId}
+        onGroupUpdated={handleGroupUpdated}
+      />
     </div>
   );
 };
