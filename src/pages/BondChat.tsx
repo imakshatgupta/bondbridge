@@ -151,10 +151,6 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
 export default function BondChat() {
   const [messages, setMessages] = useState<ExtendedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [suggestions] = useState([
-    "This is the for fast reply",
-    "This is the suggestion for fast reply",
-  ]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
 
@@ -522,25 +518,6 @@ export default function BondChat() {
           </div>
         )}
 
-        {/* Quick Suggestions */}
-        <div className="px-4 relative -top-[75px]">
-          {messages.length == 0 && (
-            <div className="text-sm text-muted-foreground mb-2">
-              Quick suggestion
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                className="bg-muted text-muted-foreground px-3 py-2 rounded-full text-xs"
-                onClick={() => handleSendMessage(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
         <div className="absolute bottom-0 left-0 right-0">
           <ChatInput
             onSendMessage={handleSendMessage}
