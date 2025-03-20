@@ -8,6 +8,60 @@ import "react-intl-tel-input/dist/main.css";
 import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
 
+// Custom styles for the phone input component that change with theme
+const customPhoneInputStyles = `
+  /* Theme Styles */
+  .intl-tel-input .country-list {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-color: var(--border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .intl-tel-input .country-list .country {
+    color: var(--foreground);
+  }
+  
+  .intl-tel-input .country-list .country.highlight {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input .country-list .country .dial-code {
+    color: var(--muted-foreground);
+  }
+  
+  .intl-tel-input .selected-flag {
+    background-color: transparent;
+  }
+
+  .intl-tel-input.allow-dropdown .flag-container:hover .selected-flag {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input.allow-dropdown.separate-dial-code .selected-flag {
+    background-color: var(--muted);
+  }
+  
+  .intl-tel-input .selected-dial-code {
+    color: var(--foreground);
+  }
+  
+  .intl-tel-input input {
+    background-color: var(--background);
+    color: var(--foreground);
+    border-color: var(--border);
+  }
+  
+  .intl-tel-input input:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+
+  .intl-tel-input .country-list .divider {
+    border-bottom-color: var(--border);
+  }
+`;
+
 const Signup: React.FC = () => {
   const [showOTP, setShowOTP] = useState(false);
   const [phone, setPhone] = useState("");
@@ -22,6 +76,11 @@ const Signup: React.FC = () => {
 
   // Add effect to apply styles to the phone input after it's rendered
   useEffect(() => {
+    // Apply custom theme styles
+    const styleElement = document.createElement('style');
+    styleElement.textContent = customPhoneInputStyles;
+    document.head.appendChild(styleElement);
+
     const fixPhoneInputStyles = () => {
       const container = document.querySelector(".intl-tel-input");
       if (container) {
@@ -49,7 +108,8 @@ const Signup: React.FC = () => {
         // Fix input height
         const input = container.querySelector("input");
         if (input) {
-          input.setAttribute("style", "height: 40px !important;");
+          input.setAttribute("style", "height: 40px !important; background-color: var(--background) !important; color: var(--foreground) !important; border-color: var(--border) !important;");
+          input.classList.add('border', 'border-input', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-ring', 'focus:border-ring');
         }
       }
     };
@@ -58,7 +118,10 @@ const Signup: React.FC = () => {
     fixPhoneInputStyles();
     const timeoutId = setTimeout(fixPhoneInputStyles, 100);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      document.head.removeChild(styleElement);
+    };
   }, [showOTP]);
 
   interface CountryData {

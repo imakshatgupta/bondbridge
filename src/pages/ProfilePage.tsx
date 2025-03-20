@@ -5,11 +5,16 @@ import { Loader2 } from "lucide-react";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const [userData, setUserData] = useState<UserProfileData | null>(null);
   const [executeProfileFetch, isLoading] = useApiCall(fetchUserProfile);
+  
+  // Get currentUserId from Redux store instead of localStorage
+  const currentUserId = useSelector((state: RootState) => state.currentUser.userId);
 
   useEffect(() => {
     console.log("userId", userId);
@@ -18,9 +23,10 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const loadUserData = async () => {
-      console.log("userIdsxns", userId);
+      console.log("userId", userId);
       if (!userId) return;
-      const currentUserId = localStorage.getItem("userId") || ""; 
+      
+      // Use currentUserId from Redux instead of localStorage
       console.log("fetching user data");
       const result = await executeProfileFetch(userId, currentUserId);
       console.log("result", result);
@@ -29,10 +35,8 @@ const ProfilePage: React.FC = () => {
       }
     };
 
-
-
     loadUserData();
-  }, [userId]);
+  }, [userId,currentUserId]);
 
   if (isLoading) {
     return (
@@ -63,6 +67,7 @@ const ProfilePage: React.FC = () => {
         isFollowing={userData.isFollowing}
         isFollower={userData.isFollower}
         requestSent={userData.requestSent}
+        compatibility={userData.compatibility}
       />
     </>
   );

@@ -5,11 +5,14 @@ export interface BasePhoneRequest {
 }
 
 // OTP request type
-export type SendOTPRequest = BasePhoneRequest;
+export type SendOTPRequest = BasePhoneRequest & {
+  forgot?: string;
+};
 
 // OTP verification request type
 export interface VerifyOTPRequest extends BasePhoneRequest {
   otp: string;
+  forgot?: string;
 }
 
 export interface RewriteWithBondChatRequest {

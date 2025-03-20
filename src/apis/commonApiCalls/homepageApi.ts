@@ -19,9 +19,12 @@ export const fetchPosts = async (page: number): Promise<FetchPostsResponse> => {
 
     // Handle the actual response structure
     if (response.status === 200) {
+      // Sort posts by createdAt in descending order (latest first)
+      const sortedPosts = [...(response.data.posts || [])].sort((a, b) => b.createdAt - a.createdAt);
+      
       return {
         success: true,
-        posts: response.data.posts || [],
+        posts: sortedPosts,
         hasMore: response.data.hasMore || false,
         message: response.data.message
       };
@@ -77,6 +80,8 @@ export const fetchHomepageData = async (page: number): Promise<FetchHomepageData
       fetchPosts(page),
       fetchStories()
     ]);
+
+    console.log("postsData", postsData);
     
     return {
       success: true,

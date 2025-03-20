@@ -1,7 +1,7 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchHomepageData } from "@/apis/commonApiCalls/homepageApi";
 import { HomepageResponse, HomePostData, StoryData } from "@/apis/apiTypes/response";
 import { useApiCall } from "@/apis/globalCatchError";
@@ -22,18 +22,20 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [preloadedMedia, setPreloadedMedia] = useState<Set<string>>(new Set());
+  const preloadContainerRef = useRef<HTMLDivElement>(null);
   const currentUser = useAppSelector(state => state.currentUser);
-  
+
   // Use our custom hook for API calls
   const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
   const [executeGetSelfStories, isLoadingSelfStories] = useApiCall(getSelfStories);
-  
+
   // Get current user ID from localStorage
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     setCurrentUserId(userId);
   }, []);
-  
+
   // Load initial data
   useEffect(() => {
     const loadHomepageData = async () => {
@@ -45,20 +47,19 @@ export default function HomePage() {
 
       // Then fetch homepage data
       const result = await executeFetchHomepageData(1);
-      console.log(result.data);
-      
+
       if (result.success && result.data) {
         const { postsData, storiesData } = result.data as HomepageResponse;
-        
+
         setPosts(postsData.posts);
-        
+
         // Sort stories to show users with unseen stories first
         const sortedStories = [...storiesData.stories].sort((a, b) => {
           // Check if user A has any unseen stories
           const aHasUnseenStories = a.stories.some(story => story.seen === 0);
           // Check if user B has any unseen stories
           const bHasUnseenStories = b.stories.some(story => story.seen === 0);
-          
+
           if (aHasUnseenStories && !bHasUnseenStories) {
             return -1; // A comes first
           } else if (!aHasUnseenStories && bHasUnseenStories) {
@@ -68,24 +69,118 @@ export default function HomePage() {
             return b.latestStoryTime - a.latestStoryTime;
           }
         });
-        
+
         setStories(sortedStories);
         setHasMore(postsData.hasMore || false);
       } else {
         setError(result.data?.message || 'Failed to load homepage data');
       }
     };
-    
+
     loadHomepageData();
   }, []);
-  
+
+  // Preload all story media (images and videos)
+  useEffect(() => {
+    // Skip if still loading
+    if (isLoading || isLoadingSelfStories) return;
+
+    // Collect all media URLs that need to be preloaded
+    const mediaUrls: { url: string; type: 'image' | 'video' }[] = [];
+
+    // Add self stories to preload list
+    if (selfStories && selfStories.stories) {
+      selfStories.stories.forEach(story => {
+        if (story.url && !preloadedMedia.has(story.url)) {
+          mediaUrls.push({
+            url: story.url,
+            type: story.contentType === 'video' ? 'video' : 'image'
+          });
+        }
+      });
+    }
+
+    // Add other users' stories to preload list
+    stories.forEach(user => {
+      if (user.stories) {
+        user.stories.forEach(story => {
+          if (story.url && !preloadedMedia.has(story.url)) {
+            mediaUrls.push({
+              url: story.url,
+              type: story.contentType === 'video' ? 'video' : 'image'
+            });
+          }
+        });
+      }
+    });
+
+    // If no new media to preload, return early
+    if (mediaUrls.length === 0) return;
+
+    // Create a div to hold preloaded media if it doesn't exist
+    if (!preloadContainerRef.current) {
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.width = '0';
+      container.style.height = '0';
+      container.style.overflow = 'hidden';
+      container.style.visibility = 'hidden';
+      document.body.appendChild(container);
+      preloadContainerRef.current = container;
+    }
+
+    // Preload all media
+    const newPreloadedUrls = new Set(preloadedMedia);
+    
+    mediaUrls.forEach(({ url, type }) => {
+      if (type === 'image') {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+          console.log(`Preloaded image: ${url}`);
+          newPreloadedUrls.add(url);
+        };
+        if (preloadContainerRef.current) {
+          preloadContainerRef.current.appendChild(img);
+        }
+      } else {
+        // Preload video by creating a video element and loading metadata
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.src = url;
+        video.muted = true;
+        video.onloadedmetadata = () => {
+          console.log(`Preloaded video metadata: ${url}`);
+          newPreloadedUrls.add(url);
+          // Load a small portion of the video to speed up playback start
+          video.currentTime = 0;
+        };
+        // This will trigger actual data loading
+        video.load();
+        if (preloadContainerRef.current) {
+          preloadContainerRef.current.appendChild(video);
+        }
+      }
+    });
+
+    // Update the preloaded media set
+    setPreloadedMedia(newPreloadedUrls);
+
+    // Clean up function to remove the preload container
+    return () => {
+      if (preloadContainerRef.current && preloadContainerRef.current.parentNode) {
+        preloadContainerRef.current.parentNode.removeChild(preloadContainerRef.current);
+      }
+    };
+  }, [stories, selfStories, isLoading, isLoadingSelfStories]);
+
   // Function to load more posts
   const loadMorePosts = async () => {
     if (isLoading || !hasMore) return;
-    
+
     const nextPage = page + 1;
     const result = await executeFetchHomepageData(nextPage);
-    
+
     if (result.success && result.data) {
       const { postsData } = result.data as HomepageResponse;
 
@@ -101,7 +196,7 @@ export default function HomePage() {
     hasMore,
     onLoadMore: loadMorePosts
   });
-  
+
   const handleLikeClick = (postId: string) => {
     console.log(postId);
   };
@@ -109,18 +204,6 @@ export default function HomePage() {
   const handleCommentClick = (postId: string, postData: HomePostData) => {
     navigate(`/post/${postId}`, { state: { postData } });
   };
-  
-  // Render loading skeletons
-  if (isLoading && posts.length === 0) {
-    return (
-      <div className="max-w-2xl mx-auto p-4">
-        <StoryRowSkeleton />
-        {Array.from({ length: 3 }).map((_, index) => (
-          <PostSkeleton key={index} />
-        ))}
-      </div>
-    );
-  }
 
   // Render error state
   if (error) {
@@ -167,11 +250,11 @@ export default function HomePage() {
       profilePic: story.profilePic
     }))
   ].filter(Boolean);
-  
+
   return (
     <div className="max-w-2xl mx-auto bg-background">
       {/* Stories Section */}
-      {isLoading || isLoadingSelfStories ? (
+      {isLoading || isLoadingSelfStories  ? (
         <StoryRowSkeleton />
       ) : (
         <div className="mb-2 overflow-x-auto">
@@ -194,9 +277,9 @@ export default function HomePage() {
               ) : (
                 <div className="flex flex-col items-center space-y-1 mx-2 my-1">
                   <div className="relative w-16 h-16 rounded-full ring-2 ring-muted">
-                    <img 
-                      src={currentUser.avatar || '/profile/avatars/1.png'} 
-                      alt="Your Story" 
+                    <img
+                      src={currentUser.avatar || '/profile/avatars/1.png'}
+                      alt="Your Story"
                       className="w-full h-full rounded-full object-cover p-[2px] bg-background"
                     />
                     <button
@@ -230,47 +313,44 @@ export default function HomePage() {
       )}
 
       {/* Posts Section */}
-      {posts.length > 0 ? (
-        posts.map((post, index) => (
-          <div
-            key={`post-${post._id || index}`}
-            ref={index === posts.length - 1 ? lastPostElementRef : undefined}
-          >
-            <Post 
-              user={post.name}
-              avatar={post.profilePic}
-              userId={post.userId}
-              caption={post.data.content}
-              media={post.data.media}
-              image={post.data.media && post.data.media.length > 0 ? post.data.media[0].url : undefined}
-              likes={post.reactionCount}
-              comments={post.commentCount}
-              datePosted={post.ago_time}
-              isOwner={currentUserId === post.userId}
-              onCommentClick={() => handleCommentClick(post.feedId, post)}
-              onLikeClick={() => handleLikeClick(post._id)}
-              feedId={post.feedId}
-            />
-          </div>
-        ))
-      ) : (
-        <EmptyState
-          icon={ImageIcon}
-          title="No posts yet"
-          description="There are no posts in your feed right now. Follow more people to see their posts here."
-          className="my-8"
-        />
-      )}
-      
-      {/* Loading indicator for more posts */}
-      {isLoading && posts.length > 0 && (
-        <div className="py-4">
+      {isLoading || isLoadingSelfStories  ?
+        (<div className="py-4">
           <PostSkeleton />
         </div>
-      )}
-      
+        ) : posts.length > 0 ? (
+          posts.map((post, index) => (
+            <div
+              key={`post-${post._id || index}`}
+              ref={index === posts.length - 1 ? lastPostElementRef : undefined}
+            >
+              <Post
+                user={post.name}
+                avatar={post.profilePic}
+                userId={post.userId}
+                caption={post.data.content}
+                media={post.data.media}
+                image={post.data.media && post.data.media.length > 0 ? post.data.media[0].url : undefined}
+                likes={post.reactionCount}
+                comments={post.commentCount}
+                datePosted={post.ago_time}
+                isOwner={currentUserId === post.userId}
+                onCommentClick={() => handleCommentClick(post.feedId, post)}
+                onLikeClick={() => handleLikeClick(post._id)}
+                feedId={post.feedId}
+              />
+            </div>
+          ))
+        ) : (
+          <EmptyState
+            icon={ImageIcon}
+            title="No posts yet"
+            description="There are no posts in your feed right now. Follow more people to see their posts here."
+            className="my-8"
+          />
+        )}
+
       {/* End of content message */}
-      {!hasMore && posts.length > 0 && (
+      {!hasMore && posts.length > 0 && !isLoading && !isLoadingSelfStories && (
         <div className="text-center py-6 mb-4 text-muted-foreground border-t border-border">
           <p className="text-sm font-medium">You're all caught up</p>
           <p className="text-xs">No more posts to load</p>
