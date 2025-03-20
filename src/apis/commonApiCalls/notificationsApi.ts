@@ -79,3 +79,18 @@ export const rejectFriendRequest = async (
     throw new Error(response.data.message || "Failed to fetch follow requests");
   }
 };
+
+export const markNotificationAsSeen = async (
+  notificationId: string
+): Promise<ApiResponse> => {
+  const response = await apiClient.post<ApiResponse>(
+    "/mark-as-seen",
+    { notificationId }
+  );
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to mark notification as seen");
+  }
+};

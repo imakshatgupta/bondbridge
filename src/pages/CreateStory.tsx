@@ -609,7 +609,7 @@ const CreateStory = () => {
               )}
 
               {/* Show color picker only for text type */}
-              {showColorPicker && currentStory.type === 'text' && (
+              {showColorPicker && (
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-background/50 rounded-full animate-in fade-in duration-200">
                   {['bg-primary', 'bg-accent', 'bg-secondary', 'bg-destructive', 'bg-muted'].map(color => (
                     <button
