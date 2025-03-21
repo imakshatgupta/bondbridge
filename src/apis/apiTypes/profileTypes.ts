@@ -62,3 +62,18 @@ export interface UpdateProfileRequest {
   bio?: string;
   avatarSrc?: string;
 }
+
+export interface FollowingFollowerUser {
+  _id: string;
+  name: string;
+  nickName: string;
+  email: string;
+  avatar: string;
+  profilePic: string;
+  interests: string[];
+}
+
+export interface FollowingFollowersResponse {
+  success: boolean;
+  data: FollowingFollowerUser[];
+}

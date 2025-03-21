@@ -142,6 +142,23 @@ export interface PostData {
   datePosted: string;
 }
 
+export interface ProfilePostData {
+  id: string;
+  author: {
+    name: string;
+    profilePic: string;
+  };
+  content: string;
+  createdAt: number;
+  imageSrc: string;
+  stats: {
+    commentCount: number;
+    hasReacted: boolean;
+    reactionCount: number;
+    reactionType: string | null;
+  };
+}
+
 export interface FetchCommentsResponse {
   hasMoreComments: boolean;
   success: boolean;
@@ -498,4 +515,43 @@ export interface Reaction {
 export interface GetAllReactionsResponse {
   message: string;
   reactions: Reaction[];
+}
+
+export interface PostDetailsData {
+  _id: string;
+  author: string;
+  whoCanComment: number;
+  privacy: number;
+  content_type: string | null;
+  taggedUsers: string[] | null;
+  hideFrom: string[] | null;
+  status: number;
+  createdAt: number;
+  data: {
+    content: string;
+    media: Array<{
+      url: string;
+      type: string;
+    }>;
+  };
+  feedId: string;
+  weekIndex: string;
+  authorDetails: {
+    userId: string;
+    profilePic: string;
+    name: string;
+  };
+  commentCount: number;
+  reactionCount: number;
+  agoTime: string;
+  reaction?: {
+    hasReacted: boolean;
+    reactionType: string | null;
+  };
+}
+
+export interface GetPostDetailsResponse {
+  success: boolean;
+  message: string;
+  post: PostDetailsData;
 }
