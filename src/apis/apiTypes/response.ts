@@ -24,6 +24,13 @@ export interface ApiResponse<T = void> {
   };
 }
 
+// Random text suggestions for chat
+export interface RandomTextResponse {
+  success: boolean;
+  message?: string;
+  topic: string;
+}
+
 // OTP response interfaces
 export type SendOTPResponse = ApiResponse<{
   message: string;
@@ -101,8 +108,8 @@ export type FetchAvatarsResponse = {
   URLS: {
     male: AvatarItem[];
     female: AvatarItem[];
-  }
-}
+  };
+};
 
 export interface CommentData {
   commentId: string;
@@ -284,10 +291,9 @@ export interface SearchResponse {
 }
 
 export interface RewriteWithBondChatResponse {
-  original : string;
-  rewritten : string;
+  original: string;
+  rewritten: string;
 }
-
 
 export interface Notification {
   id: number;

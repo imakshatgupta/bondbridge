@@ -2,12 +2,12 @@ import { useState } from "react";
 import { getRelativeTime } from "../../lib/utils";
 
 interface NotificationProps {
-  _id: number;
+  _id: string;
   title: string;
   profilePic: string;
   timestamp: string;
   seen: boolean;
-  onMarkAsSeen: (id: number) => void;
+  onMarkAsSeen: (id: string) => void;
 }
 
 const Notification = ({
