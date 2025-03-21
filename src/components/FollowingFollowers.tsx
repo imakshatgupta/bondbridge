@@ -23,20 +23,16 @@ const FollowingFollowers = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      try {
-        const [followingResult, followersResult] = await Promise.all([
-          executeFetchFollowing(),
-          executeFetchFollowers()
-        ]);
+      const [followingResult, followersResult] = await Promise.all([
+        executeFetchFollowing(),
+        executeFetchFollowers()
+      ]);
 
-        if (followingResult.success && followingResult.data) {
-          setFollowing(followingResult.data.data || []);
-        }
-        if (followersResult.success && followersResult.data) {
-          setFollowers(followersResult.data.data || []);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      if (followingResult.success && followingResult.data) {
+        setFollowing(followingResult.data.data || []);
+      }
+      if (followersResult.success && followersResult.data) {
+        setFollowers(followersResult.data.data || []);
       }
     };
 

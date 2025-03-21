@@ -170,18 +170,13 @@ export function Post({
 
     const handleDeletePost = async () => {
         if (!feedId) return;
+        const result = await executeDeletePost(feedId);
         
-        try {
-            const result = await executeDeletePost(feedId);
-            
-            if (result.success) {
-                toast.success("Post deleted successfully");
-                // You might want to add a callback prop to handle post deletion
-                // For now, we'll just refresh the page
-                window.location.reload();
-            }
-        } catch (error) {
-            toast.error("Failed to delete post");
+        if (result.success) {
+            toast.success("Post deleted successfully");
+            // You might want to add a callback prop to handle post deletion
+            // For now, we'll just refresh the page
+            window.location.reload();
         }
     };
 
