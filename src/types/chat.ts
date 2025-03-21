@@ -5,6 +5,8 @@ export interface Message {
   isUser: boolean;
   avatar: string;
   username: string;
+  media?: string;
+  senderId?: string;
 }
 
 export interface ChatInterfaceProps {

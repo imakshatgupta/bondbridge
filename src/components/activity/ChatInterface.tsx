@@ -61,6 +61,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { socket } = useSocket();
   const userId = localStorage.getItem("userId") || "";
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -297,6 +298,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const handleSuggestionClick = (suggestion: string) => {
     setNewMessage(suggestion);
+    // Focus the input field after setting the message
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
   };
 
   const handleTyping = () => {
@@ -531,6 +536,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {/* Input field */}
         <div className="flex items-center gap-2 py-3">
           <Input
+            ref={inputRef}
             value={newMessage}
             onChange={(e) => {
               setNewMessage(e.target.value);
