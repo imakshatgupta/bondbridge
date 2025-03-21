@@ -384,6 +384,7 @@ export interface ChatMessage {
   updatedAt: string;
   senderName?: string;
   senderAvatar?: string;
+  media?: string;
 }
 
 export interface GetMessagesResponse {
