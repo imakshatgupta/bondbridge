@@ -201,8 +201,8 @@ export default function HomePage() {
     console.log(postId);
   };
 
-  const handleCommentClick = (postId: string, postData: HomePostData) => {
-    navigate(`/post/${postId}`, { state: { postData } });
+  const handleCommentClick = (postId: string, post: HomePostData) => {
+    navigate(`/post/${postId}`, { state: { post } });
   };
 
   // Render error state

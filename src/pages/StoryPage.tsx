@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Pause, Play } from 'lucide-react';
+import { ArrowLeft, Send, Play } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -20,7 +20,10 @@ export default function StoryPage() {
     const [videoProgress, setVideoProgress] = useState(0); // 0 to 100 percentage
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
     const [videoEnded, setVideoEnded] = useState(false);
+    const [showControls, setShowControls] = useState(true);
+    const [hasShownControlsTooltip, setHasShownControlsTooltip] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [animationEndDetector, setAnimationEndDetector] = useState(0);
     
     // Use our custom hook for API calls
     const [executeSaveInteraction] = useApiCall(saveStoryInteraction);
@@ -131,7 +134,7 @@ export default function StoryPage() {
             }
         } else {
             // If API call fails or returns no stories, navigate back to home
-            // navigate('/');
+            navigate('/');
         }
     };
 
@@ -254,10 +257,10 @@ export default function StoryPage() {
             // Set progress to 100% before moving to next story
             setVideoProgress(100);
             
-            // Add a small delay to show the completed progress bar before moving to next story
+            // Reduce delay for faster forwarding
             const timer = setTimeout(() => {
                 goToNextStory();
-            }, 500); // Increased delay for better visibility
+            }, 150);
             
             return () => clearTimeout(timer);
         }
@@ -279,6 +282,21 @@ export default function StoryPage() {
             }
         }
     }, [currentUserIndex, currentStoryIndex, isLoading, allStories.length, goToNextStory, isPaused]);
+
+    // Handle animation end for image stories
+    useEffect(() => {
+        if (!isPaused && !isLoading && allStories.length > 0) {
+            const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+            
+            // Only for image content types when story changes, not when resuming
+            if (currentStoryItem?.contentType !== 'video') {
+                // Only increment the detector when the story changes, not when resuming from pause
+                if (currentUserIndex !== undefined && currentStoryIndex !== undefined) {
+                    setAnimationEndDetector(currentUserIndex * 100 + currentStoryIndex);
+                }
+            }
+        }
+    }, [currentUserIndex, currentStoryIndex, isLoading, allStories.length]);
 
     // Toggle video play/pause
     const toggleVideoPlayback = useCallback(() => {
@@ -304,6 +322,20 @@ export default function StoryPage() {
         setVideoProgress(progressPercentage);
     }, [videoDuration]);
 
+    // Toggle play/pause for both image and video stories
+    const toggleStoryPlayback = useCallback(() => {
+        const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+        
+        // For video content, toggle video playback
+        if (currentStoryItem?.contentType === 'video') {
+            toggleVideoPlayback();
+        } 
+        // For image content, toggle the paused state
+        else {
+            setIsPaused(prev => !prev);
+        }
+    }, [allStories, currentUserIndex, currentStoryIndex, toggleVideoPlayback]);
+
     // Add keyboard event listener for arrow key navigation
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
@@ -314,10 +346,8 @@ export default function StoryPage() {
             } else if (event.key === 'Escape') {
                 navigate(-1); // Go back to the previous page
             } else if (event.key === ' ') { // Space bar
-                const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
-                if (currentStoryItem?.contentType === 'video') {
-                    toggleVideoPlayback();
-                }
+                event.preventDefault(); // Prevent page scrolling
+                toggleStoryPlayback();
             }
         };
 
@@ -328,7 +358,21 @@ export default function StoryPage() {
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [goToNextStory, goToPreviousStory, navigate, allStories, currentUserIndex, currentStoryIndex, toggleVideoPlayback]);
+    }, [goToNextStory, goToPreviousStory, navigate, toggleStoryPlayback]);
+
+    // Show controls tooltip only once when the page loads
+    useEffect(() => {
+        if (!isLoading && !hasShownControlsTooltip) {
+            setShowControls(true);
+            setHasShownControlsTooltip(true);
+            
+            const timer = setTimeout(() => {
+                setShowControls(false);
+            }, 3000); // Hide after 3 seconds
+            
+            return () => clearTimeout(timer);
+        }
+    }, [isLoading, hasShownControlsTooltip]);
 
     // If still loading or no stories, show a loading state
     if (isLoading || allStories.length === 0) {
@@ -359,13 +403,20 @@ export default function StoryPage() {
             </button>
 
             <div className='bg-background relative border border-border rounded-lg shadow-sm overflow-hidden'>
+                {/* Keyboard Controls Tooltip */}
+                {showControls && (
+                    <div className="absolute bottom-20 left-0 right-0 z-20 flex justify-center">
+                        <div className="px-4 py-2 bg-background/90 rounded-md border border-border shadow-sm text-xs text-muted-foreground animate-fade-in-out">
+                            <p>Space: Pause/Play | ← →: Navigate | Esc: Exit</p>
+                        </div>
+                    </div>
+                )}
+                
                 <div className="absolute top-0 left-0 right-0 flex gap-1 z-10">
                     {Array.from({ length: totalStories }).map((_, index) => {
-                        // Determine if this story item is a video
-                        
                         return (
                             <div
-                                key={index}
+                                key={`progress-${index}-${animationEndDetector}`}
                                 className="h-1 flex-1 rounded-full overflow-hidden bg-muted"
                             >
                                 <div
@@ -377,7 +428,13 @@ export default function StoryPage() {
                                     style={{
                                         width: index === currentStoryIndex && isVideo ? `${videoProgress}%` : undefined,
                                         animationDuration: index === currentStoryIndex && !isVideo ? '5s' : '0s',
-                                        animationPlayState: isPaused ? 'paused' : 'running'
+                                        animationPlayState: isPaused ? 'paused' : 'running',
+                                        animationFillMode: 'forwards'
+                                    }}
+                                    onAnimationEnd={() => {
+                                        if (index === currentStoryIndex && !isVideo && !isPaused) {
+                                            goToNextStory();
+                                        }
                                     }}
                                 />
                             </div>
@@ -413,7 +470,7 @@ export default function StoryPage() {
                 {/* Story Content */}
                 <div
                     className="h-[calc(100vh-104px)] w-full flex items-center justify-center bg-background relative"
-                    onClick={isVideo ? toggleVideoPlayback : goToNextStory}
+                    onClick={toggleStoryPlayback}
                 >
                     {isVideo ? (
                         <>
@@ -449,27 +506,39 @@ export default function StoryPage() {
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 {!isVideoPlaying && !videoEnded && (
                                     <button 
-                                        className="w-16 h-16 bg-primary/80 rounded-full flex items-center justify-center pointer-events-auto"
+                                        className="w-12 h-12 bg-primary/80 rounded-full flex items-center justify-center pointer-events-auto"
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             toggleVideoPlayback();
                                         }}
                                     >
-                                        {isPaused ? (
-                                            <Play className="h-8 w-8 text-primary-foreground" />
-                                        ) : (
-                                            <Pause className="h-8 w-8 text-primary-foreground" />
-                                        )}
+                                        <Play className="h-6 w-6 text-primary-foreground" />
                                     </button>
                                 )}
                             </div>
                         </>
                     ) : (
-                        <img
-                            src={currentStoryItem.url}
-                            alt="Story content"
-                            className="w-full h-full p-4 object-contain"
-                        />
+                        <>
+                            <img
+                                src={currentStoryItem.url}
+                                alt="Story content"
+                                className="w-full h-full p-4 object-contain"
+                            />
+                            {/* Image Controls Overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                {isPaused && (
+                                    <button 
+                                        className="w-12 h-12 bg-primary/80 rounded-full flex items-center justify-center pointer-events-auto"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleStoryPlayback();
+                                        }}
+                                    >
+                                        <Play className="h-6 w-6 text-primary-foreground" />
+                                    </button>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
 

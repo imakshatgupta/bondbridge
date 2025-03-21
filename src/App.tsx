@@ -11,7 +11,7 @@ import Layout from "./components/Layout";
 import HomePage from "./pages/HomePage";
 import Notifications from "./pages/Notifications";
 import Search from "./pages/Search";
-import CommentsPage from "@/pages/CommentsPage";
+import CommentsPage from "@/pages/PostPage";
 import CreateGroup from "./pages/CreateGroup";
 import ProfilePage from "@/pages/ProfilePage";
 import OthersProfilePage from "./pages/OthersProfilePage";
