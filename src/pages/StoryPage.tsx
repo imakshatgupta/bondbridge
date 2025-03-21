@@ -23,6 +23,7 @@ export default function StoryPage() {
     const [showControls, setShowControls] = useState(true);
     const [hasShownControlsTooltip, setHasShownControlsTooltip] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const [animationEndDetector, setAnimationEndDetector] = useState(0);
     
     // Use our custom hook for API calls
@@ -339,13 +340,16 @@ export default function StoryPage() {
     // Add keyboard event listener for arrow key navigation
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            // Skip handling spacebar if the input field is focused
+            const isInputFocused = document.activeElement === inputRef.current;
+            
             if (event.key === 'ArrowLeft') {
                 goToPreviousStory();
             } else if (event.key === 'ArrowRight') {
                 goToNextStory();
             } else if (event.key === 'Escape') {
                 navigate(-1); // Go back to the previous page
-            } else if (event.key === ' ') { // Space bar
+            } else if (event.key === ' ' && !isInputFocused) { // Only toggle playback if input is not focused
                 event.preventDefault(); // Prevent page scrolling
                 toggleStoryPlayback();
             }
@@ -564,6 +568,7 @@ export default function StoryPage() {
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                     <div className="flex gap-2 items-center">
                         <Input
+                            ref={inputRef}
                             placeholder="What's on your mind..."
                             className="bg-muted border-none rounded-full text-sm"
                             onClick={(e) => e.stopPropagation()} // Prevent triggering the parent's onClick
