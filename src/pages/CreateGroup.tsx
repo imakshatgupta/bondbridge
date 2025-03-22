@@ -11,7 +11,7 @@ import { toast } from "sonner";
 interface GroupInfo {
   name: string;
   description: string;
-  image?: string | null;
+  image?: File | null;
 }
 
 // interface GroupSkills {
@@ -85,6 +85,7 @@ const CreateGroup: React.FC = () => {
                 groupId: chatRoomId,
                 bio: groupInfo.description,
                 image: groupInfo.image || undefined,
+                groupName: groupInfo.name,
               });
               
               console.log("Edit group result:", editResult);

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 interface GroupInfo {
   name: string;
   description: string;
-  image?: string | null;
+  image?: File | null;
 }
 
 interface GroupInfoTabProps {
@@ -32,13 +32,8 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
 
-    // Convert the file to base64 for storage as string
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      // Store the base64 string in the image property
-      onChange({ ...groupInfo, image: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    // Store the File object directly
+    onChange({ ...groupInfo, image: file });
   };
 
   const handleButtonClick = () => {

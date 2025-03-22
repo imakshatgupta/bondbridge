@@ -37,7 +37,7 @@ export function EditGroupModal({
   const [formData, setFormData] = useState({
     groupName,
     bio,
-    image,
+    image: null as File | null,
   });
   const [previewUrl, setPreviewUrl] = useState<string>(image);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -49,21 +49,28 @@ export function EditGroupModal({
     const file = e.target.files?.[0];
     if (file) {
       try {
-        // Generate preview
-        const preview = URL.createObjectURL(file);
-        setPreviewUrl(preview);
-        
-        // Convert file to base64 using FileReader directly
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFormData({ ...formData, image: reader.result as string });
-        };
-        reader.readAsDataURL(file);
+        // Process the file directly
+        processFile(file);
       } catch (error) {
         console.error("Error processing image:", error);
         toast.error("Failed to process the image");
       }
     }
+  };
+
+  // Process the file - store as File and create preview URL
+  const processFile = (file: File) => {
+    // Store the file object directly
+    setFormData(prev => ({ ...prev, image: file }));
+    
+    // Create a preview URL for display
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target && e.target.result) {
+        setPreviewUrl(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // Trigger file input click
@@ -73,23 +80,19 @@ export function EditGroupModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const result = await executeEditGroup({
-        groupId,
-        bio: formData.bio,
-        image: formData.image,
-        groupName: formData.groupName,
-      });
-      
-      if (result.success) {
-        toast.success("Group updated successfully");
-        onGroupUpdated();
-        onClose();
-      } else {
-        toast.error(result.data?.message || "Failed to update group");
-      }
-    } catch (error) {
-      toast.error("An error occurred while updating the group");
+    const result = await executeEditGroup({
+      groupId,
+      bio: formData.bio,
+      image: formData.image,
+      groupName: formData.groupName,
+    });
+    
+    if (result.success) {
+      toast.success("Group updated successfully");
+      onGroupUpdated();
+      onClose();
+    } else {
+      toast.error(result.data?.message || "Failed to update group");
     }
   };
 
