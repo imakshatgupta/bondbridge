@@ -15,7 +15,6 @@ import { Search, Loader2 } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import { searchPeople, Person } from "@/apis/commonApiCalls/searchApi";
 import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
-import { blockUser, unblockUser } from "@/apis/commonApiCalls/activityApi";
 
 interface UserSearchDialogProps {
   isOpen: boolean;
@@ -26,8 +25,6 @@ interface UserSearchDialogProps {
   description: string;
   actionIcon: React.ReactNode;
   actionLabel?: string;
-  isBlockAction?: boolean;
-  isUnblockAction?: boolean;
 }
 
 const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
@@ -39,8 +36,6 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
   description,
   actionIcon,
   actionLabel,
-  isBlockAction = false,
-  isUnblockAction = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Person[]>([]);
@@ -48,8 +43,6 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
   const [executeSearch, isSearching] = useApiCall(searchPeople);
   const [executeFetchFollowings, isLoadingFollowings] =
     useApiCall(fetchFollowings);
-  const [executeBlockUser, isBlockingUser] = useApiCall(blockUser);
-  const [executeUnblockUser, isUnblockingUser] = useApiCall(unblockUser);
   const [processingUsers, setProcessingUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -102,19 +95,12 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
     
     // Set the user as processing
     setProcessingUsers(prev => ({ ...prev, [user.id]: true }));
-  
-      if (isBlockAction) {
-        console.log("Attempting to block user:", user.id);
-        const result = await executeBlockUser(user.id);
-        console.log("Block user result:", result);
-      } else if (isUnblockAction) {
-        console.log("Attempting to unblock user:", user.id);
-        const result = await executeUnblockUser(user.id);
-        console.log("Unblock user result:", result);
-      }
-      
-      // Call the parent component's onSelectUser callback
-      onSelectUser(user);
+    
+    // Call the parent component's onSelectUser callback
+    onSelectUser(user);
+    
+    // Reset processing state
+    setProcessingUsers(prev => ({ ...prev, [user.id]: false }));
   };
 
   const displayUsers = searchQuery.trim() ? searchResults : followings;
@@ -170,7 +156,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={(e) => handleUserAction(user, e)}
-                  disabled={isBlockingUser || isUnblockingUser || processingUsers[user.id]}
+                  disabled={processingUsers[user.id]}
                 >
                   {processingUsers[user.id] ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />

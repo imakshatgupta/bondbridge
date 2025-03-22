@@ -54,23 +54,23 @@ export const editGroup = async (
   data: EditGroupRequest
 ): Promise<ApiResponse> => {
   console.log("Editing group with data:", data);
-  
+
   const formData = new FormData();
   formData.append("chatRoomId", data.groupId);
   formData.append("bio", data.bio);
-  
-  if (data.profileUrl) {
-    formData.append("profileUrl", data.profileUrl);
+
+  if (data.image) {
+    formData.append("image", data.image);
   }
 
   if (data.groupName) {
     formData.append("groupName", data.groupName);
   }
-  
+
   const response = await formDataApiClient.put<ApiResponse>("/edit-group", formData);
-  
+
   console.log("Response from edit group:", response);
-  
+
   if (response.status === 200 || response.status === 201) {
     return {
       ...response.data,
@@ -90,24 +90,19 @@ export const blockUser = async (blockedUserId: string): Promise<ApiResponse> => 
   if (!blockedUserId) {
     throw new Error('User ID is required');
   }
-  
+
   console.log("blockUser API called with ID:", blockedUserId);
-  
-  try {
-    const response = await apiClient.post<ApiResponse>('/block-user', {
-      blocked: blockedUserId
-    });
-    
-    console.log("Block user API response:", response);
-    
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error(response.data.message || 'Failed to block user');
-    }
-  } catch (error) {
-    console.error("Error in blockUser API:", error);
-    throw error;
+
+  const response = await apiClient.post<ApiResponse>('/block-user', {
+    blocked: blockedUserId
+  });
+
+  console.log("Block user API response:", response);
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to block user');
   }
 };
 
@@ -120,24 +115,19 @@ export const unblockUser = async (blockedUserId: string): Promise<ApiResponse> =
   if (!blockedUserId) {
     throw new Error('User ID is required');
   }
-  
+
   console.log("unblockUser API called with ID:", blockedUserId);
-  
-  try {
-    const response = await apiClient.post<ApiResponse>('/unblock-user', {
-      blocked: blockedUserId
-    });
-    
-    console.log("Unblock user API response:", response);
-    
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error(response.data.message || 'Failed to unblock user');
-    }
-  } catch (error) {
-    console.error("Error in unblockUser API:", error);
-    throw error;
+
+  const response = await apiClient.post<ApiResponse>('/unblock-user', {
+    blocked: blockedUserId
+  });
+
+  console.log("Unblock user API response:", response);
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to unblock user');
   }
 };
 
@@ -163,18 +153,13 @@ export interface GetBlockedUsersResponse {
  * @returns Promise with the blocked users response
  */
 export const getBlockedUsers = async (): Promise<GetBlockedUsersResponse> => {
-  try {
-    const response = await apiClient.get<GetBlockedUsersResponse>('/get-blocked-users');
-    
-    console.log("Get blocked users API response:", response);
-    
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      throw new Error(response.data.message || 'Failed to fetch blocked users');
-    }
-  } catch (error) {
-    console.error("Error in getBlockedUsers API:", error);
-    throw error;
+  const response = await apiClient.get<GetBlockedUsersResponse>('/get-blocked-users');
+
+  console.log("Get blocked users API response:", response);
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to fetch blocked users');
   }
 };

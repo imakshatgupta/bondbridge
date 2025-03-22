@@ -1,7 +1,7 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchHomepageData } from "@/apis/commonApiCalls/homepageApi";
 import { HomepageResponse, HomePostData, StoryData } from "@/apis/apiTypes/response";
 import { useApiCall } from "@/apis/globalCatchError";
@@ -22,6 +22,8 @@ export default function HomePage() {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [preloadedMedia, setPreloadedMedia] = useState<Set<string>>(new Set());
+  const preloadContainerRef = useRef<HTMLDivElement>(null);
   const currentUser = useAppSelector(state => state.currentUser);
 
   // Use our custom hook for API calls
@@ -78,6 +80,100 @@ export default function HomePage() {
     loadHomepageData();
   }, []);
 
+  // Preload all story media (images and videos)
+  useEffect(() => {
+    // Skip if still loading
+    if (isLoading || isLoadingSelfStories) return;
+
+    // Collect all media URLs that need to be preloaded
+    const mediaUrls: { url: string; type: 'image' | 'video' }[] = [];
+
+    // Add self stories to preload list
+    if (selfStories && selfStories.stories) {
+      selfStories.stories.forEach(story => {
+        if (story.url && !preloadedMedia.has(story.url)) {
+          mediaUrls.push({
+            url: story.url,
+            type: story.contentType === 'video' ? 'video' : 'image'
+          });
+        }
+      });
+    }
+
+    // Add other users' stories to preload list
+    stories.forEach(user => {
+      if (user.stories) {
+        user.stories.forEach(story => {
+          if (story.url && !preloadedMedia.has(story.url)) {
+            mediaUrls.push({
+              url: story.url,
+              type: story.contentType === 'video' ? 'video' : 'image'
+            });
+          }
+        });
+      }
+    });
+
+    // If no new media to preload, return early
+    if (mediaUrls.length === 0) return;
+
+    // Create a div to hold preloaded media if it doesn't exist
+    if (!preloadContainerRef.current) {
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.width = '0';
+      container.style.height = '0';
+      container.style.overflow = 'hidden';
+      container.style.visibility = 'hidden';
+      document.body.appendChild(container);
+      preloadContainerRef.current = container;
+    }
+
+    // Preload all media
+    const newPreloadedUrls = new Set(preloadedMedia);
+    
+    mediaUrls.forEach(({ url, type }) => {
+      if (type === 'image') {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+          console.log(`Preloaded image: ${url}`);
+          newPreloadedUrls.add(url);
+        };
+        if (preloadContainerRef.current) {
+          preloadContainerRef.current.appendChild(img);
+        }
+      } else {
+        // Preload video by creating a video element and loading metadata
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.src = url;
+        video.muted = true;
+        video.onloadedmetadata = () => {
+          console.log(`Preloaded video metadata: ${url}`);
+          newPreloadedUrls.add(url);
+          // Load a small portion of the video to speed up playback start
+          video.currentTime = 0;
+        };
+        // This will trigger actual data loading
+        video.load();
+        if (preloadContainerRef.current) {
+          preloadContainerRef.current.appendChild(video);
+        }
+      }
+    });
+
+    // Update the preloaded media set
+    setPreloadedMedia(newPreloadedUrls);
+
+    // Clean up function to remove the preload container
+    return () => {
+      if (preloadContainerRef.current && preloadContainerRef.current.parentNode) {
+        preloadContainerRef.current.parentNode.removeChild(preloadContainerRef.current);
+      }
+    };
+  }, [stories, selfStories, isLoading, isLoadingSelfStories]);
+
   // Function to load more posts
   const loadMorePosts = async () => {
     if (isLoading || !hasMore) return;
@@ -108,8 +204,6 @@ export default function HomePage() {
   const handleCommentClick = (postId: string, postData: HomePostData) => {
     navigate(`/post/${postId}`, { state: { postData } });
   };
-
-
 
   // Render error state
   if (error) {
@@ -254,8 +348,6 @@ export default function HomePage() {
             className="my-8"
           />
         )}
-
-
 
       {/* End of content message */}
       {!hasMore && posts.length > 0 && !isLoading && !isLoadingSelfStories && (

@@ -12,6 +12,7 @@ export interface UserProfileData {
   isFollowing?: boolean;
   isFollower?: boolean;
   requestSent?: boolean;
+  compatibility?: number;
 }
 
 export interface PostData {

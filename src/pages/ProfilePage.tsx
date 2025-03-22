@@ -23,7 +23,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const loadUserData = async () => {
-      console.log("userIdsxns", userId);
+      console.log("userId", userId);
       if (!userId) return;
       
       // Use currentUserId from Redux instead of localStorage
@@ -68,6 +68,7 @@ const ProfilePage: React.FC = () => {
         isFollowing={userData.isFollowing}
         isFollower={userData.isFollower}
         requestSent={userData.requestSent}
+        compatibility={userData.compatibility}
       />
     </>
   );

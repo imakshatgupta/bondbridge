@@ -129,7 +129,7 @@ export interface CreateGroupRequest {
 export interface EditGroupRequest {
   groupId: string;
   bio: string;
-  profileUrl?: string;
+  image?: string;
   groupName?: string;
 }
 

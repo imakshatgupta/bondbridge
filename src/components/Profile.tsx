@@ -43,6 +43,7 @@ interface ProfileProps {
   isFollowing?: boolean;
   isFollower?: boolean;
   requestSent?: boolean;
+  compatibility?: number;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -53,10 +54,11 @@ const Profile: React.FC<ProfileProps> = ({
   followers,
   following,
   avatarSrc,
-  isCurrentUser = false,
+  isCurrentUser: propsIsCurrentUser = false,
   isFollowing = false,
   isFollower = false,
   requestSent = false,
+  compatibility = 0,
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -77,6 +79,10 @@ const Profile: React.FC<ProfileProps> = ({
   const { privacyLevel, interests, nickname } = useAppSelector(
     (state) => state.currentUser
   );
+  
+  // Check if current user by comparing with userId in localStorage
+  const localStorageUserId = localStorage.getItem("userId");
+  const isCurrentUser = userId === localStorageUserId || propsIsCurrentUser;
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -276,17 +282,35 @@ const Profile: React.FC<ProfileProps> = ({
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
           className="relative w-24 h-24 cursor-pointer"
-          // className={`relative w-24 h-24 cursor-pointer ${
-          //   userStories?.hasStory 
-          //     ? 'ring-2 ring-muted rounded-full'
-          //     : ''
-          // }`}
-          // onClick={handleStoryClick}
         >
+          {!isCurrentUser && compatibility >= 0 && (
+            <div className="absolute -inset-1 flex items-center justify-center z-20">
+              {/* SVG for the ring */}
+              <svg viewBox="0 0 110 110" className="absolute">
+                <circle 
+                  cx="55" 
+                  cy="55" 
+                  r="52" 
+                  fill="none" 
+                  stroke="var(--primary)" 
+                  strokeWidth="4"
+                />
+              </svg>
+              {/* Compatibility percentage badge */}
+              <div className="absolute -bottom-2 -right-2 bg-background rounded-full shadow-sm">
+                <div 
+                  className="text-xs font-medium rounded-full w-8 h-8 flex items-center justify-center text-white bg-primary"
+                >
+                  {compatibility}%
+                </div>
+              </div>
+            </div>
+          )}
           <img
             src={avatarSrc || "avatar.png"}
             alt={username}
-            className="w-full h-full object-cover rounded-full"
+            className="w-full h-full object-cover rounded-full absolute z-10"
+            style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
         </div>
         <h1 className="text-xl font-semibold">

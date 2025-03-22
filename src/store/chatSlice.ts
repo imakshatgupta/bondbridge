@@ -166,7 +166,7 @@ const chatSlice = createSlice({
               name: otherParticipant?.name || "Unknown",
               avatar: otherParticipant?.profilePic || "",
               lastMessage: lastMessageText,
-              timestamp: new Date(chatRoom.updatedAt).toLocaleTimeString([], {
+              timestamp: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
@@ -178,10 +178,10 @@ const chatSlice = createSlice({
           } else {
             return {
               id: chatRoom.chatRoomId,
-              name: chatRoom.groupName,
+              name: chatRoom.groupName || "Group Chat",
               avatar: chatRoom.profileUrl || "",
               lastMessage: lastMessageText,
-              timestamp: new Date(chatRoom.updatedAt).toLocaleTimeString([], {
+              timestamp: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               }),

@@ -20,7 +20,7 @@ interface EditGroupModalProps {
   onClose: () => void;
   groupName: string;
   bio: string;
-  profileUrl: string;
+  image: string;
   groupId: string;
   onGroupUpdated: () => void;
 }
@@ -30,32 +30,22 @@ export function EditGroupModal({
   onClose,
   groupName,
   bio,
-  profileUrl,
+  image,
   groupId,
   onGroupUpdated,
 }: EditGroupModalProps) {
   const [formData, setFormData] = useState({
     groupName,
     bio,
-    profileUrl,
+    image,
   });
-  const [previewUrl, setPreviewUrl] = useState<string>(profileUrl);
+  const [previewUrl, setPreviewUrl] = useState<string>(image);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [executeEditGroup] = useApiCall(editGroup);
 
-  // Convert file to base64 string
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   // Handle file input change
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
@@ -63,9 +53,12 @@ export function EditGroupModal({
         const preview = URL.createObjectURL(file);
         setPreviewUrl(preview);
         
-        // Convert file to base64
-        const base64String = await convertToBase64(file);
-        setFormData({ ...formData, profileUrl: base64String });
+        // Convert file to base64 using FileReader directly
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormData({ ...formData, image: reader.result as string });
+        };
+        reader.readAsDataURL(file);
       } catch (error) {
         console.error("Error processing image:", error);
         toast.error("Failed to process the image");
@@ -84,7 +77,7 @@ export function EditGroupModal({
       const result = await executeEditGroup({
         groupId,
         bio: formData.bio,
-        profileUrl: formData.profileUrl,
+        image: formData.image,
         groupName: formData.groupName,
       });
       

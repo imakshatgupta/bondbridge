@@ -29,18 +29,12 @@ const BlockedUsersPage: React.FC = () => {
   // Fetch blocked users from API
   const fetchBlockedUsers = async () => {
     setIsLoading(true);
-    try {
-      const result = await executeGetBlockedUsers();
-      console.log("Blocked users from API:", result);
-      if (result.success && result.data) {
-        setBlockedUsers(result.data.blockedUsers);
-      }
-    } catch (error) {
-      console.error("Error fetching blocked users:", error);
-      toast.error("Failed to load blocked users");
-    } finally {
-      setIsLoading(false);
+    const result = await executeGetBlockedUsers();
+    console.log("Blocked users from API:", result);
+    if (result.success && result.data) {
+      setBlockedUsers(result.data.blockedUsers);
     }
+    setIsLoading(false);
   };
 
   // Fetch blocked users on component mount
@@ -52,47 +46,51 @@ const BlockedUsersPage: React.FC = () => {
     console.log("Unblocking user:", userId);
     setUnblockingUser(userId);
     
-    try {
-      // Call the API to unblock the user
-      const result = await executeUnblockUser(userId);
-      console.log("Unblock API result:", result);
-      
-      if (result.success) {
-        // Update local state by filtering out the unblocked user
-        setBlockedUsers(prevUsers => prevUsers.filter(user => user.userId !== userId));
-        toast.success("User unblocked successfully");
-      } else {
-        toast.error("Failed to unblock user");
-      }
-    } catch (error) {
-      console.error("Error unblocking user:", error);
-      toast.error("An error occurred while unblocking the user");
-    } finally {
-      setUnblockingUser(null);
+    // Call the API to unblock the user
+    const result = await executeUnblockUser(userId);
+    console.log("Unblock API result:", result);
+    
+    if (result.success) {
+      // Update local state by filtering out the unblocked user
+      setBlockedUsers(prevUsers => prevUsers.filter(user => user.userId !== userId));
+      toast.success("User unblocked successfully");
+    } else {
+      toast.error("Failed to unblock user");
     }
+    
+    setUnblockingUser(null);
   };
 
   const handleBlock = async (user: Person) => {
     console.log("Attempting to block user:", user);
     
-    try {
-      // Call the API to block the user
-      const result = await executeBlockUser(user.id);
-      console.log("Block API result:", result);
-      
-      if (result.success) {
-        // Refresh the list of blocked users after blocking
-        fetchBlockedUsers();
-        toast.success(`${user.name} has been blocked successfully`);
-      } else {
-        toast.error(`Failed to block ${user.name}`);
-      }
-    } catch (error) {
-      console.error("Error blocking user:", error);
-      toast.error(`An error occurred while blocking ${user.name}`);
+    // Call the API to block the user
+    const result = await executeBlockUser(user.id);
+    console.log("Block API result:", result);
+    
+    if (result.success) {
+      // Refresh the list of blocked users after blocking
+      fetchBlockedUsers();
+      toast.success(`${user.name} has been blocked successfully`);
+    } else {
+      toast.error(`Failed to block ${user.name}`);
     }
     
     setDialogOpen(false);
+  };
+
+  // Check if a user is already blocked
+  const isUserBlocked = (userId: string) => {
+    return blockedUsers.some(user => user.userId === userId);
+  };
+  
+  // Handle user selection in dialog
+  const handleUserSelection = async (user: Person) => {
+    if (isUserBlocked(user.id)) {
+      await handleUnblock(user.id);
+    } else {
+      await handleBlock(user);
+    }
   };
 
   const handleCloseSettings = () => {
@@ -113,7 +111,7 @@ const BlockedUsersPage: React.FC = () => {
         <UserSearchDialog
           isOpen={dialogOpen}
           onOpenChange={setDialogOpen}
-          onSelectUser={handleBlock}
+          onSelectUser={handleUserSelection}
           triggerButton={
             <Button variant="outline" size="sm">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -124,7 +122,6 @@ const BlockedUsersPage: React.FC = () => {
           description="Search for a user to block. Blocked users won't be able to message you or see your content."
           actionIcon={<UserX className="h-4 w-4" />}
           actionLabel="Block"
-          isBlockAction={true}
         />
       </div>
 

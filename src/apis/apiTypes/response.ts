@@ -296,30 +296,30 @@ export interface FollowRequest {
   profilePic: string;
 }
 
-interface ChatParticipant {
-  userId: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  profilePic: string;
-}
+// interface ChatParticipant {
+//   userId: string;
+//   status: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   name: string;
+//   profilePic: string;
+// }
 
-interface BaseChatRoom {
-  _id: string;
-  chatRoomId: string;
-  participants: ChatParticipant[];
-  roomType: "dm" | "group" | "community";
-  createdAt: string;
-  updatedAt: string;
-  isPart: boolean;
-  unseenCount: number;
-  lastMessage?:
-    | {
-        text: string;
-      }
-    | string;
-}
+// interface BaseChatRoom {
+//   _id: string;
+//   chatRoomId: string;
+//   participants: ChatParticipant[];
+//   roomType: "dm" | "group" | "community";
+//   createdAt: string;
+//   updatedAt: string;
+//   isPart: boolean;
+//   unseenCount: number;
+//   lastMessage?:
+//     | {
+//         text: string;
+//       }
+//     | string;
+// }
 
 export interface ChatParticipantInfo {
   userId: string;
@@ -353,6 +353,8 @@ export interface GroupChatRoom {
   unseenCount: number;
   admin: string;
   bio?: string;
+  groupName?: string;
+  profileUrl?: string | null;
 }
 
 export interface CommunityChatRoom {
@@ -363,6 +365,8 @@ export interface CommunityChatRoom {
   unseenCount: number;
   admin: string;
   bio?: string;
+  groupName?: string;
+  profileUrl?: string | null;
 }
 
 export type ChatRoom = DMChatRoom | GroupChatRoom | CommunityChatRoom;

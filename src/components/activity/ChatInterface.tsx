@@ -493,7 +493,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onClose={() => setIsEditGroupModalOpen(false)}
         groupName={name}
         bio={chat?.bio || ""}
-        profileUrl={avatar}
+        image={avatar}
         groupId={chatId}
         onGroupUpdated={handleGroupUpdated}
       />

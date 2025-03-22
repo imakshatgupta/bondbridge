@@ -47,7 +47,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   const isPostOwner = (currentUserId && postAuthorId && currentUserId === postAuthorId);
   
   // Show delete option if user is either comment owner or post owner
-  const canDelete = isCommentOwner || isPostOwner;
+  // const canDelete = isCommentOwner || isPostOwner;
   
   // Use the useApiCall hook for API calls
   const [executeDeleteComment] = useApiCall(deleteComment);
