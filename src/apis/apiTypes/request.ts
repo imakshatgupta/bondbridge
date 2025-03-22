@@ -188,3 +188,7 @@ export interface ReactionRequest {
   entityType: string;
   reactionType: string;
 }
+
+export interface GetPostDetailsRequest {
+  feedId: string;
+}

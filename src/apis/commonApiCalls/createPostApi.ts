@@ -36,6 +36,27 @@ export const createPost = async (postData: CreatePostRequest): Promise<CreatePos
   return response.data;
 };
 
+/**
+ * Deletes a post with the given feedId
+ * @param feedId - The ID of the post to delete
+ * @returns Promise with the delete post response
+ */
+export const deletePost = async (post_id: string): Promise<{ success: boolean; message: string }> => {
+  if (!post_id) {
+    throw new Error('Feed ID is required');
+  }
+  
+  const response = await apiClient.delete('/delete-post', { 
+    data: { post_id } 
+  });
+  
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to delete post');
+  }
+};
+
 export const rewriteWithBondChat = async (caption : string)=>{
   const response = await apiClient.post<RewriteWithBondChatResponse>('/rewriteWithBond', { caption });
   const data = response.data;

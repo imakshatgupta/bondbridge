@@ -19,6 +19,29 @@
   animation-fill-mode: forwards;
 }
 
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 3s ease-in-out forwards;
+}
+
 @keyframes heart-burst {
     0% {
         opacity: 1;
@@ -194,6 +217,16 @@ body {
 .app-scrollbar::-webkit-scrollbar-thumb, *::-webkit-scrollbar-thumb {
   width: 8px;  /* Vertical scrollbar width */
   height: 8px; /* Horizontal scrollbar height */
+}
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
 }
 
 

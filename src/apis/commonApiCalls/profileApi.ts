@@ -6,6 +6,7 @@ import { UpdateProfileResponse } from "../apiTypes/response";
 import apiClient, { formDataApiClient } from "../apiClient";
 import { UpdateProfileRequest } from "../apiTypes/request";
 import { PostData } from "../apiTypes/profileTypes";
+import { FollowingFollowersResponse } from "../apiTypes/profileTypes";
 
 export const fetchUserProfile = async (
   userId: string,
@@ -105,5 +106,39 @@ export const updateUserProfile = async (
     success: response.status === 200,
     message: response.data.message || "Profile updated successfully",
     user: response.data.userDetails,
+  };
+};
+
+export const fetchFollowingList = async (): Promise<FollowingFollowersResponse> => {
+  const response = await apiClient.get("/followings");
+  
+  return {
+    success: true,
+    data: response.data.result.map((user: any) => ({
+      _id: user._id,
+      name: user.name,
+      nickName: user.nickName,
+      email: user.email,
+      avatar: user.avatar || user.profilePic,
+      profilePic: user.profilePic || user.avatar,
+      interests: user.interests || []
+    }))
+  };
+};
+
+export const fetchFollowersList = async (): Promise<FollowingFollowersResponse> => {
+  const response = await apiClient.get("/followers");
+  
+  return {
+    success: true,
+    data: response.data.result.map((user: any) => ({
+      _id: user._id,
+      name: user.name,
+      nickName: user.nickName,
+      email: user.email,
+      avatar: user.avatar || user.profilePic,
+      profilePic: user.profilePic || user.avatar,
+      interests: user.interests || []
+    }))
   };
 };

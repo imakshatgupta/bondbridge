@@ -24,6 +24,13 @@ export interface ApiResponse<T = void> {
   };
 }
 
+// Random text suggestions for chat
+export interface RandomTextResponse {
+  success: boolean;
+  message?: string;
+  topic: string;
+}
+
 // OTP response interfaces
 export type SendOTPResponse = ApiResponse<{
   message: string;
@@ -101,8 +108,8 @@ export type FetchAvatarsResponse = {
   URLS: {
     male: AvatarItem[];
     female: AvatarItem[];
-  }
-}
+  };
+};
 
 export interface CommentData {
   commentId: string;
@@ -133,6 +140,23 @@ export interface PostData {
   likes: number;
   comments: number;
   datePosted: string;
+}
+
+export interface ProfilePostData {
+  id: string;
+  author: {
+    name: string;
+    profilePic: string;
+  };
+  content: string;
+  createdAt: number;
+  imageSrc: string;
+  stats: {
+    commentCount: number;
+    hasReacted: boolean;
+    reactionCount: number;
+    reactionType: string | null;
+  };
 }
 
 export interface FetchCommentsResponse {
@@ -267,10 +291,9 @@ export interface SearchResponse {
 }
 
 export interface RewriteWithBondChatResponse {
-  original : string;
-  rewritten : string;
+  original: string;
+  rewritten: string;
 }
-
 
 export interface Notification {
   id: number;
@@ -408,6 +431,7 @@ export interface ChatMessage {
   updatedAt: string;
   senderName?: string;
   senderAvatar?: string;
+  media?: string;
 }
 
 export interface GetMessagesResponse {
@@ -522,4 +546,43 @@ export interface Reaction {
 export interface GetAllReactionsResponse {
   message: string;
   reactions: Reaction[];
+}
+
+export interface PostDetailsData {
+  _id: string;
+  author: string;
+  whoCanComment: number;
+  privacy: number;
+  content_type: string | null;
+  taggedUsers: string[] | null;
+  hideFrom: string[] | null;
+  status: number;
+  createdAt: number;
+  data: {
+    content: string;
+    media: Array<{
+      url: string;
+      type: string;
+    }>;
+  };
+  feedId: string;
+  weekIndex: string;
+  authorDetails: {
+    userId: string;
+    profilePic: string;
+    name: string;
+  };
+  commentCount: number;
+  reactionCount: number;
+  agoTime: string;
+  reaction?: {
+    hasReacted: boolean;
+    reactionType: string | null;
+  };
+}
+
+export interface GetPostDetailsResponse {
+  success: boolean;
+  message: string;
+  post: PostDetailsData;
 }

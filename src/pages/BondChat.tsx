@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
-import { ArrowLeft, History, Volume2 } from "lucide-react";
+import {
+  ArrowLeft,
+  History,
+  Volume2,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useSocket } from "@/context/SocketContext";
@@ -12,11 +18,18 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setActiveChat } from "@/store/chatSlice";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Extend the Message type to support complex content
 interface ExtendedMessage extends Omit<Message, "text"> {
   text: string | MessageContent;
   media?: string;
+  senderId?: string;
 }
 
 interface UserRecommendation {
@@ -43,6 +56,15 @@ interface MessageResponse {
   senderName?: string;
   senderAvatar?: string;
   isBot?: boolean;
+  media?: string;
+}
+
+// Interface for message objects in the API response
+interface MessageHistoryItem {
+  _id: string;
+  content: string | MessageContent;
+  senderId: string;
+  createdAt: string;
   media?: string;
 }
 
@@ -73,9 +95,13 @@ const UserCard = ({ user }: { user: UserRecommendation }) => {
           <span className="font-medium">{user.name}</span>
           <div className="flex flex-wrap gap-1 mt-1">
             {displayedInterests.map((interest, index) => (
-                <Badge key={index} variant="outline" className="text-xs border-primary">
-                  {interest}
-                </Badge>
+              <Badge
+                key={`${index}-${user._id}`}
+                variant="outline"
+                className="text-xs border-primary"
+              >
+                {interest}
+              </Badge>
             ))}
             {remainingCount > 0 && (
               <Badge variant="outline" className="text-xs border-primary">
@@ -90,7 +116,13 @@ const UserCard = ({ user }: { user: UserRecommendation }) => {
 };
 
 // Custom component for rendering bot messages with potential user recommendations
-const BotMessage = ({ message }: { message: ExtendedMessage }) => {
+const BotMessage = ({
+  message,
+  messageIndex,
+}: {
+  message: ExtendedMessage;
+  messageIndex: number;
+}) => {
   // Check if the message has content that includes user recommendations
   const hasUserRecommendations =
     typeof message.text === "object" &&
@@ -124,9 +156,10 @@ const BotMessage = ({ message }: { message: ExtendedMessage }) => {
 
         {users.length > 0 && (
           <div className="mt-2">
-            {users.map((user, index) => (
-              <UserCard key={index} user={user} />
-            ))}
+            {users.map((user, index) => {
+              const key = `${messageIndex}-user-${index}-${user._id}`;
+              return <UserCard key={key} user={user} />;
+            })}
           </div>
         )}
       </div>
@@ -139,7 +172,9 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
   return (
     <div className="flex items-start gap-2 mb-4 flex-row-reverse">
       <div className="bg-primary p-3 rounded-lg text-primary-foreground rounded-tr-none max-w-[70%]">
-        <p className="break-all">{typeof message.text === "string" ? message.text : ""}</p>
+        <p className="break-all">
+          {typeof message.text === "string" ? message.text : ""}
+        </p>
         <span className="text-xs opacity-70 block text-right mt-1  ">
           {message.timestamp}
         </span>
@@ -151,12 +186,11 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
 export default function BondChat() {
   const [messages, setMessages] = useState<ExtendedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [suggestions] = useState([
-    "This is the for fast reply",
-    "This is the suggestion for fast reply",
-  ]);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [voiceType, setVoiceType] = useState<"male" | "female">("male"); // Default voice type is male
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
+  const isSpeakerOnRef = useRef(false); // Add a ref to track current speaker state
+  const voiceTypeRef = useRef<"male" | "female">("male"); // Ref for voice type
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
@@ -165,9 +199,14 @@ export default function BondChat() {
   const roomId = userId; // Using userId as the roomId for BondChat
   const dispatch = useDispatch();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  };
+  // Update refs when states change
+  useEffect(() => {
+    isSpeakerOnRef.current = isSpeakerOn;
+  }, [isSpeakerOn]);
+
+  useEffect(() => {
+    voiceTypeRef.current = voiceType;
+  }, [voiceType]);
 
   // Set activeChat to null when component mounts
   useEffect(() => {
@@ -178,6 +217,58 @@ export default function BondChat() {
     scrollToBottom();
   }, [messages]);
 
+  // Function to toggle the speaker state
+  const toggleSpeaker = () => {
+    const newSpeakerState = !isSpeakerOn;
+    setIsSpeakerOn(newSpeakerState);
+
+    // Stop any current audio playback when turning off
+    if (!newSpeakerState && audioRef) {
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      setAudioRef(null);
+    }
+  };
+
+  // Function to select voice type
+  const selectVoice = (type: "male" | "female") => {
+    setVoiceType(type);
+  };
+
+  // Function to play audio from base64 string when received
+  const playAudioFromBase64 = (base64Audio: string) => {
+    if (!isSpeakerOnRef.current || !base64Audio) return;
+
+    try {
+      // Stop any current audio
+      if (audioRef) {
+        audioRef.pause();
+        audioRef.currentTime = 0;
+      }
+
+      // Create audio source from base64
+      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+      setAudioRef(audio);
+
+      // Set up event handlers
+      audio.onerror = () => {
+        setAudioRef(null);
+        toast.error("Audio playback failed");
+      };
+
+      // Play the audio
+      audio.play().catch((error) => {
+        console.error("Audio playback error:", error);
+        toast.error("Failed to play audio");
+        setAudioRef(null);
+      });
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      toast.error("Failed to process audio data");
+    }
+  };
+
+  // Socket connection and message fetching effect
   useEffect(() => {
     if (!socket || !isConnected || !userId) return;
 
@@ -197,7 +288,7 @@ export default function BondChat() {
 
         if (result.success && result.data) {
           const messageHistory = result.data.messages
-            .map((msg) => {
+            .map((msg: MessageHistoryItem) => {
               // Try to parse content if it's a string that might be JSON
               let parsedContent: string | MessageContent = msg.content;
               if (typeof msg.content === "string") {
@@ -224,6 +315,7 @@ export default function BondChat() {
                     ? "/profile/user.png"
                     : "/bondchat.svg",
                 username: msg.senderId === userId ? "You" : "Bond Chat",
+                media: msg.media,
               };
             })
             .reverse(); // Reverse to show newest at the bottom
@@ -257,7 +349,7 @@ export default function BondChat() {
             messageContent = possibleJson as MessageContent;
           }
         } catch {
-          // Not JSON, keep as string
+          console.log("Not JSON, keep as string");
         }
       }
 
@@ -273,9 +365,19 @@ export default function BondChat() {
         isUser: false,
         avatar: "/bondchat.svg",
         username: "Bond Chat",
-        media: data.media // Store audio data from Polly if available
+        media: data.media, // Store audio data from Polly if available
       };
+
       setMessages((prev) => [...prev, newMsg]);
+
+      console.log("isSpeakerOn state:", isSpeakerOn);
+      console.log("isSpeakerOnRef.current:", isSpeakerOnRef.current);
+      console.log("data.media:", data.media);
+
+      // Play audio if speaker is on and we have audio data - use the ref value
+      if (isSpeakerOnRef.current && data.media) {
+        playAudioFromBase64(data.media);
+      }
     };
 
     // Add event listeners
@@ -286,8 +388,23 @@ export default function BondChat() {
       socket.off("receiveMessage", handleReceiveMessage);
       // Leave the room when component unmounts
       socket.emit("leave", roomId);
+      // Clean up audio
+      if (audioRef) {
+        audioRef.pause();
+        audioRef.currentTime = 0;
+      }
     };
-  }, [socket, isConnected, userId]);
+  }, [socket, isConnected, userId, roomId]);
+
+  // Effect to handle existing messages' audio when speaker toggle changes
+  useEffect(() => {
+    // If speaker is turned off, stop any playing audio
+    if (!isSpeakerOn && audioRef) {
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      setAudioRef(null);
+    }
+  }, [isSpeakerOn]);
 
   const handleSendMessage = (text: string) => {
     if (!text.trim() || !socket || !isConnected) return;
@@ -302,6 +419,8 @@ export default function BondChat() {
       isBot: true, // Set isBot flag to true
       senderName: "You",
       senderAvatar: "/profile/user.png",
+      isSpeakerOn: isSpeakerOnRef.current, // Use ref value to ensure latest state
+      voice: voiceTypeRef.current, // Send voice type preference
     };
 
     // Add message to local state immediately for better UX
@@ -327,127 +446,12 @@ export default function BondChat() {
     });
   };
 
-  // Function to stop any ongoing speech
-  const stopSpeech = () => {
-    if (audioRef) {
-      audioRef.pause();
-      audioRef.currentTime = 0;
-      setIsSpeaking(false);
-    } else if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
   };
-
-  // Function to read the latest AI message aloud
-  const speakLatestAIMessage = () => {
-    // If already speaking, stop the speech and return
-    if (isSpeaking) {
-      stopSpeech();
-      return;
-    }
-    
-    if (messages.length === 0) return;
-    
-    // Find the latest non-user message (AI message)
-    const latestAIMessage = [...messages].reverse().find(msg => !msg.isUser);
-    
-    if (!latestAIMessage) return;
-    
-    // Check if the message has an audio attachment from Polly
-    const messageData = typeof latestAIMessage === 'object' ? latestAIMessage : null;
-    const audioData = messageData?.media;
-    
-    if (audioData) {
-      // Handle base64 audio data from AWS Polly
-      playAudioFromBase64(audioData);
-    } else {
-      // Fallback to browser's speech synthesis if no Polly audio is available
-      // Extract the text content
-      let textToSpeak = "";
-      if (typeof latestAIMessage.text === "string") {
-        textToSpeak = latestAIMessage.text;
-      } else if (typeof latestAIMessage.text === "object" && "message" in latestAIMessage.text) {
-        textToSpeak = latestAIMessage.text.message;
-      }
-      
-      if (!textToSpeak) return;
-      
-      // Stop any ongoing speech before starting new one
-      stopSpeech();
-        
-      // Create a new speech synthesis utterance
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        
-        // Set speaking state
-        setIsSpeaking(true);
-        
-        // Event handlers
-        utterance.onend = () => {
-          setIsSpeaking(false);
-        };
-        
-        utterance.onerror = () => {
-          setIsSpeaking(false);
-          toast.error("Speech synthesis failed");
-        };
-        
-        // Speak the text
-        window.speechSynthesis.speak(utterance);
-      } else {
-        toast.error("Text-to-speech is not supported in this browser");
-      }
-    }
-  };
-
-  // Function to play audio from base64 string
-  const playAudioFromBase64 = (base64Audio: string) => {
-    try {
-      // Stop any current audio
-      stopSpeech();
-      
-      // Create audio source from base64
-      const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
-      setAudioRef(audio);
-      
-      // Set up event handlers
-      audio.onplay = () => {
-        setIsSpeaking(true);
-      };
-      
-      audio.onended = () => {
-        setIsSpeaking(false);
-        setAudioRef(null);
-      };
-      
-      audio.onerror = () => {
-        setIsSpeaking(false);
-        setAudioRef(null);
-        toast.error("Audio playback failed");
-      };
-      
-      // Play the audio
-      audio.play()
-        .catch(error => {
-          console.error("Audio playback error:", error);
-          toast.error("Failed to play audio");
-          setIsSpeaking(false);
-          setAudioRef(null);
-        });
-    } catch (error) {
-      console.error("Error playing audio:", error);
-      toast.error("Failed to process audio data");
-      setIsSpeaking(false);
-    }
-  };
-
-  // Clean up speech synthesis when navigating away
-  useEffect(() => {
-    return () => {
-      stopSpeech();
-    };
-  }, []);
 
   return (
     <div className="flex flex-col bg-background relative h-[calc(100vh-64px)] overflow-hidden">
@@ -456,7 +460,10 @@ export default function BondChat() {
           variant="ghost"
           size="icon"
           onClick={() => {
-            stopSpeech();
+            if (audioRef) {
+              audioRef.pause();
+              audioRef.currentTime = 0;
+            }
             window.history.back();
           }}
         >
@@ -470,18 +477,55 @@ export default function BondChat() {
           </span>
         </div>
         <div className="ml-auto gap-2 flex items-center">
-          <Button size="sm" variant="default" className="rounded-full cursor-pointer">
+          <Button
+            size="sm"
+            variant="default"
+            className="rounded-full cursor-pointer"
+          >
             New +
           </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="rounded-full text-muted-foreground cursor-pointer"
-            onClick={speakLatestAIMessage}
-            disabled={messages.length === 0}
-          >
-            <Volume2 className={`h-5 w-5 ${isSpeaking ? 'text-primary' : ''}`} />
-          </Button>
+          <div className="flex items-center">
+            <Button
+              size="icon"
+              variant="ghost"
+              className={`rounded-full text-muted-foreground cursor-pointer ${
+                isSpeakerOn ? "text-primary" : ""
+              }`}
+              onClick={toggleSpeaker}
+              disabled={messages.length === 0}
+            >
+              <Volume2 className="h-5 w-5" />
+            </Button>
+
+            {isSpeakerOn && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="ml-1 h-8 px-2 cursor-pointer">
+                    {voiceType === "male" ? "Male" : "Female"}
+                    <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => selectVoice("male")}>
+                    <Check
+                      className={`mr-2 h-4 w-4 ${
+                        voiceType === "male" ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    Male
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => selectVoice("female")}>
+                    <Check
+                      className={`mr-2 h-4 w-4 ${
+                        voiceType === "female" ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    Female
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
           <Button
             size="icon"
             variant="ghost"
@@ -510,11 +554,15 @@ export default function BondChat() {
                 <p>Loading messages...</p>
               </div>
             ) : (
-              messages.map((message) =>
+              messages.map((message, index) =>
                 message.isUser ? (
-                  <UserMessage key={message.id} message={message} />
+                  <UserMessage key={index} message={message} />
                 ) : (
-                  <BotMessage key={message.id} message={message} />
+                  <BotMessage
+                    key={index}
+                    message={message}
+                    messageIndex={index}
+                  />
                 )
               )
             )}
@@ -522,25 +570,6 @@ export default function BondChat() {
           </div>
         )}
 
-        {/* Quick Suggestions */}
-        <div className="px-4 relative -top-[75px]">
-          {messages.length == 0 && (
-            <div className="text-sm text-muted-foreground mb-2">
-              Quick suggestion
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                className="bg-muted text-muted-foreground px-3 py-2 rounded-full text-xs"
-                onClick={() => handleSendMessage(suggestion)}
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
         <div className="absolute bottom-0 left-0 right-0">
           <ChatInput
             onSendMessage={handleSendMessage}

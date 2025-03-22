@@ -21,6 +21,7 @@ import {
     deleteReaction, 
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
+import { deletePost } from "@/apis/commonApiCalls/createPostApi";
 import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 
@@ -51,6 +52,7 @@ export function Post({
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
     const [executeGetAllReactions] = useApiCall(getAllReactions);
+    const [executeDeletePost] = useApiCall(deletePost);
 
     useEffect(() => {
         if (feedId) {
@@ -170,6 +172,18 @@ export function Post({
         </div>
     );
 
+    const handleDeletePost = async () => {
+        if (!feedId) return;
+        const result = await executeDeletePost(feedId);
+        
+        if (result.success) {
+            toast.success("Post deleted successfully");
+            // You might want to add a callback prop to handle post deletion
+            // For now, we'll just refresh the page
+            window.location.reload();
+        }
+    };
+
     // Prepare menu items based on post ownership
     const menuItems = [
         {
@@ -183,7 +197,7 @@ export function Post({
         // my post -> share, delete
         menuItems.push({
             ...DeleteMenuItem,
-            onClick: () => console.log('Delete clicked')
+            onClick: handleDeletePost
         });
     } else {
         // other post -> share, report

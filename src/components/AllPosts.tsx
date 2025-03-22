@@ -1,12 +1,25 @@
 import { useNavigate } from 'react-router-dom';
+import { ProfilePostData } from '../apis/apiTypes/response';
 
 interface Post {
-  id: number;
+  id: number | string;
   imageSrc: string;
+  creationDate?: string; // Optional creation date
+  content?: string;
+  author?: {
+    name: string;
+    profilePic: string;
+  };
+  stats?: {
+    commentCount: number;
+    hasReacted: boolean;
+    reactionCount: number;
+    reactionType: string | null;
+  };
 }
 
 interface AllPostsProps {
-  posts: Post[];
+  posts: (Post | ProfilePostData)[];
 }
 
 const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
@@ -14,13 +27,44 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
   
   return (
     <div className="grid grid-cols-3 gap-1">
-      {posts.map(post => (
-        <div key={post.id} className="aspect-square overflow-hidden rounded-3xl m-1 cursor-pointer" onClick={() => {
-          navigate(`/post/${post.id}`, { state: { post } });
-        }}>
-          <img src={post.imageSrc} alt="" className="w-full h-full object-cover" />
-        </div>
-      ))}
+      {posts.map(post => {
+        // Determine if it's a ProfilePostData or a regular Post
+        const isProfilePost = 'createdAt' in post;
+        
+        // Extract the properties based on the type
+        const postId = isProfilePost 
+          ? (post as ProfilePostData).id 
+          : (post as Post).id;
+        
+        const postImageSrc = isProfilePost
+          ? (post as ProfilePostData).imageSrc
+          : (post as Post).imageSrc;
+        
+        // Create feedId using post.id and creationDate
+        let creationDate = '2025-03-16';
+        
+        if (isProfilePost) {
+          // For ProfilePostData use the createdAt timestamp
+          creationDate = new Date((post as ProfilePostData).createdAt * 1000)
+            .toISOString().split('T')[0];
+        } else if ('creationDate' in post && post.creationDate) {
+          creationDate = post.creationDate;
+        }
+        
+        const feedId = `${postId}:${creationDate}`;
+        
+        return (
+          <div 
+            key={postId.toString()} 
+            className="aspect-square overflow-hidden rounded-3xl m-1 cursor-pointer" 
+            onClick={() => {
+              navigate(`/post/${feedId}`, { state: { post } });
+            }}
+          >
+            <img src={postImageSrc} alt="" className="w-full h-full object-cover" />
+          </div>
+        );
+      })}
     </div>
   );
 };

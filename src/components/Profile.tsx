@@ -329,14 +329,35 @@ const Profile: React.FC<ProfileProps> = ({
         </p>
 
         <div className="flex gap-8 py-3 mt-4">
-          <div className="text-center">
-            <div className="font-semibold">{followers.toLocaleString()}</div>
-            <div className="text-sm text-muted-foreground">followers</div>
-          </div>
-          <div className="text-center">
-            <div className="font-semibold">{following.toLocaleString()}</div>
-            <div className="text-sm text-muted-foreground">following</div>
-          </div>
+          {isCurrentUser ? (
+            <>
+              <Link 
+                to="/following-followers?tab=followers" 
+                className="text-center cursor-pointer hover:text-primary transition-colors"
+              >
+                <div className="font-semibold">{followers.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">followers</div>
+              </Link>
+              <Link 
+                to="/following-followers?tab=following" 
+                className="text-center cursor-pointer hover:text-primary transition-colors"
+              >
+                <div className="font-semibold">{following.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">following</div>
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="text-center">
+                <div className="font-semibold">{followers.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">followers</div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold">{following.toLocaleString()}</div>
+                <div className="text-sm text-muted-foreground">following</div>
+              </div>
+            </>
+          )}
           {isCurrentUser && (
             <Link to="/settings" className="p-2 rounded-full border h-fit">
               <Settings size={20} />

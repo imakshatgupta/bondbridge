@@ -3,7 +3,9 @@ import {
   FetchHomepageDataResponse,
   FetchPostsResponse,
   FetchStoriesResponse,
+  GetPostDetailsResponse
 } from '@/apis/apiTypes/response';
+import { GetPostDetailsRequest } from '@/apis/apiTypes/request';
 
 /**
  * Function to fetch posts for the homepage
@@ -105,5 +107,28 @@ export const fetchHomepageData = async (page: number): Promise<FetchHomepageData
         stories: []
       }
     };
+  }
+};
+
+/**
+ * Function to fetch details of a specific post
+ */
+export const getPostDetails = async (requestData: GetPostDetailsRequest): Promise<GetPostDetailsResponse> => {
+  const { feedId } = requestData;
+
+  if (!feedId) {
+    throw new Error('Feed ID is required');
+  }
+  const response = await apiClient.get<GetPostDetailsResponse>(
+    `/get-post-details`,
+    { params: { feedId } }
+  );
+
+  console.log("response", response);
+  
+  if (response.status === 200 && response.data) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to fetch post details');
   }
 };
