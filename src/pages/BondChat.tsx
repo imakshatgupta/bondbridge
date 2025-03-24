@@ -492,7 +492,7 @@ export default function BondChat() {
                 isSpeakerOn ? "text-primary" : ""
               }`}
               onClick={toggleSpeaker}
-              disabled={messages.length === 0}
+              // disabled={messages.length === 0}
             >
               <Volume2 className="h-5 w-5" />
             </Button>
@@ -539,12 +539,12 @@ export default function BondChat() {
       <div className="flex-1 flex flex-col overflow-hidden h-full relative">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col justify-center h-full p-4 mb-20 font-bold capitalize text-6xl space-y-3">
-            <h3 className="">Hey, </h3>
+            <h3 className="">Welcome, </h3>
             <h3 className="">
-              I'm <span className="grad">BondChat</span>
+              To <span className="grad">BondChat</span>
             </h3>
             <p className="text-muted-foreground font-normal text-xl">
-              Your Favourite GPT At Work
+              Choose your persona
             </p>
           </div>
         ) : (
