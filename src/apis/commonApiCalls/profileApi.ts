@@ -6,6 +6,7 @@ import { UpdateProfileResponse } from "../apiTypes/response";
 import apiClient, { formDataApiClient } from "../apiClient";
 import { UpdateProfileRequest } from "../apiTypes/request";
 import { PostData } from "../apiTypes/profileTypes";
+import { FollowingFollowersResponse } from "../apiTypes/profileTypes";
 
 export const fetchUserProfile = async (
   userId: string,
@@ -29,6 +30,8 @@ export const fetchUserProfile = async (
       followers: userData.followers || 0,
       following: userData.followings || 0,
       avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
+      bio: userData.bio || "",
+      interests: userData.interests || [],
       isCurrentUser,
       privacyLevel: userData.privacyLevel || 0,
       isFollowing: userData.isFollowing || false,
@@ -79,6 +82,11 @@ export const updateUserProfile = async (
   formDataObj.append("email", profileData.email);
   formDataObj.append("interests", JSON.stringify(profileData.interests));
   formDataObj.append("privacyLevel", profileData.privacyLevel.toString());
+  
+  // Append bio if it exists
+  if (profileData.bio !== undefined) {
+    formDataObj.append("bio", profileData.bio);
+  }
 
   // Handle avatar - could be a string URL or a File
   if (profileData.avatar) {
@@ -98,5 +106,39 @@ export const updateUserProfile = async (
     success: response.status === 200,
     message: response.data.message || "Profile updated successfully",
     user: response.data.userDetails,
+  };
+};
+
+export const fetchFollowingList = async (): Promise<FollowingFollowersResponse> => {
+  const response = await apiClient.get("/followings");
+  
+  return {
+    success: true,
+    data: response.data.result.map((user: any) => ({
+      _id: user._id,
+      name: user.name,
+      nickName: user.nickName,
+      email: user.email,
+      avatar: user.avatar || user.profilePic,
+      profilePic: user.profilePic || user.avatar,
+      interests: user.interests || []
+    }))
+  };
+};
+
+export const fetchFollowersList = async (): Promise<FollowingFollowersResponse> => {
+  const response = await apiClient.get("/followers");
+  
+  return {
+    success: true,
+    data: response.data.result.map((user: any) => ({
+      _id: user._id,
+      name: user.name,
+      nickName: user.nickName,
+      email: user.email,
+      avatar: user.avatar || user.profilePic,
+      profilePic: user.profilePic || user.avatar,
+      interests: user.interests || []
+    }))
   };
 };

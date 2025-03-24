@@ -129,7 +129,8 @@ export interface CreateGroupRequest {
 export interface EditGroupRequest {
   groupId: string;
   bio: string;
-  profileUrl?: string;
+  image?: File | null;
+  groupName?: string;
 }
 
 export interface StoryData {
@@ -170,6 +171,7 @@ export interface UpdateProfileRequest {
   interests: string[];
   privacyLevel: number;
   avatar?: string | File;
+  bio?: string;
 }
 
 // Post creation request type
@@ -185,4 +187,8 @@ export interface ReactionRequest {
   entityId: string;
   entityType: string;
   reactionType: string;
+}
+
+export interface GetPostDetailsRequest {
+  feedId: string;
 }

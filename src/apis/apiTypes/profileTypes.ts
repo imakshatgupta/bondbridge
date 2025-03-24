@@ -6,6 +6,7 @@ export interface UserProfileData {
   followers: number;
   following: number;
   avatarSrc: string;
+  interests: string[];
   isCurrentUser?: boolean;
   privacyLevel?: number;
   isFollowing?: boolean;
@@ -61,4 +62,19 @@ export interface UpdateProfileRequest {
   email?: string;
   bio?: string;
   avatarSrc?: string;
+}
+
+export interface FollowingFollowerUser {
+  _id: string;
+  name: string;
+  nickName: string;
+  email: string;
+  avatar: string;
+  profilePic: string;
+  interests: string[];
+}
+
+export interface FollowingFollowersResponse {
+  success: boolean;
+  data: FollowingFollowerUser[];
 }

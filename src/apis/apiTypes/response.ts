@@ -142,6 +142,23 @@ export interface PostData {
   datePosted: string;
 }
 
+export interface ProfilePostData {
+  id: string;
+  author: {
+    name: string;
+    profilePic: string;
+  };
+  content: string;
+  createdAt: number;
+  imageSrc: string;
+  stats: {
+    commentCount: number;
+    hasReacted: boolean;
+    reactionCount: number;
+    reactionType: string | null;
+  };
+}
+
 export interface FetchCommentsResponse {
   hasMoreComments: boolean;
   success: boolean;
@@ -302,47 +319,78 @@ export interface FollowRequest {
   profilePic: string;
 }
 
-interface ChatParticipant {
+// interface ChatParticipant {
+//   userId: string;
+//   status: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   name: string;
+//   profilePic: string;
+// }
+
+// interface BaseChatRoom {
+//   _id: string;
+//   chatRoomId: string;
+//   participants: ChatParticipant[];
+//   roomType: "dm" | "group" | "community";
+//   createdAt: string;
+//   updatedAt: string;
+//   isPart: boolean;
+//   unseenCount: number;
+//   lastMessage?:
+//     | {
+//         text: string;
+//       }
+//     | string;
+// }
+
+export interface ChatParticipantInfo {
   userId: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
   name: string;
   profilePic: string;
+  status?: string;
 }
 
-interface BaseChatRoom {
+export interface Message {
   _id: string;
+  content: string;
+  senderId: string;
+  timestamp: number;
+  senderName?: string;
+  senderAvatar?: string;
+}
+
+export interface DMChatRoom {
   chatRoomId: string;
-  participants: ChatParticipant[];
-  roomType: "dm" | "group" | "community";
-  createdAt: string;
-  updatedAt: string;
-  isPart: boolean;
-  unseenCount: number;
-  lastMessage?:
-    | {
-        text: string;
-      }
-    | string;
-}
-
-interface DMChatRoom extends BaseChatRoom {
   roomType: "dm";
+  participants: ChatParticipantInfo[];
+  lastMessage?: Message;
+  unseenCount: number;
+  bio?: string;
 }
 
-interface GroupChatRoom extends BaseChatRoom {
+export interface GroupChatRoom {
+  chatRoomId: string;
   roomType: "group";
-  groupName: string;
-  profileUrl: string | null;
+  participants: ChatParticipantInfo[];
+  lastMessage?: Message;
+  unseenCount: number;
   admin: string;
+  bio?: string;
+  groupName?: string;
+  profileUrl?: string | null;
 }
 
-interface CommunityChatRoom extends BaseChatRoom {
+export interface CommunityChatRoom {
+  chatRoomId: string;
   roomType: "community";
-  groupName: string;
-  profileUrl: string | null;
+  participants: ChatParticipantInfo[];
+  lastMessage?: Message;
+  unseenCount: number;
   admin: string;
+  bio?: string;
+  groupName?: string;
+  profileUrl?: string | null;
 }
 
 export type ChatRoom = DMChatRoom | GroupChatRoom | CommunityChatRoom;
@@ -458,6 +506,7 @@ export interface UpdateProfileResponse {
     avatar: string;
     interests: string[];
     privacyLevel: number;
+    bio?: string;
   };
 }
 
@@ -498,4 +547,43 @@ export interface Reaction {
 export interface GetAllReactionsResponse {
   message: string;
   reactions: Reaction[];
+}
+
+export interface PostDetailsData {
+  _id: string;
+  author: string;
+  whoCanComment: number;
+  privacy: number;
+  content_type: string | null;
+  taggedUsers: string[] | null;
+  hideFrom: string[] | null;
+  status: number;
+  createdAt: number;
+  data: {
+    content: string;
+    media: Array<{
+      url: string;
+      type: string;
+    }>;
+  };
+  feedId: string;
+  weekIndex: string;
+  authorDetails: {
+    userId: string;
+    profilePic: string;
+    name: string;
+  };
+  commentCount: number;
+  reactionCount: number;
+  agoTime: string;
+  reaction?: {
+    hasReacted: boolean;
+    reactionType: string | null;
+  };
+}
+
+export interface GetPostDetailsResponse {
+  success: boolean;
+  message: string;
+  post: PostDetailsData;
 }

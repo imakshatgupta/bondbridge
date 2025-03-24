@@ -32,6 +32,7 @@ const SetupProfile: React.FC = () => {
     password,
     skillSelected,
     avatar,
+    // image,
     // communitiesSelected
   } = useAppSelector(state => state.createProfile);
 

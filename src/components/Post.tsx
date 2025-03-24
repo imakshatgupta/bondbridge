@@ -2,7 +2,11 @@ import { Heart, MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
+import ThreeDotsMenu, { 
+    ShareMenuItem, 
+    ReportMenuItem, 
+    DeleteMenuItem 
+} from "@/components/global/ThreeDotsMenu";
 import { useState, useEffect, useCallback } from "react";
 import {
     Carousel,
@@ -17,6 +21,7 @@ import {
     deleteReaction, 
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
+import { deletePost } from "@/apis/commonApiCalls/createPostApi";
 import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 
@@ -47,6 +52,7 @@ export function Post({
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
     const [executeGetAllReactions] = useApiCall(getAllReactions);
+    const [executeDeletePost] = useApiCall(deletePost);
 
     useEffect(() => {
         if (feedId) {
@@ -166,6 +172,41 @@ export function Post({
         </div>
     );
 
+    const handleDeletePost = async () => {
+        if (!feedId) return;
+        const result = await executeDeletePost(feedId);
+        
+        if (result.success) {
+            toast.success("Post deleted successfully");
+            // You might want to add a callback prop to handle post deletion
+            // For now, we'll just refresh the page
+            window.location.reload();
+        }
+    };
+
+    // Prepare menu items based on post ownership
+    const menuItems = [
+        {
+            ...ShareMenuItem,
+            onClick: () => console.log('Share clicked')
+        }
+    ];
+
+    // Add different items based on whether it's the user's own post
+    if (isOwner) {
+        // my post -> share, delete
+        menuItems.push({
+            ...DeleteMenuItem,
+            onClick: handleDeletePost
+        });
+    } else {
+        // other post -> share, report
+        menuItems.push({
+            ...ReportMenuItem,
+            onClick: () => console.log('Report clicked')
+        });
+    }
+
     return (
         <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
             <div className="flex items-center justify-between p-4">
@@ -181,12 +222,7 @@ export function Post({
                         <p className="font-semibold">{user}</p>
                     </div>
                 </div>
-                <ThreeDotsMenu
-                    showDelete={isOwner}
-                    onShare={() => console.log('Share clicked')}
-                    onReport={() => console.log('Report clicked')}
-                    onDelete={() => console.log('Delete clicked')}
-                />
+                <ThreeDotsMenu items={menuItems} />
             </div>
             <CardContent className="p-4 pt-0">
                 <p className="text-card-foreground">{caption}</p>

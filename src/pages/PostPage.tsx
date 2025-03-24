@@ -8,9 +8,10 @@ import { Post } from "@/components/Post";
 import { Input } from "@/components/ui/input";
 import avatarImage from "/profile/user.png";
 import { fetchComments, postComment } from "@/apis/commonApiCalls/commentsApi";
+import { getPostDetails } from "@/apis/commonApiCalls/homepageApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { CommentData, HomePostData } from "@/apis/apiTypes/response";
+import { CommentData, HomePostData, ProfilePostData } from "@/apis/apiTypes/response";
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/store";
 
@@ -18,8 +19,78 @@ export default function CommentsPage() {
   const navigate = useNavigate();
   const { postId } = useParams();
   const location = useLocation();
-  const { postData } = location.state as { postData: HomePostData };
-  const [post, setpost] = useState<HomePostData>(postData);
+  // Access post directly from state
+  const locationState = location.state || {};
+  const locationPost = locationState.post;
+  
+  // Convert ProfilePostData to a format compatible with HomePostData if needed
+  const [post, setPost] = useState<HomePostData>(() => {
+    if (!locationPost) {
+      // If no post was provided in state, create a minimal object
+      // (Will be populated from API once post details are fetched)
+      return {
+        _id: postId?.split(':')[0] || '',
+        name: '',
+        profilePic: '',
+        userId: '',
+        data: {
+          content: '',
+          media: []
+        },
+        commentCount: 0,
+        reactionCount: 0,
+        reaction: {
+          hasReacted: false,
+          reactionType: null
+        },
+        ago_time: '',
+        feedId: postId || '',
+        author: '',
+        whoCanComment: 0,
+        privacy: 0,
+        content_type: null,
+        taggedUsers: null,
+        hideFrom: null,
+        status: 0,
+        createdAt: 0,
+        weekIndex: '',
+      };
+    } else if ('_id' in locationPost) {
+      // Already HomePostData
+      return locationPost as HomePostData;
+    } else {
+      // Convert ProfilePostData to compatible format
+      const profilePost = locationPost as ProfilePostData;
+      return {
+        _id: profilePost.id,
+        name: profilePost.author.name,
+        profilePic: profilePost.author.profilePic,
+        userId: profilePost.id.split(':')[0], // Extract userId from id if possible
+        data: {
+          content: profilePost.content,
+          media: [{ url: profilePost.imageSrc, type: 'image' }]
+        },
+        commentCount: profilePost.stats.commentCount,
+        reactionCount: profilePost.stats.reactionCount,
+        reaction: {
+          hasReacted: profilePost.stats.hasReacted,
+          reactionType: profilePost.stats.reactionType
+        },
+        ago_time: new Date(profilePost.createdAt * 1000).toLocaleDateString(),
+        feedId: postId || '',
+        author: '',
+        whoCanComment: 0,
+        privacy: 0,
+        content_type: null,
+        taggedUsers: null,
+        hideFrom: null,
+        status: 0,
+        createdAt: profilePost.createdAt,
+        weekIndex: '',
+      };
+    }
+  });
+  
   const [newComment, setNewComment] = useState("");
   const [commentsData, setCommentsData] = useState<CommentData[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -34,12 +105,58 @@ export default function CommentsPage() {
   // Use our custom hook for API calls
   const [executeFetchComments, isLoading] = useApiCall(fetchComments);
   const [executePostComment, isPosting] = useApiCall(postComment);
+  const [executeGetPostDetails, isLoadingPost] = useApiCall(getPostDetails);
   
   // Get current user ID from localStorage
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     setCurrentUserId(userId);
   }, []);
+
+  // Fetch post details if not provided in state
+  useEffect(() => {
+    const fetchPostDetails = async () => {
+      if (!postId || locationPost) return; // Skip if postId is missing or post is already available
+      
+      const result = await executeGetPostDetails({ feedId: postId });
+      console.log("result", result);
+      
+      if (result.success && result.data) {
+        const apiPostData = result.data.post;
+        // Map the API response to our expected HomePostData format
+        const mappedPost: HomePostData = {
+          _id: apiPostData._id,
+          name: apiPostData.authorDetails.name,
+          profilePic: apiPostData.authorDetails.profilePic,
+          userId: apiPostData.authorDetails.userId,
+          data: apiPostData.data,
+          commentCount: apiPostData.commentCount,
+          reactionCount: apiPostData.reactionCount,
+          reaction: apiPostData.reaction || {
+            hasReacted: false,
+            reactionType: null
+          },
+          ago_time: apiPostData.agoTime,
+          feedId: apiPostData.feedId,
+          author: apiPostData.author,
+          whoCanComment: apiPostData.whoCanComment,
+          privacy: apiPostData.privacy,
+          content_type: apiPostData.content_type,
+          taggedUsers: apiPostData.taggedUsers,
+          hideFrom: apiPostData.hideFrom,
+          status: apiPostData.status,
+          createdAt: apiPostData.createdAt,
+          weekIndex: apiPostData.weekIndex,
+        };
+        setPost(mappedPost);
+        console.log("mappedPost", mappedPost);
+      } else {
+        setError("Failed to load post details. Please try again.");
+      }
+    };
+    
+    fetchPostDetails();
+  }, [postId, locationPost]);
   
   // Helper function to sort comments by creation time (newest first)
   const sortCommentsByTime = (comments: CommentData[]): CommentData[] => {
@@ -146,7 +263,7 @@ export default function CommentsPage() {
     
     // Optimistically add the comment to the UI (at the top since it's newest)
     setCommentsData(prevComments => [tempComment, ...prevComments]);
-    setpost(prevPost => ({
+    setPost(prevPost => ({
       ...prevPost,
       commentCount: prevPost.commentCount + 1
     }));
@@ -165,7 +282,7 @@ export default function CommentsPage() {
       setCommentsData(prevComments => 
         prevComments.filter(comment => comment.commentId !== tempCommentId)
       );
-      setpost(prevPost => ({
+      setPost(prevPost => ({
         ...prevPost,
         commentCount: prevPost.commentCount - 1
       }));
@@ -261,7 +378,11 @@ export default function CommentsPage() {
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Post Summary and Comment Input */}
         <div className="flex-none">
-          {post && (
+          {isLoadingPost ? (
+            <div className="p-4 flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : post && (
             <Post 
               user={post.name}
               userId={post.userId}
@@ -338,10 +459,10 @@ export default function CommentsPage() {
                   }}
                   postId={postId}
                   currentUserId={localStorage.getItem('userId') || undefined}
-                  postAuthorId={post.name}
+                  postAuthorId={post.userId}
                   onCommentDeleted={(commentId) => {
                     setCommentsData(prev => prev.filter(c => c.commentId !== commentId));
-                    setpost(prevPost => ({
+                    setPost(prevPost => ({
                       ...prevPost,
                       commentCount: prevPost.commentCount - 1
                     }));
