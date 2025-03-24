@@ -7,6 +7,8 @@ import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
 import { useApiCall } from "@/apis/globalCatchError";
 import { createGroup, editGroup } from "@/apis/commonApiCalls/activityApi";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { setActiveChat } from "@/store/chatSlice";
 
 interface GroupInfo {
   name: string;
@@ -29,6 +31,7 @@ const CreateGroup: React.FC = () => {
   const location = useLocation();
   const currentTab = location.hash.replace("#", "") || "info";
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // State management for each tab
   const [groupInfo, setGroupInfo] = useState<GroupInfo>({
@@ -86,9 +89,9 @@ const CreateGroup: React.FC = () => {
                 bio: groupInfo.description,
                 profileUrl: groupInfo.profileUrl || undefined,
               });
-              
+
               console.log("Edit group result:", editResult);
-              
+
               if (!editResult.success) {
                 toast.error("Group created but failed to update details");
               }
@@ -100,8 +103,34 @@ const CreateGroup: React.FC = () => {
             toast.error("Group created but failed to update details");
           }
         }
-        
-        toast.success("Group created successfully!");
+
+        // Transform the chatRoom data to match ChatItem format
+        if (result.data?.chatRoom) {
+          const chatRoom = result.data.chatRoom;
+          const participants = chatRoom.participants.map((participant) => ({
+            userId: participant.userId,
+            name: participant.name,
+            profilePic: participant.profilePic,
+          }));
+
+          const transformedChat = {
+            id: chatRoom.chatRoomId,
+            name: chatRoom.groupName,
+            avatar: chatRoom.profileUrl || "",
+            lastMessage: "No messages yet",
+            timestamp: new Date(chatRoom.updatedAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            unread: false,
+            type: "group" as const,
+            admin: chatRoom.admin,
+            participants,
+          };
+
+          dispatch(setActiveChat(transformedChat));
+        }
+
         navigate("/activity");
       } else {
         toast.error("Failed to create group. Please try again.");
@@ -144,14 +173,14 @@ const CreateGroup: React.FC = () => {
       )}
       {currentTab === "skills" && (
         <SkillsInterestsTab
-          // skills={groupSkills.skills}
-          // interests={groupSkills.interests}
-          // onSkillsChange={(skills: string[]) =>
-          //   setGroupSkills((prev) => ({ ...prev, skills }))
-          // }
-          // onInterestsChange={(interests: string[]) =>
-          //   setGroupSkills((prev) => ({ ...prev, interests }))
-          // }
+        // skills={groupSkills.skills}
+        // interests={groupSkills.interests}
+        // onSkillsChange={(skills: string[]) =>
+        //   setGroupSkills((prev) => ({ ...prev, skills }))
+        // }
+        // onInterestsChange={(interests: string[]) =>
+        //   setGroupSkills((prev) => ({ ...prev, interests }))
+        // }
         />
       )}
       {currentTab === "friends" && (

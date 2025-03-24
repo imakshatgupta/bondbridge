@@ -10,7 +10,7 @@ const Navbar: React.FC = () => {
                             <div>
                                 <img src="/logo.png" alt="Bond Bridge" className="h-8 w-8" />
                             </div>
-                            <h2 className="text-2xl font-medium grad">BondBridge</h2>
+                            <h2 className="text-2xl font-extrabold grad">BondBridge</h2>
                         </a>
                     </div>
                     <ModeToggle />
