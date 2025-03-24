@@ -5,6 +5,7 @@ export interface ChatParticipantInfo {
   userId: string;
   name: string;
   profilePic: string;
+  status?: string;
 }
 
 export interface ChatItem {
@@ -21,6 +22,7 @@ export interface ChatItem {
     userId: string;
     name: string;
     profilePic: string;
+    status?: string;
   }[];
 }
 
@@ -137,6 +139,7 @@ const chatSlice = createSlice({
               userId: participant.userId,
               name: participant.name,
               profilePic: participant.profilePic,
+              status: participant.status,
             })
           );
 

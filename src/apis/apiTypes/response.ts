@@ -348,6 +348,7 @@ export interface ChatParticipantInfo {
   userId: string;
   name: string;
   profilePic: string;
+  status?: string;
 }
 
 export interface Message {

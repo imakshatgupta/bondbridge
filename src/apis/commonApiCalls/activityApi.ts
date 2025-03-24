@@ -81,36 +81,11 @@ export const editGroup = async (
   }
 };
 
-/**
- * Function to block a user
- * @param blockedUserId - ID of the user to block
- * @returns Promise with the API response
- */
-export const blockUser = async (blockedUserId: string): Promise<ApiResponse> => {
-  if (!blockedUserId) {
-    throw new Error('User ID is required');
-  }
-
-  console.log("blockUser API called with ID:", blockedUserId);
-
-  const response = await apiClient.post<ApiResponse>('/block-user', {
-    blocked: blockedUserId
-  });
-
-  console.log("Block user API response:", response);
-
-  if (response.status === 200) {
-    return response.data;
-  } else {
-    throw new Error(response.data.message || 'Failed to block user');
-  }
+export const blockUser = async (userId: string): Promise<ApiResponse> => {
+  const response = await apiClient.post<ApiResponse>(`/block-user/${userId}`);
+  return response.data;
 };
 
-/**
- * Function to unblock a user
- * @param blockedUserId - ID of the user to unblock
- * @returns Promise with the API response
- */
 export const unblockUser = async (blockedUserId: string): Promise<ApiResponse> => {
   if (!blockedUserId) {
     throw new Error('User ID is required');
@@ -131,27 +106,17 @@ export const unblockUser = async (blockedUserId: string): Promise<ApiResponse> =
   }
 };
 
-/**
- * Interface for blocked user data
- */
 export interface BlockedUser {
   userId: string;
   profilePic: string;
   name: string;
 }
 
-/**
- * Response interface for blocked users
- */
 export interface GetBlockedUsersResponse {
   message: string;
   blockedUsers: BlockedUser[];
 }
 
-/**
- * Function to fetch all blocked users
- * @returns Promise with the blocked users response
- */
 export const getBlockedUsers = async (): Promise<GetBlockedUsersResponse> => {
   const response = await apiClient.get<GetBlockedUsersResponse>('/get-blocked-users');
 
@@ -161,5 +126,36 @@ export const getBlockedUsers = async (): Promise<GetBlockedUsersResponse> => {
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to fetch blocked users');
+  }
+};
+
+export const leaveGroup = async (groupId: string): Promise<ApiResponse> => {
+  const response = await apiClient.post<ApiResponse>('/leave-chatroom', {
+    chatRoomId: groupId
+  });
+  
+  if (response.status === 200) {
+    return {
+      ...response.data,
+      success: true
+    };
+  } else {
+    throw new Error(response.data.message || "Failed to leave group");
+  }
+};
+
+export const inviteToGroup = async (groupId: string, userIds: string[]): Promise<ApiResponse> => {
+  const response = await apiClient.put<ApiResponse>('/add-participants', {
+    chatRoomId: groupId,
+    participants: userIds
+  });
+  
+  if (response.status === 200) {
+    return {
+      ...response.data,
+      success: true
+    };
+  } else {
+    throw new Error(response.data.message || "Failed to invite users to group");
   }
 };
