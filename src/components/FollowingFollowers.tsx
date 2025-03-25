@@ -4,11 +4,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { fetchFollowingList, fetchFollowersList } from "@/apis/commonApiCalls/profileApi";
 import { FollowingFollowerUser } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 
 const FollowingFollowers = () => {
   const navigate = useNavigate();
@@ -177,19 +178,46 @@ const FollowingFollowers = () => {
 
   return (
     <div className="container max-w-2xl mx-auto py-4 px-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-4 -ml-2"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
       <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="following">Following</TabsTrigger>
           <TabsTrigger value="followers">Followers</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="following" className="mt-0">
-          <FollowingList users={following} isLoading={isLoadingFollowing} />
-        </TabsContent>
+        <AnimatePresence mode="wait">
+          <TabsContent value="following" className="mt-0">
+            <motion.div
+              key="following"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FollowingList users={following} isLoading={isLoadingFollowing} />
+            </motion.div>
+          </TabsContent>
 
-        <TabsContent value="followers" className="mt-0">
-          <FollowersList users={followers} isLoading={isLoadingFollowers} />
-        </TabsContent>
+          <TabsContent value="followers" className="mt-0">
+            <motion.div
+              key="followers"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <FollowersList users={followers} isLoading={isLoadingFollowers} />
+            </motion.div>
+          </TabsContent>
+        </AnimatePresence>
       </Tabs>
     </div>
   );
