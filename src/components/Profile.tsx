@@ -28,6 +28,9 @@ import {
   transformAndSetChats,
 } from "@/store/chatSlice";
 import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
+import AllCommunities from "@/components/AllCommunities";
+import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
+import { Community } from "@/lib/constants";
 // import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
 // import type { StoryData } from "@/apis/apiTypes/response";
 
@@ -44,6 +47,7 @@ interface ProfileProps {
   isFollower?: boolean;
   requestSent?: boolean;
   compatibility?: number;
+  communities?: string[];
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -59,6 +63,7 @@ const Profile: React.FC<ProfileProps> = ({
   isFollower = false,
   requestSent = false,
   compatibility = 0,
+  communities: userCommunityIds = [],
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -73,13 +78,14 @@ const Profile: React.FC<ProfileProps> = ({
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
   const [executeBlockUser] = useApiCall(blockUserApi);
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
 
   // Get user data from Redux store
   const { privacyLevel, interests, nickname } = useAppSelector(
     (state) => state.currentUser
   );
-  
   // Check if current user by comparing with userId in localStorage
   const localStorageUserId = localStorage.getItem("userId");
   const isCurrentUser = userId === localStorageUserId || propsIsCurrentUser;
@@ -89,11 +95,42 @@ const Profile: React.FC<ProfileProps> = ({
       const result = await executePostsFetch(userId, isCurrentUser);
       if (result.success && result.data) {
         setPosts(result.data.posts);
-        console.log("posts", result.data.posts);
       }
     };
-
     loadPosts();
+  }, [userId]);
+
+  // Add new useEffect for loading communities
+  useEffect(() => {
+    const loadCommunities = async () => {
+      if (!userCommunityIds || userCommunityIds.length === 0) {
+        setUserCommunities([]);
+        return;
+      }
+      
+      const result = await executeFetchCommunities();
+
+      if (result.success && result.data) {
+        // Filter communities where the user is a member
+        const filteredCommunities = result.data.filter(community => 
+          userCommunityIds.includes(community._id)
+        ); 
+        // Map to the format expected by the component
+        const formattedCommunities = filteredCommunities.map(community => ({
+          id: community._id,
+          name: community.name,
+          members: community.members?.length || 0,
+          pfp: community.profilePicture || '/profile/default-avatar.png',
+          description: community.description,
+          backgroundImage: community.backgroundImage || '/profile/community/commbg.png',
+          bio: community.bio
+        }));
+        
+        setUserCommunities(formattedCommunities);
+      }
+    };
+    
+    loadCommunities();
   }, [userId]);
 
   // useEffect(() => {
@@ -431,7 +468,7 @@ const Profile: React.FC<ProfileProps> = ({
         </TabsContent>
 
         <TabsContent value="community" className="p-4">
-          {/* Community content will go here */}
+          <AllCommunities communities={userCommunities} isLoadingCommunities={isLoadingCommunities} />
         </TabsContent>
       </Tabs>
     </div>

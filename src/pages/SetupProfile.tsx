@@ -9,6 +9,7 @@ import TabPageLayout from "@/components/layouts/TabPageLayout";
 import { useAppSelector } from "../store";
 import { submitProfile } from "../apis/commonApiCalls/createProfileApi";
 import { setPassword } from "../apis/commonApiCalls/authenticationApi";
+// import { joinMultipleCommunities } from "../apis/commonApiCalls/communitiesApi";
 import { useApiCall } from "../apis/globalCatchError";
 
 const tabs = [
@@ -32,13 +33,14 @@ const SetupProfile: React.FC = () => {
     password,
     skillSelected,
     avatar,
-    // image,
+    image,
     // communitiesSelected
   } = useAppSelector(state => state.createProfile);
 
   // Use our custom hooks for API calls
   const [executeSubmit] = useApiCall(submitProfile);
   const [executeSetPassword] = useApiCall(setPassword);
+  // const [executeJoinCommunities] = useApiCall(joinMultipleCommunities);
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -49,9 +51,8 @@ const SetupProfile: React.FC = () => {
       dateOfBirth,
       password,
       skillSelected,
-      // image, // Uncomment if you have this in your state
+      image: image || undefined,
       avatar: avatar || undefined,
-      // communitiesSelected
     });
     
     if (result.success && result.data) {
@@ -63,6 +64,21 @@ const SetupProfile: React.FC = () => {
       });
       
       if (passwordResult.success) {
+        // // Join selected communities if any are selected
+        // if (communitiesSelected.length > 0) {
+        //   // Extract community IDs from the selected communities
+        //   const communityIds = communitiesSelected.map(community => community.id);
+          
+        //   const joinResult = await executeJoinCommunities(communityIds);
+          
+        //   if (joinResult.success) {
+        //     console.log("Successfully joined communities");
+        //   } else {
+        //     console.error("Failed to join some communities");
+        //   }
+        // }
+        
+        // Navigate to home page regardless of community join status
         navigate('/');
       }
     }

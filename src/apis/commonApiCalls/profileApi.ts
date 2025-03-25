@@ -38,6 +38,7 @@ export const fetchUserProfile = async (
       isFollower: userData.isFollower || false,
       requestSent: userData.requestSent || false,
       compatibility: userData.compatibility || 0,
+      communities: userData.communities || [],
     },
   };
 };
