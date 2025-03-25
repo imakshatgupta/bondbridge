@@ -1,9 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { ProfilePostData } from '../apis/apiTypes/response';
+import { POST_IMAGE } from '../constants/posts';
+
+// Default image to use when a post doesn't have an image
+const DEFAULT_POST_IMAGE = POST_IMAGE;
 
 interface Post {
   id: number | string;
-  imageSrc: string;
+  imageSrc?: string;
   creationDate?: string; // Optional creation date
   content?: string;
   author?: {
@@ -22,6 +26,7 @@ interface AllPostsProps {
   posts: (Post | ProfilePostData)[];
 }
 
+
 const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
   const navigate = useNavigate();
   
@@ -37,18 +42,18 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
           : (post as Post).id;
         
         const postImageSrc = isProfilePost
-          ? (post as ProfilePostData).imageSrc
-          : (post as Post).imageSrc;
+          ? (post as ProfilePostData)?.imageSrc
+          : (post as Post)?.imageSrc;
         
         // Create feedId using post.id and creationDate
         let creationDate = '2025-03-16';
         
         if (isProfilePost) {
           // For ProfilePostData use the createdAt timestamp
-          creationDate = new Date((post as ProfilePostData).createdAt * 1000)
+          creationDate = new Date((post as ProfilePostData)?.createdAt * 1000)
             .toISOString().split('T')[0];
-        } else if ('creationDate' in post && post.creationDate) {
-          creationDate = post.creationDate;
+        } else if ('creationDate' in post && post?.creationDate) {
+          creationDate = post?.creationDate;
         }
         
         const feedId = `${postId}:${creationDate}`;
@@ -61,7 +66,11 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
               navigate(`/post/${feedId}`, { state: { post } });
             }}
           >
-            <img src={postImageSrc} alt="" className="w-full h-full object-cover" />
+            <img 
+              src={postImageSrc && postImageSrc.trim() !== '' ? postImageSrc : DEFAULT_POST_IMAGE} 
+              alt={`Post ${postId}`} 
+              className="w-full h-full object-cover"
+            />
           </div>
         );
       })}
