@@ -52,7 +52,7 @@ export const fetchUserPosts = async (
 
   const posts = response.data.posts.map((post: PostData) => ({
     id: post._id,
-    imageSrc: post.data.media[0]?.url || "",
+    imageSrc: post.data.media?.[0]?.url || "",
     content: post.data.content,
     createdAt: post.createdAt,
     author: {
