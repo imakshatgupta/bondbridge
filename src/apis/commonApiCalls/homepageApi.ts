@@ -3,7 +3,8 @@ import {
   FetchHomepageDataResponse,
   FetchPostsResponse,
   FetchStoriesResponse,
-  GetPostDetailsResponse
+  GetPostDetailsResponse,
+  GetSuggestedUsersResponse
 } from '@/apis/apiTypes/response';
 import { GetPostDetailsRequest } from '@/apis/apiTypes/request';
 
@@ -130,5 +131,24 @@ export const getPostDetails = async (requestData: GetPostDetailsRequest): Promis
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to fetch post details');
+  }
+};
+
+/**
+ * Function to fetch suggested users for the sidebar
+ */
+export const getSuggestedUsers = async (): Promise<GetSuggestedUsersResponse> => {
+  const response = await apiClient.get<GetSuggestedUsersResponse>(
+    '/getAllUsers'
+  );
+  
+  if (response.status === 200) {
+    return {
+      success: true,
+      users: response.data.users || [],
+      message: response.data.message
+    };
+  } else {
+    throw new Error(response.data.message || 'Failed to fetch suggested users');
   }
 };
