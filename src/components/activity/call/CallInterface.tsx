@@ -10,6 +10,8 @@ import {
   Users,
   PlusCircle,
   RefreshCw,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,7 @@ const CallInterface: React.FC = () => {
 
   const localVideoRef = useRef<HTMLDivElement>(null);
   const [shouldRerender, setShouldRerender] = useState(0);
+  const [audioTroubleshootingVisible, setAudioTroubleshootingVisible] = useState(false);
 
   // Force re-render every 2 seconds during the initial call setup
   // This helps ensure remote videos get rendered properly
@@ -85,7 +88,9 @@ const CallInterface: React.FC = () => {
       uid: user.uid,
       hasAudio: user.hasAudio,
       hasVideo: user.hasVideo,
-      videoTrack: !!user.videoTrack
+      videoTrack: !!user.videoTrack,
+      audioTrack: !!user.audioTrack,
+      audioPlaying: user.audioTrack ? user.audioTrack.isPlaying : false
     })));
   }
 
@@ -101,6 +106,37 @@ const CallInterface: React.FC = () => {
         localTracks.videoTrack?.play(localVideoRef.current!);
       }, 200);
     }
+  };
+
+  // Force refresh audio for all remote users
+  const handleRefreshAudio = () => {
+    console.log("Manually refreshing audio connections");
+    
+    // For each remote user with audio
+    remoteUsers.forEach(async (user) => {
+      if (user.hasAudio) {
+        console.log(`Attempting to refresh audio for user ${user.uid}`);
+        
+        try {
+          if (user.audioTrack) {
+            // Stop existing audio playback
+            user.audioTrack.stop();
+            
+            // Start playback again
+            setTimeout(() => {
+              if (user.audioTrack) {
+                user.audioTrack.play();
+                console.log(`Restarted audio for user ${user.uid}`);
+              }
+            }, 200);
+          }
+        } catch (err) {
+          console.error(`Error refreshing audio for user ${user.uid}:`, err);
+        }
+      }
+    });
+    
+    setShouldRerender(prev => prev + 1);
   };
 
   // Render remote users and their video tracks
@@ -140,14 +176,22 @@ const CallInterface: React.FC = () => {
             <p className="text-muted-foreground">
               {statusMessage}
             </p>
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="mt-2"
-              onClick={handleRefreshVideos}
-            >
-              <RefreshCw className="h-3 w-3 mr-1" /> Refresh Connection
-            </Button>
+            <div className="flex gap-2 justify-center mt-2">
+              <Button 
+                variant="link" 
+                size="sm" 
+                onClick={handleRefreshVideos}
+              >
+                <RefreshCw className="h-3 w-3 mr-1" /> Refresh Video
+              </Button>
+              <Button 
+                variant="link" 
+                size="sm" 
+                onClick={handleRefreshAudio}
+              >
+                <Volume2 className="h-3 w-3 mr-1" /> Refresh Audio
+              </Button>
+            </div>
           </div>
         </div>
       );
@@ -158,8 +202,12 @@ const CallInterface: React.FC = () => {
       console.log(`Rendering remote user ${user.uid}:`, {
         hasVideo: user.hasVideo,
         hasVideoTrack: !!user.videoTrack,
-        hasAudio: user.hasAudio
+        hasAudio: user.hasAudio,
+        hasAudioTrack: !!user.audioTrack,
+        audioPlaying: user.audioTrack ? user.audioTrack.isPlaying : false
       });
+      
+      const hasAudioIssue = user.hasAudio && (!user.audioTrack || !user.audioTrack.isPlaying);
       
       return (
         <div key={`${user.uid}-${shouldRerender}`} className="relative h-full rounded-lg overflow-hidden bg-black">
@@ -211,6 +259,25 @@ const CallInterface: React.FC = () => {
             </div>
           )}
           
+          {/* Audio status icon */}
+          {user.hasAudio && (
+            <div className="absolute top-2 right-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 bg-black/50 hover:bg-black/70"
+                onClick={() => handleRefreshUserAudio(user)}
+                title={hasAudioIssue ? "Audio issue detected. Click to retry." : "Audio is working. Click to refresh if needed."}
+              >
+                {hasAudioIssue ? (
+                  <VolumeX className="h-4 w-4 text-red-400" />
+                ) : (
+                  <Volume2 className="h-4 w-4 text-green-400" />
+                )}
+              </Button>
+            </div>
+          )}
+          
           {/* Display name and status of remote user */}
           <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm flex items-center">
             <span>
@@ -241,6 +308,35 @@ const CallInterface: React.FC = () => {
         setShouldRerender(prev => prev + 1);
       } catch (err) {
         console.error(`Error refreshing video for user ${user.uid}:`, err);
+      }
+    }
+  };
+
+  // Force refresh for a specific user's audio
+  const handleRefreshUserAudio = async (user: any) => {
+    console.log(`Attempting to refresh audio for user ${user.uid}`);
+    
+    if (user.hasAudio) {
+      try {
+        if (user.audioTrack) {
+          // Stop existing audio playback
+          user.audioTrack.stop();
+          
+          // Start playback again
+          setTimeout(() => {
+            if (user.audioTrack) {
+              user.audioTrack.play();
+              console.log(`Restarted audio for user ${user.uid}`);
+            }
+          }, 200);
+        } else {
+          console.log(`User ${user.uid} has no audio track to refresh`);
+        }
+        
+        // Force state update to trigger re-render
+        setShouldRerender(prev => prev + 1);
+      } catch (err) {
+        console.error(`Error refreshing audio for user ${user.uid}:`, err);
       }
     }
   };
@@ -309,6 +405,11 @@ const CallInterface: React.FC = () => {
     }
   };
 
+  // Toggle audio troubleshooting visibility
+  const toggleAudioTroubleshooting = () => {
+    setAudioTroubleshootingVisible(prev => !prev);
+  };
+
   // Define menu items for the header
   const menuItems = [
     {
@@ -320,6 +421,11 @@ const CallInterface: React.FC = () => {
       label: "Refresh video",
       icon: <RefreshCw className="h-4 w-4" />,
       onClick: handleRefreshVideos,
+    },
+    {
+      label: "Refresh audio",
+      icon: <Volume2 className="h-4 w-4" />,
+      onClick: handleRefreshAudio,
     },
     {
       label: "End call for everyone",
@@ -345,13 +451,77 @@ const CallInterface: React.FC = () => {
       {/* Call body */}
       <div className="flex flex-col flex-1 p-4 space-y-4 overflow-hidden">
         {/* Call type indicator */}
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-center gap-2">
           <Badge variant="outline" className="px-2 py-1 text-xs">
             {callType === "video" ? "Video Call" : "Audio Call"}
             {isCalling && " • Connecting..."}
             {remoteUsers.length > 0 && ` • ${remoteUsers.length} connected`}
           </Badge>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 px-2"
+            onClick={toggleAudioTroubleshooting}
+          >
+            <Volume2 className="h-3 w-3 mr-1" />
+            Audio Status
+          </Button>
         </div>
+
+        {/* Audio troubleshooting panel */}
+        {audioTroubleshootingVisible && (
+          <div className="bg-slate-100 dark:bg-slate-900 rounded-md p-2 text-xs">
+            <h4 className="font-medium mb-1">Audio Status</h4>
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span>Your microphone:</span>
+                <Badge variant={localTracks.audioTrack?.enabled ? "default" : "destructive"} className="text-xs">
+                  {localTracks.audioTrack?.enabled ? "Enabled" : "Muted"}
+                </Badge>
+              </div>
+              
+              {remoteUsers.map(user => {
+                const name = participants.find(p => p.userId === user.uid)?.userInfo?.name || "User";
+                const hasAudio = user.hasAudio;
+                const hasAudioTrack = !!user.audioTrack;
+                const isAudioPlaying = user.audioTrack?.isPlaying || false;
+                
+                return (
+                  <div key={user.uid} className="flex justify-between">
+                    <span>{name}'s audio:</span>
+                    <div className="flex items-center gap-1">
+                      <Badge 
+                        variant={hasAudio && hasAudioTrack && isAudioPlaying ? "default" : "destructive"} 
+                        className="text-xs"
+                      >
+                        {!hasAudio ? "No Audio" : !hasAudioTrack ? "No Track" : isAudioPlaying ? "Playing" : "Not Playing"}
+                      </Badge>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-4 w-4"
+                        onClick={() => handleRefreshUserAudio(user)}
+                      >
+                        <RefreshCw className="h-2 w-2" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              <Button
+                size="sm"
+                variant="secondary"
+                className="w-full mt-1 h-6 text-xs"
+                onClick={handleRefreshAudio}
+              >
+                Refresh All Audio
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Main video area */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden">
@@ -370,13 +540,13 @@ const CallInterface: React.FC = () => {
           <Button
             variant="outline"
             size="icon"
-            className="h-12 w-12 rounded-full"
+            className={`h-12 w-12 rounded-full ${!localTracks.audioTrack?.enabled ? 'bg-red-100 border-red-300 dark:bg-red-900/30 dark:border-red-800' : ''}`}
             onClick={toggleMic}
           >
             {localTracks.audioTrack?.enabled ? (
               <Mic className="h-5 w-5" />
             ) : (
-              <MicOff className="h-5 w-5" />
+              <MicOff className="h-5 w-5 text-red-500" />
             )}
           </Button>
 
@@ -384,13 +554,13 @@ const CallInterface: React.FC = () => {
             <Button
               variant="outline"
               size="icon"
-              className="h-12 w-12 rounded-full"
+              className={`h-12 w-12 rounded-full ${!localTracks.videoTrack?.enabled ? 'bg-red-100 border-red-300 dark:bg-red-900/30 dark:border-red-800' : ''}`}
               onClick={toggleCamera}
             >
               {localTracks.videoTrack?.enabled ? (
                 <Video className="h-5 w-5" />
               ) : (
-                <VideoOff className="h-5 w-5" />
+                <VideoOff className="h-5 w-5 text-red-500" />
               )}
             </Button>
           )}

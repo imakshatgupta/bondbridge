@@ -248,7 +248,24 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (mediaType === "audio") {
           console.log(`Playing audio for user ${user.uid}`);
-          user.audioTrack?.play();
+          
+          // IMPORTANT: Explicitly play the audio track
+          if (user.audioTrack) {
+            try {
+              // Stop if already playing somewhere
+              if (user.audioTrack.isPlaying) {
+                user.audioTrack.stop();
+              }
+              
+              // Play with specified playback options (default)
+              user.audioTrack.play();
+              console.log(`Successfully started playing audio for ${user.uid}`);
+            } catch (err) {
+              console.error(`Error playing audio for ${user.uid}:`, err);
+            }
+          } else {
+            console.warn(`User ${user.uid} published audio but no audioTrack is available`);
+          }
           
           // Even for audio-only users, we want them in the remoteUsers list
           // so they show with avatar instead of video
@@ -259,8 +276,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 ...prev,
                 remoteUsers: [...prev.remoteUsers, user]
               };
+            } else {
+              // Update existing entry to make sure it has the latest audio state
+              return {
+                ...prev,
+                remoteUsers: prev.remoteUsers.map(u => 
+                  u.uid === user.uid ? user : u
+                )
+              };
             }
-            return prev;
           });
         }
       } catch (error) {
@@ -1059,6 +1083,45 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     console.log("Setting up periodic remote user check");
     
+    // Check if audio playback is working for all users with audio
+    const audioPlaybackCheckInterval = setInterval(() => {
+      const usersWithAudio = client.remoteUsers.filter(user => user.hasAudio);
+      
+      if (usersWithAudio.length > 0) {
+        console.log(`Checking audio playback for ${usersWithAudio.length} users with audio`);
+        
+        usersWithAudio.forEach(async (user) => {
+          // If the user has audio but it's not playing, try to fix it
+          if (user.audioTrack && !user.audioTrack.isPlaying) {
+            console.log(`User ${user.uid} has audio but it's not playing. Attempting to play...`);
+            
+            try {
+              // Try to play the audio track
+              user.audioTrack.play();
+              console.log(`Successfully started playing audio for ${user.uid}`);
+            } catch (err) {
+              console.error(`Error playing audio for ${user.uid}:`, err);
+              
+              // If that fails, try to resubscribe
+              try {
+                console.log(`Resubscribing to audio for ${user.uid}`);
+                await client.unsubscribe(user, "audio");
+                await client.subscribe(user, "audio");
+                
+                // Try to play again after resubscribe
+                if (user.audioTrack) {
+                  user.audioTrack.play();
+                  console.log(`Successfully playing audio after resubscribe for ${user.uid}`);
+                }
+              } catch (subErr) {
+                console.error(`Failed to resubscribe to audio for ${user.uid}:`, subErr);
+              }
+            }
+          }
+        });
+      }
+    }, 3000); // Check every 3 seconds
+    
     // Check if user-published events might not be firing
     const userPublishedCheckInterval = setInterval(() => {
       // For each remote user that has video but no videoTrack
@@ -1090,6 +1153,45 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }));
           } catch (err) {
             console.error(`Error resubscribing to ${user.uid}'s video:`, err);
+          }
+        });
+      }
+      
+      // Also check for users with audio issues
+      const usersWithAudioButNoTrack = client.remoteUsers.filter(
+        user => user.hasAudio && !user.audioTrack
+      );
+      
+      if (usersWithAudioButNoTrack.length > 0) {
+        console.log(`Found ${usersWithAudioButNoTrack.length} users with audio but no tracks:`, 
+          usersWithAudioButNoTrack.map(u => u.uid));
+        
+        // Force (re)subscribe to their audio tracks
+        usersWithAudioButNoTrack.forEach(async (user) => {
+          console.log(`Attempting to force resubscribe to ${user.uid}'s audio`);
+          
+          try {
+            // First try unsubscribing
+            await client.unsubscribe(user, "audio");
+            console.log(`Successfully unsubscribed from ${user.uid}'s audio`);
+            
+            // Then resubscribe
+            await client.subscribe(user, "audio");
+            console.log(`Successfully resubscribed to ${user.uid}'s audio`);
+            
+            // Play the audio track if available
+            if (user.audioTrack) {
+              user.audioTrack.play();
+              console.log(`Playing audio track for ${user.uid} after resubscribe`);
+            }
+            
+            // Update remoteUsers to trigger UI update
+            setCallState(prev => ({
+              ...prev,
+              remoteUsers: [...prev.remoteUsers.filter(u => u.uid !== user.uid), user]
+            }));
+          } catch (err) {
+            console.error(`Error resubscribing to ${user.uid}'s audio:`, err);
           }
         });
       }
@@ -1141,7 +1243,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
               try {
                 await client.subscribe(user, "audio");
                 console.log(`Successfully subscribed to ${user.uid}'s audio`);
-                user.audioTrack?.play();
+                
+                // Explicitly play the audio track
+                if (user.audioTrack) {
+                  user.audioTrack.play();
+                  console.log(`Playing audio for ${user.uid} after subscription`);
+                } else {
+                  console.warn(`No audio track available for ${user.uid} after subscription`);
+                }
               } catch (err) {
                 console.error(`Error subscribing to ${user.uid}'s audio:`, err);
               }
@@ -1154,6 +1263,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       clearInterval(interval);
       clearInterval(userPublishedCheckInterval);
+      clearInterval(audioPlaybackCheckInterval);
     };
   }, [callState.isInCall, callState.callId, callState.remoteUsers.length]);
 
