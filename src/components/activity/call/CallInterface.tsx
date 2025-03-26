@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useCall } from "@/context/CallContext";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
   PhoneOff,
   Users,
   PlusCircle,
+  RefreshCw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,29 @@ const CallInterface: React.FC = () => {
   } = useCall();
 
   const localVideoRef = useRef<HTMLDivElement>(null);
+  const [shouldRerender, setShouldRerender] = useState(0);
+
+  // Force re-render every 2 seconds during the initial call setup
+  // This helps ensure remote videos get rendered properly
+  useEffect(() => {
+    if (isInCall && callType === "video") {
+      const timer = setInterval(() => {
+        if (remoteUsers.length > 0) {
+          setShouldRerender(prev => prev + 1);
+        }
+      }, 2000);
+      
+      // Clear interval after 15 seconds (or when component unmounts)
+      const maxTimer = setTimeout(() => {
+        clearInterval(timer);
+      }, 15000);
+      
+      return () => {
+        clearInterval(timer);
+        clearTimeout(maxTimer);
+      };
+    }
+  }, [isInCall, callType, remoteUsers.length]);
 
   // Mount local video track to DOM
   useEffect(() => {
@@ -44,6 +68,40 @@ const CallInterface: React.FC = () => {
 
   // If not in a call or calling, don't render anything
   if (!isInCall && !isCalling) return null;
+
+  // Debug active call information
+  console.log("CallInterface active with:", {
+    isInCall,
+    callType,
+    remoteUsersCount: remoteUsers.length,
+    participantsCount: participants.length,
+    localVideo: !!localTracks.videoTrack,
+    localAudio: !!localTracks.audioTrack,
+    renderCounter: shouldRerender
+  });
+
+  if (remoteUsers.length > 0) {
+    console.log("Remote users detail:", remoteUsers.map(user => ({
+      uid: user.uid,
+      hasAudio: user.hasAudio,
+      hasVideo: user.hasVideo,
+      videoTrack: !!user.videoTrack
+    })));
+  }
+
+  // Force refreshing of video connections
+  const handleRefreshVideos = () => {
+    setShouldRerender(prev => prev + 1);
+    console.log("Manually refreshing video connections");
+    
+    // Re-play local video if needed
+    if (localTracks.videoTrack && localVideoRef.current) {
+      localTracks.videoTrack.stop();
+      setTimeout(() => {
+        localTracks.videoTrack?.play(localVideoRef.current!);
+      }, 200);
+    }
+  };
 
   // Render remote users and their video tracks
   const renderRemoteUsers = () => {
@@ -82,44 +140,113 @@ const CallInterface: React.FC = () => {
             <p className="text-muted-foreground">
               {statusMessage}
             </p>
+            <Button 
+              variant="link" 
+              size="sm" 
+              className="mt-2"
+              onClick={handleRefreshVideos}
+            >
+              <RefreshCw className="h-3 w-3 mr-1" /> Refresh Connection
+            </Button>
           </div>
         </div>
       );
     }
 
-    return remoteUsers.map((user) => (
-      <div key={user.uid} className="relative h-full rounded-lg overflow-hidden">
-        <div id={`remote-video-${user.uid}`} className="h-full w-full bg-black">
-          {user.videoTrack && (
-            <div
-              ref={(el) => {
-                if (el) user.videoTrack?.play(el);
-              }}
+    return remoteUsers.map((user) => {
+      // Debug info for this specific user
+      console.log(`Rendering remote user ${user.uid}:`, {
+        hasVideo: user.hasVideo,
+        hasVideoTrack: !!user.videoTrack,
+        hasAudio: user.hasAudio
+      });
+      
+      return (
+        <div key={`${user.uid}-${shouldRerender}`} className="relative h-full rounded-lg overflow-hidden bg-black">
+          {user.videoTrack ? (
+            <div 
               className="h-full w-full object-cover"
+              ref={el => {
+                if (el) {
+                  // First clean up any previous rendering
+                  el.innerHTML = '';
+                  // Then play the video track in this element
+                  console.log(`Playing video for user ${user.uid}`);
+                  try {
+                    // Stop the track first if it's already playing somewhere
+                    if (user.videoTrack && user.videoTrack.isPlaying) {
+                      user.videoTrack.stop();
+                    }
+                    // Set fit mode to cover (fills container)
+                    if (user.videoTrack) {
+                      user.videoTrack.play(el, { fit: "cover" });
+                      console.log(`Successfully played video for user ${user.uid}`);
+                    }
+                  } catch (err) {
+                    console.error(`Error playing video for user ${user.uid}:`, err);
+                  }
+                }
+              }}
             />
-          )}
-          {!user.videoTrack && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <Avatar className="h-20 w-20">
+          ) : (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+              <Avatar className="h-20 w-20 mx-auto">
                 <AvatarFallback>
                   {participants.find((p) => p.userId === user.uid)?.userInfo?.name?.[0] || "U"}
                 </AvatarFallback>
               </Avatar>
+              <p className="text-white text-xs mt-2">
+                {user.hasVideo ? "Video connecting..." : "No video"}
+              </p>
+              {user.hasVideo && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleRefreshUserVideo(user)}
+                  className="mt-1 text-xs py-1 h-auto"
+                >
+                  Retry Video
+                </Button>
+              )}
             </div>
           )}
+          
+          {/* Display name and status of remote user */}
+          <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-sm flex items-center">
+            <span>
+              {participants.find((p) => p.userId === user.uid)?.userInfo?.name || "User"}
+            </span>
+            {user.hasAudio === false && (
+              <MicOff className="h-3 w-3 ml-1 text-red-400" />
+            )}
+          </div>
         </div>
-      </div>
-    ));
+      );
+    });
+  };
+
+  // Force refresh for a specific user's video
+  const handleRefreshUserVideo = async (user: any) => {
+    console.log(`Attempting to refresh video for user ${user.uid}`);
+    
+    if (user.hasVideo) {
+      try {
+        // Try to resubscribe
+        if (user.videoTrack) {
+          // First stop the existing track
+          user.videoTrack.stop();
+        }
+        
+        // Force state update to trigger re-render
+        setShouldRerender(prev => prev + 1);
+      } catch (err) {
+        console.error(`Error refreshing video for user ${user.uid}:`, err);
+      }
+    }
   };
 
   // Get user info for header
   const getCallInfo = () => {
-    // Debug logging - examining in detail
-    console.log("RAW participants array:", JSON.stringify(participants));
-    console.log("Participants array length:", participants ? participants.length : 0);
-    console.log("Participants array type:", Array.isArray(participants) ? "Array" : typeof participants);
-    console.log("Remote users count:", remoteUsers.length);
-    
     // Defensive check - ensure participants is an array
     const safeParticipants = Array.isArray(participants) ? participants : [];
     
@@ -172,8 +299,6 @@ const CallInterface: React.FC = () => {
 
   const callInfo = getCallInfo();
 
-  console.log("callinfo: ", callInfo);
-
   // Add a participant to the call
   const handleAddParticipant = () => {
     // This would typically open a modal to select users
@@ -190,6 +315,11 @@ const CallInterface: React.FC = () => {
       label: "Add participant",
       icon: <PlusCircle className="h-4 w-4" />,
       onClick: handleAddParticipant,
+    },
+    {
+      label: "Refresh video",
+      icon: <RefreshCw className="h-4 w-4" />,
+      onClick: handleRefreshVideos,
     },
     {
       label: "End call for everyone",
@@ -219,6 +349,7 @@ const CallInterface: React.FC = () => {
           <Badge variant="outline" className="px-2 py-1 text-xs">
             {callType === "video" ? "Video Call" : "Audio Call"}
             {isCalling && " • Connecting..."}
+            {remoteUsers.length > 0 && ` • ${remoteUsers.length} connected`}
           </Badge>
         </div>
 

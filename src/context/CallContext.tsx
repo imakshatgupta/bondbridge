@@ -212,38 +212,107 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Set up Agora event listeners
     client.on("user-published", async (user, mediaType) => {
-      await client.subscribe(user, mediaType);
-      console.log("Subscribe success", user.uid, mediaType);
-
-      if (mediaType === "video") {
-        setCallState(prev => ({
-          ...prev,
-          remoteUsers: [...prev.remoteUsers, user]
-        }));
-      }
+      console.log(`Remote user ${user.uid} published ${mediaType} track`);
       
-      if (mediaType === "audio") {
-        user.audioTrack?.play();
+      try {
+        // Subscribe to the remote user
+        await client.subscribe(user, mediaType);
+        console.log(`Successfully subscribed to ${user.uid}'s ${mediaType}`);
+
+        if (mediaType === "video") {
+          console.log(`Remote user ${user.uid} published video - adding to remoteUsers list`);
+          // Update remoteUsers list to include this user with video
+          setCallState(prev => {
+            // Check if this user is already in our remoteUsers array
+            const userExists = prev.remoteUsers.some(u => u.uid === user.uid);
+            
+            if (userExists) {
+              // Update existing user entry
+              console.log(`User ${user.uid} already exists in remoteUsers, updating`);
+              return {
+                ...prev,
+                remoteUsers: prev.remoteUsers.map(u => 
+                  u.uid === user.uid ? user : u
+                )
+              };
+            } else {
+              // Add new user
+              console.log(`Adding new user ${user.uid} to remoteUsers`);
+              return {
+                ...prev,
+                remoteUsers: [...prev.remoteUsers, user]
+              };
+            }
+          });
+        }
+        
+        if (mediaType === "audio") {
+          console.log(`Playing audio for user ${user.uid}`);
+          user.audioTrack?.play();
+          
+          // Even for audio-only users, we want them in the remoteUsers list
+          // so they show with avatar instead of video
+          setCallState(prev => {
+            // Only add if not already in the list
+            if (!prev.remoteUsers.some(u => u.uid === user.uid)) {
+              return {
+                ...prev,
+                remoteUsers: [...prev.remoteUsers, user]
+              };
+            }
+            return prev;
+          });
+        }
+      } catch (error) {
+        console.error(`Error subscribing to ${user.uid}'s ${mediaType}:`, error);
       }
     });
 
     client.on("user-unpublished", (user, mediaType) => {
-      console.log("Unsubscribe", user.uid, mediaType);
+      console.log(`Remote user ${user.uid} unpublished ${mediaType}`);
+      
       if (mediaType === "video") {
-        setCallState(prev => ({
-          ...prev,
-          remoteUsers: prev.remoteUsers.filter(u => u.uid !== user.uid)
-        }));
+        // Don't remove user completely, just update the reference to show they have no video
+        // This approach avoids TypeScript errors while achieving the same goal
+        setCallState(prev => {
+          // Create a safe copy of the remote users array
+          const updatedRemoteUsers = prev.remoteUsers.map(u => {
+            if (u.uid === user.uid) {
+              // This is the user who unpublished their video
+              // We'll replace them with the updated user object from Agora
+              return user; // This will have videoTrack set to undefined
+            }
+            return u;
+          });
+          
+          return {
+            ...prev,
+            remoteUsers: updatedRemoteUsers
+          };
+        });
       }
     });
 
     client.on("user-left", (user) => {
-      console.log("User left:", user.uid);
+      console.log(`Remote user ${user.uid} left the call`);
+      
+      // Remove user from remoteUsers list
       setCallState(prev => ({
         ...prev,
         remoteUsers: prev.remoteUsers.filter(u => u.uid !== user.uid)
       }));
     });
+
+    // Debugging - log all users currently in the channel
+    console.log("Current remote users in channel:", client.remoteUsers);
+    if (client.remoteUsers.length > 0 && callState.remoteUsers.length === 0) {
+      // If there are users in the channel but not in our state, add them
+      console.log("Found existing users in channel, adding to state");
+      setCallState(prev => ({
+        ...prev,
+        remoteUsers: client.remoteUsers
+      }));
+    }
 
     return () => {
       client.removeAllListeners();
@@ -279,7 +348,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (type === "video") {
         console.log("Creating video track (video call)");
-        videoTrack = await AgoraRTC.createCameraVideoTrack();
+        try {
+          videoTrack = await AgoraRTC.createCameraVideoTrack();
+          console.log("Video track created successfully");
+        } catch (err) {
+          console.error("Failed to create video track:", err);
+        }
       }
       console.log("Successfully created local media tracks");
 
@@ -319,9 +393,39 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (audioTrack) tracksToPublish.push(audioTrack);
       if (videoTrack) tracksToPublish.push(videoTrack);
       
+      let publishSuccess = false;
       if (tracksToPublish.length > 0) {
-        await client.publish(tracksToPublish);
-        console.log("Successfully published caller's tracks to Agora");
+        try {
+          await client.publish(tracksToPublish);
+          console.log("Successfully published caller's tracks to Agora");
+          publishSuccess = true;
+        } catch (err) {
+          console.error("Failed to publish all tracks at once:", err);
+          
+          // Try publishing one by one if bulk publish fails
+          console.log("Trying to publish tracks individually...");
+          publishSuccess = true; // Assume success until a failure
+          
+          if (audioTrack) {
+            try {
+              await client.publish(audioTrack);
+              console.log("Successfully published audio track");
+            } catch (err) {
+              console.error("Failed to publish audio track:", err);
+              publishSuccess = false;
+            }
+          }
+          
+          if (videoTrack) {
+            try {
+              await client.publish(videoTrack);
+              console.log("Successfully published video track");
+            } catch (err) {
+              console.error("Failed to publish video track:", err);
+              // Don't set publishSuccess to false here as audio might still work
+            }
+          }
+        }
       }
 
       // Create participants array with both users
@@ -375,6 +479,30 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("Call initialization completed successfully");
       console.groupEnd();
+      
+      // Add a delayed check to ensure local tracks are properly published
+      if (type === "video" && videoTrack) {
+        setTimeout(async () => {
+          // Check if our local video track got properly published
+          const localUser = client.uid;
+          const localStreamIsPublished = client.localTracks.some(track => 
+            track.trackMediaType === "video"
+          );
+          
+          console.log(`Delayed check - local user ${localUser} video published:`, localStreamIsPublished);
+          
+          // If not published properly, try republishing
+          if (!localStreamIsPublished && videoTrack) {
+            console.log("Local video track not properly published, attempting republish");
+            try {
+              await client.publish(videoTrack);
+              console.log("Successfully republished video track");
+            } catch (err) {
+              console.error("Failed to republish video track:", err);
+            }
+          }
+        }, 2000);
+      }
       
     } catch (error) {
       console.error("Error initializing call:", error);
@@ -430,32 +558,47 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
       let videoTrack = null;
       
+      // Determine call type - using a more reliable approach
+      const callTypeToUse = callState.callType || incomingCall?.type || 'audio';
+      const isVideoCall = callTypeToUse === 'video';
+      
+      console.log("Call type determined as:", callTypeToUse);
+      console.log("Is this a video call?", isVideoCall);
+      
       // For video calls, create video track
-      if (callState.callType === "video" || incomingCall?.type === "video") {
-        console.log("Creating video track for video call");
-        videoTrack = await AgoraRTC.createCameraVideoTrack();
-        console.log("Publishing audio and video tracks to Agora");
-        
-        // Create an array of tracks to publish
-        const tracksToPublish = [];
-        if (audioTrack) tracksToPublish.push(audioTrack);
-        if (videoTrack) tracksToPublish.push(videoTrack);
-        
-        if (tracksToPublish.length > 0) {
-          console.log(`Publishing ${tracksToPublish.length} tracks to Agora`);
+      if (isVideoCall) {
+        try {
+          console.log("Creating video track for video call");
+          videoTrack = await AgoraRTC.createCameraVideoTrack();
+          console.log("Video track created successfully");
+        } catch (err) {
+          console.error("Failed to create video track:", err);
+        }
+      }
+      
+      // Create an array of tracks to publish
+      const tracksToPublish = [];
+      if (audioTrack) {
+        tracksToPublish.push(audioTrack);
+        console.log("Added audio track to publish");
+      }
+      
+      if (videoTrack) {
+        tracksToPublish.push(videoTrack);
+        console.log("Added video track to publish");
+      }
+      
+      // Publish tracks
+      if (tracksToPublish.length > 0) {
+        console.log(`Publishing ${tracksToPublish.length} tracks to Agora`);
+        try {
           await client.publish(tracksToPublish);
-          console.log("Successfully published tracks");
-        } else {
-          console.warn("No tracks to publish");
+          console.log("Successfully published tracks to Agora");
+        } catch (err) {
+          console.error("Failed to publish tracks:", err);
         }
       } else {
-        console.log("Publishing audio track only (audio call)");
-        if (audioTrack) {
-          await client.publish([audioTrack]);
-          console.log("Successfully published audio track");
-        } else {
-          console.warn("No audio track to publish");
-        }
+        console.warn("No tracks to publish");
       }
 
       // Check socket connection again before sending join event
@@ -588,7 +731,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isInCall: true,
           isCalling: false,
           callId,
-          callType: callState.callType || incomingCall?.type,
+          callType: callTypeToUse,
           localTracks: {
             audioTrack,
             videoTrack
@@ -788,10 +931,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Final participants list for answerCall:", JSON.stringify(initialParticipants));
     console.log("Participant count:", initialParticipants.length);
     
+    // IMPORTANT: Force the call type to be correctly set before joining
+    const callType = callData.type || 'audio';
+    console.log("Setting call type to:", callType);
+    
     // IMPORTANT: Force the participant data to be set before joining call
     setCallState(prev => ({
       ...prev,
-      callType: callData.type,
+      callType: callType,
       participants: initialParticipants
     }));
     
@@ -802,9 +949,47 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Proceeding to join call:", callData.callId);
     await joinCall(callData.callId, userId);
     
-    // IMPORTANT: Second update to ensure participants data is preserved
-    // This helps in case joinCall modifies participants
-    setTimeout(() => {
+    // IMPORTANT: After joining, double-check for users already in the channel
+    setTimeout(async () => {
+      // If we're in the call but don't see any remote users yet
+      if (client.remoteUsers.length > 0 && callState.remoteUsers.length === 0) {
+        console.log("🔍 Post-join check: Found users in channel that weren't detected:", 
+          client.remoteUsers.map(u => u.uid));
+        
+        // Force subscribe to all remote users
+        for (const remoteUser of client.remoteUsers) {
+          console.log(`Attempting to force subscribe to user ${remoteUser.uid}'s tracks`);
+          
+          if (remoteUser.hasVideo) {
+            try {
+              console.log(`👁️ Force subscribing to ${remoteUser.uid}'s video`);
+              await client.subscribe(remoteUser, "video");
+              console.log(`✅ Successfully subscribed to ${remoteUser.uid}'s video`);
+            } catch (err) {
+              console.error(`❌ Error subscribing to ${remoteUser.uid}'s video:`, err);
+            }
+          }
+          
+          if (remoteUser.hasAudio) {
+            try {
+              console.log(`🔊 Force subscribing to ${remoteUser.uid}'s audio`);
+              await client.subscribe(remoteUser, "audio");
+              remoteUser.audioTrack?.play();
+              console.log(`✅ Successfully subscribed to ${remoteUser.uid}'s audio`);
+            } catch (err) {
+              console.error(`❌ Error subscribing to ${remoteUser.uid}'s audio:`, err);
+            }
+          }
+        }
+        
+        // Update state with all remote users
+        setCallState(prev => ({
+          ...prev,
+          remoteUsers: client.remoteUsers
+        }));
+      }
+      
+      // Continue with second update for participants
       setCallState(prev => {
         // If the participants somehow got lost in the joinCall process,
         // restore our initialParticipants array
@@ -820,13 +1005,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         return {
           ...prev,
-          participants: finalParticipants
+          participants: finalParticipants,
+          callType: callType // Ensure call type is preserved
         };
       });
-    }, 500);
+    }, 1000); // Give a bit more time for network operations to settle
     
     console.groupEnd();
-  }, [joinCall, userId, checkSocketConnection, currentUser]);
+  }, [joinCall, userId, checkSocketConnection, currentUser, callState.remoteUsers.length]);
 
   // Reject an incoming call
   const rejectCall = useCallback((callData: any) => {
@@ -866,6 +1052,110 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
       client.off("connection-state-change", () => {});
     };
   }, []);
+
+  // Periodic check for remote users when in a call
+  useEffect(() => {
+    if (!callState.isInCall || !callState.callId) return;
+    
+    console.log("Setting up periodic remote user check");
+    
+    // Check if user-published events might not be firing
+    const userPublishedCheckInterval = setInterval(() => {
+      // For each remote user that has video but no videoTrack
+      const usersWithVideoButNoTrack = client.remoteUsers.filter(
+        user => user.hasVideo && !user.videoTrack
+      );
+      
+      if (usersWithVideoButNoTrack.length > 0) {
+        console.log(`Found ${usersWithVideoButNoTrack.length} users with video but no tracks:`, 
+          usersWithVideoButNoTrack.map(u => u.uid));
+        
+        // Force (re)subscribe to their video tracks
+        usersWithVideoButNoTrack.forEach(async (user) => {
+          console.log(`Attempting to force resubscribe to ${user.uid}'s video`);
+          
+          try {
+            // First try unsubscribing
+            await client.unsubscribe(user, "video");
+            console.log(`Successfully unsubscribed from ${user.uid}'s video`);
+            
+            // Then resubscribe
+            await client.subscribe(user, "video");
+            console.log(`Successfully resubscribed to ${user.uid}'s video`);
+            
+            // Update remoteUsers to trigger UI update
+            setCallState(prev => ({
+              ...prev,
+              remoteUsers: [...prev.remoteUsers.filter(u => u.uid !== user.uid), user]
+            }));
+          } catch (err) {
+            console.error(`Error resubscribing to ${user.uid}'s video:`, err);
+          }
+        });
+      }
+    }, 5000); // Check every 5 seconds
+    
+    // Regularly check for remote users that we might have missed
+    const interval = setInterval(() => {
+      // Get current remote users from the Agora client
+      const currentRemoteUsers = client.remoteUsers;
+      
+      // If we have remote users in the channel but not in our state, add them
+      if (currentRemoteUsers.length > 0 && 
+          (callState.remoteUsers.length === 0 || 
+           currentRemoteUsers.length > callState.remoteUsers.length)) {
+        
+        console.log("Found remote users in periodic check:", currentRemoteUsers.map(u => u.uid));
+        console.log("Current state remote users:", callState.remoteUsers.map(u => u.uid));
+        
+        // Check for users in client.remoteUsers that aren't in our state
+        const missingUsers = currentRemoteUsers.filter(
+          remoteUser => !callState.remoteUsers.some(u => u.uid === remoteUser.uid)
+        );
+        
+        if (missingUsers.length > 0) {
+          console.log("Adding missing remote users to state:", missingUsers.map(u => u.uid));
+          
+          // Update state with all remote users
+          setCallState(prev => ({
+            ...prev,
+            remoteUsers: [...prev.remoteUsers, ...missingUsers]
+          }));
+          
+          // Try to subscribe to any missing users' tracks
+          missingUsers.forEach(async (user) => {
+            // Try to subscribe to video if available
+            if (user.hasVideo) {
+              console.log(`Trying to subscribe to missing user ${user.uid}'s video`);
+              try {
+                await client.subscribe(user, "video");
+                console.log(`Successfully subscribed to ${user.uid}'s video`);
+              } catch (err) {
+                console.error(`Error subscribing to ${user.uid}'s video:`, err);
+              }
+            }
+            
+            // Try to subscribe to audio if available
+            if (user.hasAudio) {
+              console.log(`Trying to subscribe to missing user ${user.uid}'s audio`);
+              try {
+                await client.subscribe(user, "audio");
+                console.log(`Successfully subscribed to ${user.uid}'s audio`);
+                user.audioTrack?.play();
+              } catch (err) {
+                console.error(`Error subscribing to ${user.uid}'s audio:`, err);
+              }
+            }
+          });
+        }
+      }
+    }, 3000); // Check every 3 seconds
+    
+    return () => {
+      clearInterval(interval);
+      clearInterval(userPublishedCheckInterval);
+    };
+  }, [callState.isInCall, callState.callId, callState.remoteUsers.length]);
 
   return (
     <CallContext.Provider 

@@ -17,9 +17,31 @@ interface IncomingCallModalProps {
 
 const IncomingCallModal: React.FC<IncomingCallModalProps> = ({ open }) => {
   const { incomingCall, answerCall, rejectCall } = useCall();
-  console.log("incomingCall, answerCall, rejectCall: ", incomingCall, answerCall, rejectCall); // perfect
+
+  // console.log("incomingCall, answerCall, rejectCall: ", incomingCall, answerCall, rejectCall); // perfect
+  
+  // Debug incoming call data
+  console.log("Incoming call data:", incomingCall ? {
+    type: incomingCall.type,
+    from: incomingCall.userId,
+    name: incomingCall.senderInfo?.name,
+    callId: incomingCall.callId
+  } : "No incoming call");
 
   if (!incomingCall) return null;
+
+  const handleAnswerCall = async () => {
+    // Log before answering
+    console.log("Answering call of type:", incomingCall.type || "audio");
+    
+    // Make sure call type is preserved
+    const callData = {
+      ...incomingCall,
+      type: incomingCall.type || "audio" // Ensure type is set
+    };
+    
+    await answerCall(callData);
+  };
 
   return (
     <Dialog open={open}>
@@ -55,7 +77,7 @@ const IncomingCallModal: React.FC<IncomingCallModalProps> = ({ open }) => {
             variant="default" 
             size="icon" 
             className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600"
-            onClick={() => answerCall(incomingCall)}
+            onClick={handleAnswerCall}
           >
             {incomingCall.type === "video" ? 
               <Video className="h-6 w-6" /> : 

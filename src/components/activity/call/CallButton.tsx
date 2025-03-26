@@ -30,9 +30,13 @@ const CallButton: React.FC<CallButtonProps> = ({
       return;
     }
 
-    console.log("initializing call: ", userId, otherId, type); // perfect
+    console.log(`Initializing ${type} call from ${userId} to ${otherId}`);
     
-    await initializeCall(userId, otherId, type);
+    try {
+      await initializeCall(userId, otherId, type);
+    } catch (error) {
+      console.error("Failed to initialize call:", error);
+    }
   };
 
   return (
@@ -43,6 +47,7 @@ const CallButton: React.FC<CallButtonProps> = ({
       disabled={!isConnected}
       className={className}
       aria-label={`${type === "video" ? "Video" : "Audio"} call`}
+      title={`Start ${type === "video" ? "video" : "audio"} call`}
     >
       {type === "video" ? (
         <Video className="h-4 w-4" />
