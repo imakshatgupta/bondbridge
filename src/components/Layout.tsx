@@ -6,13 +6,15 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import ChatInterface from "./activity/ChatInterface";
 import { setActiveChat } from "@/store/chatSlice";
 import { Link } from "react-router-dom";
-import mockUserData from "@/constants/users";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
+import { getSuggestedUsers } from "@/apis/commonApiCalls/homepageApi";
+import { SuggestedUser } from "@/apis/apiTypes/response";
 import SettingLayout from "./settings/SettingLayout";
 import LeftSidebar from "./auth/LeftSidebar";
 import { updateCurrentUser } from "@/store/currentUserSlice";
 import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
 import { Toaster } from "./ui/sonner";
+import { useApiCall } from "@/apis/globalCatchError";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,6 +33,8 @@ const Layout: React.FC<LayoutProps> = ({
   const currentUserId = localStorage.getItem("userId") || "";
   const currentUser = useAppSelector((state) => state.currentUser);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
+  const [fetchSuggestedUsers, isLoadingSuggested] = useApiCall(getSuggestedUsers);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -57,17 +61,28 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [currentUserId, dispatch,currentUser.username]);
 
+  useEffect(() => {
+    const loadSuggestedUsers = async () => {
+      const result = await fetchSuggestedUsers();
+      if (result.success && result.data && result.data.users) {
+        setSuggestedUsers(result.data.users);
+      }
+    };
+
+    loadSuggestedUsers();
+  }, []);
+
   const isSettingsActive = useAppSelector(
     (state) => state.settings.isSettingsActive
   );
 
-  // Convert mockUserData to array and filter out current user
-  const sidebarUsers = Object.entries(mockUserData)
-    .filter(([id]) => id !== currentUserId)
-    .map(([id, user]) => ({
-      id,
-      username: user.username,
-      avatarSrc: user.avatarSrc,
+  // Convert suggested users to format needed for sidebar
+  const sidebarUsers = suggestedUsers
+    .filter(user => user._id !== currentUserId)
+    .map(user => ({
+      id: user._id,
+      username: user.name,
+      avatarSrc: user.profilePic || user.avatar,
     }));
 
   const handleCloseChat = () => {
@@ -151,16 +166,20 @@ const Layout: React.FC<LayoutProps> = ({
                       <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground">
                         People
                       </h3>
-                      <ul className="space-y-3">
-                        {sidebarUsers.map((user) => (
-                          <SidebarAvatar
-                            key={user.id}
-                            id={user.id}
-                            username={user.username}
-                            avatarSrc={user.avatarSrc}
-                          />
-                        ))}
-                      </ul>
+                      {isLoadingSuggested ? (
+                        <SidebarPeopleSkeleton />
+                      ) : (
+                        <ul className="space-y-3">
+                          {sidebarUsers.map((user) => (
+                            <SidebarAvatar
+                              key={user.id}
+                              id={user.id}
+                              username={user.username}
+                              avatarSrc={user.avatarSrc}
+                            />
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   </>
                 )}
