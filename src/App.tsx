@@ -23,133 +23,136 @@ import CreateStory from "./pages/CreateStory";
 import Settings from "./pages/Settings";
 import ForgotPassword from "./pages/ForgotPassword";
 import FollowingFollowers from "@/components/FollowingFollowers";
+import AuthGuard from "@/components/AuthGuard";
 
 // Component for routes that require authentication and socket connection
 const AuthenticatedRoutes: React.FC = () => {
   return (
     <SocketProvider>
-      <Routes>
-        <Route
-          path="/setup-profile"
-          element={
-            <Layout>
-              <SetupProfile />
-            </Layout>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <Layout showSidebars={true}>
-              <HomePage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <Layout showSidebars={true}>
-              <Notifications />
-            </Layout>
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            <Layout showSidebars={true}>
-              <Search />
-            </Layout>
-          }
-        />
-        <Route
-          path="/post/:postId"
-          element={
-            <Layout showSidebars={true}>
-              <CommentsPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/activity"
-          element={
-            <Layout showSidebars={true}>
-              <Activity />
-            </Layout>
-          }
-        />
-        <Route
-          path="/create-group"
-          element={
-            <Layout showSidebars={false}>
-              <CreateGroup />
-            </Layout>
-          }
-        />
-        <Route
-          path="/profile/:userId"
-          element={
-            <Layout showSidebars={true}>
-              <ProfilePage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/following-followers"
-          element={
-            <Layout showSidebars={true}>
-              <FollowingFollowers />
-            </Layout>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <Layout showSidebars={true}>
-              <Settings />
-            </Layout>
-          }
-        />
-        <Route
-          path="/others-profile"
-          element={
-            <Layout showSidebars={true}>
-              <OthersProfilePage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/bondchat"
-          element={
-            <Layout showSidebars={true} className="py-0">
-              <BondChat />
-            </Layout>
-          }
-        />
-        <Route
-          path="/story/:userId"
-          element={
-            <Layout showSidebars={true} className="!p-0">
-              <StoryPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/create-post"
-          element={
-            <Layout showSidebars={true}>
-              <CreatePost />
-            </Layout>
-          }
-        />
-        <Route
-          path="/create-story"
-          element={
-            <Layout showSidebars={true} className="!p-0">
-              <CreateStory />
-            </Layout>
-          }
-        />
-      </Routes>
+      <AuthGuard>
+        <Routes>
+          <Route
+            path="/setup-profile"
+            element={
+              <Layout>
+                <SetupProfile />
+              </Layout>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <Layout showSidebars={true}>
+                <HomePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <Layout showSidebars={true}>
+                <Notifications />
+              </Layout>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <Layout showSidebars={true}>
+                <Search />
+              </Layout>
+            }
+          />
+          <Route
+            path="/post/:postId"
+            element={
+              <Layout showSidebars={true}>
+                <CommentsPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/activity"
+            element={
+              <Layout showSidebars={true}>
+                <Activity />
+              </Layout>
+            }
+          />
+          <Route
+            path="/create-group"
+            element={
+              <Layout showSidebars={false}>
+                <CreateGroup />
+              </Layout>
+            }
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <Layout showSidebars={true}>
+                <ProfilePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/following-followers"
+            element={
+              <Layout showSidebars={true}>
+                <FollowingFollowers />
+              </Layout>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Layout showSidebars={true}>
+                <Settings />
+              </Layout>
+            }
+          />
+          <Route
+            path="/others-profile"
+            element={
+              <Layout showSidebars={true}>
+                <OthersProfilePage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/bondchat"
+            element={
+              <Layout showSidebars={true} className="py-0">
+                <BondChat />
+              </Layout>
+            }
+          />
+          <Route
+            path="/story/:userId"
+            element={
+              <Layout showSidebars={true} className="!p-0">
+                <StoryPage />
+              </Layout>
+            }
+          />
+          <Route
+            path="/create-post"
+            element={
+              <Layout showSidebars={true}>
+                <CreatePost />
+              </Layout>
+            }
+          />
+          <Route
+            path="/create-story"
+            element={
+              <Layout showSidebars={true} className="!p-0">
+                <CreateStory />
+              </Layout>
+            }
+          />
+        </Routes>
+      </AuthGuard>
     </SocketProvider>
   );
 };

@@ -11,7 +11,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { LogOut, AlertTriangle, ArrowLeft, KeyRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import ResetPasswordDialog from "./ResetPasswordDialog";
 
@@ -19,13 +19,6 @@ const LogoutDeletePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
-
-  const handleLogout = () => {
-    dispatch(resetUser());
-    localStorage.removeItem("userId");
-    // Redirect to login page
-    window.location.href = "/login";
-  };
 
   const handleDeleteAccount = () => {
     dispatch(resetUser());
@@ -67,26 +60,6 @@ const LogoutDeletePage: React.FC = () => {
             >
               <KeyRound className="h-4 w-4 mr-2" />
               Reset Password
-            </Button>
-          </div>
-        </div>
-
-        {/* Logout Section */}
-        <div className="p-4 border border-border rounded-md">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Logout</h4>
-              <p className="text-sm text-muted-foreground">
-                Sign out of your account
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="border-red-300 hover:bg-red-50 hover:text-red-600 text-red-500 cursor-pointer"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
             </Button>
           </div>
         </div>
