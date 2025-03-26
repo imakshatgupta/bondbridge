@@ -6,9 +6,14 @@ import { ArrowRight, Paperclip, Mic } from 'lucide-react';
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
-export const ChatInput = ({ onSendMessage, placeholder = 'Type your message...' }: ChatInputProps) => {
+export const ChatInput = ({ 
+  onSendMessage, 
+  placeholder = 'Type your message...', 
+  disabled = false 
+}: ChatInputProps) => {
   const [message, setMessage] = useState('');
 
   const handleSend = () => {
@@ -25,15 +30,16 @@ export const ChatInput = ({ onSendMessage, placeholder = 'Type your message...' 
         <Input 
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => e.key === 'Enter' && !disabled && handleSend()}
           placeholder={placeholder}
+          disabled={disabled}
           className="flex-1 border-0 bg-transparent rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
         />
         <Mic className="h-5 w-5 text-muted-foreground/60" />
       </div>
       <Button 
         onClick={handleSend}
-        disabled={!message.trim()}
+        disabled={!message.trim() || disabled}
         className="rounded-full aspect-square h-11 w-11 bg-primary"
       >
         <ArrowRight className="h-full w-full" />
