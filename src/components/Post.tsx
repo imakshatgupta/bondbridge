@@ -31,7 +31,7 @@ export function Post({
     avatar, 
     caption, 
     image, 
-    media, 
+    media = [], 
     likes: initialLikes, 
     comments, 
     datePosted, 
@@ -144,7 +144,7 @@ export function Post({
 
     // Determine if we should show a carousel or a single image
     const hasMultipleMedia = media && media.length > 1;
-    const hasSingleMedia = (media && media.length === 1) || image;
+    const hasSingleMedia = (media && media.length === 1) || !!image;
 
     const MediaWrapper = ({ children }: { children: React.ReactNode }) => (
         <div className="relative" onDoubleClick={handleDoubleClick}>
@@ -223,11 +223,11 @@ export function Post({
                 <p className="text-card-foreground">{caption}</p>
                 
                 {/* Carousel for multiple media items */}
-                {hasMultipleMedia && (
+                {hasMultipleMedia && media && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <Carousel className="w-full">
                             <CarouselContent>
-                                {media!.map((item, index) => (
+                                {media.map((item, index) => (
                                     <CarouselItem key={`${userId}-media-${index}`}>
                                         {item.type === "image" && (
                                             <MediaWrapper>
@@ -261,7 +261,7 @@ export function Post({
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <MediaWrapper>
                             <img
-                                src={media ? media[0].url : image}
+                                src={media && media.length > 0 ? media[0].url : image}
                                 alt="Post"
                                 className="w-full max-h-[500px] object-contain bg-muted"
                             />
