@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useSocket } from "@/context/SocketContext";
 import { useApiCall } from "@/apis/globalCatchError";
-import { getMessages } from "@/apis/commonApiCalls/chatApi";
+import { getMessages, startMessage } from "@/apis/commonApiCalls/chatApi";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -195,8 +195,10 @@ export default function BondChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
   const [executeGetMessages] = useApiCall(getMessages);
+  const [executeStartMessage] = useApiCall(startMessage);
   const userId = localStorage.getItem("userId") || "";
-  const roomId = userId; // Using userId as the roomId for BondChat
+  const [chatRoomId, setChatRoomId] = useState<string | null>(null);
+  const BOT_ID = import.meta.env.VITE_BOT_ID; // Access the bot ID from environment variables
   const dispatch = useDispatch();
 
   // Update refs when states change
@@ -272,14 +274,24 @@ export default function BondChat() {
   useEffect(() => {
     if (!socket || !isConnected || !userId) return;
 
-    // Join the room
-    console.log("Joining BondChat room:", roomId);
-    socket.emit("join", roomId);
-
-    // Fetch message history
-    const fetchMessageHistory = async () => {
+    // Initialize the chat with the bot
+    const initializeChat = async () => {
       setIsLoading(true);
-      try {
+      
+      // First call start-message API to get or create the chat room
+      const startMessageResult = await executeStartMessage({
+        userId2: BOT_ID, // Use the bot ID from environment variables
+      });
+
+      if (startMessageResult.success && startMessageResult.data) {
+        const roomId = startMessageResult.data.chatRoom.chatRoomId;
+        setChatRoomId(roomId);
+        console.log("Chat initialized with room ID:", roomId);
+        
+        // Join the room
+        socket.emit("join", roomId);
+        
+        // Now fetch messages for this room
         const result = await executeGetMessages({
           roomId,
           page: 1,
@@ -321,15 +333,15 @@ export default function BondChat() {
             .reverse(); // Reverse to show newest at the bottom
           setMessages(messageHistory);
         }
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        toast.error("Failed to load message history");
-      } finally {
-        setIsLoading(false);
+      } else {
+        toast.error("Failed to initialize chat");
+        console.error("Start message failed:", startMessageResult);
       }
+      
+      setIsLoading(false);
     };
 
-    fetchMessageHistory();
+    initializeChat();
 
     // Set up socket event listeners
     const handleReceiveMessage = (data: MessageResponse) => {
@@ -387,14 +399,16 @@ export default function BondChat() {
     return () => {
       socket.off("receiveMessage", handleReceiveMessage);
       // Leave the room when component unmounts
-      socket.emit("leave", roomId);
+      if (chatRoomId) {
+        socket.emit("leave", chatRoomId);
+      }
       // Clean up audio
       if (audioRef) {
         audioRef.pause();
         audioRef.currentTime = 0;
       }
     };
-  }, [socket, isConnected, userId, roomId]);
+  }, [socket, isConnected, userId, BOT_ID]);
 
   // Effect to handle existing messages' audio when speaker toggle changes
   useEffect(() => {
@@ -407,13 +421,13 @@ export default function BondChat() {
   }, [isSpeakerOn]);
 
   const handleSendMessage = (text: string) => {
-    if (!text.trim() || !socket || !isConnected) return;
+    if (!text.trim() || !socket || !isConnected || !chatRoomId) return;
 
     // Create message data
     const messageData = {
       senderId: userId,
       content: text,
-      entityId: roomId,
+      entityId: chatRoomId, // Use the roomId from start-message API
       media: null,
       entity: "chat",
       isBot: true, // Set isBot flag to true
@@ -501,7 +515,7 @@ export default function BondChat() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="ml-1 h-8 px-2 cursor-pointer">
-                    {voiceType === "male" ? "Male" : "Female"}
+                    {voiceType === "male" ? "Michael" : "Vanessa"}
                     <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -512,7 +526,7 @@ export default function BondChat() {
                         voiceType === "male" ? "opacity-100" : "opacity-0"
                       }`}
                     />
-                    Male
+                    Michael
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => selectVoice("female")}>
                     <Check
@@ -520,7 +534,7 @@ export default function BondChat() {
                         voiceType === "female" ? "opacity-100" : "opacity-0"
                       }`}
                     />
-                    Female
+                    Vanessa
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
