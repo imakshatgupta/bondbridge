@@ -168,6 +168,13 @@ const Layout: React.FC<LayoutProps> = ({
                       </h3>
                       {isLoadingSuggested ? (
                         <SidebarPeopleSkeleton />
+                      ) : sidebarUsers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                          <p className="text-sidebar-foreground/70 mb-3">No suggested people found</p>
+                          <p className="text-sidebar-foreground/60 text-sm">
+                            Add interests to your profile to view suggested people in the settings page
+                          </p>
+                        </div>
                       ) : (
                         <ul className="space-y-3">
                           {sidebarUsers.map((user) => (
