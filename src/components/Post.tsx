@@ -31,7 +31,7 @@ export function Post({
     avatar, 
     caption, 
     image, 
-    media, 
+    media = [], 
     likes: initialLikes, 
     comments, 
     datePosted, 
@@ -64,61 +64,56 @@ export function Post({
         if (!feedId || isLoadingReactions) return;
         
         setIsLoadingReactions(true);
-        try {
-            const result = await executeGetAllReactions(feedId, 'feed');
+        const result = await executeGetAllReactions(feedId, 'feed');
+        
+        if (result.success && result.data) {
+            const likeReaction = result.data.reactions.find(r => r.reactionType === 'like');
             
-            if (result.success && result.data) {
-                const likeReaction = result.data.reactions.find(r => r.reactionType === 'like');
+            if (likeReaction) {
+                // Get current user ID from localStorage or auth context
+                const currentUserId = localStorage.getItem('userId'); // Adjust based on your auth implementation
                 
-                if (likeReaction) {
-                    // Get current user ID from localStorage or auth context
-                    const currentUserId = localStorage.getItem('userId'); // Adjust based on your auth implementation
-                    
-                    // Check if current user has liked the post
-                    const userHasLiked = likeReaction.users.some(u => u.userId === currentUserId);
-                    setIsLiked(userHasLiked);
-                    
-                    // Update likes count
-                    setLikes(likeReaction.count);
-                }
+                // Check if current user has liked the post
+                const userHasLiked = likeReaction.users.some(u => u.userId === currentUserId);
+                setIsLiked(userHasLiked);
+                
+                // Update likes count
+                setLikes(likeReaction.count);
             }
-        } catch (error) {
-            console.error('Failed to fetch reactions:', error);
-        } finally {
-            setIsLoadingReactions(false);
         }
+        setIsLoadingReactions(false);
     };
 
     const handleLikeClick = async () => {
         if (isLikeLoading || !feedId) return;
 
+        // Optimistically update the UI
+        setIsLiked(prev => !prev);
+        setLikes(prev => isLiked ? prev - 1 : prev + 1);
         setIsLikeLoading(true);
-        try {
-            const reactionData = {
-                entityId: feedId,
-                entityType: 'feed',
-                reactionType: 'like'
-            };
 
-            let result;
-            if (isLiked) {
-                result = await executeDeleteReaction(reactionData);
-            } else {
-                result = await executeAddReaction(reactionData);
-            }
+        const reactionData = {
+            entityId: feedId,
+            entityType: 'feed',
+            reactionType: 'like'
+        };
 
-            if (result.success && result.data) {
-                setIsLiked(!isLiked);
-                setLikes(prev => isLiked ? prev - 1 : prev + 1);
-                onLikeClick?.();
-            } else {
-                toast.error("Failed to update like status");
-            }
-        } catch (error) {
-            toast.error("Failed to update like status");
-        } finally {
-            setIsLikeLoading(false);
+        let result;
+        if (isLiked) {
+            result = await executeDeleteReaction(reactionData);
+        } else {
+            result = await executeAddReaction(reactionData);
         }
+
+        if (!result.success || !result.data) {
+            // Revert optimistic update on failure
+            setIsLiked(prev => !prev);
+            setLikes(prev => isLiked ? prev + 1 : prev - 1);
+        } else {
+            onLikeClick?.();
+        }
+
+        setIsLikeLoading(false);
     };
 
     const handleDoubleClick = useCallback(async (e: React.MouseEvent) => {
@@ -149,7 +144,7 @@ export function Post({
 
     // Determine if we should show a carousel or a single image
     const hasMultipleMedia = media && media.length > 1;
-    const hasSingleMedia = (media && media.length === 1) || image;
+    const hasSingleMedia = (media && media.length === 1) || !!image;
 
     const MediaWrapper = ({ children }: { children: React.ReactNode }) => (
         <div className="relative" onDoubleClick={handleDoubleClick}>
@@ -228,11 +223,11 @@ export function Post({
                 <p className="text-card-foreground">{caption}</p>
                 
                 {/* Carousel for multiple media items */}
-                {hasMultipleMedia && (
+                {hasMultipleMedia && media && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <Carousel className="w-full">
                             <CarouselContent>
-                                {media!.map((item, index) => (
+                                {media.map((item, index) => (
                                     <CarouselItem key={`${userId}-media-${index}`}>
                                         {item.type === "image" && (
                                             <MediaWrapper>
@@ -266,7 +261,7 @@ export function Post({
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <MediaWrapper>
                             <img
-                                src={media ? media[0].url : image}
+                                src={media && media.length > 0 ? media[0].url : image}
                                 alt="Post"
                                 className="w-full max-h-[500px] object-contain bg-muted"
                             />
@@ -277,7 +272,7 @@ export function Post({
                 <div className="flex items-center justify-between mt-4 text-muted-foreground">
                     <div className="flex items-center gap-3">
                         <button 
-                            className={`flex items-center gap-1 cursor-pointer ${isLiked ? 'text-destructive' : 'hover:text-destructive'} ${isLikeLoading || isLoadingReactions ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-1 ${isLiked ? 'text-destructive' : 'hover:text-destructive'} ${isLikeLoading || isLoadingReactions ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                             onClick={handleLikeClick}
                             disabled={isLikeLoading || isLoadingReactions}
                         >
