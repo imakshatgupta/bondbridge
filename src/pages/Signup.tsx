@@ -44,6 +44,7 @@ const customPhoneInputStyles = `
   
   .intl-tel-input .selected-dial-code {
     color: var(--foreground);
+    padding-left: 10px; /* Add padding between flag and country code */
   }
   
   .intl-tel-input input {
@@ -59,6 +60,15 @@ const customPhoneInputStyles = `
 
   .intl-tel-input .country-list .divider {
     border-bottom-color: var(--border);
+  }
+  
+  /* Fix spacing between flag and dial code */
+  .intl-tel-input.separate-dial-code .selected-flag {
+    padding-right: 6px !important;
+  }
+  
+  .intl-tel-input.separate-dial-code .selected-dial-code {
+    margin-left: 6px !important;
   }
 `;
 
@@ -103,6 +113,12 @@ const Signup: React.FC = () => {
             "style",
             "height: 100% !important; display: flex !important; align-items: center !important;"
           );
+        }
+        
+        // Fix selected dial code (country code) spacing
+        const selectedDialCode = container.querySelector(".selected-dial-code");
+        if (selectedDialCode) {
+          selectedDialCode.setAttribute("style", "margin-left: 6px !important; padding-left: 0 !important;");
         }
 
         // Fix input height

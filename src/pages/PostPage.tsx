@@ -388,7 +388,7 @@ export default function CommentsPage() {
               userId={post.userId}
               avatar={post.profilePic}
               caption={post.data.content}
-              image={post.data.media[0]?.url}
+              media={post.data.media || []}
               likes={post.reactionCount}
               comments={post.commentCount}
               datePosted={post.ago_time}
