@@ -13,6 +13,7 @@ export interface UserProfileData {
   isFollower?: boolean;
   requestSent?: boolean;
   compatibility?: number;
+  communities?: string[];
 }
 
 export interface PostData {
@@ -49,6 +50,7 @@ export interface UserPostsResponse {
       reactionType: string;
     };
   }>;
+  communities?: string[];
 }
 
 export interface FetchUserProfileResponse {

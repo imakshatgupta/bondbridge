@@ -192,3 +192,8 @@ export interface ReactionRequest {
 export interface GetPostDetailsRequest {
   feedId: string;
 }
+
+export interface FetchCommunitiesRequest {
+  page?: number;
+  limit?: number;
+}

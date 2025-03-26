@@ -54,39 +54,40 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <div className="flex-1 p-4 overflow-y-auto space-y-3">
-      {messages.map((message, index) => {
-        // Check if this is the first message from this user or if the previous message was from a different sender
-        const isPreviousDifferentSender =
-          index === 0 ||
-          messages[index - 1].senderName !== message.senderName;
+    <div className="absolute inset-0 overflow-y-auto px-4">
+      <div className="py-4 space-y-3">
+        {messages.map((message, index) => {
+          const isPreviousDifferentSender =
+            index === 0 ||
+            messages[index - 1].senderName !== message.senderName;
 
-        return (
-          <Message
-            key={message.id}
-            message={message}
-            isFirstInSequence={isPreviousDifferentSender}
-            isGroupChat={chatType === "group"}
-            userId={userId}
-          />
-        );
-      })}
-
-      {isTyping && (
-        <div className="flex items-start gap-2">
-          <Avatar className="h-6 w-6 mt-1">
-            <AvatarImage
-              src={typingUser?.profilePic || ""}
-              alt={typingUser?.name || "User"}
+          return (
+            <Message
+              key={message.id}
+              message={message}
+              isFirstInSequence={isPreviousDifferentSender}
+              isGroupChat={chatType === "group"}
+              userId={userId}
             />
-            <AvatarFallback>{(typingUser?.name || "?")[0]}</AvatarFallback>
-          </Avatar>
-          <div className="bg-muted p-2 rounded-md text-sm rounded-tl-none">
-            <span>typing...</span>
+          );
+        })}
+
+        {isTyping && (
+          <div className="flex items-start gap-2">
+            <Avatar className="h-6 w-6 mt-1">
+              <AvatarImage
+                src={typingUser?.profilePic || ""}
+                alt={typingUser?.name || "User"}
+              />
+              <AvatarFallback>{(typingUser?.name || "?")[0]}</AvatarFallback>
+            </Avatar>
+            <div className="bg-muted p-2 rounded-md text-sm rounded-tl-none">
+              <span>typing...</span>
+            </div>
           </div>
-        </div>
-      )}
-      <div ref={messagesEndRef} />
+        )}
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 };

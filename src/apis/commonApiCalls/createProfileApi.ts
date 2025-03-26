@@ -12,7 +12,7 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
     password, 
     skillSelected, 
     avatar,
-    // image,
+    image,
     // communities
   } = profileData;
   
@@ -27,16 +27,16 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
   formData.append('email', email);
 
   // commented out as not being uploaded currently
-  // formData.append('dateOfBirth', dateOfBirth);
+  formData.append('dob', dateOfBirth);
 
   if (skillSelected && skillSelected.length > 0) {
     formData.append('interests', JSON.stringify(skillSelected));
   }
   
   // commented out as not being uploaded currently
-  // if (image) {
-  //   formData.append('image', image);
-  // }
+  if (image) {
+    formData.append('profilePic', image);
+  }
 
   if (avatar) {
     formData.append('avatar', avatar);

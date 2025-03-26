@@ -1,27 +1,62 @@
-import React, { useEffect } from 'react';
-import { addCommunity, removeCommunity } from '../../store/createProfileSlice';
+import React, { useEffect, useState } from 'react';
+import { addCommunity, removeCommunity, setCommunities } from '../../store/createProfileSlice';
 import { useAppDispatch, useAppSelector } from '../../store';
+import { fetchCommunities } from '../../apis/commonApiCalls/communitiesApi';
+import { useApiCall } from '../../apis/globalCatchError';
+import { Community } from '@/lib/constants';
+import { CommunityResponse } from '@/apis/apiTypes/response';
+import { Loader2 } from "lucide-react";
 
 const SelectCommunitiesTab: React.FC = () => {
-  const dispatch = useAppDispatch();  
+  const dispatch = useAppDispatch();
+  const [executeFetchCommunities, isLoading] = useApiCall(fetchCommunities);
+  
   // Get all profile data from Redux store
-  const {
-    communitiesAvailable,
-    communitiesSelected
-  } = useAppSelector(state => state.createProfile);
+  const { communitiesSelected } = useAppSelector(state => state.createProfile);
+  const [communities, setCommunityList] = useState<CommunityResponse[]>([]);
 
-  const isCommunitySelected = (id: number) => {
+  // Function to convert CommunityResponse to Community format for Redux store
+  const mapToCommunity = (communityResponse: CommunityResponse): Community => ({
+    id: communityResponse._id,
+    name: communityResponse.name,
+    members: communityResponse.memberCount,
+    pfp: communityResponse.profilePicture,
+    description: communityResponse.description,
+    backgroundImage: communityResponse.backgroundImage,
+    bio: communityResponse.bio
+  });
+
+  useEffect(() => {
+    const loadCommunities = async () => {
+      const { data, success } = await executeFetchCommunities();
+      if (success && data) {
+        setCommunityList(data);
+        
+        // Map the API communities to the format expected by the Redux store
+        const formattedCommunities = data.map(mapToCommunity);
+        dispatch(setCommunities(formattedCommunities));
+      }
+    };
+    
+    loadCommunities();
+  },[]);
+
+  const isCommunitySelected = (id: string) => {
     return communitiesSelected.some(community => community.id === id);
   };
 
-  // Toggle community selection
-  const toggleCommunity = (community: { id: number; name: string; members: number; pfp: string }) => {
-    if (isCommunitySelected(community.id)) {
+  // Toggle community selection - only updates Redux store, no API calls
+  const toggleCommunity = (community: CommunityResponse) => {
+    const communityData = mapToCommunity(community);
+    const isSelected = isCommunitySelected(community._id);
+    
+    // Update Redux store only
+    if (isSelected) {
       // If already selected, remove it from selected list
-      dispatch(removeCommunity(community));
+      dispatch(removeCommunity(communityData));
     } else {
       // If not selected, add it to selected list
-      dispatch(addCommunity(community));
+      dispatch(addCommunity(communityData));
     }
   };
   
@@ -29,24 +64,38 @@ const SelectCommunitiesTab: React.FC = () => {
     console.log("Selected Communities:", communitiesSelected);
   }, [communitiesSelected]);
 
+  // Loading skeleton UI
+  if (isLoading) {
+    return (
+      <div className="h-[45vh]">
+        <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
+        <p className="text-muted-foreground mb-8">select communities you want to join</p>
+        
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="">
       <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
       <p className="text-muted-foreground mb-8">select communities you want to join</p>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {communitiesAvailable.map((community) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 h-[45vh] overflow-y-auto">
+        {communities.map((community) => (
           <div 
-            key={community.id}
+            key={community._id}
             className={`relative rounded-xl cursor-pointer transition-all ${
-              isCommunitySelected(community.id) 
+              isCommunitySelected(community._id) 
                 ? 'bg-accent' 
                 : 'bg-muted'
             }`}
             onClick={() => toggleCommunity(community)}
           >
             {/* Selection Indicator */}
-            {isCommunitySelected(community.id) && (
+            {isCommunitySelected(community._id) && (
               <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                   <polyline points="20 6 9 17 4 12"></polyline>
@@ -55,9 +104,9 @@ const SelectCommunitiesTab: React.FC = () => {
             )}
 
             {/* Cover Image */}
-            <div className="h-16 w-full rounded-t-xl overflow-hidden">
+            <div className="h-16 w-full rounded-t-xl overflow-hidden fill-accent">
               <img 
-                src={'/profile/community/commbg.png'} 
+                src={community.backgroundImage || '/profile/community/commbg.png'} 
                 alt="" 
                 className="w-full h-full object-cover"
               />
@@ -67,7 +116,7 @@ const SelectCommunitiesTab: React.FC = () => {
             <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2">
               <div className="w-16 h-16 rounded-full border-4 border-background overflow-hidden">
                 <img 
-                  src={community.pfp} 
+                  src={community.profilePicture || '/profile/default-avatar.png'} 
                   alt="" 
                   className="w-full h-full object-cover"
                 />
@@ -75,14 +124,14 @@ const SelectCommunitiesTab: React.FC = () => {
             </div>
 
             {/* Content */}
-            <div className="pt-6 pb-2 px-4 text-center">
+            <div className="pt-8 pb-2 px-4 text-center">
               <h3 className={`text-base font-medium ${
-                isCommunitySelected(community.id) ? 'text-primary' : 'text-foreground'
+                isCommunitySelected(community._id) ? 'text-primary' : 'text-foreground'
               }`}>
                 {community.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                members: {community.members.toLocaleString()}
+                members: {community.memberCount.toLocaleString()}
               </p>
             </div>
           </div>

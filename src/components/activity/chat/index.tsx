@@ -127,6 +127,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const currentUserParticipant = chat?.participants.find(p => p.userId === userId);
   const hasLeftGroup = currentUserParticipant?.status === "left";
 
+//   const scrollToBottom = () => {
+//     messagesEndRef.current?.scrollIntoView({
+//       behavior: "smooth",
+//       block: "end",
+//     });
+//   };
+
+// useEffect(() => {
+//     scrollToBottom();
+//   }, [messages]);
   // Combined useEffect for fetching messages and suggestions
   useEffect(() => {
     const fetchMessageHistory = async () => {
@@ -569,14 +579,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         menuItems={menuItems}
       />
 
-      <MessageList
-        messages={messages}
-        isLoadingMessages={isLoadingMessages}
-        isTyping={isTyping}
-        typingUser={typingUser || null}
-        chatType={chat.type}
-        userId={userId}
-      />
+      {/* Add a wrapper div with flex-1 and overflow handling */}
+      <div className="flex-1 overflow-hidden relative">
+        <MessageList
+          messages={messages}
+          isLoadingMessages={isLoadingMessages}
+          isTyping={isTyping}
+          typingUser={typingUser || null}
+          chatType={chat.type}
+          userId={userId}
+        />
+      </div>
 
       <MessageInput
         newMessage={newMessage}

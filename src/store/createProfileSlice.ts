@@ -1,5 +1,15 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { INITIAL_PROFILE_STATE, AVAILABLE_INTERESTS } from "@/lib/constants";
+
+interface Community {
+  id: string;
+  name: string;
+  members: number;
+  pfp: string;
+  description?: string;
+  backgroundImage?: string;
+  bio?: string;
+}
 
 export const createProfile = createSlice({
   name: "createProfile",
@@ -8,7 +18,7 @@ export const createProfile = createSlice({
     skillsAvailable: [...AVAILABLE_INTERESTS],
     skillSelected: [...INITIAL_PROFILE_STATE.skillSelected],
     communitiesSelected: [...INITIAL_PROFILE_STATE.communitiesSelected],
-    communitiesAvailable: [...INITIAL_PROFILE_STATE.communitiesAvailable],
+    communitiesAvailable: [] as Community[],
   },
   reducers: {
     setName: (state, action) => {
@@ -54,6 +64,12 @@ export const createProfile = createSlice({
         (c) => c.id !== communityId
       );
     },
+    setCommunities: (state, action: PayloadAction<Community[]>) => {
+      state.communitiesAvailable = action.payload;
+    },
+    setAllCommunities: (state, action: PayloadAction<typeof INITIAL_PROFILE_STATE.communitiesSelected>) => {
+      state.communitiesSelected = action.payload;
+    },
   },
 });
 
@@ -69,6 +85,8 @@ export const {
   setCommunitiesSelected,
   addCommunity,
   removeCommunity,
+  setCommunities,
+  setAllCommunities,
 } = createProfile.actions;
 
 export default createProfile.reducer;

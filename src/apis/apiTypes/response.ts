@@ -1,3 +1,5 @@
+import { Community } from "@/lib/constants";
+
 // Base API response interface
 export interface ApiResponse<T = void> {
   success: boolean;
@@ -157,6 +159,7 @@ export interface ProfilePostData {
     reactionCount: number;
     reactionType: string | null;
   };
+  community?: Community;
 }
 
 export interface FetchCommentsResponse {
@@ -586,4 +589,28 @@ export interface GetPostDetailsResponse {
   success: boolean;
   message: string;
   post: PostDetailsData;
+}
+
+export interface CommunityResponse {
+  _id: string;
+  name: string;
+  description: string;
+  interest: string;
+  createdAt: string;
+  status: string;
+  memberCount: number;
+  updatedAt: string;
+  backgroundImage: string;
+  profilePicture: string;
+  likesCount: number;
+  commentsCount: number;
+  bio: string;
+  members: string[];
+  communityId?: string;
+}
+
+export interface CommunitiesResponse {
+  success: boolean;
+  message: string;
+  communities: CommunityResponse[];
 }

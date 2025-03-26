@@ -27,7 +27,6 @@ const ProfilePage: React.FC = () => {
       if (!userId) return;
       
       // Use currentUserId from Redux instead of localStorage
-      console.log("fetching user data");
       const result = await executeProfileFetch(userId, currentUserId);
       console.log("result", result);
       if (result.success && result.data) {
@@ -69,6 +68,7 @@ const ProfilePage: React.FC = () => {
         isFollower={userData.isFollower}
         requestSent={userData.requestSent}
         compatibility={userData.compatibility}
+        communities={userData.communities}
       />
     </>
   );
