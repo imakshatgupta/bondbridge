@@ -24,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Extend the Message type to support complex content
 interface ExtendedMessage extends Omit<Message, "text"> {
@@ -182,6 +183,43 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
     </div>
   );
 };
+
+// Skeleton loader for chat messages
+const ChatMessageSkeleton = () => (
+  <div className="flex flex-col space-y-8 px-4 py-2 w-full">
+    {/* Bot message skeleton */}
+    <div className="flex items-start gap-2 mb-4 animate-[pulse_2s_ease-in-out_0s_infinite]">
+      <Skeleton className="h-8 w-8 rounded-full" />
+      <div className="flex-1 max-w-[80%] space-y-2">
+        <Skeleton className="h-24 w-full rounded-lg opacity-70" />
+        <div className="flex justify-end mt-1">
+          <Skeleton className="h-3 w-12 rounded-sm opacity-50" />
+        </div>
+      </div>
+    </div>
+    
+    {/* User message skeleton */}
+    <div className="flex items-start gap-2 mb-4 flex-row-reverse animate-[pulse_2s_ease-in-out_0.5s_infinite]">
+      <div className="max-w-[70%] space-y-2">
+        <Skeleton className="h-16 w-full rounded-lg opacity-70" />
+        <div className="flex justify-end mt-1">
+          <Skeleton className="h-3 w-12 rounded-sm opacity-50" />
+        </div>
+      </div>
+    </div>
+    
+    {/* Bot message skeleton */}
+    <div className="flex items-start gap-2 mb-4 animate-[pulse_2s_ease-in-out_1s_infinite]">
+      <Skeleton className="h-8 w-8 rounded-full" />
+      <div className="flex-1 max-w-[80%] space-y-2">
+        <Skeleton className="h-32 w-full rounded-lg opacity-70" />
+        <div className="flex justify-end mt-1">
+          <Skeleton className="h-3 w-12 rounded-sm opacity-50" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function BondChat() {
   const [messages, setMessages] = useState<ExtendedMessage[]>([]);
@@ -551,7 +589,7 @@ export default function BondChat() {
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden h-full relative">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isLoading ? (
           <div className="flex-1 flex flex-col justify-center h-full p-4 mb-20 font-bold capitalize text-6xl space-y-3">
             <h3 className="">Welcome, </h3>
             <h3 className="">
@@ -562,23 +600,26 @@ export default function BondChat() {
             </p>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-4 mb-20 ">
+          <div className="flex-1 overflow-y-auto p-4 mb-20">
             {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                <p>Loading messages...</p>
+              <div className="flex flex-col justify-center h-full opacity-80 transition-opacity duration-300">
+                <p className="text-sm text-muted-foreground text-center mb-4">Loading your conversation...</p>
+                <ChatMessageSkeleton />
               </div>
             ) : (
-              messages.map((message, index) =>
-                message.isUser ? (
-                  <UserMessage key={index} message={message} />
-                ) : (
-                  <BotMessage
-                    key={index}
-                    message={message}
-                    messageIndex={index}
-                  />
-                )
-              )
+              <div className="animate-in fade-in-0 duration-300">
+                {messages.map((message, index) =>
+                  message.isUser ? (
+                    <UserMessage key={index} message={message} />
+                  ) : (
+                    <BotMessage
+                      key={index}
+                      message={message}
+                      messageIndex={index}
+                    />
+                  )
+                )}
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -587,7 +628,8 @@ export default function BondChat() {
         <div className="absolute bottom-0 left-0 right-0">
           <ChatInput
             onSendMessage={handleSendMessage}
-            placeholder="Type Your Message Here..."
+            placeholder={isLoading ? "Loading conversation..." : "Type Your Message Here..."}
+            disabled={isLoading}
           />
         </div>
       </div>
