@@ -614,3 +614,20 @@ export interface CommunitiesResponse {
   message: string;
   communities: CommunityResponse[];
 }
+
+export interface SuggestedUser {
+  _id: string;
+  nickName: string;
+  privacyLevel: number | string;
+  avatar: string;
+  interests: string[];
+  name: string;
+  matchScore: number;
+  profilePic: string;
+}
+
+export interface GetSuggestedUsersResponse {
+  success: boolean;
+  message?: string;
+  users: SuggestedUser[];
+}

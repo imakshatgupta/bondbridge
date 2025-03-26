@@ -211,21 +211,21 @@ const Signup: React.FC = () => {
     <>
       <AuthLayout
         title="Connecting Dreams, Fostering Growth"
-        subtitle="Sign up for your BondBridge journey today!"
+        subtitle={<>Sign up for your <span className="grad">BondBridge</span> journey today!</>}
         image="/auth/signup.png"
         showOTP={showOTP}
         otpMessage="Welcome, We are glad to see you!"
       >
         {!showOTP ? (
-          <form onSubmit={handleSubmit} className="space-y-4 w-full">
-            <div className="w-full">
+          <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
+            <div className="w-full flex flex-col justify-start">
               <label
                 htmlFor="phone"
                 className="block text-sm font-medium text-foreground"
               >
                 Phone
               </label>
-              <div className="mt-1 relative" style={{ height: "40px" }}>
+              <div className="relative">
                 <IntlTelInput
                   ref={phoneInputRef}
                   containerClassName="intl-tel-input"
@@ -247,7 +247,7 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 flex flex-col justify-start w-full">
               <div className="flex items-center space-x-2">
                 <Checkbox id="terms" required className="cursor-pointer"/>
                 <label
@@ -284,6 +284,26 @@ const Signup: React.FC = () => {
             >
               {isSendingOTP ? "Sending OTP..." : "Sign Up"}
             </button>
+
+            <div className="absolute bottom-8 pt-4">
+              {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
+              <div className="flex justify-center gap-4">
+                <Link to="#" className="h-44">
+                  <img 
+                    src="/assets/stores/appstore.svg" 
+                    alt="Download on App Store" 
+                    className="h-full"
+                  />
+                </Link>
+                <Link to="#" className="h-44">
+                  <img 
+                    src="/assets/stores/googleplay.svg" 
+                    alt="Get it on Google Play" 
+                    className="h-full"
+                  />
+                </Link>
+              </div>
+            </div>
           </form>
         ) : (
           <div className="space-y-4">
