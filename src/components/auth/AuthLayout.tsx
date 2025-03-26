@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
-  subtitle: string;
+  subtitle: React.ReactNode;
   image: string;
   isLogin?: boolean;
   showOTP?: boolean;
