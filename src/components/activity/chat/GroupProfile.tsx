@@ -103,15 +103,15 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
         </div>
 
         {/* Shared media section */}
-        <div className="flex justify-between items-center p-4 border-b border-border">
+        {/* <div className="flex justify-between items-center p-4 border-b border-border">
           <h3 className="text-muted-foreground">shared media (23)</h3>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div>
+        </div> */}
 
         {/* Participants list */}
-        <div className="pt-4 px-4 overflow-y-auto max-h-[45vh]">
+        <div className="pt-4 px-4">
           <h4 className="font-medium mb-4">Participants</h4>
-          <div>
+          <div className="pb-4 overflow-y-auto max-h-[35vh]">
             {activeParticipants
               .sort((a, b) => {
                 // Sort admin to the top

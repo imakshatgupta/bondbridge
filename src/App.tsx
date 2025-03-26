@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "./store";
 import { SocketProvider } from "./context/SocketContext";
+import { CallProvider } from "./context/CallContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import SetupProfile from "./pages/SetupProfile";
@@ -23,11 +24,19 @@ import CreateStory from "./pages/CreateStory";
 import Settings from "./pages/Settings";
 import ForgotPassword from "./pages/ForgotPassword";
 import FollowingFollowers from "@/components/FollowingFollowers";
+import { IncomingCallModal, CallInterface } from "./components/activity/call";
+import { useCall } from "./context/CallContext";
 
-// Component for routes that require authentication and socket connection
-const AuthenticatedRoutes: React.FC = () => {
+// The wrapped authenticated routes that have access to CallContext
+const CallWrappedRoutes: React.FC = () => {
+  const { incomingCall } = useCall();
+  
   return (
-    <SocketProvider>
+    <>
+      {/* Call UI Components */}
+      <IncomingCallModal open={!!incomingCall} />
+      <CallInterface />
+      
       <Routes>
         <Route
           path="/setup-profile"
@@ -150,6 +159,17 @@ const AuthenticatedRoutes: React.FC = () => {
           }
         />
       </Routes>
+    </>
+  );
+};
+
+// Component for routes that require authentication and socket connection
+const AuthenticatedRoutes: React.FC = () => {
+  return (
+    <SocketProvider>
+      <CallProvider>
+        <CallWrappedRoutes />
+      </CallProvider>
     </SocketProvider>
   );
 };

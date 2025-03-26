@@ -42,36 +42,62 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Connection event handlers
     newSocket.on("connect", () => {
-      console.log("Connected to server with ID:", newSocket.id);
+      console.log("🟢 Socket connected to server with ID:", newSocket.id);
+      console.log("Socket transport:", newSocket.io.engine.transport.name);
       setIsConnected(true);
     });
 
+    newSocket.on("connect_error", (error) => {
+      console.error("🔴 Socket connect error:", error.message);
+      console.error("Error details:", error);
+    });
+
     newSocket.on("disconnect", (reason) => {
-      console.log("Disconnected from server:", reason);
+      console.log("🔴 Socket disconnected from server. Reason:", reason);
+      
+      // Log more details about the disconnection
+      if (reason === "io server disconnect") {
+        console.error("The server has forcefully disconnected the socket");
+      } else if (reason === "io client disconnect") {
+        console.log("The client manually disconnected the socket");
+      } else if (reason === "ping timeout") {
+        console.error("The server did not respond to the ping within the timeout");
+      } else if (reason === "transport close") {
+        console.error("The connection was closed (possible network issue)");
+      } else if (reason === "transport error") {
+        console.error("The connection encountered an error");
+      }
+      
       setIsConnected(false);
 
       // If the disconnection was initiated by the server, try to reconnect
       if (reason === "io server disconnect") {
+        console.log("Attempting to reconnect after server disconnect");
         newSocket.connect();
       }
     });
 
-    // Reconnection event handlers
-    newSocket.on("reconnect", (attemptNumber) => {
-      console.log("Reconnected after", attemptNumber, "attempts");
+    // Socket connection lifecycle events
+    newSocket.io.on("reconnect", (attemptNumber) => {
+      console.log("🟢 Socket reconnected after", attemptNumber, "attempts");
       setIsConnected(true);
     });
 
-    newSocket.on("reconnect_attempt", (attemptNumber) => {
-      console.log("Attempting to reconnect...", attemptNumber);
+    newSocket.io.on("reconnect_attempt", (attemptNumber) => {
+      console.log("🟠 Socket attempting to reconnect... Attempt #", attemptNumber);
     });
 
-    newSocket.on("reconnect_error", (error) => {
-      console.error("Reconnection error:", error);
+    newSocket.io.on("reconnect_error", (error) => {
+      console.error("🔴 Socket reconnection error:", error);
     });
 
-    newSocket.on("reconnect_failed", () => {
-      console.error("Failed to reconnect");
+    newSocket.io.on("reconnect_failed", () => {
+      console.error("🔴 Socket failed to reconnect after all attempts");
+    });
+
+    // Monitor for potential issues
+    newSocket.io.on("error", (error) => {
+      console.error("🔴 Socket error:", error);
     });
 
     // Implement heartbeat mechanism

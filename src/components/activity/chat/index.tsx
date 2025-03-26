@@ -567,6 +567,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onClose={onClose}
         onProfileClick={handleProfileClick}
         menuItems={menuItems}
+        userId={userId}
+        otherId={otherUserId}
       />
 
       <MessageList

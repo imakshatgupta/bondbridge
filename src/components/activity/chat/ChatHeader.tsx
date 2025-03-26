@@ -1,9 +1,11 @@
 import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Phone, Video } from "lucide-react";
 import ThreeDotsMenu from "@/components/global/ThreeDotsMenu";
 import { MenuItemProps } from "@/components/global/ThreeDotsMenu";
+import { CallButton } from "../call";
+import { useSocket } from "@/context/SocketContext";
 
 interface ChatHeaderProps {
   name: string;
@@ -13,6 +15,8 @@ interface ChatHeaderProps {
   onClose: () => void;
   onProfileClick: () => void;
   menuItems: MenuItemProps[];
+  userId?: string; // Current user ID
+  otherId?: string; // Other user ID for DMs
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -22,8 +26,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   participantsCount,
   onClose,
   onProfileClick,
-  menuItems
+  menuItems,
+  userId,
+  otherId
 }) => {
+  const { isConnected } = useSocket();
+  console.log(userId, otherId, isConnected);
+  const showCallButtons = chatType === "dm" && userId && otherId && isConnected;
+  console.log(showCallButtons);
+
   return (
     <div className="flex items-center justify-between p-4 border-b">
       <div className="flex items-center gap-3">
@@ -54,6 +65,24 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-2">
+        {showCallButtons && (
+          <>
+            <CallButton 
+              userId={userId} 
+              otherId={otherId} 
+              type="audio" 
+              variant="ghost"
+              size="icon"
+            />
+            <CallButton 
+              userId={userId} 
+              otherId={otherId} 
+              type="video" 
+              variant="ghost"
+              size="icon"
+            />
+          </>
+        )}
         <ThreeDotsMenu items={menuItems} />
       </div>
     </div>
