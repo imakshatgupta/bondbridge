@@ -129,7 +129,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             size="sm"
             className="text-[var(--muted-foreground)] px-8 border cursor-pointer"
             onClick={() => setContent('')}
-
+            disabled={isSubmitting || isCreatingPost}
           >
             Cancel
           </Button>
@@ -222,7 +222,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             size="sm"
             className="text-xs flex items-center gap-1 bg-[var(--secondary)]"
             onClick={handleRewriteWithBondChat}
-            
+            disabled={isRewritingWithBondChat || !content.trim()}
           >
             {isRewritingWithBondChat ? (
               <div className="flex items-center gap-1">
