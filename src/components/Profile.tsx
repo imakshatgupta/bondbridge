@@ -457,8 +457,6 @@ const Profile: React.FC<ProfileProps> = ({
           onClose={() => setIsProfilePictureModalOpen(false)}
           currentAvatar={avatarSrc}
           username={username}
-          email={email}
-          interests={interests}
           privacyLevel={privacyLevel}
           bio={bio}
         />

@@ -19,8 +19,6 @@ interface ProfilePictureUploadModalProps {
   onClose: () => void;
   currentAvatar: string;
   username: string;
-  email: string;
-  interests: string[];
   privacyLevel: number;
   bio?: string;
 }
@@ -30,8 +28,6 @@ export function ProfilePictureUploadModal({
   onClose,
   currentAvatar,
   username,
-  email,
-  interests,
   privacyLevel,
   bio,
 }: ProfilePictureUploadModalProps) {
@@ -82,8 +78,6 @@ export function ProfilePictureUploadModal({
 
     const profileData = {
       name: username,
-      email,
-      interests,
       privacyLevel,
       avatar: currentAvatar,
       image: selectedFile,
