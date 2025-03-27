@@ -212,7 +212,8 @@ const Signup: React.FC = () => {
       <AuthLayout
         title="Connecting Dreams, Fostering Growth"
         subtitle={<>Sign up for your <span className="grad">BondBridge</span> journey today!</>}
-        image="/auth/signup.png"
+        videoLight="/auth/signup_lightmode.mp4"
+        videoDark="/auth/signup_darkmode.mp4"
         showOTP={showOTP}
         otpMessage="Welcome, We are glad to see you!"
       >

@@ -1,11 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle: React.ReactNode;
-  image: string;
+  image?: string;
+  videoLight?: string;
+  videoDark?: string;
   isLogin?: boolean;
   showOTP?: boolean;
   otpMessage?: string;
@@ -17,11 +20,16 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
   title, 
   subtitle, 
   image,
+  videoLight,
+  videoDark,
   isLogin = false,
   showOTP = false,
   otpMessage = "Welcome, We are glad to see you!",
   isForgotPassword = false
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
     <div className="md:px-40">
       <div className="mx-auto grid grid-cols-1 md:grid-cols-2">
@@ -82,11 +90,20 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         </div>
         
         <div className="hidden md:flex flex-col justify-between p-8 pb-0 h-[calc(100vh-64px)]">
-
-            <h1 className="text-5xl 2xl:text-6xl font-semibold mb-2 ">{title}</h1>
-            <p className="text-muted-foreground text-xl 2xl:text-2xl mb-8">{subtitle}</p>
+          <h1 className="text-5xl 2xl:text-6xl font-semibold mb-2">{title}</h1>
+          <p className="text-muted-foreground text-xl 2xl:text-2xl mb-16 z-50">{subtitle}</p>
+          {videoLight && videoDark ? (
+            <video 
+              src={isDark ? videoDark : videoLight} 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              className="-mt-20 mx-auto aspect-auto max-h-[60vh] object-contain border-0"
+            />
+          ) : image && (
             <img src={image} alt="Illustration" className="-mt-20 mx-auto aspect-auto" />
-       
+          )}
         </div>
       </div>
     </div>
