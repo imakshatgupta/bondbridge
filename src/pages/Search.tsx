@@ -96,7 +96,7 @@ export default function Search() {
         {!isLoading && hasSearched && people.length === 0 && !error && (
           <EmptyState
             icon={Users}
-            title="No results found"
+            title="No Results Found"
             description={`No users found matching "${searchQuery}"`}
             className="my-8"
           />

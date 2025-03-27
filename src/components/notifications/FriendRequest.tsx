@@ -66,11 +66,11 @@ const FriendRequest = ({
         </div>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" onClick={handleReject} disabled={isLoading}>
-          Reject
-        </Button>
-        <Button onClick={handleAccept} disabled={isLoading}>
+        <Button  className="cursor-pointer" onClick={handleAccept} disabled={isLoading}>
           Accept
+        </Button>
+        <Button variant="outline" className="text-destructive-foreground border-destructive-foreground cursor-pointer" onClick={handleReject} disabled={isLoading}>
+          Decline
         </Button>
       </div>
     </div>

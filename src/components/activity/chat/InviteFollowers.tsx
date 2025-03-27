@@ -81,8 +81,8 @@ const InviteFollowers: React.FC<InviteFollowersProps> = ({
           <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-4">
             <p className="text-center">
               {searchTerm.trim() !== ""
-                ? "No followers match your search"
-                : "No followers to add"}
+                ? "No Followers Match Your Search"
+                : "No Followers to Add"}
             </p>
           </div>
         ) : (

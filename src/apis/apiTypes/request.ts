@@ -166,9 +166,9 @@ export interface StartMessageRequest {
 
 // Profile update request type
 export interface UpdateProfileRequest {
-  name: string;
-  email: string;
-  interests: string[];
+  name?: string;
+  email?: string;
+  interests?: string[];
   privacyLevel: number;
   avatar?: string | File;
   bio?: string;

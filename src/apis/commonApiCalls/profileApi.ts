@@ -79,9 +79,15 @@ export const updateUserProfile = async (
   const formDataObj = new FormData();
 
   // Append form data
-  formDataObj.append("name", profileData.name);
-  formDataObj.append("email", profileData.email);
-  formDataObj.append("interests", JSON.stringify(profileData.interests));
+  if (profileData.name) {
+    formDataObj.append("name", profileData.name);
+  }
+  if (profileData.email) {
+    formDataObj.append("email", profileData.email);
+  }
+  if (profileData.interests) {
+    formDataObj.append("interests", JSON.stringify(profileData.interests));
+  }
   formDataObj.append("privacyLevel", profileData.privacyLevel.toString());
   
   // Append bio if it exists

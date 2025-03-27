@@ -68,7 +68,7 @@ const FollowingFollowers = () => {
     if (!Array.isArray(users) || users.length === 0) {
       return (
         <div className="text-center text-muted-foreground py-8">
-          No users found
+          No Users Found
         </div>
       );
     }
@@ -128,7 +128,7 @@ const FollowingFollowers = () => {
     if (!Array.isArray(users) || users.length === 0) {
       return (
         <div className="text-center text-muted-foreground py-8">
-          No users found
+          No Users Found
         </div>
       );
     }
