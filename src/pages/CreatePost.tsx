@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
-import { Pencil, Trash2, Image, Smile, Plus, Video, Mic } from 'lucide-react';
+import { Pencil, Trash2, Image, Smile, Video, Mic } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { createPost, rewriteWithBondChat } from '../apis/commonApiCalls/createPostApi';
 import { useApiCall } from '../apis/globalCatchError';
@@ -48,10 +48,10 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     });
   };
 
-  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setDocumentFiles(prev => [...prev, ...files]);
-  };
+  // const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = Array.from(e.target.files || []);
+  //   setDocumentFiles(prev => [...prev, ...files]);
+  // };
 
   const handleRemoveMedia = (index: number) => {
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
