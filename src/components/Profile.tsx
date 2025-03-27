@@ -49,6 +49,7 @@ interface ProfileProps {
   requestSent?: boolean;
   compatibility?: number;
   communities?: string[];
+  interests?: string[];
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -64,6 +65,7 @@ const Profile: React.FC<ProfileProps> = ({
   requestSent = false,
   compatibility = 0,
   communities: userCommunityIds = [],
+  interests = [],
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -375,6 +377,20 @@ const Profile: React.FC<ProfileProps> = ({
               ? "Add a bio in your profile settings" 
               : "No bio available"}
         </p>
+
+        {/* Interests section */}
+        {interests && interests.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-[80%]">
+            {interests.map((interest, index) => (
+              <span 
+                key={index} 
+                className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="flex gap-8 py-3 mt-4">
           {isCurrentUser ? (
