@@ -44,9 +44,9 @@ const Notification = ({
         />
       </div>
       <div className="flex-1">
-        <h3 className="font-medium text-xl text-foreground">{title}</h3>
+        <h3 className="font-medium text-xl text-foreground capitalize">{title}</h3>
       </div>
-      <div className="text-sm text-muted-foreground">
+      <div className="text-sm capitalize text-muted-foreground">
         {getRelativeTime(new Date(timestamp))}
       </div>
       {!localseen && (
