@@ -171,6 +171,7 @@ export interface UpdateProfileRequest {
   interests: string[];
   privacyLevel: number;
   avatar?: string | File;
+  image?: File;
   bio?: string;
 }
 

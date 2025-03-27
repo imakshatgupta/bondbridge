@@ -31,6 +31,7 @@ import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
 import AllCommunities from "@/components/AllCommunities";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
 import { Community } from "@/lib/constants";
+import { ProfilePictureUploadModal } from "@/components/ProfilePictureUploadModal";
 // import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
 // import type { StoryData } from "@/apis/apiTypes/response";
 
@@ -81,6 +82,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
+  const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] = useState(false);
 
   // Get user data from Redux store
   const { privacyLevel, interests, nickname } = useAppSelector(
@@ -319,6 +321,7 @@ const Profile: React.FC<ProfileProps> = ({
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
           className="relative w-24 h-24 cursor-pointer"
+          onClick={() => isCurrentUser && setIsProfilePictureModalOpen(true)}
         >
           {!isCurrentUser && compatibility >= 0 && (
             <div className="absolute -inset-1 flex items-center justify-center z-20">
@@ -438,6 +441,20 @@ const Profile: React.FC<ProfileProps> = ({
           </div>
         )}
       </div>
+
+      {/* Add the Profile Picture Upload Modal */}
+      {isCurrentUser && (
+        <ProfilePictureUploadModal
+          isOpen={isProfilePictureModalOpen}
+          onClose={() => setIsProfilePictureModalOpen(false)}
+          currentAvatar={avatarSrc}
+          username={username}
+          email={email}
+          interests={interests}
+          privacyLevel={privacyLevel}
+          bio={bio}
+        />
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
