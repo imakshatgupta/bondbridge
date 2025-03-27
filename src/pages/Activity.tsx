@@ -253,9 +253,9 @@ export default function Activity() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="chats">
+            <TabsContent value="chats" className="min-h-[300px] relative">
               {isLoading ? (
-                <div className="flex justify-center items-center h-full">
+                <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
                   <LogoLoader size="lg" opacity={0.8}/>
                 </div>
               ) : filteredDms.length === 0 ? (
@@ -277,9 +277,11 @@ export default function Activity() {
               )}
             </TabsContent>
 
-            <TabsContent value="my-groups">
+            <TabsContent value="my-groups" className="min-h-[300px] relative">
               {isLoading ? (
-                <LogoLoader size="lg" opacity={0.8} />
+                <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+                  <LogoLoader size="lg" opacity={0.8} />
+                </div>
               ) : filteredGroups.length === 0 ? (
                 <EmptyState
                   icon={Users}
@@ -297,9 +299,11 @@ export default function Activity() {
               )}
             </TabsContent>
 
-            <TabsContent value="communities">
+            <TabsContent value="communities" className="min-h-[300px] relative">
               {isLoading ? (
-                <LogoLoader size="lg" opacity={0.8} />
+                <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
+                  <LogoLoader size="lg" opacity={0.8} />
+                </div>
               ) : filteredCommunities.length === 0 ? (
                 <EmptyState
                   icon={Building2}
