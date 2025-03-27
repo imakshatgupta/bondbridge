@@ -9,7 +9,7 @@ import {
   markNotificationAsSeen,
 } from "@/apis/commonApiCalls/notificationsApi";
 import { useApiCall } from "@/apis/globalCatchError";
-import { NotificationsListSkeleton } from "@/components/skeletons/NotificationSkeleton";
+import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Bell, UserPlus, AlertCircle } from "lucide-react";
 
@@ -113,7 +113,9 @@ const Notifications = () => {
       <h1 className="text-4xl font-semibold mb-5">Notifications</h1>
 
       {isLoading ? (
-        <NotificationsListSkeleton />
+        <div className="flex items-center justify-center h-[65vh]">
+          <LogoLoader size="md" />
+        </div>
       ) : error ? (
         <EmptyState
           icon={AlertCircle}
