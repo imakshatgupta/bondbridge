@@ -255,12 +255,12 @@ const Signup: React.FC = () => {
                   htmlFor="terms"
                   className="text-xs text-muted-foreground"
                 >
-                  I agree to Bond's{" "}
-                  <Link to="/terms" className="text-primary hover:underline">
+                  I agree to{" "}
+                  <Link to="/terms" className="text-foreground font-bold underline">
                     Terms of Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link to="/privacy" className="text-primary hover:underline">
+                  <Link to="/privacy" className="text-foreground font-bold underline">
                     Privacy Policy
                   </Link>
                 </label>
