@@ -250,10 +250,10 @@ const Signup: React.FC = () => {
 
             <div className="space-y-2 flex flex-col justify-start w-full">
               <div className="flex items-center space-x-2">
-                <Checkbox id="terms" required className="cursor-pointer"/>
+                <Checkbox id="terms" required className="cursor-pointer text-foreground"/>
                 <label
                   htmlFor="terms"
-                  className="text-xs text-muted-foreground"
+                  className="text-xs text-foreground"
                 >
                   I agree to{" "}
                   <Link to="/terms" className="text-foreground font-bold underline">
@@ -267,10 +267,10 @@ const Signup: React.FC = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox id="newsletter" className="cursor-pointer"/>
+                <Checkbox id="newsletter" className="cursor-pointer text-foreground"/>
                 <label
                   htmlFor="newsletter"
-                  className="text-xs text-muted-foreground"
+                  className="text-xs text-foreground"
                 >
                   I would like to receive updates about products, services, and
                   promotions

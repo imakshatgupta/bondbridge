@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import {
   fetchUserPosts,
   updateUserProfile,
+  fetchUserProfile,
 } from "@/apis/commonApiCalls/profileApi";
 import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
@@ -38,7 +39,6 @@ import { ProfilePictureUploadModal } from "@/components/ProfilePictureUploadModa
 interface ProfileProps {
   userId: string;
   username: string;
-  email: string;
   bio?: string;
   followers: number;
   following: number;
@@ -54,7 +54,6 @@ interface ProfileProps {
 const Profile: React.FC<ProfileProps> = ({
   userId,
   username,
-  email,
   bio = "",
   followers,
   following,
@@ -85,7 +84,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] = useState(false);
 
   // Get user data from Redux store
-  const { privacyLevel, interests, nickname } = useAppSelector(
+  const { privacyLevel, nickname } = useAppSelector(
     (state) => state.currentUser
   );
   // Check if current user by comparing with userId in localStorage
@@ -195,12 +194,7 @@ const Profile: React.FC<ProfileProps> = ({
 
     // Prepare the request data
     const profileData = {
-      name: username,
-      email,
-      bio,
-      interests: interests,
       privacyLevel: newPrivacyLevel,
-      avatar: avatarSrc,
     };
 
     // Execute the API call
@@ -211,11 +205,25 @@ const Profile: React.FC<ProfileProps> = ({
       dispatch(setPrivacyLevel(privacyLevel));
       toast.error("Failed to update anonymous mode");
     } else {
-      dispatch(
-        updateCurrentUser({
-          username: nickname,
-        })
-      );
+      // After successful update, refresh user data to ensure consistent display
+      const currentUserId = localStorage.getItem("userId") || "";
+      if (currentUserId) {
+        const result = await fetchUserProfile(currentUserId, currentUserId);
+        if (result.success && result.data) {
+          // Update Redux store with fresh user data
+          dispatch(
+            updateCurrentUser({
+              username: result.data.username,
+              nickname: result.data.nickName,
+              email: result.data.email,
+              avatar: result.data.avatarSrc,
+              privacyLevel: result.data.privacyLevel,
+              bio: result.data.bio,
+              interests: result.data.interests,
+            })
+          );
+        }
+      }
     }
   };
 

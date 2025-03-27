@@ -118,7 +118,7 @@ const CreateGroup: React.FC = () => {
             id: chatRoom.chatRoomId,
             name: chatRoom.groupName,
             avatar: chatRoom.profileUrl || "",
-            lastMessage: "No messages yet",
+            lastMessage: "No Messages Yet",
             timestamp: new Date(chatRoom.updatedAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",

@@ -163,7 +163,7 @@ const Notifications = () => {
               ) : (
                 <EmptyState
                   icon={Bell}
-                  title="No notifications"
+                  title="No Notifications"
                   description="You don't have any notifications yet. We'll notify you when something happens."
                   className="my-8"
                 />
@@ -184,7 +184,7 @@ const Notifications = () => {
               ) : (
                 <EmptyState
                   icon={UserPlus}
-                  title="No friend requests"
+                  title="No Friend Requests"
                   description="You don't have any friend requests at the moment."
                   className="my-8"
                 />

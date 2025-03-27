@@ -9,7 +9,7 @@ export const searchPeople = async (query: string): Promise<SearchResponse> => {
   if (!query.trim()) {
     return {
       success: true,
-      message: "No search query provided",
+      message: "No Search Query Provided",
       users: [],
     };
   }

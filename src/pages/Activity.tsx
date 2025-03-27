@@ -20,7 +20,7 @@ import { Plus, UserPlus, MessageSquare, Users, Building2 } from "lucide-react";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
 import { ChatRoom } from "@/apis/apiTypes/response";
 import UserSearchDialog from "@/components/common/UserSearchDialog";
-import { SuggestedCommunitiesSkeleton, ChatListSkeleton } from "@/components/skeletons/ActivitySkeleton";
+import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Person } from "@/apis/apiTypes/response";
 
@@ -158,7 +158,7 @@ export default function Activity() {
             <Link to="/create-group">
               <Button
                 variant="outline"
-                className="cursor-pointer rounded-full bg-background text-primary border-primary"
+                className="cursor-pointer rounded-full bg-background text-foreground   border-primary"
               >
                 Create Group
               </Button>
@@ -186,7 +186,7 @@ export default function Activity() {
             Suggested Communities
           </h2>
           {isLoading ? (
-            <SuggestedCommunitiesSkeleton />
+            <LogoLoader size="md" opacity={0.7} />
           ) : (
             <SuggestedCommunities />
           )}
@@ -196,7 +196,7 @@ export default function Activity() {
         <div className="relative mb-6">
           <Input
             type="search"
-            placeholder="search"
+            placeholder="Search"
             className="w-full bg-muted border-none rounded-full pl-4 pr-10"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -243,7 +243,7 @@ export default function Activity() {
                 value="my-groups"
                 className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground cursor-pointer"
               >
-                My groups ({filteredChats.groups.length})
+                My Groups ({filteredChats.groups.length})
               </TabsTrigger>
               <TabsTrigger
                 value="communities"
@@ -255,11 +255,13 @@ export default function Activity() {
 
             <TabsContent value="chats">
               {isLoading ? (
-                <ChatListSkeleton />
+                <div className="flex justify-center items-center h-full">
+                  <LogoLoader size="lg" opacity={0.8}/>
+                </div>
               ) : filteredDms.length === 0 ? (
                 <EmptyState
                   icon={MessageSquare}
-                  title="No chats yet"
+                  title="No Chats Yet"
                   description={searchQuery ? `No chats matching "${searchQuery}"` : "Start a conversation to chat with friends"}
                   actionLabel={searchQuery ? undefined : "Start Chat"}
                   actionIcon={searchQuery ? undefined : UserPlus}
@@ -277,11 +279,11 @@ export default function Activity() {
 
             <TabsContent value="my-groups">
               {isLoading ? (
-                <ChatListSkeleton />
+                <LogoLoader size="lg" opacity={0.8} />
               ) : filteredGroups.length === 0 ? (
                 <EmptyState
                   icon={Users}
-                  title="No groups yet"
+                  title="No Groups Yet"
                   description={searchQuery ? `No groups matching "${searchQuery}"` : "Create or join a group to chat with multiple people"}
                   actionLabel={searchQuery ? undefined : "Create Group"}
                   className="my-8"
@@ -297,11 +299,11 @@ export default function Activity() {
 
             <TabsContent value="communities">
               {isLoading ? (
-                <ChatListSkeleton />
+                <LogoLoader size="lg" opacity={0.8} />
               ) : filteredCommunities.length === 0 ? (
                 <EmptyState
                   icon={Building2}
-                  title="No communities yet"
+                  title="No Communities Yet"
                   description={searchQuery ? `No communities matching "${searchQuery}"` : "Join a community to connect with people who share your interests"}
                   className="my-8"
                 />

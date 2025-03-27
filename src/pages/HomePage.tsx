@@ -343,7 +343,7 @@ export default function HomePage() {
         ) : (
           <EmptyState
             icon={ImageIcon}
-            title="No posts yet"
+            title="No Posts Yet"
             description="There are no posts in your feed right now. Follow more people to see their posts here."
             className="my-8"
           />
