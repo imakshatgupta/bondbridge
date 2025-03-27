@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
-import { Pencil, Trash2, Image, Smile, Plus } from 'lucide-react';
+import { Pencil, Trash2, Image, Smile, Video, Mic } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { createPost, rewriteWithBondChat } from '../apis/commonApiCalls/createPostApi';
 import { useApiCall } from '../apis/globalCatchError';
@@ -23,6 +23,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   
   // Get the current user's avatar from Redux store
   const { avatar, nickname } = useAppSelector(state => state.currentUser);
@@ -47,10 +48,10 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     });
   };
 
-  const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setDocumentFiles(prev => [...prev, ...files]);
-  };
+  // const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = Array.from(e.target.files || []);
+  //   setDocumentFiles(prev => [...prev, ...files]);
+  // };
 
   const handleRemoveMedia = (index: number) => {
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
@@ -150,7 +151,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           <label className="cursor-pointer hover:opacity-75 transition-opacity">
             <input
               type="file"
-              accept="image/*,video/*"
+              accept="image/*"
               className="hidden"
               onChange={handleMediaUpload}
             />
@@ -180,12 +181,39 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           <label className="cursor-pointer hover:opacity-75 transition-opacity">
             <input
               type="file"
-              accept=".pdf,.doc,.docx,.txt"
+              accept="video/*"
               className="hidden"
-              onChange={handleDocumentUpload}
+              onChange={handleMediaUpload}
             />
-            <Plus size={20} className="text-[var(--foreground)]" />
+            <Video size={20} className="text-[var(--foreground)]" />
           </label>
+
+          <div className="relative">
+            <button 
+              onClick={() => setShowPicker(!showPicker)}
+              type="button"
+              className="hover:opacity-75 transition-opacity cursor-pointer"
+            >
+              <Mic size={20} className="text-[var(--foreground)]" />
+            </button>
+            {showPicker && (
+              <div className='absolute z-50'>
+                <EmojiPicker 
+                  onEmojiClick={(emojiObject) => {
+                    setContent(prevContent => prevContent + emojiObject.emoji);
+                    setShowPicker(false);
+                  }}
+                  width={300}
+                  height={400}
+                />
+              </div>
+            )}
+          </div>
+
+
+          
+          
+          
         </div>
 
         <div className=" flex justify-end">
