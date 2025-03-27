@@ -5,6 +5,7 @@ interface CurrentUserState {
   nickname: string;
   email: string;
   avatar: string;
+  profilePic?: string;
   bio?: string;
   interests: string[];
   privacyLevel: number;
@@ -17,6 +18,7 @@ const initialState: CurrentUserState = {
   nickname: "",
   email: "",
   avatar: "",
+  profilePic: "",
   bio: "",
   interests: [],
   privacyLevel: 0,
