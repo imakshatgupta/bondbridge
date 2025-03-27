@@ -25,7 +25,7 @@ const Settings = () => {
   const navigate = useNavigate();
 
   // Get user data from Redux store
-  const { username, nickname, email, avatar, privacyLevel, interests } =
+  const { username, nickname, email, avatar, privacyLevel } =
     useAppSelector((state) => state.currentUser);
 
   const handleSettingsClick = (page: SettingPage) => {
@@ -41,11 +41,7 @@ const Settings = () => {
 
     // Prepare the request data
     const profileData = {
-      name: username,
-      email,
-      interests: interests,
-      privacyLevel: newPrivacyLevel,
-      avatar,
+      privacyLevel: newPrivacyLevel
     };
 
     // Execute the API call
@@ -56,11 +52,25 @@ const Settings = () => {
       dispatch(setPrivacyLevel(privacyLevel));
       toast.error("Failed to update anonymous mode");
     } else {
-      dispatch(
-        updateCurrentUser({
-          username: nickname,
-        })
-      );
+      // After successful update, refresh user data to ensure consistent display
+      const currentUserId = localStorage.getItem("userId") || "";
+      if (currentUserId) {
+        const result = await fetchUserProfile(currentUserId, currentUserId);
+        if (result.success && result.data) {
+          // Update Redux store with fresh user data
+          dispatch(
+            updateCurrentUser({
+              username: result.data.username,
+              nickname: result.data.nickName,
+              email: result.data.email,
+              avatar: result.data.avatarSrc,
+              privacyLevel: result.data.privacyLevel,
+              bio: result.data.bio,
+              interests: result.data.interests,
+            })
+          );
+        }
+      }
     }
   };
 
@@ -135,7 +145,7 @@ const Settings = () => {
               {privacyLevel == 1 ? nickname : username}
             </h2>
             <p className="text-muted-foreground">
-              {email || "No email available"}
+              {email || "No Email Available"}
             </p>
           </div>
         </div>

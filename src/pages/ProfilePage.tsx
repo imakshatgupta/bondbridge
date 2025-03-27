@@ -58,7 +58,7 @@ const ProfilePage: React.FC = () => {
       <Profile
         userId={userId}
         username={userData.username}
-        email={userData.email}
+        // email={userData.email}
         bio={userData.bio}
         followers={userData.followers}
         following={userData.following}

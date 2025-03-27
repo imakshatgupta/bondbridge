@@ -219,7 +219,7 @@ const Login: React.FC = () => {
   return (
     <>
       <AuthLayout
-        title="Empower your Journey, Welcome Back!"
+        title="Empower Your Journey, Welcome Back!"
         subtitle="Log in to unlock a world of endless possibilities"
         image="/auth/login.png"
         isLogin

@@ -109,7 +109,7 @@ const EditProfilePage: React.FC = () => {
     e.preventDefault();
     // Ensure we have a valid avatar URL before sending
     if (!selectedAvatar) {
-      console.warn('No avatar selected, using default avatar');
+      console.warn('avatar selected, using default avatar');
     }
     
     // Prepare the request data
