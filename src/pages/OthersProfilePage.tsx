@@ -18,7 +18,7 @@ export default function OthersProfilePage() {
     <Profile 
       userId={userData.userId}
       username={userData.username}
-      email={userData.email}
+      // email={userData.email}
       bio={userData.bio}
       followers={userData.followers}
       following={userData.following}
