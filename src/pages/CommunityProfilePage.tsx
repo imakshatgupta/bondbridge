@@ -307,7 +307,7 @@ const CommunityProfilePage = () => {
               <p className="text-muted-foreground">{community.description}</p>
               
               <h3 className="font-semibold mt-4 mb-2">Interest</h3>
-              <Badge className="bg-primary/20 text-primary border-primary/20">
+              <Badge className="bg-primary/20 text-foreground border-primary">
                 {community.interest}
               </Badge>
               

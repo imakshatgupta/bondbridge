@@ -1,12 +1,13 @@
 import { Community } from "../lib/constants";
 import { Loader2 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
 interface AllCommunitiesProps {
   communities: Community[];
   isLoadingCommunities?: boolean;
 }
 
 const AllCommunities: React.FC<AllCommunitiesProps> = ({ communities, isLoadingCommunities }) => {
+  const navigate = useNavigate();
   if (isLoadingCommunities) {
     return (
       <div className="flex justify-center items-center min-h-[200px]">
@@ -23,12 +24,14 @@ const AllCommunities: React.FC<AllCommunitiesProps> = ({ communities, isLoadingC
     );
   }
 
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {communities.map((community) => (
         <div 
           key={community.id}
           className="relative rounded-xl bg-muted cursor-pointer hover:bg-accent transition-colors"
+          onClick={() => navigate(`/community/${community.id}`)}
         >
           {/* Cover Image */}
           <div className="h-16 w-full rounded-t-xl overflow-hidden">

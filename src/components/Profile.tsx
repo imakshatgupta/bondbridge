@@ -384,7 +384,7 @@ const Profile: React.FC<ProfileProps> = ({
             {interests.map((interest, index) => (
               <span 
                 key={index} 
-                className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full"
+                className="bg-muted text-foreground border border-primary text-xs px-2 py-1 rounded-full"
               >
                 {interest}
               </span>
@@ -400,25 +400,25 @@ const Profile: React.FC<ProfileProps> = ({
                 className="text-center cursor-pointer hover:text-primary transition-colors"
               >
                 <div className="font-semibold">{followers.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">followers</div>
+                <div className="text-sm text-muted-foreground">Followers</div>
               </Link>
               <Link 
                 to="/following-followers?tab=following" 
                 className="text-center cursor-pointer hover:text-primary transition-colors"
               >
                 <div className="font-semibold">{following.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">following</div>
+                <div className="text-sm text-muted-foreground">Following</div>
               </Link>
             </>
           ) : (
             <>
               <div className="text-center">
                 <div className="font-semibold">{followers.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">followers</div>
+                <div className="text-sm text-muted-foreground">Followers</div>
               </div>
               <div className="text-center">
                 <div className="font-semibold">{following.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">following</div>
+                <div className="text-sm text-muted-foreground">Following</div>
               </div>
             </>
           )}
@@ -482,7 +482,7 @@ const Profile: React.FC<ProfileProps> = ({
       <Tabs defaultValue="posts" className="w-full">
         <TabsList
           className="grid w-full grid-cols-2 bg-transparent *:rounded-none *:border-transparent 
-        *:data-[state=active]:text-primary"
+        *:data-[state=active]:text-foreground"
         >
           <TabsTrigger value="posts" className="group cursor-pointer">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
