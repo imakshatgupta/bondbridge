@@ -172,13 +172,13 @@ const Profile: React.FC<ProfileProps> = ({
       const result = await executeSendFriendRequest({ userId: userId });
       if (result.success && result.data) {
         setLocalRequestSent(true);
-        toast.success("Friend request sent successfully!");
+        // toast.success("Friend request sent successfully!");
       } else {
-        toast.error(result.data?.message || "Failed to send friend request");
+        // toast.error(result.data?.message || "Failed to send friend request");
       }
     } catch (error) {
       console.error("Error sending friend request:", error);
-      toast.error("An error occurred while sending friend request");
+      // toast.error("An error occurred while sending friend request");
     }
   };
 
@@ -201,7 +201,7 @@ const Profile: React.FC<ProfileProps> = ({
     if (!success) {
       // If the request fails, revert the change
       dispatch(setPrivacyLevel(privacyLevel));
-      toast.error("Failed to update anonymous mode");
+      // toast.error("Failed to update anonymous mode");
     } else {
       // After successful update, refresh user data to ensure consistent display
       const currentUserId = localStorage.getItem("userId") || "";
@@ -254,7 +254,7 @@ const Profile: React.FC<ProfileProps> = ({
                 id: newChatRoomId,
                 name: username,
                 avatar: avatarSrc,
-                lastMessage: "No messages yet",
+                lastMessage: "No Messages Yet",
                 timestamp: new Date().toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",

@@ -56,7 +56,7 @@ const AllCommunities: React.FC<AllCommunitiesProps> = ({ communities, isLoadingC
               {community.name}
             </h3>
             <p className="text-sm text-muted-foreground">
-              members: {community.members.toLocaleString()}
+              Members: {community.members.toLocaleString()}
             </p>
           </div>
         </div>

@@ -22,7 +22,7 @@ import {
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 
 export function Post({ 
@@ -172,7 +172,7 @@ export function Post({
         const result = await executeDeletePost(feedId);
         
         if (result.success) {
-            toast.success("Post deleted successfully");
+            // toast.success("Post deleted successfully");
             // You might want to add a callback prop to handle post deletion
             // For now, we'll just refresh the page
             window.location.reload();

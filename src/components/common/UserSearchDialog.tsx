@@ -117,7 +117,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
         <div className="relative mt-4">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder="Search"
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

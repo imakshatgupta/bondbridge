@@ -95,7 +95,7 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
         </label>
         <Input
           id="groupName"
-          placeholder="Enter group name"
+          placeholder="Enter Group Name"
           value={groupInfo.name}
           onChange={(e) => onChange({ ...groupInfo, name: e.target.value })}
         />
@@ -107,7 +107,7 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
         </label>
         <Textarea
           id="description"
-          placeholder="Describe your group..."
+          placeholder="Describe Your Group..."
           value={groupInfo.description}
           onChange={(e) =>
             onChange({ ...groupInfo, description: e.target.value })

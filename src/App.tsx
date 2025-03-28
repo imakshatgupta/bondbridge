@@ -24,6 +24,7 @@ import Settings from "./pages/Settings";
 import ForgotPassword from "./pages/ForgotPassword";
 import FollowingFollowers from "@/components/FollowingFollowers";
 import AuthGuard from "@/components/AuthGuard";
+import CommunityProfilePage from "@/pages/CommunityProfilePage";
 
 // Component for routes that require authentication and socket connection
 const AuthenticatedRoutes: React.FC = () => {
@@ -148,6 +149,14 @@ const AuthenticatedRoutes: React.FC = () => {
             element={
               <Layout showSidebars={true} className="!p-0">
                 <CreateStory />
+              </Layout>
+            }
+          />
+          <Route
+            path="/community/:communityId"
+            element={
+              <Layout showSidebars={true}>
+                <CommunityProfilePage />
               </Layout>
             }
           />

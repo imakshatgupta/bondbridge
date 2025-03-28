@@ -86,7 +86,7 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
             {!hasLeftGroup && (
               <Button
                 variant="outline"
-                className="border-border px-6 cursor-pointer"
+                className="border-border px-6 cursor-pointer border-2 border-destructive hover"
                 onClick={onLeaveGroup}
               >
                 Leave
@@ -145,7 +145,7 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
                   {member.userId !== currentUserId && (
                     <Link
                       to={`/profile/${member.userId}`}
-                      className="text-primary text-sm cursor-pointer"
+                      className="text-foreground text-sm cursor-pointer border-2 border-primary rounded-full px-2 py-1"
                     >
                       View
                     </Link>

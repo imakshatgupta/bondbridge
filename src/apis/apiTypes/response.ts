@@ -607,6 +607,8 @@ export interface CommunityResponse {
   bio: string;
   members: string[];
   communityId?: string;
+  posts?: string[];
+  postCount?: number;
 }
 
 export interface CommunitiesResponse {

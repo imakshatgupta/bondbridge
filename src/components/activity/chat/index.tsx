@@ -180,7 +180,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         dispatch(setMessages(messageHistory));
 
         // If no messages were found, fetch suggestions
-        if (messageHistory.length === 0 && chat && otherUserId) {
+        if (messageHistory.length === 0 && chat ) {
           await fetchSuggestions();
         } else {
           // Clear suggestions if there are messages
@@ -193,7 +193,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     const fetchSuggestions = async () => {
       setLoadingSuggestions(true);
-      const result = await executeGetRandomText(otherUserId as string);
+      
+      // For groups where otherUserId might not exist, find the first participant who isn't the current user
+      let targetUserId = otherUserId;
+      
+      if (!targetUserId && chat?.participants && chat.participants.length > 0) {
+        // Find the first non-current user participant
+        const firstOtherParticipant = chat.participants.find(p => p.userId !== userId);
+        if (firstOtherParticipant) {
+          targetUserId = firstOtherParticipant.userId;
+        }
+      }
+      
+      // If we still don't have a target user ID, use a fallback or empty string
+      targetUserId = targetUserId || "";
+      
+      const result = await executeGetRandomText(targetUserId);
       if (result.success && result.data?.topic) {
         // Parse the topic string into individual suggestions
         const suggestionText = result.data.topic;

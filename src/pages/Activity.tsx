@@ -23,6 +23,8 @@ import UserSearchDialog from "@/components/common/UserSearchDialog";
 import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Person } from "@/apis/apiTypes/response";
+import { fetchUserCommunities } from "@/apis/commonApiCalls/communitiesApi";
+import { CommunityResponse } from "@/apis/apiTypes/response";
 
 interface Participant {
   userId: string;
@@ -34,10 +36,14 @@ export default function Activity() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userCommunities, setUserCommunities] = useState<ChatItem[]>([]);
+  const [loadingCommunities, setLoadingCommunities] = useState(false);
+  const [activeTab, setActiveTab] = useState("chats");
   const dispatch = useAppDispatch();
   const { filteredChats, isLoading } = useAppSelector((state) => state.chat);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeStartMessage] = useApiCall(startMessage);
+  const [executeFetchUserCommunities] = useApiCall(fetchUserCommunities);
 
   useEffect(() => {
     const loadChats = async () => {
@@ -65,6 +71,42 @@ export default function Activity() {
     };
     loadChats();
   }, [dispatch]);
+
+  useEffect(() => {
+    const loadUserCommunities = async () => {
+      setLoadingCommunities(true);
+      try {
+        const result = await executeFetchUserCommunities();
+        if (result.success && result.data) {
+          // Transform communities to ChatItem format
+          const communityItems = result.data.map((community: CommunityResponse) => ({
+            id: community._id,
+            name: community.name,
+            avatar: community.profilePicture || "",
+            lastMessage: community.description || "No description",
+            description: community.description,
+            timestamp: new Date(community.updatedAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            unread: false,
+            type: "community" as const,
+            memberCount: community.memberCount || community.members.length,
+            backgroundImage: community.backgroundImage,
+            participants: [] // Add empty participants array to satisfy ChatItem type
+          }));
+          
+          setUserCommunities(communityItems);
+        }
+      } catch (err) {
+        console.error("Error loading communities:", err);
+      } finally {
+        setLoadingCommunities(false);
+      }
+    };
+    
+    loadUserCommunities();
+  }, []);
 
   const handleSelectChat = (chat: ChatItem) => {
     dispatch(setActiveChat(chat));
@@ -122,6 +164,7 @@ export default function Activity() {
               };
 
               dispatch(setActiveChat(chatItem));
+              setActiveTab("chats");
             }
           }
         }
@@ -142,15 +185,16 @@ export default function Activity() {
         group.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : filteredChats.groups;
     
-  const filteredCommunities = searchQuery
-    ? filteredChats.communities.filter(community => 
+  const filteredUserCommunities = searchQuery
+    ? userCommunities.filter(community => 
         community.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : filteredChats.communities;
+    : userCommunities;
+
 
   return (
-    <div className="flex">
-      {/* Main content area */}
-      <div className={`p-6 overflow-y-auto w-full`}>
+    <div className={`flex flex-col md:flex-row h-screen`}>
+      {/* Left sidebar */}
+      <div className={`p-6 w-full`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-semibold">Activity</h1>
@@ -158,7 +202,7 @@ export default function Activity() {
             <Link to="/create-group">
               <Button
                 variant="outline"
-                className="cursor-pointer rounded-full bg-background text-foreground   border-primary"
+                className="cursor-pointer rounded-full bg-background text-foreground border-primary"
               >
                 Create Group
               </Button>
@@ -231,7 +275,12 @@ export default function Activity() {
 
         {/* Chat Interface or Tabs */}
         {!error && (
-          <Tabs defaultValue="chats" className="w-full">
+          <Tabs 
+            defaultValue="chats" 
+            value={activeTab} 
+            onValueChange={setActiveTab} 
+            className="w-full"
+          >
             <TabsList className="bg-transparent gap-4 *:px-5 *:py-1.5 mb-4">
               <TabsTrigger
                 value="chats"
@@ -249,11 +298,11 @@ export default function Activity() {
                 value="communities"
                 className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground cursor-pointer"
               >
-                Communities ({filteredChats.communities.length})
+                Communities ({userCommunities.length})
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="chats" className="min-h-[300px] relative">
+            <TabsContent value="chats" className="min-h-[300px] relative mb-6">
               {isLoading ? (
                 <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
                   <LogoLoader size="lg" opacity={0.8}/>
@@ -299,12 +348,12 @@ export default function Activity() {
               )}
             </TabsContent>
 
-            <TabsContent value="communities" className="min-h-[300px] relative">
-              {isLoading ? (
+            <TabsContent value="communities" className="min-h-[300px] relative mb-8">
+              {isLoading || loadingCommunities ? (
                 <div className="absolute top-0 left-0 right-0 bottom-0 flex justify-center items-center">
                   <LogoLoader size="lg" opacity={0.8} />
                 </div>
-              ) : filteredCommunities.length === 0 ? (
+              ) : filteredUserCommunities.length === 0 ? (
                 <EmptyState
                   icon={Building2}
                   title="No Communities Yet"
@@ -313,8 +362,8 @@ export default function Activity() {
                 />
               ) : (
                 <CommunityList
-                  communities={filteredCommunities}
-                  isLoading={isLoading}
+                  communities={filteredUserCommunities}
+                  isLoading={loadingCommunities}
                   onSelectCommunity={handleSelectChat}
                 />
               )}
@@ -322,6 +371,22 @@ export default function Activity() {
           </Tabs>
         )}
       </div>
+
+      {/* Right panel - Chat interface or Community feed
+      {activeChat && (
+        <div className="flex-1 h-full">
+          {isActiveChatCommunity ? (
+            <CommunityFeed onBack={() => dispatch(setActiveChat(null))} />
+          ) : (
+            <ChatInterface 
+              chatId={activeChat.id}
+              name={activeChat.name}
+              avatar={activeChat.avatar}
+              onClose={() => dispatch(setActiveChat(null))}
+            />
+          )}
+        </div>
+      )} */}
     </div>
   );
 }
