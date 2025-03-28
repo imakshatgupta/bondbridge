@@ -69,6 +69,7 @@ const ProfilePage: React.FC = () => {
         requestSent={userData.requestSent}
         compatibility={userData.compatibility}
         communities={userData.communities}
+        interests={userData.interests}
       />
     </>
   );

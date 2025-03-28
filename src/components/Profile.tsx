@@ -32,6 +32,7 @@ import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
 import AllCommunities from "@/components/AllCommunities";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
 import { Community } from "@/lib/constants";
+import { ProfilePictureUploadModal } from "@/components/ProfilePictureUploadModal";
 // import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
 // import type { StoryData } from "@/apis/apiTypes/response";
 
@@ -48,6 +49,7 @@ interface ProfileProps {
   requestSent?: boolean;
   compatibility?: number;
   communities?: string[];
+  interests?: string[];
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -63,6 +65,7 @@ const Profile: React.FC<ProfileProps> = ({
   requestSent = false,
   compatibility = 0,
   communities: userCommunityIds = [],
+  interests = [],
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -80,6 +83,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
+  const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] = useState(false);
 
   // Get user data from Redux store
   const { privacyLevel, nickname } = useAppSelector(
@@ -327,6 +331,7 @@ const Profile: React.FC<ProfileProps> = ({
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
           className="relative w-24 h-24 cursor-pointer"
+          onClick={() => isCurrentUser && setIsProfilePictureModalOpen(true)}
         >
           {!isCurrentUser && compatibility >= 0 && (
             <div className="absolute -inset-1 flex items-center justify-center z-20">
@@ -372,6 +377,20 @@ const Profile: React.FC<ProfileProps> = ({
               ? "Add a bio in your profile settings" 
               : "No bio available"}
         </p>
+
+        {/* Interests section */}
+        {interests && interests.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-[80%]">
+            {interests.map((interest, index) => (
+              <span 
+                key={index} 
+                className="bg-muted text-muted-foreground text-xs px-2 py-1 rounded-full"
+              >
+                {interest}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="flex gap-8 py-3 mt-4">
           {isCurrentUser ? (
@@ -446,6 +465,18 @@ const Profile: React.FC<ProfileProps> = ({
           </div>
         )}
       </div>
+
+      {/* Add the Profile Picture Upload Modal */}
+      {isCurrentUser && (
+        <ProfilePictureUploadModal
+          isOpen={isProfilePictureModalOpen}
+          onClose={() => setIsProfilePictureModalOpen(false)}
+          currentAvatar={avatarSrc}
+          username={username}
+          privacyLevel={privacyLevel}
+          bio={bio}
+        />
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">

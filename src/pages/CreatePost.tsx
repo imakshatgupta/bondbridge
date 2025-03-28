@@ -222,7 +222,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             size="sm"
             className="text-xs flex items-center gap-1 bg-[var(--secondary)] cursor-pointer"
             onClick={handleRewriteWithBondChat}
-            disabled={isRewritingWithBondChat }
+            disabled={isRewritingWithBondChat}
           >
             {isRewritingWithBondChat ? (
               <div className="flex items-center gap-1">

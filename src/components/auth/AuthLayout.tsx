@@ -53,11 +53,11 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               </div>
               
               {isLogin && (
-                <p className="text-sm text-muted-foreground mb-4">Welcome back, I'm so happy to see you again!</p>
+                <p className="text-sm text-foreground mb-4">Welcome back, I'm so happy to see you again!</p>
               )}
               
               {!isLogin && (
-                <p className="text-sm text-muted-foreground mb-4">Welcome, we are glad to see you!</p>
+                <p className="text-sm text-foreground mb-4">Welcome, we are glad to see you!</p>
               )}
             </>
           )}
@@ -91,7 +91,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
         
         <div className="hidden md:flex flex-col justify-between p-8 pb-0 h-[calc(100vh-64px)]">
           <h1 className="text-5xl 2xl:text-6xl font-semibold mb-2">{title}</h1>
-          <p className="text-muted-foreground text-xl 2xl:text-2xl z-50">{subtitle}</p>
+          <p className="text-foreground text-xl 2xl:text-2xl z-50">{subtitle}</p>
           {videoLight && videoDark ? (
             <video 
               src={isDark ? videoDark : videoLight} 
@@ -102,7 +102,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               className="mx-auto aspect-auto max-h-[60vh] object-contain border-0"
             />
           ) : image && (
-            <img src={image} alt="Illustration" className="-mt-20 mx-auto aspect-auto" />
+            <img src={image} alt="Illustration" className="-mt-16 mx-auto aspect-auto" />
           )}
         </div>
       </div>

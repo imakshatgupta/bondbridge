@@ -507,6 +507,7 @@ export interface UpdateProfileResponse {
     name: string;
     email: string;
     avatar: string;
+    profilePic?: string;
     interests: string[];
     privacyLevel: number;
     bio?: string;
