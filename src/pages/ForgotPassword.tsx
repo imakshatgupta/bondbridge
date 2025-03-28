@@ -273,7 +273,7 @@ const ForgotPassword: React.FC = () => {
                         <Button
                             onClick={() => setStep('phone')}
                             variant="link"
-                            className="mt-4 text-primary hover:underline w-full text-center"
+                            className="mt-4 text-foreground hover:underline w-full text-center"
                         >
                             Back
                         </Button>
@@ -382,7 +382,7 @@ const ForgotPassword: React.FC = () => {
             >
                 {renderForm()}
                 <div className="mt-4 text-center">
-                    <Link to="/login" className="text-primary hover:underline">
+                    <Link to="/login" className="text-foreground hover:underline">
                         Back to Login
                     </Link>
                 </div>
