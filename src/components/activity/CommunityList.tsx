@@ -1,7 +1,14 @@
-
 import { ChatItem } from "@/store/chatSlice";
-import { useAppDispatch } from "../../store";
+import { useAppDispatch, useAppSelector } from "../../store";
 import { setActiveChat } from "../../store/chatSlice";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+// Extended ChatItem for communities with additional properties
+interface CommunityItem extends ChatItem {
+  memberCount?: number;
+  backgroundImage?: string;
+  description?: string;
+}
 
 interface CommunityListProps {
   communities: ChatItem[];
@@ -15,6 +22,7 @@ const CommunityList = ({
   onSelectCommunity,
 }: CommunityListProps) => {
   const dispatch = useAppDispatch();
+  const activeChat = useAppSelector(state => state.chat.activeChat);
 
   const handleCommunitySelect = (community: ChatItem) => {
     dispatch(setActiveChat(community));
@@ -28,33 +36,43 @@ const CommunityList = ({
   }
 
   return (
-    <div className="space-y-1">
-      {communities.map((community) => (
-        <div
-          key={community.id}
-          className="flex items-center justify-between p-3 rounded-lg hover:bg-muted cursor-pointer"
-          onClick={() => handleCommunitySelect(community)}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
-              <img
-                src={community.avatar || "/placeholder.png"}
-                alt={community.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h3 className="font-medium">{community.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                {community.lastMessage}
-              </p>
+    <div className="space-y-2">
+      {communities.map((community) => {
+        const communityWithDetails = community as CommunityItem;
+        const isActive = activeChat?.id === community.id;
+        
+        return (
+          <div
+            key={community.id}
+            className={`flex items-center justify-between p-4 rounded-lg ${
+              isActive 
+                ? 'bg-primary/10 border-primary' 
+                : 'border-primary/20 bg-background hover:bg-primary/5'
+            } border cursor-pointer transition-colors duration-200`}
+            onClick={() => handleCommunitySelect(community)}
+          >
+            <div className="flex items-center gap-4 flex-1">
+              <Avatar className="h-10 w-10 rounded-full border-2 border-primary/30">
+                <AvatarImage 
+                  src={community.avatar || "/placeholder.png"} 
+                  alt={community.name} 
+                  className="object-cover" 
+                />
+                <AvatarFallback className="rounded-full bg-primary/20 text-primary">{community.name[0]}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="font-semibold text-primary">{community.name}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-1">
+                  {communityWithDetails.description || "Community description"}
+                </p>
+              </div>
+              <div className="text-xs text-foreground/80 font-medium">
+                {communityWithDetails.memberCount || community.participants.length || 0} Members
+              </div>
             </div>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {community.timestamp}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

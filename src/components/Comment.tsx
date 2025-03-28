@@ -135,7 +135,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
         setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
         toast.error(`Failed to ${newLikedState ? 'like' : 'unlike'} comment`);
       }
-    } catch (error) {
+    } catch {
       // Revert optimistic update if there's an error
       setLiked(!newLikedState);
       setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
@@ -198,7 +198,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
     }
     
     if (!postId) {
-      toast.error("Cannot delete comment: missing post ID");
+      // toast.error("Cannot delete comment: missing post ID");
       return;
     }
 

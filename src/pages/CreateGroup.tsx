@@ -24,7 +24,7 @@ interface GroupInfo {
 const tabs = [
   { id: "info", label: "Group Information" },
   { id: "skills", label: "Skills/Interests" },
-  { id: "friends", label: "Select friends" },
+  { id: "friends", label: "Select Friends" },
 ];
 
 const CreateGroup: React.FC = () => {

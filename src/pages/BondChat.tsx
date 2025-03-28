@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Message } from "@/types/chat";
 import {
   ArrowLeft,
-  History,
+  // History,
   Volume2,
   Check,
   ChevronsUpDown,
@@ -492,13 +492,13 @@ export default function BondChat() {
           </span>
         </div>
         <div className="ml-auto gap-2 flex items-center">
-          <Button
+          {/* <Button
             size="sm"
             variant="default"
             className="rounded-full cursor-pointer"
           >
             New +
-          </Button>
+          </Button> */}
           <div className="flex items-center">
             <Button
               size="icon"
@@ -541,13 +541,13 @@ export default function BondChat() {
               </DropdownMenu>
             )}
           </div>
-          <Button
+          {/* <Button
             size="icon"
             variant="ghost"
             className="rounded-full text-muted-foreground cursor-pointer"
           >
             <History />
-          </Button>
+          </Button> */}
         </div>
       </div>
 

@@ -50,13 +50,13 @@ const LogoutDeletePage: React.FC = () => {
             <div>
               <h4 className="font-medium">Reset Password</h4>
               <p className="text-sm text-muted-foreground">
-                Change your account password
+                Change your Account Password
               </p>
             </div>
             <Button
               variant="outline"
               onClick={() => setResetPasswordOpen(true)}
-              className="border-primary hover:bg-primary/10 hover:text-primary text-primary cursor-pointer"
+              className="border-primary hover:bg-primary/10 hover:text-muted-foreground text-foreground cursor-pointer"
             >
               <KeyRound className="h-4 w-4 mr-2" />
               Reset Password
@@ -70,7 +70,7 @@ const LogoutDeletePage: React.FC = () => {
             <div>
               <h4 className="font-medium">Delete Account</h4>
               <p className="text-sm text-muted-foreground">
-                Permanently delete your account and all data
+                Permanently Delete Your Account
               </p>
             </div>
             <Button

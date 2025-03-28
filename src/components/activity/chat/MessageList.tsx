@@ -48,7 +48,7 @@ const MessageList: React.FC<MessageListProps> = ({
   if (messages.length === 0) {
     return (
       <div className="flex justify-center items-center h-full text-muted-foreground">
-        <p>No messages yet. Start a conversation!</p>
+        <p>No Messages Yet. Start a Conversation!</p>
       </div>
     );
   }

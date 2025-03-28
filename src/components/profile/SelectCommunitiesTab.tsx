@@ -69,7 +69,7 @@ const SelectCommunitiesTab: React.FC = () => {
     return (
       <div className="h-[45vh]">
         <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
-        <p className="text-muted-foreground mb-8">select communities you want to join</p>
+        <p className="text-muted-foreground mb-8">Select Communities</p>
         
         <div className="flex justify-center items-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -81,7 +81,7 @@ const SelectCommunitiesTab: React.FC = () => {
   return (
     <div className="">
       <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
-      <p className="text-muted-foreground mb-8">select communities you want to join</p>
+      <p className="text-muted-foreground mb-8">Select Communities</p>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 h-[45vh] overflow-y-auto">
         {communities.map((community) => (
@@ -131,7 +131,7 @@ const SelectCommunitiesTab: React.FC = () => {
                 {community.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                members: {community.memberCount.toLocaleString()}
+                Members: {community.memberCount.toLocaleString()}
               </p>
             </div>
           </div>

@@ -18,8 +18,9 @@ const QuickSuggestions: React.FC<QuickSuggestionsProps> = ({
 
   return (
     <div className="">
-      <div className="text-sm text-muted-foreground mb-2 opacity-70">
-        Quick suggestion
+      <div className="text-base text-muted-foreground mb-2 opacity-70 flex items-center gap-2">
+      <img src="/bondchat.svg" alt="" className="w-4 h-4"/>
+      <span className="grad font-bold">BondChat</span>
       </div>
       <div className="flex overflow-x-auto scrollbar-hide pb-2 -mx-2 px-2">
         <div className="flex gap-2 flex-nowrap">
@@ -33,7 +34,7 @@ const QuickSuggestions: React.FC<QuickSuggestionsProps> = ({
             suggestions.map((suggestion, index) => (
               <button
                 key={index}
-                className="bg-muted cursor-pointer text-muted-foreground px-3 py-2 rounded-full text-xs hover:bg-muted/80 transition-colors whitespace-nowrap flex-shrink-0"
+                className="bg-muted border-2 border-primary cursor-pointer text-foreground px-3 py-2 rounded-full text-xs hover:bg-muted/80 transition-colors whitespace-nowrap flex-shrink-0"
                 onClick={() => onSuggestionClick(suggestion)}
               >
                 {suggestion}

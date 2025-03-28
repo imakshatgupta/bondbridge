@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { toast } from "sonner";
+// import { toast } from "sonner";
 
 // Define error types
 export type ApiError = {
@@ -40,15 +40,20 @@ export const handleApiError = (error: unknown): ApiError => {
     };
   }
 
+  if(apiError?.message && apiError.message === "Unauthorised") {
+    localStorage.clear();
+    window.location.href = "/login";
+  }
+
   // Add console log to debug
   console.log('Showing error toast:', apiError);
 
   // Show toast notification with a unique ID and custom styling
-  toast.error(apiError.message, {
-    id: `error-${Date.now()}`,
-    description: apiError.code || "Error occurred",
-    duration: 5000,
-  });
+  // toast.error(apiError.message, {
+  //   id: `error-${Date.now()}`,
+  //   description: apiError.code || "Error occurred",
+  //   duration: 5000,
+  // });
 
   // Call the global error handler if it exists
   if (globalErrorHandler) {

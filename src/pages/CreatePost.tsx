@@ -220,7 +220,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs flex items-center gap-1 bg-[var(--secondary)]"
+            className="text-xs flex items-center gap-1 bg-[var(--secondary)] cursor-pointer"
             onClick={handleRewriteWithBondChat}
             disabled={isRewritingWithBondChat}
           >

@@ -68,7 +68,7 @@ const SelectAvatarTab: React.FC = () => {
   // Render avatar grid
   const renderAvatarGrid = (avatars: AvatarData[], type: string) => {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {avatars.map((avatarItem, index) => (
           <div 
             key={`${type}-${index}`}
@@ -99,7 +99,7 @@ const SelectAvatarTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">Choose an avatar that represents you</p>
+      <p className="text-sm text-muted-foreground">Choose Avatar</p>
       
       {loading ? (
         <div className="flex justify-center py-8">

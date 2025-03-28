@@ -7,6 +7,7 @@ import apiClient, { formDataApiClient } from "../apiClient";
 import { UpdateProfileRequest } from "../apiTypes/request";
 import { PostData } from "../apiTypes/profileTypes";
 import { FollowingFollowersResponse } from "../apiTypes/profileTypes";
+import { FollowingFollowerUser } from "../apiTypes/profileTypes";
 
 export const fetchUserProfile = async (
   userId: string,
@@ -152,5 +153,25 @@ export const fetchFollowersList = async (): Promise<FollowingFollowersResponse> 
       profilePic: user.profilePic || user.avatar,
       interests: user.interests || []
     }))
+  };
+};
+
+export const fetchProfileById = async (userId: string): Promise<FollowingFollowerUser> => {
+  const response = await apiClient.get("/showProfile", {
+    params: {
+      other: userId,
+    },
+  });
+
+  const userData = response.data.result[0];
+  
+  return {
+    _id: userData._id,
+    name: userData.name,
+    nickName: userData.nickName || "",
+    email: "",  // We don't need to expose email
+    avatar: userData.avatar || userData.profilePic || "/profile/user.png",
+    profilePic: userData.profilePic || userData.avatar || "/profile/user.png",
+    interests: userData.interests || [],
   };
 };

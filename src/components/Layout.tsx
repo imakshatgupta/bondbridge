@@ -15,6 +15,7 @@ import { updateCurrentUser } from "@/store/currentUserSlice";
 import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/SidebarProfileSkeleton";
 import { Toaster } from "./ui/sonner";
 import { useApiCall } from "@/apis/globalCatchError";
+import CommunityFeed from "./activity/CommunityFeed";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -54,8 +55,15 @@ const Layout: React.FC<LayoutProps> = ({
       }
       setIsLoadingProfile(false);
     };
-    if (!currentUser.username) {
-      loadCurrentUser();
+    const location = window.location.pathname;
+    const isAuthRoute = location === '/login' || location === '/signup';
+    
+    if (!isAuthRoute) {
+      if (!currentUser.username) {
+        loadCurrentUser();
+      } else {
+        setIsLoadingProfile(false);
+      }
     } else {
       setIsLoadingProfile(false);
     }
@@ -69,8 +77,13 @@ const Layout: React.FC<LayoutProps> = ({
       }
     };
 
-    loadSuggestedUsers();
-  }, []);
+    const location = window.location.pathname;
+    const isAuthRoute = location === '/login' || location === '/signup';
+
+    if (!isAuthRoute) {
+      loadSuggestedUsers();
+    }
+  }, [currentUserId]);
 
   const isSettingsActive = useAppSelector(
     (state) => state.settings.isSettingsActive
@@ -118,12 +131,16 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
             ) : activeChat ? (
               <div className="min-w-2/5 max-w-2/5">
-                <ChatInterface
-                  chatId={activeChat.id}
-                  name={activeChat.name}
-                  avatar={activeChat.avatar}
-                  onClose={handleCloseChat}
-                />
+                {activeChat.type === "community" ? (
+                  <CommunityFeed onBack={() => dispatch(setActiveChat(null))} />
+                ) : (
+                  <ChatInterface
+                    chatId={activeChat.id}
+                    name={activeChat.name}
+                    avatar={activeChat.avatar}
+                    onClose={handleCloseChat}
+                  />
+                )}
               </div>
             ) : (
               <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl">

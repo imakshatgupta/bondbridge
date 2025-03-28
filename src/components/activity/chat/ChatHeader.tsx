@@ -47,8 +47,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <h3 className="font-medium">{name}</h3>
             <p className="text-xs text-muted-foreground">
               {chatType === "dm"
-                ? "online"
-                : `${chatType} · ${participantsCount} members`}
+                ? "Online"
+                : `${chatType.charAt(0).toUpperCase() + chatType.slice(1)} · ${participantsCount} Members`}
             </p>
           </div>
         </div>

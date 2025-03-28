@@ -24,6 +24,8 @@ export interface ChatItem {
     profilePic: string;
     status?: string;
   }[];
+  memberCount?: number;
+  backgroundImage?: string;
 }
 
 export interface Message {
@@ -144,7 +146,7 @@ const chatSlice = createSlice({
           );
 
           // Extract last message text from different possible formats
-          let lastMessageText = "No messages yet";
+          let lastMessageText = "No Messages Yet";
           const lastMessage = chatRoom.lastMessage as LastMessageType;
 
           if (typeof lastMessage === "string") {

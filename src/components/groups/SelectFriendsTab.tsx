@@ -108,7 +108,7 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
       <div className="mb-4 relative">
         <Input
           type="text"
-          placeholder="Search friends..."
+          placeholder="Search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-10"
