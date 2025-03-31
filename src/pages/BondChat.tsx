@@ -190,6 +190,7 @@ export default function BondChat() {
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [voiceType, setVoiceType] = useState<"male" | "female">("male"); // Default voice type is male
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const isSpeakerOnRef = useRef(false); // Add a ref to track current speaker state
   const voiceTypeRef = useRef<"male" | "female">("male"); // Ref for voice type
 
@@ -230,6 +231,7 @@ export default function BondChat() {
       audioRef.pause();
       audioRef.currentTime = 0;
       setAudioRef(null);
+      setIsAudioPlaying(false);
     }
   };
 
@@ -252,10 +254,19 @@ export default function BondChat() {
       // Create audio source from base64
       const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
       setAudioRef(audio);
-
+      
       // Set up event handlers
+      audio.onplaying = () => {
+        setIsAudioPlaying(true);
+      };
+      
+      audio.onended = audio.onpause = () => {
+        setIsAudioPlaying(false);
+      };
+
       audio.onerror = () => {
         setAudioRef(null);
+        setIsAudioPlaying(false);
         toast.error("Audio playback failed");
       };
 
@@ -264,10 +275,12 @@ export default function BondChat() {
         console.error("Audio playback error:", error);
         toast.error("Failed to play audio");
         setAudioRef(null);
+        setIsAudioPlaying(false);
       });
     } catch (error) {
       console.error("Error playing audio:", error);
       toast.error("Failed to process audio data");
+      setIsAudioPlaying(false);
     }
   };
 
@@ -407,6 +420,7 @@ export default function BondChat() {
       if (audioRef) {
         audioRef.pause();
         audioRef.currentTime = 0;
+        setIsAudioPlaying(false);
       }
     };
   }, [socket, isConnected, userId, BOT_ID]);
@@ -418,6 +432,7 @@ export default function BondChat() {
       audioRef.pause();
       audioRef.currentTime = 0;
       setAudioRef(null);
+      setIsAudioPlaying(false);
     }
   }, [isSpeakerOn]);
 
@@ -478,6 +493,7 @@ export default function BondChat() {
             if (audioRef) {
               audioRef.pause();
               audioRef.currentTime = 0;
+              setIsAudioPlaying(false);
             }
             window.history.back();
           }}
@@ -592,6 +608,8 @@ export default function BondChat() {
             onSendMessage={handleSendMessage}
             placeholder={isLoading ? "Loading conversation..." : "Type Your Message Here..."}
             disabled={isLoading}
+            isAudioPlaying={isAudioPlaying}
+            expectAudioAfterSend={isSpeakerOn}
           />
         </div>
       </div>
