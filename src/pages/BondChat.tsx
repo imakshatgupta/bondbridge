@@ -8,14 +8,14 @@ import {
   ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChatInput } from "@/components/chat/ChatInput";
+import { ChatInput, ChatInputRef } from "@/components/chat/ChatInput";
 import { useSocket } from "@/context/SocketContext";
 import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages, startMessage } from "@/apis/commonApiCalls/chatApi";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setActiveChat } from "@/store/chatSlice";
 import {
@@ -25,6 +25,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import LogoLoader from "@/components/LogoLoader";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { stopAllRecognitionInstances } from "@/types/speech-recognition";
 
 // Extend the Message type to support complex content
 interface ExtendedMessage extends Omit<Message, "text"> {
@@ -80,39 +89,40 @@ interface SendMessageResponse {
 }
 
 // Custom component for user recommendation cards
-const UserCard = ({ user }: { user: UserRecommendation }) => {
+const UserCard = ({ user, onNavigate }: { user: UserRecommendation, onNavigate: (path: string) => void }) => {
   // Display up to 3 interests with a "+n more" indicator if needed
   const displayedInterests = user.interests.slice(0, 3);
   const remainingCount = Math.max(0, user.interests.length - 3);
 
   return (
-    <Link to={`/profile/${user._id}`} className="block">
-      <div className="flex items-start border-2 border-primary/25 gap-3 p-4 bg-muted/50 rounded-lg mb-2 hover:bg-muted transition-colors">
-        <Avatar className="h-12 w-12">
-          <AvatarImage src={user.profilePic} alt={user.name} />
-          <AvatarFallback>{user.name[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <span className="font-medium">{user.name}</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {displayedInterests.map((interest, index) => (
-              <Badge
-                key={`${index}-${user._id}`}
-                variant="outline"
-                className="text-xs border-primary"
-              >
-                {interest}
-              </Badge>
-            ))}
-            {remainingCount > 0 && (
-              <Badge variant="outline" className="text-xs border-primary">
-                +{remainingCount} more
-              </Badge>
-            )}
-          </div>
+    <div 
+      className="flex items-start border-2 border-primary/25 gap-3 p-4 bg-muted/50 rounded-lg mb-2 hover:bg-muted transition-colors cursor-pointer"
+      onClick={() => onNavigate(`/profile/${user._id}`)}
+    >
+      <Avatar className="h-12 w-12">
+        <AvatarImage src={user.profilePic} alt={user.name} />
+        <AvatarFallback>{user.name[0]}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <span className="font-medium">{user.name}</span>
+        <div className="flex flex-wrap gap-1 mt-1">
+          {displayedInterests.map((interest, index) => (
+            <Badge
+              key={`${index}-${user._id}`}
+              variant="outline"
+              className="text-xs border-primary"
+            >
+              {interest}
+            </Badge>
+          ))}
+          {remainingCount > 0 && (
+            <Badge variant="outline" className="text-xs border-primary">
+              +{remainingCount} more
+            </Badge>
+          )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
@@ -120,9 +130,11 @@ const UserCard = ({ user }: { user: UserRecommendation }) => {
 const BotMessage = ({
   message,
   messageIndex,
+  onNavigate
 }: {
   message: ExtendedMessage;
   messageIndex: number;
+  onNavigate: (path: string) => void;
 }) => {
   // Check if the message has content that includes user recommendations
   const hasUserRecommendations =
@@ -159,7 +171,7 @@ const BotMessage = ({
           <div className="mt-2">
             {users.map((user, index) => {
               const key = `${messageIndex}-user-${index}-${user._id}`;
-              return <UserCard key={key} user={user} />;
+              return <UserCard key={key} user={user} onNavigate={onNavigate} />;
             })}
           </div>
         )}
@@ -193,7 +205,14 @@ export default function BondChat() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const isSpeakerOnRef = useRef(false); // Add a ref to track current speaker state
   const voiceTypeRef = useRef<"male" | "female">("male"); // Ref for voice type
-
+  
+  // Add new state for speech recognition active
+  const [isSpeechActive, setIsSpeechActive] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
+  
+  // Add ref for ChatInput component
+  const chatInputRef = useRef<ChatInputRef>(null);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
   const [executeGetMessages] = useApiCall(getMessages);
@@ -202,6 +221,7 @@ export default function BondChat() {
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
   const BOT_ID = import.meta.env.VITE_BOT_ID; // Access the bot ID from environment variables
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Update refs when states change
   useEffect(() => {
@@ -215,6 +235,12 @@ export default function BondChat() {
   // Set activeChat to null when component mounts
   useEffect(() => {
     dispatch(setActiveChat(null));
+
+    // Cleanup when component unmounts
+    return () => {
+      // Make sure all speech recognition instances are stopped
+      stopAllRecognitionInstances();
+    };
   }, [dispatch]);
 
   useEffect(() => {
@@ -483,6 +509,97 @@ export default function BondChat() {
     });
   };
 
+  // Update handleSpeechStateChange function to track speech recognition state
+  const handleSpeechStateChange = (isActive: boolean) => {
+    setIsSpeechActive(isActive);
+  };
+
+  // Add new function to handle navigation
+  const handleNavigation = (path?: string) => {
+    // Always clean up audio regardless of speech state
+    if (audioRef) {
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      setIsAudioPlaying(false);
+    }
+    
+    // Only turn off speech recognition if it's active
+    if (isSpeechActive) {
+      // Force stop speech recognition
+      if (chatInputRef.current) {
+        chatInputRef.current.forceStopListening();
+      }
+      stopAllRecognitionInstances();
+      setIsSpeechActive(false);
+    }
+    
+    // Navigate to the specified path or back
+    if (path) {
+      navigate(path);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // Add confirmation dialog exit handler
+  const handleConfirmExit = () => {
+    setShowExitDialog(false);
+    
+    // First explicitly turn off speech recognition in the ChatInput component
+    if (chatInputRef.current) {
+      chatInputRef.current.forceStopListening();
+    }
+    
+    // Clean up audio
+    if (audioRef) {
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      setIsAudioPlaying(false);
+    }
+    
+    // Make sure speech recognition is turned off and mic button is toggled off
+    stopAllRecognitionInstances();
+    setIsSpeechActive(false);
+    
+    // Use the navigate function from react-router instead of window.history.back()
+    navigate(-1);
+  };
+
+  // Add a new useEffect to handle beforeunload event
+  useEffect(() => {
+    // Handle browser back button and page refresh
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSpeechActive) {
+        // Standard way to show a confirmation dialog when leaving page
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    // Handle browser navigation (history)
+    const handlePopState = () => {
+      // Only turn off speech recognition if it's active
+      if (isSpeechActive && chatInputRef.current) {
+        chatInputRef.current.forceStopListening();
+        stopAllRecognitionInstances();
+        setIsSpeechActive(false);
+      }
+      
+      // Note: No need to call navigate here as the browser will handle the navigation
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isSpeechActive]);
+
   return (
     <div className="flex flex-col bg-background relative h-[calc(100vh-64px)] overflow-hidden">
       <div className="flex items-center gap-3 p-4 border-b">
@@ -490,12 +607,25 @@ export default function BondChat() {
           variant="ghost"
           size="icon"
           onClick={() => {
+            // Always clean up audio regardless of speech state
             if (audioRef) {
               audioRef.pause();
               audioRef.currentTime = 0;
               setIsAudioPlaying(false);
             }
-            window.history.back();
+            
+            // Only turn off speech recognition if it's active
+            if (isSpeechActive) {
+              // Force stop any speech recognition
+              if (chatInputRef.current) {
+                chatInputRef.current.forceStopListening();
+              }
+              stopAllRecognitionInstances();
+              setIsSpeechActive(false);
+            }
+            
+            // Always navigate back using react-router
+            navigate(-1);
           }}
         >
           <ArrowLeft className="h-5 w-5" />
@@ -594,6 +724,7 @@ export default function BondChat() {
                       key={index}
                       message={message}
                       messageIndex={index}
+                      onNavigate={handleNavigation}
                     />
                   )
                 )}
@@ -610,9 +741,39 @@ export default function BondChat() {
             disabled={isLoading}
             isAudioPlaying={isAudioPlaying}
             expectAudioAfterSend={isSpeakerOn}
+            onSpeechStateChange={handleSpeechStateChange}
+            ref={chatInputRef}
           />
         </div>
       </div>
+
+      {/* Add confirmation dialog */}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Speech Recognition Active</DialogTitle>
+            <DialogDescription>
+              You currently have speech recognition (microphone) active. If you leave now, your recording will be stopped. Would you like to continue?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowExitDialog(false)}
+            >
+              Stay on Page
+            </Button>
+            <Button
+              type="button" 
+              variant="destructive"
+              onClick={handleConfirmExit}
+            >
+              Leave Anyway
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

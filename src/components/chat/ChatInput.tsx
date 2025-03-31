@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { ArrowRight, Paperclip, Mic } from 'lucide-react';
@@ -16,15 +16,21 @@ interface ChatInputProps {
   disabled?: boolean;
   isAudioPlaying?: boolean;
   expectAudioAfterSend?: boolean;
+  onSpeechStateChange?: (isActive: boolean) => void;
 }
 
-export const ChatInput = ({ 
+export interface ChatInputRef {
+  forceStopListening: () => void;
+}
+
+export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ 
   onSendMessage, 
   placeholder = 'Type your message...', 
   disabled = false,
   isAudioPlaying = false,
-  expectAudioAfterSend = false
-}: ChatInputProps) => {
+  expectAudioAfterSend = false,
+  onSpeechStateChange
+}, ref) => {
   const [message, setMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [wasListeningBeforeAudio, setWasListeningBeforeAudio] = useState(false);
@@ -43,10 +49,12 @@ export const ChatInput = ({
       rec.start();
       registerRecognitionInstance(rec);
       recognitionActiveRef.current = true;
+      if (onSpeechStateChange) onSpeechStateChange(true);
     } catch (error) {
       console.error('Error starting speech recognition:', error);
       recognitionActiveRef.current = false;
       setIsListening(false);
+      if (onSpeechStateChange) onSpeechStateChange(false);
     }
   };
 
@@ -65,8 +73,25 @@ export const ChatInput = ({
     } catch (error) {
       console.error('Error stopping speech recognition:', error);
       recognitionActiveRef.current = false;
+      if (onSpeechStateChange) onSpeechStateChange(false);
     }
   };
+
+  // Method to force stop listening that can be called from parent
+  const forceStopListening = () => {
+    if (recognition) {
+      safelyStopRecognition(recognition);
+    }
+    setIsListening(false);
+    setWasListeningBeforeAudio(false);
+    recognitionActiveRef.current = false;
+    if (onSpeechStateChange) onSpeechStateChange(false);
+  };
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    forceStopListening
+  }));
 
   // Initialize speech recognition on component mount
   useEffect(() => {
@@ -95,6 +120,7 @@ export const ChatInput = ({
       // Recognition has ended, update our active flag
       recognitionActiveRef.current = false;
       unregisterRecognitionInstance(recognitionInstance);
+      if (onSpeechStateChange) onSpeechStateChange(false);
       
       if (isListening && !isAudioPlaying) {
         if (message.trim()) {
@@ -130,6 +156,7 @@ export const ChatInput = ({
       console.error('Speech recognition error', event.error);
       recognitionActiveRef.current = false;
       setIsListening(false);
+      if (onSpeechStateChange) onSpeechStateChange(false);
     };
     
     setRecognition(recognitionInstance);
@@ -141,6 +168,7 @@ export const ChatInput = ({
           recognition.stop();
           recognitionActiveRef.current = false;
           setIsListening(false);
+          if (onSpeechStateChange) onSpeechStateChange(false);
         } catch (error) {
           console.error('Error stopping speech recognition on unmount:', error);
         }
@@ -154,6 +182,7 @@ export const ChatInput = ({
       recognition.onend = () => {
         // Recognition has ended, update our active flag
         recognitionActiveRef.current = false;
+        if (onSpeechStateChange) onSpeechStateChange(false);
         
         if (isListening && !isAudioPlaying) {
           if (message.trim()) {
@@ -185,7 +214,7 @@ export const ChatInput = ({
         }
       };
     }
-  }, [recognition, isListening, message, onSendMessage, isAudioPlaying, expectAudioAfterSend]);
+  }, [recognition, isListening, message, onSendMessage, isAudioPlaying, expectAudioAfterSend, onSpeechStateChange]);
 
   // Effect to handle audio playback state changes
   useEffect(() => {
@@ -284,4 +313,4 @@ export const ChatInput = ({
       </Button>
     </div>
   );
-}; 
+}); 
