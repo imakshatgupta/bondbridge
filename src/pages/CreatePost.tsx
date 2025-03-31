@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -10,6 +10,13 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { useAppSelector } from '../store';
+import { 
+  SpeechRecognition, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent,
+  registerRecognitionInstance,
+  unregisterRecognitionInstance
+} from '../types/speech-recognition';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
@@ -23,6 +30,9 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const recognitionActiveRef = useRef(false);
   
   
   // Get the current user's avatar from Redux store
@@ -71,6 +81,112 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     if (success && data) {
       // Update the content with the rewritten text
       setContent(data.rewritten);
+    }
+  };
+
+  // Initialize speech recognition on component mount
+  useEffect(() => {
+    // Get the correct Speech Recognition API based on browser
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognitionAPI) {
+      console.error('Speech recognition not supported by this browser');
+      return;
+    }
+    
+    const recognitionInstance = new SpeechRecognitionAPI();
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
+    recognitionInstance.lang = 'en-US';
+    
+    recognitionInstance.onstart = () => {
+      setIsListening(true);
+      registerRecognitionInstance(recognitionInstance);
+    };
+    
+    recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      
+      setContent(transcript);
+    };
+    
+    recognitionInstance.onend = () => {
+      // Recognition has ended, update our active flag
+      recognitionActiveRef.current = false;
+      unregisterRecognitionInstance(recognitionInstance);
+      if (isListening) {
+        // Try to restart the recognition if it ended automatically and we're still in listening mode
+        setTimeout(() => {
+          if (isListening && !recognitionActiveRef.current && recognitionInstance) {
+            try {
+              recognitionInstance.start();
+              registerRecognitionInstance(recognitionInstance);
+              recognitionActiveRef.current = true;
+            } catch (error) {
+              console.error('Error restarting speech recognition:', error);
+              setIsListening(false);
+            }
+          }
+        }, 100);
+      }
+    };
+    
+    recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error', event.error);
+      recognitionActiveRef.current = false;
+      setIsListening(false);
+      unregisterRecognitionInstance(recognitionInstance);
+    };
+    
+    setRecognition(recognitionInstance);
+    
+    // Cleanup function
+    return () => {
+      if (recognitionInstance && recognitionActiveRef.current) {
+        try {
+          recognitionInstance.stop();
+          unregisterRecognitionInstance(recognitionInstance);
+          recognitionActiveRef.current = false;
+          setIsListening(false);
+        } catch (error) {
+          console.error('Error stopping speech recognition on unmount:', error);
+        }
+      }
+    };
+  }, []); // Empty dependency array to initialize once
+
+  // Toggle speech recognition
+  const toggleSpeechRecognition = () => {
+    if (!recognition) {
+      toast.error('Speech recognition is not supported in your browser');
+      return;
+    }
+    
+    if (isListening) {
+      // Stop listening
+      try {
+        recognition.stop();
+        unregisterRecognitionInstance(recognition);
+        recognitionActiveRef.current = false;
+        setIsListening(false);
+        // toast.info('Speech recognition stopped');
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error);
+      }
+    } else {
+      // Start listening
+      try {
+        recognition.start();
+        registerRecognitionInstance(recognition);
+        recognitionActiveRef.current = true;
+        setIsListening(true);
+        // toast.success('Listening... speak now');
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        // toast.error('Failed to start speech recognition');
+      }
     }
   };
 
@@ -128,7 +244,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             variant="ghost"
             size="sm"
             className="text-[var(--muted-foreground)] px-8 border cursor-pointer"
-            onClick={() => setContent('')}
+            onClick={() => navigate('/')}
             disabled={isSubmitting || isCreatingPost}
           >
             Cancel
@@ -148,6 +264,24 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
 
       <div className="flex justify-between items-center">
         <div className="flex gap-3">
+          <div className="relative">
+            <button 
+              onClick={toggleSpeechRecognition}
+              type="button"
+              className={`hover:opacity-75 transition-opacity cursor-pointer ${isListening ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}
+            >
+              <Mic size={20} className={isListening ? 'animate-pulse' : ''} />
+            </button>
+          </div>
+          <label className="cursor-pointer hover:opacity-75 transition-opacity">
+            <input
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={handleMediaUpload}
+            />
+            <Video size={20} className="text-[var(--foreground)]" />
+          </label>
           <label className="cursor-pointer hover:opacity-75 transition-opacity">
             <input
               type="file"
@@ -178,37 +312,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
               </div>
             )}
           </div>
-          <label className="cursor-pointer hover:opacity-75 transition-opacity">
-            <input
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleMediaUpload}
-            />
-            <Video size={20} className="text-[var(--foreground)]" />
-          </label>
-
-          <div className="relative">
-            <button 
-              onClick={() => setShowPicker(!showPicker)}
-              type="button"
-              className="hover:opacity-75 transition-opacity cursor-pointer"
-            >
-              <Mic size={20} className="text-[var(--foreground)]" />
-            </button>
-            {showPicker && (
-              <div className='absolute z-50'>
-                <EmojiPicker 
-                  onEmojiClick={(emojiObject) => {
-                    setContent(prevContent => prevContent + emojiObject.emoji);
-                    setShowPicker(false);
-                  }}
-                  width={300}
-                  height={400}
-                />
-              </div>
-            )}
-          </div>
+                  
 
 
           
