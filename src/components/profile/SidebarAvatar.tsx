@@ -28,7 +28,7 @@ const SidebarAvatar: React.FC<SidebarAvatarProps> = ({
           alt={`${username}'s avatar`}
           className="w-12 h-12 rounded-full"
         />
-        <span className="text-sidebar-foreground">{username}</span>
+        <p className="text-sidebar-foreground truncate">{username}</p>
       </div>
       <svg
         className="h-5 w-5 text-sidebar-foreground/40"

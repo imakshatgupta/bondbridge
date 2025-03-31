@@ -33,6 +33,8 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const recognitionActiveRef = useRef(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
   
   
   // Get the current user's avatar from Redux store
@@ -229,6 +231,28 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showPicker && 
+        emojiPickerRef.current && 
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowPicker(false);
+      }
+    };
+
+    // Use mousedown instead of click to handle the event before the emoji picker's click event
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPicker]);
+
   return (
     <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
       <div className="flex items-start gap-3 pb-4">
@@ -251,7 +275,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           </Button>
           <Button
             size="sm"
-            className="bg-[var(--primary)] px-10 hover:bg-[var(--primary-hover)] text-[var(--primary-foreground)] cursor-pointer"
+            className="bg-primary px-10 hover:bg-primary/90 text-primary-foreground cursor-pointer"
             onClick={handleSubmit}
             disabled={isSubmitting || isCreatingPost}
           >
@@ -293,6 +317,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           </label>
           <div className="relative">
             <button 
+              ref={emojiButtonRef}
               onClick={() => setShowPicker(!showPicker)}
               type="button"
               className="hover:opacity-75 transition-opacity cursor-pointer"
@@ -300,7 +325,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
               <Smile size={20} className="text-[var(--foreground)]" />
             </button>
             {showPicker && (
-              <div className='absolute z-50'>
+              <div ref={emojiPickerRef} className='absolute z-50'>
                 <EmojiPicker 
                   onEmojiClick={(emojiObject) => {
                     setContent(prevContent => prevContent + emojiObject.emoji);

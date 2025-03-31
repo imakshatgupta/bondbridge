@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
@@ -9,12 +9,66 @@ import { useApiCall } from '../apis/globalCatchError';
 import { Story, StoryData } from '../apis/apiTypes/request';
 import { useAppSelector } from '../store';
 
+type StoryTheme = {
+  name: string;
+  bgColor: string;
+  textColor: string;
+  thumbnailColor: string;
+};
+const storyThemes: StoryTheme[] = [
+  {
+    name: 'Purple',
+    bgColor: '#4A148C', // Deep purple
+    textColor: '#FFFFFF', // White
+    thumbnailColor: '#6A1B9A'
+  },
+  {
+    name: 'Blue', 
+    bgColor: '#1A237E', // Dark blue
+    textColor: '#FFFFFF', // White
+    thumbnailColor: '#283593'
+  },
+  {
+    name: 'Orange',
+    bgColor: '#E65100', // Deep orange
+    textColor: '#FFFFFF', // White text for contrast
+    thumbnailColor: '#F57C00'
+  },
+  {
+    name: 'Green',
+    bgColor: '#1B5E20', // Dark green
+    textColor: '#FFFFFF', // White text for contrast
+    thumbnailColor: '#2E7D32' // Slightly lighter dark green for thumbnail
+  },
+  // {
+  //   name: 'Yellow',
+  //   bgColor: '#FFD700', // Brighter yellow
+  //   textColor: '#000000', // Black text for contrast
+  //   thumbnailColor: '#FFE44D' // Slightly darker bright yellow
+  // },
+  {
+    name: 'Grey',
+    bgColor: '#424242', // Dark grey
+    textColor: '#FFFFFF', // White text for contrast
+    thumbnailColor: '#616161' // Slightly lighter grey for thumbnail
+  },
+  // {
+  //   name: 'Cream',
+  //   bgColor: '#FFF5E1', // Light cream color
+  //   textColor: '#2C1810', // Dark brown text for contrast
+  //   thumbnailColor: '#F5E6D3' // Slightly darker cream for thumbnail
+  // }
+];
+
 const CreateStory = () => {
   const { avatar, username } = useAppSelector((state) => state.currentUser);
   const [stories, setStories] = useState<Story[]>([{ 
     type: 'text', 
     content: '', 
-    theme: 'bg-primary',
+    theme: {
+      bgColor: storyThemes[0].bgColor,
+      textColor: storyThemes[0].textColor
+    },
     privacy: 1 
   }]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -29,9 +83,15 @@ const CreateStory = () => {
     ));
   };
 
-  const handleThemeChange = (color: string) => {
+  const handleThemeChange = (theme: StoryTheme) => {
     setStories(prev => prev.map((story, idx) => 
-      idx === currentPage ? { ...story, theme: color } : story
+      idx === currentPage ? { 
+        ...story, 
+        theme: {
+          bgColor: theme.bgColor,
+          textColor: theme.textColor
+        }
+      } : story
     ));
   };
 
@@ -86,35 +146,8 @@ const CreateStory = () => {
     navigate('/');
   };
 
-  // Helper function to get computed color from CSS variables
-  const getComputedColor = (cssVar: string): string => {
-    // For direct color values (like #fff or rgb values)
-    if (cssVar.startsWith('#') || cssVar.startsWith('rgb')) {
-      return cssVar;
-    }
-    
-    // For CSS variables in the format bg-{name}
-    if (cssVar.startsWith('bg-')) {
-      // Create a temporary element to compute the style
-      const tempEl = document.createElement('div');
-      tempEl.className = cssVar;
-      document.body.appendChild(tempEl);
-      
-      // Get the computed style
-      const computedStyle = window.getComputedStyle(tempEl);
-      const backgroundColor = computedStyle.backgroundColor;
-      
-      // Clean up
-      document.body.removeChild(tempEl);
-      
-      return backgroundColor || '#000000'; // Fallback to black
-    }
-    
-    return cssVar; // Return as is if not recognized
-  };
-
   // New utility function to render text to canvas and return as image
-  const renderTextToImage = (text: string, theme: string): Promise<Blob> => {
+  const renderTextToImage = (text: string, theme: { bgColor: string; textColor: string }): Promise<Blob> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       canvas.width = 400;
@@ -125,15 +158,12 @@ const CreateStory = () => {
         throw new Error('Could not get canvas context');
       }
       
-      // Get the actual color value from the theme
-      const backgroundColor = getComputedColor(theme);
-      
-      // Fill background with the computed color
-      ctx.fillStyle = backgroundColor;
+      // Fill background with the theme color
+      ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Set text properties
-      ctx.fillStyle = 'white'; // Text color
+      ctx.fillStyle = theme.textColor;
       ctx.textAlign = 'center';
       ctx.font = '24px sans-serif';
       
@@ -183,7 +213,7 @@ const CreateStory = () => {
   };
 
   // Utility function to process image with theme
-  const renderImageWithTheme = (file: File, theme: string): Promise<Blob> => {
+  const renderImageWithTheme = (file: File, theme: { bgColor: string; textColor: string }): Promise<Blob> => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -196,8 +226,9 @@ const CreateStory = () => {
       canvas.width = 400;
       canvas.height = 640;
       
-      // Get the actual color value from the theme
-      const backgroundColor = getComputedColor(theme);
+      // Fill background with theme color
+      ctx.fillStyle = theme.bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Create image element and load file
       const img = document.createElement('img');
@@ -208,10 +239,6 @@ const CreateStory = () => {
       };
       
       img.onload = () => {
-        // Fill background with theme color
-        ctx.fillStyle = backgroundColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         // Calculate dimensions to maintain aspect ratio
         const scale = Math.min(
           canvas.width / img.width,
@@ -247,7 +274,7 @@ const CreateStory = () => {
   };
 
   // Utility function to process video and create thumbnail
-  const renderVideoWithTheme = (file: File, theme: string): Promise<{ 
+  const renderVideoWithTheme = (file: File, theme: { bgColor: string; textColor: string }): Promise<{ 
     thumbnail: Blob;
     video: File;
   }> => {
@@ -264,8 +291,9 @@ const CreateStory = () => {
       canvas.width = 400;
       canvas.height = 640;
       
-      // Get the actual color value from the theme
-      const backgroundColor = getComputedColor(theme);
+      // Fill background with theme color
+      ctx.fillStyle = theme.bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       // Load video and capture first frame
       videoElement.src = URL.createObjectURL(file);
@@ -275,10 +303,6 @@ const CreateStory = () => {
       };
       
       videoElement.onseeked = () => {
-        // Fill background with theme color
-        ctx.fillStyle = backgroundColor;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         // Calculate video dimensions to maintain aspect ratio
         const scale = Math.min(
           canvas.width / videoElement.videoWidth,
@@ -404,6 +428,31 @@ const CreateStory = () => {
     ));
   };
 
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker && 
+        emojiPickerRef.current && 
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    // Use mousedown instead of click to handle the event before the emoji picker's click event
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   return (
     <div className="relative h-full bg-background text-foreground">
       {/* Top Controls */}
@@ -492,8 +541,8 @@ const CreateStory = () => {
               type="color"
               id="color-picker"
               className="hidden"
-              onChange={(e) => {
-                handleThemeChange(e.target.value);
+              onChange={() => {
+                handleThemeChange(storyThemes[0]);
                 setShowColorPicker(false);
               }}
             />
@@ -501,6 +550,7 @@ const CreateStory = () => {
 
           <div className="flex flex-col items-center gap-1">
             <Button
+              ref={emojiButtonRef}
               variant="ghost"
               size="icon"
               className="text-foreground h-auto p-2 cursor-pointer"
@@ -510,7 +560,7 @@ const CreateStory = () => {
             </Button>
             <span className="text-xs">Emoji</span>
             {showEmojiPicker && (
-              <div className="absolute left-20 top-1/2 -translate-y-1/2 z-96">
+              <div ref={emojiPickerRef} className="absolute left-20 top-1/2 -translate-y-1/2 z-96">
                 <EmojiPicker
                   onEmojiClick={(emojiObject) => {
                     handleTextChange(currentContentText + emojiObject.emoji);
@@ -528,9 +578,9 @@ const CreateStory = () => {
         <div className="flex-1 p-4 relative z-50">
           <div
             className={`max-w-xs mx-auto rounded-lg h-full relative`}
-            style={{ backgroundColor: currentTheme.startsWith('bg-') ? '' : currentTheme }}
+            style={{ backgroundColor: currentTheme.bgColor }}
           >
-            {currentTheme.startsWith('bg-') && <div className={`absolute inset-0 ${currentTheme} rounded-lg`}></div>}
+            {currentTheme.bgColor.startsWith('bg-') && <div className={`absolute inset-0 ${currentTheme.bgColor} rounded-lg`}></div>}
 
             {/* Delete and Add Page Buttons
             {stories.length > 1 && (
@@ -577,7 +627,8 @@ const CreateStory = () => {
                     value={currentContentText}
                     onChange={(e) => handleTextChange(e.target.value)}
                     placeholder="What's on your mind..."
-                    className="w-full bg-transparent resize-none outline-none text-foreground text-center"
+                    className="w-full bg-transparent resize-none outline-none text-center"
+                    style={{ color: currentTheme.textColor }}
                     rows={3}
                     autoFocus
                   />
@@ -611,25 +662,20 @@ const CreateStory = () => {
               {/* Show color picker only for text type */}
               {showColorPicker && (
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-background/50 rounded-full animate-in fade-in duration-200">
-                  {['bg-primary', 'bg-accent', 'bg-secondary', 'bg-destructive', 'bg-muted'].map(color => (
+                  {storyThemes.map(theme => (
                     <button
-                      key={color}
-                      className={`w-6 h-6 rounded-full ${color} ${currentTheme === color ? 'ring-2 ring-foreground' : ''}`}
+                      key={theme.name}
+                      className={`w-6 h-6 rounded-full ${currentTheme.bgColor === theme.bgColor ? 'ring-2 ring-foreground' : ''}`}
+                      style={{ 
+                        backgroundColor: theme.bgColor,
+                        border: `1px solid ${theme.textColor}`
+                      }}
                       onClick={() => {
-                        handleThemeChange(color);
+                        handleThemeChange(theme);
                         setShowColorPicker(false);
                       }}
                     />
                   ))}
-                  <button
-                    className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center"
-                    onClick={() => {
-                      const colorPicker = document.getElementById('color-picker');
-                      if (colorPicker) colorPicker.click();
-                    }}
-                  >
-                    <Palette className="w-4 h-4 text-background" />
-                  </button>
                 </div>
               )}
               

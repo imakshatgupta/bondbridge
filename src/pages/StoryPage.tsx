@@ -110,6 +110,7 @@ export default function StoryPage() {
         
         if (success && data && data.stories && data.stories.length > 0) {
             // Format the API response to match our StoryUser format
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const formattedStories = data.stories.map((story: any) => ({
                 user: story.name,
                 userId: story.userId,
@@ -450,7 +451,7 @@ export default function StoryPage() {
                 <div className="absolute top-5 left-0 right-0 z-10 flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                         <button onClick={() => navigate(-1)} className="p-1">
-                            <ArrowLeft className="h-5 w-5 text-foreground cursor-pointer" />
+                            <ArrowLeft className="h-5 w-5 text-white cursor-pointer" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
@@ -464,8 +465,8 @@ export default function StoryPage() {
                                     navigate(`/profile/${currentUser.userId}`);
                                 }}
                             >
-                                <p className="font-semibold text-sm text-foreground">{currentUser.user}</p>
-                                <p className="text-xs text-muted-foreground">{currentStoryItem.ago_time}</p>
+                                <p className="font-semibold text-sm text-white">{currentUser.user}</p>
+                                <p className="text-xs text-gray-300">{currentStoryItem.ago_time}</p>
                             </div>
                         </div>
                     </div>
@@ -526,7 +527,7 @@ export default function StoryPage() {
                             <img
                                 src={currentStoryItem.url}
                                 alt="Story content"
-                                className="w-full h-full p-4 object-contain"
+                                className="w-full h-full p-2 rounded-lg object-contain"
                             />
                             {/* Image Controls Overlay */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -565,7 +566,7 @@ export default function StoryPage() {
                 </div>
 
                 {/* Reply Input */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
+                <div className="absolute bottom-0 left-0 right-0 p-4 mx-1s">
                     <div className="flex gap-2 items-center">
                         <Input
                             ref={inputRef}

@@ -136,14 +136,20 @@ export interface EditGroupRequest {
 export interface StoryData {
   type: 'text' | 'photo' | 'video';
   content: string | File | Blob;
-  theme: string;
+  theme: {
+    bgColor: string;
+    textColor: string;
+  };
   privacy: number;
 }
 
 export interface Story {
   type: 'text' | 'photo' | 'video';
   content: string | File | Blob;
-  theme: string;
+  theme: {
+    bgColor: string;
+    textColor: string;
+  };
   privacy?: number;
   previewUrl?: string;
 }
