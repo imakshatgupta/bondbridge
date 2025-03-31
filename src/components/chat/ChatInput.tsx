@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { ArrowRight, Paperclip, Mic } from 'lucide-react';
-import { SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from '@/types/speech-recognition';
+import { 
+  SpeechRecognition, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent,
+  registerRecognitionInstance,
+  unregisterRecognitionInstance 
+} from '@/types/speech-recognition';
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -35,6 +41,7 @@ export const ChatInput = ({
     
     try {
       rec.start();
+      registerRecognitionInstance(rec);
       recognitionActiveRef.current = true;
     } catch (error) {
       console.error('Error starting speech recognition:', error);
@@ -52,6 +59,7 @@ export const ChatInput = ({
     
     try {
       rec.stop();
+      unregisterRecognitionInstance(rec);
       // We don't set recognitionActiveRef to false here because
       // that will happen in the onend handler
     } catch (error) {
@@ -86,6 +94,7 @@ export const ChatInput = ({
     recognitionInstance.onend = () => {
       // Recognition has ended, update our active flag
       recognitionActiveRef.current = false;
+      unregisterRecognitionInstance(recognitionInstance);
       
       if (isListening && !isAudioPlaying) {
         if (message.trim()) {
@@ -127,12 +136,13 @@ export const ChatInput = ({
     
     // Cleanup function
     return () => {
-      if (recognitionInstance && recognitionActiveRef.current) {
+      if (recognition && recognitionActiveRef.current) {
         try {
-          recognitionInstance.abort();
+          recognition.stop();
           recognitionActiveRef.current = false;
+          setIsListening(false);
         } catch (error) {
-          console.error('Error aborting speech recognition:', error);
+          console.error('Error stopping speech recognition on unmount:', error);
         }
       }
     };

@@ -10,35 +10,16 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import TextareaAutosize from 'react-textarea-autosize';
 import { useAppSelector } from '../store';
+import { 
+  SpeechRecognition, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent,
+  registerRecognitionInstance,
+  unregisterRecognitionInstance
+} from '../types/speech-recognition';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
-}
-
-// Define the SpeechRecognition types for TypeScript
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-}
-
-// Create a type for our SpeechRecognition instance
-interface SpeechRecognitionInstance {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  onresult: (event: SpeechRecognitionEvent) => void;
-  onend: () => void;
-  onerror: (event: Event) => void;
-}
-
-// Extend the Window interface to include SpeechRecognition
-declare global {
-  interface Window {
-    SpeechRecognition: new () => SpeechRecognitionInstance;
-    webkitSpeechRecognition: new () => SpeechRecognitionInstance;
-  }
 }
 
 const CreatePost = ({ onSubmit }: CreatePostProps) => {
@@ -50,7 +31,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognitionInstance | null>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const recognitionActiveRef = useRef(false);
   
   
@@ -118,6 +99,11 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     recognitionInstance.interimResults = true;
     recognitionInstance.lang = 'en-US';
     
+    recognitionInstance.onstart = () => {
+      setIsListening(true);
+      registerRecognitionInstance(recognitionInstance);
+    };
+    
     recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = Array.from(event.results)
         .map(result => result[0].transcript)
@@ -129,12 +115,14 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     recognitionInstance.onend = () => {
       // Recognition has ended, update our active flag
       recognitionActiveRef.current = false;
+      unregisterRecognitionInstance(recognitionInstance);
       if (isListening) {
         // Try to restart the recognition if it ended automatically and we're still in listening mode
         setTimeout(() => {
           if (isListening && !recognitionActiveRef.current && recognitionInstance) {
             try {
               recognitionInstance.start();
+              registerRecognitionInstance(recognitionInstance);
               recognitionActiveRef.current = true;
             } catch (error) {
               console.error('Error restarting speech recognition:', error);
@@ -145,10 +133,11 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
       }
     };
     
-    recognitionInstance.onerror = (event) => {
-      console.error('Speech recognition error', event);
+    recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error', event.error);
       recognitionActiveRef.current = false;
       setIsListening(false);
+      unregisterRecognitionInstance(recognitionInstance);
     };
     
     setRecognition(recognitionInstance);
@@ -157,19 +146,21 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     return () => {
       if (recognitionInstance && recognitionActiveRef.current) {
         try {
-          recognitionInstance.abort();
+          recognitionInstance.stop();
+          unregisterRecognitionInstance(recognitionInstance);
           recognitionActiveRef.current = false;
+          setIsListening(false);
         } catch (error) {
-          console.error('Error aborting speech recognition:', error);
+          console.error('Error stopping speech recognition on unmount:', error);
         }
       }
     };
-  }, []);
+  }, []); // Empty dependency array to initialize once
 
   // Toggle speech recognition
   const toggleSpeechRecognition = () => {
     if (!recognition) {
-      // toast.error('Speech recognition is not supported in your browser');
+      toast.error('Speech recognition is not supported in your browser');
       return;
     }
     
@@ -177,6 +168,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
       // Stop listening
       try {
         recognition.stop();
+        unregisterRecognitionInstance(recognition);
         recognitionActiveRef.current = false;
         setIsListening(false);
         // toast.info('Speech recognition stopped');
@@ -187,6 +179,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
       // Start listening
       try {
         recognition.start();
+        registerRecognitionInstance(recognition);
         recognitionActiveRef.current = true;
         setIsListening(true);
         // toast.success('Listening... speak now');

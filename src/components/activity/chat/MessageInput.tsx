@@ -1,9 +1,15 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import QuickSuggestions from "./QuickSuggestions";
 import { Mic } from "lucide-react";
-import { SpeechRecognition, SpeechRecognitionEvent, SpeechRecognitionErrorEvent } from "@/types/speech-recognition";
+import { 
+  SpeechRecognition, 
+  SpeechRecognitionEvent, 
+  SpeechRecognitionErrorEvent, 
+  registerRecognitionInstance,
+  unregisterRecognitionInstance
+} from "@/types/speech-recognition";
 
 interface MessageInputProps {
   newMessage: string;
@@ -32,6 +38,21 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
 
+  // Cleanup effect to stop speech recognition when component unmounts
+  useEffect(() => {
+    // This cleanup function runs when the component unmounts
+    return () => {
+      if (recognition) {
+        try {
+          recognition.stop();
+          setIsListening(false);
+        } catch (error) {
+          console.error('Error stopping speech recognition on unmount:', error);
+        }
+      }
+    };
+  }, [recognition]);
+
   const handleSuggestionClick = (suggestion: string) => {
     setNewMessage(suggestion);
     // Focus the input field after setting the message
@@ -55,6 +76,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
     
     recognitionInstance.onstart = () => {
       setIsListening(true);
+      // Register this instance in our tracker
+      registerRecognitionInstance(recognitionInstance);
     };
     
     recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
@@ -69,10 +92,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
     recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error', event.error);
       setIsListening(false);
+      unregisterRecognitionInstance(recognitionInstance);
     };
     
     recognitionInstance.onend = () => {
       setIsListening(false);
+      unregisterRecognitionInstance(recognitionInstance);
     };
     
     setRecognition(recognitionInstance);
@@ -84,6 +109,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       recognition.stop();
       setRecognition(null);
       setIsListening(false);
+      unregisterRecognitionInstance(recognition);
     }
   };
   
