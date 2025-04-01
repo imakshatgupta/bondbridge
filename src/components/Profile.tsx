@@ -54,7 +54,7 @@ interface ProfileProps {
   interests?: string[];
 }
 
-const Profile: React.FC<ProfileProps> = ({
+const   Profile: React.FC<ProfileProps> = ({
   userId,
   username,
   bio = "",

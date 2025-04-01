@@ -7,6 +7,7 @@ interface TruncatedTextProps {
   placeholderText?: string;
   className?: string;
   buttonClassName?: string;
+  showToggle?: boolean;
 }
 
 /**
@@ -17,13 +18,15 @@ interface TruncatedTextProps {
  * @param placeholderText - Optional text to display if text is empty or undefined
  * @param className - Optional className for the text container
  * @param buttonClassName - Optional className for the show more/less button
+ * @param showToggle - Optional flag to control whether to show the toggle button (defaults to true)
  */
 export function TruncatedText({
   text,
   limit,
   placeholderText = "",
   className = "",
-  buttonClassName = "text-primary text-xs mt-1 cursor-pointer hover:underline"
+  buttonClassName = "text-primary text-xs mt-1 cursor-pointer hover:underline",
+  showToggle = true
 }: TruncatedTextProps) {
   const [showFull, setShowFull] = useState(false);
   
@@ -41,7 +44,7 @@ export function TruncatedText({
       <p className={className}>
         {finalText}
       </p>
-      {isTruncated && (
+      {isTruncated && showToggle && (
         <button 
           onClick={() => setShowFull(!showFull)}
           className={buttonClassName}
