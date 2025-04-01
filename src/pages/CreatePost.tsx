@@ -300,21 +300,22 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           <label className="cursor-pointer hover:opacity-75 transition-opacity">
             <input
               type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleMediaUpload}
-            />
-            <Video size={20} className="text-[var(--foreground)]" />
-          </label>
-          <label className="cursor-pointer hover:opacity-75 transition-opacity">
-            <input
-              type="file"
               accept="image/*"
               className="hidden"
               onChange={handleMediaUpload}
             />
             <Image size={20} className="text-[var(--foreground)]" />
           </label>
+          <label className="cursor-pointer hover:opacity-75 transition-opacity">
+            <input
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={handleMediaUpload}
+            />
+            <Video size={20} className="text-[var(--foreground)]" />
+          </label>
+         
           <div className="relative">
             <button 
               ref={emojiButtonRef}
