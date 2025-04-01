@@ -169,6 +169,7 @@ const Layout: React.FC<LayoutProps> = ({
                           text={currentUser?.bio} 
                           limit={40}
                           className="text-sidebar-foreground/60 text-center break-words w-full overflow-hidden"
+                          showToggle={false}
                         />
                         <Link to={`/profile/${currentUserId}`}>
                           <Button

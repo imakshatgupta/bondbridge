@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getRelativeTime } from "../../lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationProps {
   _id: string;
@@ -8,6 +9,14 @@ interface NotificationProps {
   timestamp: string;
   seen: boolean;
   onMarkAsSeen: (id: string) => void;
+  entityDetails?: {
+    entityType: string;
+    entityId: string;
+    entity?: {
+      _id: string;
+      feedId?: string;
+    };
+  };
 }
 
 const Notification = ({
@@ -17,8 +26,10 @@ const Notification = ({
   timestamp,
   seen,
   onMarkAsSeen,
+  entityDetails,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
+  const navigate = useNavigate();
   // console.log("notifi data: ",_id,
   //   title,
   //   profilePic,
@@ -26,9 +37,17 @@ const Notification = ({
   //   seen);
 
   const handleClick = async () => {
-    if (seen) return;
-    setLocalSeen(true);
-    onMarkAsSeen(_id);
+    if (!seen) {
+      setLocalSeen(true);
+      onMarkAsSeen(_id);
+    }
+
+    // Navigate to post if entityDetails are available
+    if (entityDetails?.entityType === "feed" && entityDetails.entity?._id) {
+      const feedId = entityDetails.entity.feedId || entityDetails.entityId;
+      // Navigate to the post's comment page
+      navigate(`/post/${feedId}`);
+    }
   };
 
   return (
