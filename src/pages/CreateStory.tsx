@@ -26,7 +26,7 @@ const storyThemes: StoryTheme[] = [
     thumbnailColor: '#6A1B9A'
   },
   {
-    name: 'Blue', 
+    name: 'Blue',
     bgColor: '#1A237E', // Dark blue
     textColor: '#FFFFFF', // White
     thumbnailColor: '#283593'
@@ -65,31 +65,31 @@ const storyThemes: StoryTheme[] = [
 
 const CreateStory = () => {
   const { avatar, username } = useAppSelector((state) => state.currentUser);
-  const [stories, setStories] = useState<Story[]>([{ 
-    type: 'text', 
-    content: '', 
+  const [stories, setStories] = useState<Story[]>([{
+    type: 'text',
+    content: '',
     theme: {
       bgColor: storyThemes[0].bgColor,
       textColor: storyThemes[0].textColor
     },
-    privacy: 1 
+    privacy: 1
   }]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  
+
   const [executeUploadStory, isUploading] = useApiCall(uploadStory);
 
   const handleTextChange = (newText: string) => {
-    setStories(prev => prev.map((story, idx) => 
+    setStories(prev => prev.map((story, idx) =>
       idx === currentPage ? { ...story, content: newText } : story
     ));
   };
 
   const handleThemeChange = (theme: StoryTheme) => {
-    setStories(prev => prev.map((story, idx) => 
-      idx === currentPage ? { 
-        ...story, 
+    setStories(prev => prev.map((story, idx) =>
+      idx === currentPage ? {
+        ...story,
         theme: {
           bgColor: theme.bgColor,
           textColor: theme.textColor
@@ -126,7 +126,7 @@ const CreateStory = () => {
     const file = e.target.files?.[0];
     if (file) {
       const newStories = [...stories];
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         if (reader.result) {
@@ -143,7 +143,7 @@ const CreateStory = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   const navigate = useNavigate();
   const handleCancel = () => {
     navigate('/');
@@ -156,30 +156,30 @@ const CreateStory = () => {
       canvas.width = 400;
       canvas.height = 600;
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
         throw new Error('Could not get canvas context');
       }
-      
+
       // Fill background with the theme color
       ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Set text properties
       ctx.fillStyle = theme.textColor;
       ctx.textAlign = 'center';
       ctx.font = '24px sans-serif';
-      
+
       // Word wrap text
       const words = text.split(' ');
       const lines = [];
       let currentLine = '';
       const maxWidth = canvas.width - 40; // Padding on both sides
-      
+
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const metrics = ctx.measureText(testLine);
-        
+
         if (metrics.width > maxWidth && currentLine) {
           lines.push(currentLine);
           currentLine = word;
@@ -187,19 +187,19 @@ const CreateStory = () => {
           currentLine = testLine;
         }
       }
-      
+
       if (currentLine) {
         lines.push(currentLine);
       }
-      
+
       // Draw text
       const lineHeight = 30;
       const startY = (canvas.height - (lines.length * lineHeight)) / 2;
-      
+
       lines.forEach((line, index) => {
         ctx.fillText(line, canvas.width / 2, startY + (index * lineHeight));
       });
-      
+
       // Convert canvas to blob
       canvas.toBlob((blob) => {
         if (blob) {
@@ -220,27 +220,27 @@ const CreateStory = () => {
     return new Promise((resolve) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       if (!ctx) {
         throw new Error('Could not get canvas context');
       }
-      
+
       // Set canvas dimensions (10:16 aspect ratio)
       canvas.width = 400;
       canvas.height = 640;
-      
+
       // Fill background with theme color
       ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Create image element and load file
       const img = document.createElement('img');
       const reader = new FileReader();
-      
+
       reader.onload = () => {
         img.src = reader.result as string;
       };
-      
+
       img.onload = () => {
         // Calculate dimensions to maintain aspect ratio
         const scale = Math.min(
@@ -249,7 +249,7 @@ const CreateStory = () => {
         );
         const x = (canvas.width - img.width * scale) / 2;
         const y = (canvas.height - img.height * scale) / 2;
-        
+
         // Draw image maintaining aspect ratio
         ctx.drawImage(
           img,
@@ -258,7 +258,7 @@ const CreateStory = () => {
           img.width * scale,
           img.height * scale
         );
-        
+
         // Convert canvas to blob
         canvas.toBlob((blob) => {
           if (blob) {
@@ -271,13 +271,13 @@ const CreateStory = () => {
           }
         }, 'image/png');
       };
-      
+
       reader.readAsDataURL(file);
     });
   };
 
   // Utility function to process video and create thumbnail
-  const renderVideoWithTheme = (file: File, theme: { bgColor: string; textColor: string }): Promise<{ 
+  const renderVideoWithTheme = (file: File, theme: { bgColor: string; textColor: string }): Promise<{
     thumbnail: Blob;
     video: File;
   }> => {
@@ -285,26 +285,26 @@ const CreateStory = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const videoElement = document.createElement('video');
-      
+
       if (!ctx) {
         throw new Error('Could not get canvas context');
       }
-      
+
       // Set canvas dimensions (10:16 aspect ratio)
       canvas.width = 400;
       canvas.height = 640;
-      
+
       // Fill background with theme color
       ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Load video and capture first frame
       videoElement.src = URL.createObjectURL(file);
-      
+
       videoElement.onloadeddata = () => {
         videoElement.currentTime = 0;
       };
-      
+
       videoElement.onseeked = () => {
         // Calculate video dimensions to maintain aspect ratio
         const scale = Math.min(
@@ -313,7 +313,7 @@ const CreateStory = () => {
         );
         const x = (canvas.width - videoElement.videoWidth * scale) / 2;
         const y = (canvas.height - videoElement.videoHeight * scale) / 2;
-        
+
         // Draw video frame
         ctx.drawImage(
           videoElement,
@@ -322,7 +322,7 @@ const CreateStory = () => {
           videoElement.videoWidth * scale,
           videoElement.videoHeight * scale
         );
-        
+
         // Convert canvas to blob for thumbnail
         canvas.toBlob((blob) => {
           if (blob) {
@@ -355,24 +355,24 @@ const CreateStory = () => {
       }
       return false;
     });
-    
+
     if (emptyStory) {
       toast.error('Please add content to your story');
       return;
     }
-    
+
     // Validate word count for text stories
-    const textStoryExceedingLimit = stories.find(story => 
-      story.type === 'text' && 
-      typeof story.content === 'string' && 
+    const textStoryExceedingLimit = stories.find(story =>
+      story.type === 'text' &&
+      typeof story.content === 'string' &&
       countWords(story.content) > WORD_LIMIT
     );
-    
+
     if (textStoryExceedingLimit) {
       toast.error(`Your story exceeds the ${WORD_LIMIT} word limit. Please shorten your text.`);
       return;
     }
-    
+
     // Process all stories and store rendered images
     const processedStories = await Promise.all(
       stories.map(async (story) => {
@@ -381,19 +381,19 @@ const CreateStory = () => {
             const imageBlob = await renderTextToImage(story.content, story.theme);
             const filename = `story-text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
             const imageFile = new File([imageBlob], filename, { type: 'image/png' });
-            
+
             return {
               ...story,
               type: 'photo',
               content: imageFile,
               originalText: story.content,
             };
-          } 
+          }
           else if (story.type === 'photo' && story.content instanceof File) {
             const processedBlob = await renderImageWithTheme(story.content, story.theme);
             const filename = `story-photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
             const processedFile = new File([processedBlob], filename, { type: 'image/png' });
-            
+
             return {
               ...story,
               content: processedFile,
@@ -403,18 +403,18 @@ const CreateStory = () => {
           else if (story.type === 'video' && story.content instanceof File) {
             const { thumbnail, video } = await renderVideoWithTheme(story.content, story.theme);
             const thumbnailFile = new File(
-              [thumbnail], 
-              `thumbnail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`, 
+              [thumbnail],
+              `thumbnail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`,
               { type: 'image/png' }
             );
-            
+
             return {
               ...story,
               content: video,
               thumbnail: thumbnailFile,
             };
           }
-          
+
           return story;
         } catch (error) {
           console.error('Error processing story:', error);
@@ -422,16 +422,16 @@ const CreateStory = () => {
         }
       })
     );
-    
+
     // Ensure all stories have a privacy value
     const storiesWithPrivacy = processedStories.map(story => ({
       ...story,
       privacy: story.privacy || 1
     }));
-    
+
     // Call the API using the useApiCall hook
     const result = await executeUploadStory(storiesWithPrivacy as StoryData[]);
-    
+
     if (result.success && result.data) {
       navigate('/');
     }
@@ -439,7 +439,7 @@ const CreateStory = () => {
 
   const handleSetTextType = () => {
     // Set the current story type to text
-    setStories(prev => prev.map((story, idx) => 
+    setStories(prev => prev.map((story, idx) =>
       idx === currentPage ? { ...story, type: 'text', content: typeof story.content === 'string' ? story.content : '' } : story
     ));
   };
@@ -450,8 +450,8 @@ const CreateStory = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        showEmojiPicker && 
-        emojiPickerRef.current && 
+        showEmojiPicker &&
+        emojiPickerRef.current &&
         emojiButtonRef.current &&
         !emojiPickerRef.current.contains(event.target as Node) &&
         !emojiButtonRef.current.contains(event.target as Node)
@@ -462,7 +462,7 @@ const CreateStory = () => {
 
     // Use mousedown instead of click to handle the event before the emoji picker's click event
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     // Cleanup function to remove event listener
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -478,11 +478,11 @@ const CreateStory = () => {
           <AvatarFallback>{username ? username.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
         </Avatar>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            className="text-muted-foreground hover:text-foreground cursor-pointer border border-primary"
             onClick={handleCancel}
           >
             Cancel
@@ -592,6 +592,12 @@ const CreateStory = () => {
 
         {/* Story Content Area */}
         <div className="flex-1 p-4 relative z-50">
+          <div className="flex justify-center  absolute -bottom-1.5 left-1/2 -translate-x-1/2">
+            <span className={`text-xs ${currentContentText.length > 150 ? 'text-destructive' : 'text-muted-foreground'}`}
+              style={{ color: currentTheme.textColor }}>
+              {currentContentText.length}/150 chars
+            </span>
+          </div>
           <div
             className={`max-w-xs mx-auto rounded-lg h-full relative`}
             style={{ backgroundColor: currentTheme.bgColor }}
@@ -644,21 +650,17 @@ const CreateStory = () => {
                     onChange={(e) => {
                       handleTextChange(e.target.value);
                     }}
+                    maxLength={150}
                     placeholder="What's on your mind..."
                     className="w-full bg-transparent resize-none outline-none text-center"
                     style={{ color: currentTheme.textColor }}
                     rows={5}
                     autoFocus
                   />
-                  <div className="flex justify-center mt-1">
-                    <span className={`text-xs ${countWords(currentContentText) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`} 
-                          style={{ color: currentTheme.textColor }}>
-                      {countWords(currentContentText)}/{WORD_LIMIT} words
-                    </span>
-                  </div>
+
                 </div>
               )}
-              
+
               {/* Improved image handling from first file */}
               {currentStory.type === 'photo' && (
                 <div className="w-full h-full px-4 py-18 overflow-y-auto flex items-center justify-center">
@@ -670,7 +672,7 @@ const CreateStory = () => {
                   />
                 </div>
               )}
-              
+
               {/* Improved video handling from first file */}
               {currentStory.type === 'video' && (
                 <div className="w-full h-full px-4 py-18 overflow-y-auto flex items-center justify-center">
@@ -690,7 +692,7 @@ const CreateStory = () => {
                     <button
                       key={theme.name}
                       className={`w-6 h-6 rounded-full ${currentTheme.bgColor === theme.bgColor ? 'ring-2 ring-foreground' : ''}`}
-                      style={{ 
+                      style={{
                         backgroundColor: theme.bgColor,
                         border: `1px solid ${theme.textColor}`
                       }}
@@ -702,7 +704,7 @@ const CreateStory = () => {
                   ))}
                 </div>
               )}
-              
+
               {/* Navigation Arrows - Keeping EXACTLY as in the second file */}
               {currentPage > 0 && (
                 <button
