@@ -24,10 +24,10 @@ interface Post {
 
 interface AllPostsProps {
   posts: (Post | ProfilePostData)[];
+  userId: string;
 }
 
-
-const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
+const AllPosts: React.FC<AllPostsProps> = ({ posts, userId }) => {
   const navigate = useNavigate();
   
   return (
@@ -57,6 +57,7 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts }) => {
         }
         
         const feedId = `${postId}:${creationDate}`;
+        (post as any).userId = userId;
         
         return (
           <div 

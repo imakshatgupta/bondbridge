@@ -48,6 +48,7 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
                 .fill(null)
                 .map((_, index) => ({
                   id: foundCommunity.posts?.[index] || `post-${index}`,
+                  userId: foundCommunity._id,
                   author: {
                     name: foundCommunity.name,
                     profilePic: foundCommunity.profilePicture || "",

@@ -65,7 +65,7 @@ export default function CommentsPage() {
         _id: profilePost.id,
         name: profilePost.author.name,
         profilePic: profilePost.author.profilePic,
-        userId: profilePost.id.split(':')[0], // Extract userId from id if possible
+        userId: profilePost.userId,
         data: {
           content: profilePost.content,
           media: [{ url: profilePost.imageSrc, type: 'image' }]
@@ -119,7 +119,6 @@ export default function CommentsPage() {
       if (!postId || locationPost) return; // Skip if postId is missing or post is already available
       
       const result = await executeGetPostDetails({ feedId: postId });
-      console.log("result", result);
       
       if (result.success && result.data) {
         const apiPostData = result.data.post;
