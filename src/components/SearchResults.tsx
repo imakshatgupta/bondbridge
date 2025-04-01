@@ -39,7 +39,11 @@ const SearchResults = ({ person }: Props) => {
         </Avatar>
         <div>
           <h3 className="font-medium">{person.name}</h3>
-          <p className="text-sm text-muted-foreground">{person.bio}</p>
+          <p className="text-sm text-muted-foreground">
+            {person.bio && person.bio.length > 65  
+              ? `${person.bio.substring(0, 65 )}...` 
+              : person.bio}
+          </p>
         </div>
       </div>
       <div className="flex gap-2 ">

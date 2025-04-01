@@ -1,4 +1,8 @@
 export const TYPING_TIME = 2000;
+
+// Word limits
+export const WORD_LIMIT = 150;
+
 export interface Community {
   id: string;
   name: string;

@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function countWords(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
 /**
  * Converts a timestamp to a relative time string (e.g., "2m ago", "3h ago", "5d ago")
  * @param timestamp - ISO string or Date object
@@ -41,4 +45,28 @@ export function getRelativeTime(timestamp: string | Date): string {
   } else {
     return `${years}y ago`;
   }
+}
+
+/**
+ * Truncates text based on character length, ensuring we don't cut in the middle of a word
+ * @param text - The text to truncate
+ * @param limit - Maximum character length
+ * @returns Truncated text or original if within limit
+ */
+export function truncateText(text: string, limit: number): { 
+  text: string;
+  isTruncated: boolean; 
+} {
+  if (!text || text.length <= limit) {
+    return { text, isTruncated: false };
+  }
+  
+  // Find a space to truncate at
+  let truncateIndex = text.lastIndexOf(' ', limit);
+  if (truncateIndex === -1) truncateIndex = limit;
+  
+  return { 
+    text: text.substring(0, truncateIndex) + '...', 
+    isTruncated: true 
+  };
 }

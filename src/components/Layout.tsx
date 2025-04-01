@@ -16,13 +16,13 @@ import { SidebarProfileSkeleton, SidebarPeopleSkeleton } from "./skeletons/Sideb
 import { Toaster } from "./ui/sonner";
 import { useApiCall } from "@/apis/globalCatchError";
 import CommunityFeed from "./activity/CommunityFeed";
+import { TruncatedText } from "./ui/TruncatedText";
 
 interface LayoutProps {
   children: React.ReactNode;
   showSidebars?: boolean; // Flag to control sidebar visibility
   className?: string;
 }
-
 
 const Layout: React.FC<LayoutProps> = ({
   children,
@@ -165,9 +165,11 @@ const Layout: React.FC<LayoutProps> = ({
                         <h3 className="font-semibold text-xl text-sidebar-foreground truncate max-w-full">
                           {currentUser?.username || "Loading..."}
                         </h3>
-                        <p className="text-sidebar-foreground/60 text-center break-words w-full overflow-hidden">
-                          {currentUser?.bio || ""}
-                        </p>
+                        <TruncatedText 
+                          text={currentUser?.bio} 
+                          limit={40}
+                          className="text-sidebar-foreground/60 text-center break-words w-full overflow-hidden"
+                        />
                         <Link to={`/profile/${currentUserId}`}>
                           <Button
                             variant={"outline"}
