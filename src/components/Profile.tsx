@@ -33,6 +33,8 @@ import AllCommunities from "@/components/AllCommunities";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
 import { Community } from "@/lib/constants";
 import { ProfilePictureUploadModal } from "@/components/ProfilePictureUploadModal";
+import { TruncatedText } from "@/components/ui/TruncatedText";
+import { TruncatedList } from "@/components/ui/TruncatedList";
 // import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
 // import type { StoryData } from "@/apis/apiTypes/response";
 
@@ -52,7 +54,7 @@ interface ProfileProps {
   interests?: string[];
 }
 
-const Profile: React.FC<ProfileProps> = ({
+const   Profile: React.FC<ProfileProps> = ({
   userId,
   username,
   bio = "",
@@ -370,26 +372,29 @@ const Profile: React.FC<ProfileProps> = ({
               : username
             : username}
         </h1>
-        <p className="text-muted-foreground text-sm max-w-[80%] text-center mx-auto">
-          {bio && bio.trim() !== "" 
-            ? bio 
-            : isCurrentUser 
-              ? "Add a bio in your profile settings" 
-              : "No bio available"}
-        </p>
+        <TruncatedText 
+          text={bio} 
+          limit={100}
+          placeholderText={isCurrentUser ? "Add a bio in your profile settings" : "No bio available"}
+          className="text-muted-foreground text-sm max-w-[80%] text-center mx-auto"
+        />
 
         {/* Interests section */}
         {interests && interests.length > 0 && (
-          <div className="flex flex-wrap justify-center gap-2 mt-2 max-w-[80%]">
-            {interests.map((interest, index) => (
+          <TruncatedList
+            items={interests}
+            limit={5}
+            className="mt-2 w-full"
+            itemsContainerClassName="flex flex-wrap justify-center gap-2 max-w-[80%] mx-auto"
+            renderItem={(interest, index) => (
               <span 
                 key={index} 
                 className="bg-muted text-foreground border border-primary text-xs px-2 py-1 rounded-full"
               >
                 {interest}
               </span>
-            ))}
-          </div>
+            )}
+          />
         )}
 
         <div className="flex gap-8 py-3 mt-4">
@@ -502,7 +507,7 @@ const Profile: React.FC<ProfileProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <AllPosts posts={posts} />
+            <AllPosts posts={posts} userId={userId} />
           )}
         </TabsContent>
 

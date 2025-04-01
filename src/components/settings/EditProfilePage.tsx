@@ -13,8 +13,10 @@ import { useApiCall } from '@/apis/globalCatchError';
 import { updateUserProfile } from '@/apis/commonApiCalls/profileApi';
 import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AVAILABLE_INTERESTS } from '@/lib/constants';
+import { AVAILABLE_INTERESTS, WORD_LIMIT } from '@/lib/constants';
 import { Textarea } from "@/components/ui/textarea";
+import { countWords } from '@/lib/utils';
+import { TruncatedList } from '@/components/ui/TruncatedList';
 
 interface AvatarData {
   url: string;
@@ -107,6 +109,14 @@ const EditProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check bio word count
+    const bioWordCount = countWords(formData.bio);
+    if (bioWordCount > WORD_LIMIT) {
+      toast.error(`Bio cannot exceed ${WORD_LIMIT} words`);
+      return;
+    }
+    
     // Ensure we have a valid avatar URL before sending
     if (!selectedAvatar) {
       console.warn('avatar selected, using default avatar');
@@ -275,6 +285,11 @@ const EditProfilePage: React.FC = () => {
               placeholder="Tell us about yourself..."
               className="min-h-[100px]"
             />
+            <div className="flex justify-end">
+              <span className={`text-xs ${countWords(formData.bio) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {countWords(formData.bio)}/{WORD_LIMIT} words
+              </span>
+            </div>
           </div>
         </div>
 
@@ -282,8 +297,13 @@ const EditProfilePage: React.FC = () => {
         <div className="space-y-4">
           <Label>Interests</Label>
 
-          <div className="flex flex-wrap gap-2 mb-4 overflow-y-auto max-h-[20vh]">
-            {selectedInterests.map((interest, index) => (
+          <TruncatedList
+            items={selectedInterests}
+            limit={10}
+            className="mb-4"
+            itemsContainerClassName="flex flex-wrap gap-2 overflow-y-auto"
+            emptyMessage="No interests selected yet"
+            renderItem={(interest, index) => (
               <Badge key={`interest-${index}`} variant="secondary" className="flex items-center gap-1">
                 {interest}
                 <button
@@ -297,8 +317,8 @@ const EditProfilePage: React.FC = () => {
                   <X className="h-3 w-3 cursor-pointer" />
                 </button>
               </Badge>
-            ))}
-          </div>
+            )}
+          />
 
           <div className="mt-4">
             <p className="text-sm text-muted-foreground mb-2">

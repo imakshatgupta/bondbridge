@@ -55,6 +55,7 @@ const CommunityProfilePage = () => {
                 .fill(null)
                 .map((_, index) => ({
                   id: foundCommunity.posts?.[index] || `post-${index}`,
+                  userId: foundCommunity._id,
                   author: {
                     name: foundCommunity.name,
                     profilePic: foundCommunity.profilePicture || "",
@@ -329,7 +330,10 @@ const CommunityProfilePage = () => {
                 <p className="text-muted-foreground mb-4">
                   Showing {posts.length} of {community.postCount || community.posts?.length || 0} posts
                 </p>
-                <AllPosts posts={posts} />
+                <AllPosts 
+                  posts={posts} 
+                  userId={community._id}
+                />
               </>
             ) : (
               <div className="text-center py-8 text-muted-foreground">

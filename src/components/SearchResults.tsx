@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 // import { useState } from "react";
 // import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { TruncatedText } from "./ui/TruncatedText";
   
 type Props = {
   person: Person;
@@ -39,7 +40,12 @@ const SearchResults = ({ person }: Props) => {
         </Avatar>
         <div>
           <h3 className="font-medium">{person.name}</h3>
-          <p className="text-sm text-muted-foreground">{person.bio}</p>
+          <TruncatedText 
+            text={person.bio} 
+            limit={65}
+            className="text-sm text-muted-foreground"
+            showToggle={false}
+          />
         </div>
       </div>
       <div className="flex gap-2 ">

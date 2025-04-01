@@ -8,6 +8,9 @@ import { uploadStory } from '../apis/commonApiCalls/storyApi';
 import { useApiCall } from '../apis/globalCatchError';
 import { Story, StoryData } from '../apis/apiTypes/request';
 import { useAppSelector } from '../store';
+import { WORD_LIMIT } from '@/lib/constants';
+import { countWords } from '@/lib/utils';
+import { toast } from 'sonner';
 
 type StoryTheme = {
   name: string;
@@ -342,7 +345,7 @@ const CreateStory = () => {
   };
 
   const handleCreateStory = async () => {
-    // Validate stories
+    // Validate stories content exists
     const emptyStory = stories.find(story => {
       if (typeof story.content === 'string') {
         return !story.content.trim();
@@ -354,6 +357,19 @@ const CreateStory = () => {
     });
     
     if (emptyStory) {
+      toast.error('Please add content to your story');
+      return;
+    }
+    
+    // Validate word count for text stories
+    const textStoryExceedingLimit = stories.find(story => 
+      story.type === 'text' && 
+      typeof story.content === 'string' && 
+      countWords(story.content) > WORD_LIMIT
+    );
+    
+    if (textStoryExceedingLimit) {
+      toast.error(`Your story exceeds the ${WORD_LIMIT} word limit. Please shorten your text.`);
       return;
     }
     
@@ -625,13 +641,21 @@ const CreateStory = () => {
                 <div className="w-full px-4">
                   <textarea
                     value={currentContentText}
-                    onChange={(e) => handleTextChange(e.target.value)}
+                    onChange={(e) => {
+                      handleTextChange(e.target.value);
+                    }}
                     placeholder="What's on your mind..."
                     className="w-full bg-transparent resize-none outline-none text-center"
                     style={{ color: currentTheme.textColor }}
-                    rows={3}
+                    rows={5}
                     autoFocus
                   />
+                  <div className="flex justify-center mt-1">
+                    <span className={`text-xs ${countWords(currentContentText) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`} 
+                          style={{ color: currentTheme.textColor }}>
+                      {countWords(currentContentText)}/{WORD_LIMIT} words
+                    </span>
+                  </div>
                 </div>
               )}
               

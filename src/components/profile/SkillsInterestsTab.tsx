@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { addSkill, removeSkill } from "../../store/createProfileSlice";
 import { useAppDispatch, useAppSelector } from "../../store";
 import { AVAILABLE_INTERESTS } from "@/lib/constants";
+import { TruncatedList } from "@/components/ui/TruncatedList";
 
 // Interest item component for available interests
 const AvailableInterestItem = ({ interest, onAdd }: { interest: string; onAdd: (interest: string) => void }) => {
@@ -31,6 +32,9 @@ const SkillsInterestsTab: React.FC = () => {
   const { skillSelected } = useAppSelector(
     (state) => state.createProfile
   );
+  
+  const MIN_REQUIRED_INTERESTS = 3;
+  const isValidSelection = skillSelected.length >= MIN_REQUIRED_INTERESTS;
 
   const handleAddSkill = (skill: string) => {
     dispatch(addSkill(skill));
@@ -58,16 +62,27 @@ const SkillsInterestsTab: React.FC = () => {
         </button>
         ))}
       </div>
+      
+      {!isValidSelection && (
+        <div className="text-destructive text-sm">
+          Please select at least {MIN_REQUIRED_INTERESTS} interests
+        </div>
+      )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-y-auto h-[30vh]">
-        {availableInterests.map((interest) => (
+      <TruncatedList
+        items={availableInterests}
+        limit={15}
+        className="h-[30vh] overflow-y-auto"
+        itemsContainerClassName="grid grid-cols-2 md:grid-cols-3 gap-3"
+        emptyMessage="No more available interests"
+        renderItem={(interest) => (
           <AvailableInterestItem 
             key={interest} 
             interest={interest} 
             onAdd={handleAddSkill} 
           />
-        ))}
-      </div>
+        )}
+      />
     </div>
   );
 };

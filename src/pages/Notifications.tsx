@@ -29,8 +29,12 @@ interface ApiNotification {
     entityType: string;
     entityId: string;
     headerId: string;
-    entity: Record<string, unknown>;
-    content: Record<string, unknown>;
+    entity: {
+      _id: string;
+      feedId?: string;
+      [key: string]: unknown;
+    };
+    content: string | null;
   };
   timestamp: string;
   seen: boolean;
@@ -158,6 +162,11 @@ const Notifications = () => {
                       timestamp={notification.timestamp}
                       seen={notification.seen}
                       onMarkAsSeen={handleMarkAsSeen}
+                      entityDetails={{
+                        entityType: notification.details.entityType,
+                        entityId: notification.details.entityId,
+                        entity: notification.details.entity
+                      }}
                     />
                   ))
               ) : (

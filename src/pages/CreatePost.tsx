@@ -17,6 +17,8 @@ import {
   registerRecognitionInstance,
   unregisterRecognitionInstance
 } from '../types/speech-recognition';
+import { WORD_LIMIT } from '@/lib/constants';
+import { countWords } from '@/lib/utils';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
@@ -193,6 +195,12 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   };
 
   const handleSubmit = async () => {
+    // Check word count
+    if (countWords(content) > WORD_LIMIT) {
+      toast.error(`Your post exceeds the ${WORD_LIMIT} word limit.`);
+      return;
+    }
+
     console.log("mediaFiles: ", mediaFiles);
     console.log("documentFiles: ", documentFiles);
     if (content.trim() || mediaFiles.length > 0 || documentFiles.length > 0) {
@@ -381,13 +389,22 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
               <div className="h-6 bg-[var(--secondary)] rounded w-2/3"></div>
             </div>
           ) : (
-            <TextareaAutosize
-              placeholder="What's on your mind..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full bg-transparent outline-none resize-none text-sm h-auto"
-              maxRows={20}
-            />
+            <>
+              <TextareaAutosize
+                placeholder="What's on your mind..."
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                }}
+                className="w-full bg-transparent outline-none resize-none text-sm h-auto"
+                maxRows={20}
+              />
+              <div className="flex justify-end mt-1">
+                <span className={`text-xs ${countWords(content) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {countWords(content)}/{WORD_LIMIT} words
+                </span>
+              </div>
+            </>
           )}
 
           {mediaPreviews.length > 0 && (
