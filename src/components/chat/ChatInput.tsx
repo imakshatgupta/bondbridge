@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { ArrowRight, Paperclip, Mic } from 'lucide-react';
+import { ArrowRight, Mic } from 'lucide-react';
 import { 
   SpeechRecognition, 
   SpeechRecognitionEvent, 
