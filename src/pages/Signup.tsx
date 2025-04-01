@@ -213,7 +213,7 @@ const Signup: React.FC = () => {
         title="Connecting Dreams, Fostering Growth"
         subtitle={<>Sign up for your <span className="grad">BondBridge</span> journey today!</>}
         videoLight="/auth/signup_lightmode.mp4"
-        videoDark="/auth/signup_darkmode.mp4"
+        videoDark="/auth/signup_darkmode.webm"
         showOTP={showOTP}
         otpMessage="Welcome, We are glad to see you!"
       >
