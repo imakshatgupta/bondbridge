@@ -175,7 +175,10 @@ export function Post({
             // toast.success("Post deleted successfully");
             // You might want to add a callback prop to handle post deletion
             // For now, we'll just refresh the page
-            window.location.reload();
+            if(window.location.pathname === `/post/${feedId}`) {
+                navigate(-1);
+            }
+            else window.location.reload();
         }
     };
 
