@@ -146,6 +146,7 @@ export interface PostData {
 
 export interface ProfilePostData {
   id: string;
+  userId: string;
   author: {
     name: string;
     profilePic: string;
