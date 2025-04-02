@@ -37,13 +37,14 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
           const foundCommunity = result.data.find(
             (c) => c._id === activeCommunityChatItem.id
           );
-          
+
           if (foundCommunity) {
             setCommunity(foundCommunity);
 
             // Generate posts from the community data
             if (foundCommunity.posts && foundCommunity.posts.length > 0) {
-              const realPostCount = foundCommunity.postCount || foundCommunity.posts.length;
+              const realPostCount =
+                foundCommunity.postCount || foundCommunity.posts.length;
               const communityPosts: ProfilePostData[] = Array(realPostCount)
                 .fill(null)
                 .map((_, index) => ({
@@ -55,7 +56,15 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
                   },
                   content: `Community post ${index + 1}`,
                   createdAt: Date.now() - index * 3600000, // Decreasing timestamps
-                  imageSrc: index % 2 === 0 ? foundCommunity.backgroundImage || "" : "", // Alternate posts with and without images
+                  media:
+                    index % 2 === 0
+                      ? [
+                          {
+                            url: foundCommunity.backgroundImage || "",
+                            type: "image",
+                          },
+                        ]
+                      : [],
                   stats: {
                     commentCount: Math.floor(Math.random() * 10),
                     hasReacted: false,
@@ -97,10 +106,10 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
   const formatPostDate = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -145,18 +154,29 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
       <div className="p-4 border-b flex items-center justify-between bg-background sticky top-0 z-10">
         <div className="flex items-center gap-3">
           {onBack && (
-            <Button onClick={onBack} variant="ghost" size="icon" className="mr-1">
+            <Button
+              onClick={onBack}
+              variant="ghost"
+              size="icon"
+              className="mr-1"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
-          <Avatar className="h-10 w-10 cursor-pointer" onClick={handleNavigateToCommunityProfile}>
-            <AvatarImage 
-              src={community.profilePicture || "/placeholder.png"} 
-              alt={community.name} 
+          <Avatar
+            className="h-10 w-10 cursor-pointer"
+            onClick={handleNavigateToCommunityProfile}
+          >
+            <AvatarImage
+              src={community.profilePicture || "/placeholder.png"}
+              alt={community.name}
             />
             <AvatarFallback>{community.name[0]}</AvatarFallback>
           </Avatar>
-          <div className="cursor-pointer" onClick={handleNavigateToCommunityProfile}>
+          <div
+            className="cursor-pointer"
+            onClick={handleNavigateToCommunityProfile}
+          >
             <h3 className="font-semibold group-hover:text-primary group-hover:underline flex items-center">
               {community.name}
               <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-70" />
@@ -178,38 +198,43 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
           ) : (
             <div className="space-y-6">
               {posts.map((post) => (
-                <div key={post.id} className="rounded-lg overflow-hidden border bg-background">
+                <div
+                  key={post.id}
+                  className="rounded-lg overflow-hidden border bg-background"
+                >
                   {/* Post Header */}
                   <div className="p-3 flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage 
-                        src={post.author.profilePic} 
-                        alt={post.author.name} 
+                      <AvatarImage
+                        src={post.author.profilePic}
+                        alt={post.author.name}
                       />
                       <AvatarFallback>{post.author.name[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h4 className="font-medium text-sm">{post.author.name}</h4>
+                      <h4 className="font-medium text-sm">
+                        {post.author.name}
+                      </h4>
                       <p className="text-xs text-muted-foreground">
                         {formatPostDate(post.createdAt)}
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Post Content */}
                   <div className="px-3 pb-2">
                     <p className="text-sm mb-3">{post.content}</p>
-                    
-                    {post.imageSrc && (
+
+                    {post.media.length > 0 && (
                       <div className="rounded-md overflow-hidden mb-3">
-                        <img 
-                          src={post.imageSrc} 
-                          alt="Post" 
+                        <img
+                          src={post.media[0].url}
+                          alt="Post"
                           className="w-full h-auto object-cover"
                         />
                       </div>
                     )}
-                    
+
                     {/* Post Stats - simplified, no interaction */}
                     {/* <div className="flex items-center text-xs text-muted-foreground">
                       <Badge variant="secondary" className="text-xs">
@@ -231,4 +256,4 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
   );
 };
 
-export default CommunityPostFeed; 
+export default CommunityPostFeed;

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { ProfilePostData } from "../apis/apiTypes/response";
 import { POST_IMAGE } from "../constants/posts";
 import { Play } from "lucide-react";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 // Default image to use when a post doesn't have an image
 const DEFAULT_POST_IMAGE = POST_IMAGE;

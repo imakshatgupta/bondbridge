@@ -104,7 +104,7 @@ export default function CommentsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [, setPendingComment] = useState<string | null>(null);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  
+
   // Get current user from Redux store
   const currentUser = useAppSelector((state) => state.currentUser);
 
@@ -112,9 +112,10 @@ export default function CommentsPage() {
   const [executeFetchComments, isLoadingComments] = useApiCall(fetchComments);
   const [executePostComment, isPosting] = useApiCall(postComment);
   const [executeGetPostDetails, isLoadingPost] = useApiCall(getPostDetails);
-  
+
   // Combined loading state for the entire page
-  const pageLoading = (isLoadingPost || (isLoadingComments && !initialDataLoaded));
+  const pageLoading =
+    isLoadingPost || (isLoadingComments && !initialDataLoaded);
 
   // Get current user ID from localStorage
   useEffect(() => {
@@ -212,7 +213,7 @@ export default function CommentsPage() {
       } else {
         setError(result.data?.message || "Failed to load comments");
       }
-      
+
       // Mark initial data as loaded
       setInitialDataLoaded(true);
     };
@@ -223,7 +224,7 @@ export default function CommentsPage() {
   // Function to load more comments
   const loadMoreComments = async () => {
     if (isLoadingPost || !hasMore || !postId) return;
-    
+
     const nextPage = page + 1;
     const result = await executeFetchComments({
       feedId: postId,
@@ -392,9 +393,9 @@ export default function CommentsPage() {
         <>
           {/* Header */}
           <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => navigate(-1)}
               className="mr-2 cursor-pointer"
             >
@@ -408,7 +409,7 @@ export default function CommentsPage() {
             {/* Post Summary and Comment Input */}
             <div className="flex-none">
               {post && (
-                <Post 
+                <Post
                   user={post.name}
                   userId={post.userId}
                   avatar={post.profilePic}
@@ -427,8 +428,15 @@ export default function CommentsPage() {
               {/* Comment Input */}
               <div className="p-4 border-b flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={currentUser.avatar || avatarImage} alt="Your avatar" />
-                  <AvatarFallback>{currentUser.nickname?.charAt(0) || currentUser.username?.charAt(0) || 'U'}</AvatarFallback>
+                  <AvatarImage
+                    src={currentUser.avatar || avatarImage}
+                    alt="Your avatar"
+                  />
+                  <AvatarFallback>
+                    {currentUser.nickname?.charAt(0) ||
+                      currentUser.username?.charAt(0) ||
+                      "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 relative">
                   <Input
@@ -439,8 +447,8 @@ export default function CommentsPage() {
                     className="pr-12 rounded-full bg-muted"
                     disabled={isPosting}
                   />
-                  <Button 
-                    size="icon" 
+                  <Button
+                    size="icon"
                     variant="ghost"
                     className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
                     onClick={handleSubmitComment}
@@ -456,7 +464,13 @@ export default function CommentsPage() {
             <div className="flex-1 overflow-y-auto">
               {error ? (
                 <div className="p-4 text-center text-destructive">
-                  {error}. <Button variant="link" onClick={() => window.location.reload()}>Try again</Button>
+                  {error}.{" "}
+                  <Button
+                    variant="link"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try again
+                  </Button>
                 </div>
               ) : commentsData.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
@@ -466,25 +480,33 @@ export default function CommentsPage() {
                 commentsData.map((comment, index) => (
                   <div
                     key={`${comment.commentId}-${index}`}
-                    ref={index === commentsData.length - 1 ? lastCommentRef : undefined}
+                    ref={
+                      index === commentsData.length - 1
+                        ? lastCommentRef
+                        : undefined
+                    }
                   >
-                    <Comment 
+                    <Comment
                       comment={{
                         ...comment,
                         likes: 0,
-                        hasReplies: false
+                        hasReplies: false,
                       }}
                       postId={postId}
-                      currentUserId={localStorage.getItem('userId') || undefined}
+                      currentUserId={
+                        localStorage.getItem("userId") || undefined
+                      }
                       postAuthorId={post.userId}
                       onCommentDeleted={(commentId) => {
-                        setCommentsData(prev => prev.filter(c => c.commentId !== commentId));
-                        setPost(prevPost => ({
+                        setCommentsData((prev) =>
+                          prev.filter((c) => c.commentId !== commentId)
+                        );
+                        setPost((prevPost) => ({
                           ...prevPost,
-                          commentCount: prevPost.commentCount - 1
+                          commentCount: prevPost.commentCount - 1,
                         }));
                       }}
-                      isPending={comment.commentId.startsWith('temp-')}
+                      isPending={comment.commentId.startsWith("temp-")}
                     />
                   </div>
                 ))
