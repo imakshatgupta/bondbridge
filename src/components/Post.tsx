@@ -35,7 +35,6 @@ export function Post({
     userId, 
     avatar, 
     caption, 
-    image, 
     media = [], 
     likes: initialLikes, 
     comments, 
@@ -64,6 +63,8 @@ export function Post({
         if (feedId) {
             fetchReactions();
         }
+
+        console.log(JSON.stringify(media, null, 2));
     }, [feedId]);
 
     const fetchReactions = async () => {
@@ -150,7 +151,7 @@ export function Post({
 
     // Determine if we should show a carousel or a single image
     const hasMultipleMedia = media && media.length > 1;
-    const hasSingleMedia = (media && media.length === 1) || !!image;
+    const hasSingleMedia = (media && media.length === 1);
 
     const MediaWrapper = ({ children }: { children: React.ReactNode }) => (
         <div className="relative" onDoubleClick={handleDoubleClick}>
@@ -282,11 +283,20 @@ export function Post({
                 {!hasMultipleMedia && hasSingleMedia && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <MediaWrapper>
-                            <img
-                                src={media && media.length > 0 ? media[0].url : image}
-                                alt="Post"
-                                className="w-full max-h-[500px] object-contain bg-muted"
-                            />
+                            {media && media.length > 0 && media[0].type === "image" && (
+                                <img
+                                    src={media[0].url}
+                                    alt="Post"
+                                    className="w-full max-h-[500px] object-contain bg-muted"
+                                />
+                            )}
+                            {media && media.length > 0 && media[0].type === "video" && (
+                                <video
+                                    src={media[0].url}
+                                    controls
+                                    className="w-full max-h-[500px] object-contain bg-muted"
+                                />
+                            )}
                         </MediaWrapper>
                     </div>
                 )}
@@ -329,8 +339,6 @@ export function Post({
                                     content: caption,
                                     media: media && media.length > 0 
                                         ? media 
-                                        : image 
-                                            ? [{ url: image, type: "image" }] 
                                             : []
                                 },
                                 feedId: feedId,

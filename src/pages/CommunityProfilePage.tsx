@@ -6,7 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Users, MessageSquare, Share2 } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
-import { fetchCommunities, joinCommunity } from "@/apis/commonApiCalls/communitiesApi";
+import {
+  fetchCommunities,
+  joinCommunity,
+} from "@/apis/commonApiCalls/communitiesApi";
 import { CommunityResponse } from "@/apis/apiTypes/response";
 import { Loader2 } from "lucide-react";
 import AllPosts from "@/components/AllPosts";
@@ -33,9 +36,7 @@ const CommunityProfilePage = () => {
       try {
         const result = await executeFetchCommunities();
         if (result.success && result.data) {
-          const foundCommunity = result.data.find(
-            (c) => c._id === communityId
-          );
+          const foundCommunity = result.data.find((c) => c._id === communityId);
           if (foundCommunity) {
             setCommunity(foundCommunity);
 
@@ -50,7 +51,8 @@ const CommunityProfilePage = () => {
             if (foundCommunity.posts && foundCommunity.posts.length > 0) {
               // This should be replaced with an actual API call to fetch posts by ID
               // For now, we create representative posts with the correct count
-              const realPostCount = foundCommunity.postCount || foundCommunity.posts.length;
+              const realPostCount =
+                foundCommunity.postCount || foundCommunity.posts.length;
               const communityPosts: ProfilePostData[] = Array(realPostCount)
                 .fill(null)
                 .map((_, index) => ({
@@ -62,7 +64,14 @@ const CommunityProfilePage = () => {
                   },
                   content: `Community post ${index + 1}`,
                   createdAt: Date.now() - index * 3600000, // Decreasing timestamps
-                  imageSrc: foundCommunity.backgroundImage || "", // Use community background as fallback
+                  media: foundCommunity.backgroundImage
+                    ? [
+                        {
+                          url: foundCommunity.backgroundImage,
+                          type: "image",
+                        },
+                      ]
+                    : [],
                   stats: {
                     commentCount: Math.floor(Math.random() * 10),
                     hasReacted: false,
@@ -104,7 +113,7 @@ const CommunityProfilePage = () => {
 
   const handleJoinCommunity = async () => {
     if (!communityId) return;
-    
+
     const userId = localStorage.getItem("userId");
     if (!userId) {
       toast.error("Authentication required", {
@@ -112,15 +121,15 @@ const CommunityProfilePage = () => {
       });
       return;
     }
-    
+
     setIsMembershipLoading(true);
     try {
       const result = await executeJoinCommunity({
         communityId,
         userId,
-        action: 'join'
+        action: "join",
       });
-      
+
       if (result.success) {
         setIsUserMember(true);
         toast.success("Success", {
@@ -143,18 +152,18 @@ const CommunityProfilePage = () => {
 
   const handleLeaveCommunity = async () => {
     if (!communityId) return;
-    
+
     const userId = localStorage.getItem("userId");
     if (!userId) return;
-    
+
     setIsMembershipLoading(true);
     try {
       const result = await executeJoinCommunity({
         communityId,
         userId,
-        action: 'remove'
+        action: "remove",
       });
-      
+
       if (result.success) {
         setIsUserMember(false);
         toast.success("Success", {
@@ -187,7 +196,9 @@ const CommunityProfilePage = () => {
     return (
       <div className="p-6 text-center">
         <h2 className="text-xl font-semibold mb-2">Error</h2>
-        <p className="text-muted-foreground">{error || "Community not found"}</p>
+        <p className="text-muted-foreground">
+          {error || "Community not found"}
+        </p>
         <Button
           variant="outline"
           className="mt-4"
@@ -239,7 +250,7 @@ const CommunityProfilePage = () => {
       {/* Community information */}
       <div className="flex flex-col items-center mt-20 px-6">
         <h1 className="text-3xl font-bold text-center">{community.name}</h1>
-        
+
         <div className="flex items-center gap-2 my-2">
           <Badge variant="secondary" className="px-2 py-0.5">
             <Users className="h-3 w-3 mr-1" />
@@ -250,7 +261,7 @@ const CommunityProfilePage = () => {
             {community.postCount || 0} Posts
           </Badge>
         </div>
-        
+
         <p className="text-muted-foreground text-center mt-2 max-w-md">
           {community.bio || community.description}
         </p>
@@ -306,12 +317,12 @@ const CommunityProfilePage = () => {
             <div className="bg-muted/50 rounded-lg p-4">
               <h3 className="font-semibold mb-2">Description</h3>
               <p className="text-muted-foreground">{community.description}</p>
-              
+
               <h3 className="font-semibold mt-4 mb-2">Interest</h3>
               <Badge className="bg-primary/20 text-foreground border-primary">
                 {community.interest}
               </Badge>
-              
+
               <h3 className="font-semibold mt-4 mb-2">Created</h3>
               <p className="text-muted-foreground">
                 {new Date(community.createdAt).toLocaleDateString()}
@@ -324,16 +335,14 @@ const CommunityProfilePage = () => {
               <div className="flex justify-center items-center min-h-[200px]">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : (community.postCount && community.postCount > 0) || 
-                 (community.posts && community.posts.length > 0) ? (
+            ) : (community.postCount && community.postCount > 0) ||
+              (community.posts && community.posts.length > 0) ? (
               <>
                 <p className="text-muted-foreground mb-4">
-                  Showing {posts.length} of {community.postCount || community.posts?.length || 0} posts
+                  Showing {posts.length} of{" "}
+                  {community.postCount || community.posts?.length || 0} posts
                 </p>
-                <AllPosts 
-                  posts={posts} 
-                  userId={community._id}
-                />
+                <AllPosts posts={posts} userId={community._id} />
               </>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
@@ -357,4 +366,4 @@ const CommunityProfilePage = () => {
   );
 };
 
-export default CommunityProfilePage; 
+export default CommunityProfilePage;
