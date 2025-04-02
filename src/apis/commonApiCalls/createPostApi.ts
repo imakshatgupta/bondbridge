@@ -37,6 +37,28 @@ export const createPost = async (postData: CreatePostRequest): Promise<CreatePos
 };
 
 /**
+ * Updates an existing post with new content
+ * @param postData - The post data including content and postId
+ * @returns Promise with the updated post response
+ */
+export const updatePost = async (postData: { content: string; postId: string }): Promise<{ success: boolean; message: string }> => {
+  if (!postData.postId) {
+    throw new Error('Post ID is required');
+  }
+  
+  const response = await apiClient.put('/edit-post', {
+    post_id: postData.postId,
+    content: postData.content
+  });
+  
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to update post');
+  }
+};
+
+/**
  * Deletes a post with the given feedId
  * @param feedId - The ID of the post to delete
  * @returns Promise with the delete post response
@@ -57,10 +79,19 @@ export const deletePost = async (post_id: string): Promise<{ success: boolean; m
   }
 };
 
-export const rewriteWithBondChat = async (caption : string)=>{
-  const response = await apiClient.post<RewriteWithBondChatResponse>('/rewriteWithBond', { caption });
+/**
+ * Rewrites post content using BondChat AI
+ * @param content - The content to rewrite
+ * @returns Promise with the rewritten content
+ */
+export const rewriteWithBondChat = async (content: string): Promise<RewriteWithBondChatResponse> => {
+  const response = await apiClient.post<RewriteWithBondChatResponse>('/rewriteWithBond', { caption: content });
+  
+  // Some formatting to clean up the response
   const data = response.data;
-  data.rewritten = data.rewritten.replace(/^[^\w\s]+|[^\w\s]+$/g, '').trim();
+  if (data.rewritten) {
+    data.rewritten = data.rewritten.replace(/^[^\w\s]+|[^\w\s]+$/g, '').trim();
+  }
   
   return data;
-}
+};

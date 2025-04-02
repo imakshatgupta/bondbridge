@@ -22,11 +22,25 @@ import { countWords } from '@/lib/utils';
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
+  uploadMedia?: boolean;
+  submitButtonText?: string;
+  submitHandler?: (data: any) => void;
+  initialContent?: string;
+  postId?: string;
+  onCancel?: () => void;
 }
 
-const CreatePost = ({ onSubmit }: CreatePostProps) => {
+const CreatePost = ({ 
+  onSubmit,
+  uploadMedia = true,
+  submitButtonText = 'Post',
+  submitHandler,
+  initialContent = '',
+  postId,
+  onCancel
+}: CreatePostProps) => {
   const navigate = useNavigate();
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [showPicker, setShowPicker] = useState(false);
@@ -38,6 +52,10 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   
+  // Update content when initialContent changes (for edit mode)
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
   
   // Get the current user's avatar from Redux store
   const { avatar, nickname, profilePic } = useAppSelector(state => state.currentUser);
@@ -48,6 +66,8 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   const [executeRewriteWithBondChat, isRewritingWithBondChat] = useApiCall(rewriteWithBondChat);
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!uploadMedia) return;
+    
     const files = Array.from(e.target.files || []);
     const newFiles = [...mediaFiles, ...files].slice(0, 4);
     
@@ -201,36 +221,51 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
       return;
     }
 
-    console.log("mediaFiles: ", mediaFiles);
-    console.log("documentFiles: ", documentFiles);
-    if (content.trim() || mediaFiles.length > 0 || documentFiles.length > 0) {
+    if (content.trim() || (uploadMedia && (mediaFiles.length > 0 || documentFiles.length > 0))) {
       setIsSubmitting(true);
       
       // Prepare the post data
-      const postData = {
+      let postData: any = {
         content: content.trim(),
-        whoCanComment: 1, // Default value
-        privacy: 1, // Default value
-        image: mediaFiles,
-        document: documentFiles
       };
       
-      // Execute the API call with error handling
-      const { data, success } = await executeCreatePost(postData);
+      // Only include media files if uploadMedia is true
+      if (uploadMedia) {
+        postData = {
+          ...postData,
+          whoCanComment: 1, // Default value
+          privacy: 1, // Default value
+          image: mediaFiles,
+          document: documentFiles
+        };
+      }
       
-      if (success && data) {
-        // Show success message
-        toast.success('Post created successfully!');
+      // If editing a post, add postId
+      if (postId) {
+        postData.postId = postId;
+      }
+      
+      if (submitHandler) {
+        // Use custom submit handler if provided
+        await submitHandler(postData);
+      } else {
+        // Execute the default API call with error handling
+        const { data, success } = await executeCreatePost(postData);
         
-        // Clear form after successful submission
-        setContent('');
-        setMediaFiles([]);
-        setMediaPreviews([]);
-        setDocumentFiles([]);
-        
-        // Call the onSubmit prop if provided
-        onSubmit?.(content, [...mediaFiles, ...documentFiles]);
-        navigate('/');
+        if (success && data) {
+          // Show success message
+          toast.success(postId ? 'Post updated successfully!' : 'Post created successfully!');
+          
+          // Clear form after successful submission
+          setContent('');
+          setMediaFiles([]);
+          setMediaPreviews([]);
+          setDocumentFiles([]);
+          
+          // Call the onSubmit prop if provided
+          onSubmit?.(content, [...mediaFiles, ...documentFiles]);
+          navigate('/');
+        }
       }
       
       setIsSubmitting(false);
@@ -261,6 +296,14 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     };
   }, [showPicker]);
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
       <div className="flex items-start gap-3 pb-4">
@@ -276,7 +319,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             variant="ghost"
             size="sm"
             className="text-[var(--muted-foreground)] border cursor-pointer border-primary"
-            onClick={() => navigate('/')}
+            onClick={handleCancel}
             disabled={isSubmitting || isCreatingPost}
           >
             Cancel
@@ -287,7 +330,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
             onClick={handleSubmit}
             disabled={isSubmitting || isCreatingPost}
           >
-            {isSubmitting || isCreatingPost ? 'Posting...' : 'Post'}
+            {isSubmitting || isCreatingPost ? 'Processing...' : submitButtonText}
           </Button>
         </div>
       </div>
@@ -305,24 +348,28 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
               <Mic size={20} className={isListening ? 'animate-pulse' : ''} />
             </button>
           </div>
-          <label className="cursor-pointer hover:opacity-75 transition-opacity">
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleMediaUpload}
-            />
-            <Image size={20} className="text-[var(--foreground)]" />
-          </label>
-          <label className="cursor-pointer hover:opacity-75 transition-opacity">
-            <input
-              type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleMediaUpload}
-            />
-            <Video size={20} className="text-[var(--foreground)]" />
-          </label>
+          {uploadMedia && (
+            <>
+              <label className="cursor-pointer hover:opacity-75 transition-opacity">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleMediaUpload}
+                />
+                <Image size={20} className="text-[var(--foreground)]" />
+              </label>
+              <label className="cursor-pointer hover:opacity-75 transition-opacity">
+                <input
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={handleMediaUpload}
+                />
+                <Video size={20} className="text-[var(--foreground)]" />
+              </label>
+            </>
+          )}
          
           <div className="relative">
             <button 
