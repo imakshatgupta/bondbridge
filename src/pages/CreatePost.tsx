@@ -308,20 +308,20 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
           <label className="cursor-pointer hover:opacity-75 transition-opacity">
             <input
               type="file"
-              accept="video/*"
-              className="hidden"
-              onChange={handleMediaUpload}
-            />
-            <Video size={20} className="text-[var(--foreground)]" />
-          </label>
-          <label className="cursor-pointer hover:opacity-75 transition-opacity">
-            <input
-              type="file"
               accept="image/*"
               className="hidden"
               onChange={handleMediaUpload}
             />
             <Image size={20} className="text-[var(--foreground)]" />
+          </label>
+          <label className="cursor-pointer hover:opacity-75 transition-opacity">
+            <input
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={handleMediaUpload}
+            />
+            <Video size={20} className="text-[var(--foreground)]" />
           </label>
           <div className="relative">
             <button 
@@ -345,12 +345,6 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
               </div>
             )}
           </div>
-                  
-
-
-          
-          
-          
         </div>
 
         <div className=" flex justify-end">
@@ -399,7 +393,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
                 maxRows={20}
               />
               <div className="flex justify-end mt-1">
-                <span className={`text-xs ${countWords(content) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`}>
+                <span className={`text-xs ${countWords(content) > WORD_LIMIT ? 'text-destructive-foreground' : 'text-muted-foreground'}`}>
                   {countWords(content)}/{WORD_LIMIT} words
                 </span>
               </div>

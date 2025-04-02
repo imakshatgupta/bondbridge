@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '../components/ui/button';
-import { Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { useApiCall } from '../apis/globalCatchError';
 import { Story, StoryData } from '../apis/apiTypes/request';
 import { useAppSelector } from '../store';
 import { WORD_LIMIT } from '@/lib/constants';
-import { countWords } from '@/lib/utils';
+import { countCharacters, exceededCharLimit } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type StoryTheme = {
@@ -84,6 +84,26 @@ const CreateStory = () => {
     setStories(prev => prev.map((story, idx) => 
       idx === currentPage ? { ...story, content: newText } : story
     ));
+  };
+
+  const handleClear = () => {
+    setStories(prev => prev.map((story, idx) => {
+      if (idx === currentPage) {
+        // Create default empty content based on story type
+        let emptyContent: string | File | Blob = '';
+        
+        if (story.type === 'text') {
+          emptyContent = '';
+        } 
+        // For other types, keep the type but reset content properties
+        return {
+          ...story,
+          content: emptyContent,
+          previewUrl: undefined
+        };
+      }
+      return story;
+    }));
   };
 
   const handleThemeChange = (theme: StoryTheme) => {
@@ -361,15 +381,15 @@ const CreateStory = () => {
       return;
     }
     
-    // Validate word count for text stories
+    // Validate character count for text stories
     const textStoryExceedingLimit = stories.find(story => 
       story.type === 'text' && 
       typeof story.content === 'string' && 
-      countWords(story.content) > WORD_LIMIT
+      exceededCharLimit(story.content, WORD_LIMIT)
     );
     
     if (textStoryExceedingLimit) {
-      toast.error(`Your story exceeds the ${WORD_LIMIT} word limit. Please shorten your text.`);
+      toast.error(`Your story exceeds the ${WORD_LIMIT} character limit. Please shorten your text.`);
       return;
     }
     
@@ -588,6 +608,17 @@ const CreateStory = () => {
               </div>
             )}
           </div>
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground h-auto p-2 cursor-pointer"
+              onClick={handleClear}
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
+            <span className="text-xs">Clear</span>
+          </div>
         </div>
 
         {/* Story Content Area */}
@@ -651,9 +682,15 @@ const CreateStory = () => {
                     autoFocus
                   />
                   <div className="flex justify-center mt-1">
-                    <span className={`text-xs ${countWords(currentContentText) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`} 
-                          style={{ color: currentTheme.textColor }}>
-                      {countWords(currentContentText)}/{WORD_LIMIT} words
+                    <span 
+                      className="text-xs"
+                      style={{ 
+                        color: exceededCharLimit(currentContentText, WORD_LIMIT) 
+                          ? 'hsl(var(--destructive))' 
+                          : currentTheme.textColor 
+                      }}
+                    >
+                      {countCharacters(currentContentText)}/{WORD_LIMIT} characters
                     </span>
                   </div>
                 </div>
