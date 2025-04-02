@@ -63,8 +63,6 @@ export function Post({
         if (feedId) {
             fetchReactions();
         }
-
-        console.log(JSON.stringify(media, null, 2));
     }, [feedId]);
 
     const fetchReactions = async () => {
@@ -91,7 +89,7 @@ export function Post({
         setIsLoadingReactions(false);
     };
 
-    const handleLikeClick = async () => {
+    const handleLikeClick = useCallback(async () => {
         if (isLikeLoading || !feedId) return;
 
         // Optimistically update the UI
@@ -107,7 +105,7 @@ export function Post({
 
         let result;
         if (isLiked) {
-            result = await executeDeleteReaction(reactionData);
+            result = await executeDeleteReaction(reactionData);  
         } else {
             result = await executeAddReaction(reactionData);
         }
@@ -121,7 +119,7 @@ export function Post({
         }
 
         setIsLikeLoading(false);
-    };
+    }, [isLikeLoading, feedId, isLiked]);
 
     const handleDoubleClick = useCallback(async (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent any default double-click behavior
