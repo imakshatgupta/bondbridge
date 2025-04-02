@@ -37,7 +37,10 @@ export interface PostData {
 export interface UserPostsResponse {
   posts: Array<{
     id: number;
-    imageSrc: string;
+    media: Array<{
+      url: string;
+      type: string;
+    }>;
     content: string;
     createdAt: string;
     author: {

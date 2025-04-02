@@ -70,7 +70,7 @@ export default function HomePage() {
     };
 
     fetchCompleteUserProfile();
-  }, [currentUserId, currentUser]);
+  }, []);
 
   // Load initial data
   useEffect(() => {
@@ -368,7 +368,6 @@ export default function HomePage() {
                 userId={post.userId}
                 caption={post.data.content}
                 media={post.data.media}
-                image={post.data.media && post.data.media.length > 0 ? post.data.media[0].url : undefined}
                 likes={post.reactionCount}
                 comments={post.commentCount}
                 datePosted={post.ago_time}
