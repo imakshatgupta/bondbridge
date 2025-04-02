@@ -11,7 +11,11 @@ import { fetchComments, postComment } from "@/apis/commonApiCalls/commentsApi";
 import { getPostDetails } from "@/apis/commonApiCalls/homepageApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { CommentData, HomePostData, ProfilePostData } from "@/apis/apiTypes/response";
+import {
+  CommentData,
+  HomePostData,
+  ProfilePostData,
+} from "@/apis/apiTypes/response";
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/store";
 import LogoLoader from "@/components/LogoLoader";
@@ -23,30 +27,30 @@ export default function CommentsPage() {
   // Access post directly from state
   const locationState = location.state || {};
   const locationPost = locationState.post;
-  
+
   // Convert ProfilePostData to a format compatible with HomePostData if needed
   const [post, setPost] = useState<HomePostData>(() => {
     if (!locationPost) {
       // If no post was provided in state, create a minimal object
       // (Will be populated from API once post details are fetched)
       return {
-        _id: postId?.split(':')[0] || '',
-        name: '',
-        profilePic: '',
-        userId: '',
+        _id: postId?.split(":")[0] || "",
+        name: "",
+        profilePic: "",
+        userId: "",
         data: {
-          content: '',
-          media: []
+          content: "",
+          media: [],
         },
         commentCount: 0,
         reactionCount: 0,
         reaction: {
           hasReacted: false,
-          reactionType: null
+          reactionType: null,
         },
-        ago_time: '',
-        feedId: postId || '',
-        author: '',
+        ago_time: "",
+        feedId: postId || "",
+        author: "",
         whoCanComment: 0,
         privacy: 0,
         content_type: null,
@@ -54,9 +58,9 @@ export default function CommentsPage() {
         hideFrom: null,
         status: 0,
         createdAt: 0,
-        weekIndex: '',
+        weekIndex: "",
       };
-    } else if ('_id' in locationPost) {
+    } else if ("_id" in locationPost) {
       // Already HomePostData
       return locationPost as HomePostData;
     } else {
@@ -69,17 +73,17 @@ export default function CommentsPage() {
         userId: profilePost.userId,
         data: {
           content: profilePost.content,
-          media: [{ url: profilePost.imageSrc, type: 'image' }]
+          media: profilePost.media || [],
         },
         commentCount: profilePost.stats.commentCount,
         reactionCount: profilePost.stats.reactionCount,
         reaction: {
           hasReacted: profilePost.stats.hasReacted,
-          reactionType: profilePost.stats.reactionType
+          reactionType: profilePost.stats.reactionType,
         },
         ago_time: new Date(profilePost.createdAt * 1000).toLocaleDateString(),
-        feedId: postId || '',
-        author: '',
+        feedId: postId || "",
+        author: "",
         whoCanComment: 0,
         privacy: 0,
         content_type: null,
@@ -87,11 +91,11 @@ export default function CommentsPage() {
         hideFrom: null,
         status: 0,
         createdAt: profilePost.createdAt,
-        weekIndex: '',
+        weekIndex: "",
       };
     }
   });
-  
+
   const [newComment, setNewComment] = useState("");
   const [commentsData, setCommentsData] = useState<CommentData[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -100,31 +104,38 @@ export default function CommentsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [, setPendingComment] = useState<string | null>(null);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  
+
   // Get current user from Redux store
-  const currentUser = useAppSelector(state => state.currentUser);
-  
+  const currentUser = useAppSelector((state) => state.currentUser);
+
   // Use our custom hook for API calls
   const [executeFetchComments, isLoadingComments] = useApiCall(fetchComments);
   const [executePostComment, isPosting] = useApiCall(postComment);
   const [executeGetPostDetails, isLoadingPost] = useApiCall(getPostDetails);
-  
+
   // Combined loading state for the entire page
-  const pageLoading = (isLoadingPost || (isLoadingComments && !initialDataLoaded));
+  const pageLoading =
+    isLoadingPost || (isLoadingComments && !initialDataLoaded);
 
   // Get current user ID from localStorage
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem("userId");
     setCurrentUserId(userId);
   }, []);
+
+  useEffect(() => {
+    console.log("post", post);
+    console.log("locationPost", locationPost);
+    console.log("postId", postId);
+  }, [post, locationPost, postId]);
 
   // Fetch post details if not provided in state
   useEffect(() => {
     const fetchPostDetails = async () => {
       if (!postId || locationPost) return; // Skip if postId is missing or post is already available
-      
+
       const result = await executeGetPostDetails({ feedId: postId });
-      
+
       if (result.success && result.data) {
         const apiPostData = result.data.post;
         // Map the API response to our expected HomePostData format
@@ -138,7 +149,7 @@ export default function CommentsPage() {
           reactionCount: apiPostData.reactionCount,
           reaction: apiPostData.reaction || {
             hasReacted: false,
-            reactionType: null
+            reactionType: null,
           },
           ago_time: apiPostData.agoTime,
           feedId: apiPostData.feedId,
@@ -158,22 +169,22 @@ export default function CommentsPage() {
         setError("Failed to load post details. Please try again.");
       }
     };
-    
+
     fetchPostDetails();
   }, [postId, locationPost]);
-  
+
   // Helper function to sort comments by creation time (newest first)
   const sortCommentsByTime = (comments: CommentData[]): CommentData[] => {
     return [...comments].sort((a, b) => {
       // Try to parse the dates from createdAt
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
-      
+
       // Sort in descending order (newest first)
       return dateB - dateA;
     });
   };
-  
+
   // Load initial data
   useEffect(() => {
     const loadCommentsData = async () => {
@@ -181,13 +192,13 @@ export default function CommentsPage() {
         setError("No post ID provided");
         return;
       }
-      
-      const result = await executeFetchComments({ 
-        feedId: postId, 
-        page: 1, 
-        limit: 10 
+
+      const result = await executeFetchComments({
+        feedId: postId,
+        page: 1,
+        limit: 10,
       });
-      
+
       if (result.success && result.data) {
         // Map the API response to our expected format
         if (result.data.comments) {
@@ -197,35 +208,38 @@ export default function CommentsPage() {
         } else {
           setCommentsData([]);
         }
-        
+
         setHasMore(result.data.hasMoreComments || false);
       } else {
-        setError(result.data?.message || 'Failed to load comments');
+        setError(result.data?.message || "Failed to load comments");
       }
-      
+
       // Mark initial data as loaded
       setInitialDataLoaded(true);
     };
-    
+
     loadCommentsData();
   }, [postId]);
 
   // Function to load more comments
   const loadMoreComments = async () => {
     if (isLoadingPost || !hasMore || !postId) return;
-    
+
     const nextPage = page + 1;
-    const result = await executeFetchComments({ 
-      feedId: postId, 
-      page: nextPage, 
-      limit: 10 
+    const result = await executeFetchComments({
+      feedId: postId,
+      page: nextPage,
+      limit: 10,
     });
-    
+
     if (result.success && result.data) {
       const data = result.data;
       if (data.comments) {
         // Sort and merge with existing comments
-        const newComments = sortCommentsByTime([...commentsData, ...data.comments]);
+        const newComments = sortCommentsByTime([
+          ...commentsData,
+          ...data.comments,
+        ]);
         setCommentsData(newComments);
       }
       setHasMore(data.hasMoreComments || false);
@@ -237,19 +251,19 @@ export default function CommentsPage() {
   const lastCommentRef = useInfiniteScroll({
     isLoading: isLoadingPost,
     hasMore,
-    onLoadMore: loadMoreComments
+    onLoadMore: loadMoreComments,
   });
-  
+
   const handleSubmitComment = async () => {
     if (!newComment.trim() || !postId || isPosting) return;
-    
+
     // Store the comment text in case we need to restore it
     const commentText = newComment.trim();
     setPendingComment(commentText);
-    
+
     // Get user ID from localStorage
-    const userId = localStorage.getItem('userId') || '';
-    
+    const userId = localStorage.getItem("userId") || "";
+
     // Create a temporary comment with a unique ID
     const tempCommentId = `temp-${Date.now()}`;
     const tempComment: CommentData = {
@@ -265,39 +279,39 @@ export default function CommentsPage() {
         profilePic: currentUser.avatar || avatarImage,
       },
       likes: 0,
-      hasReplies: false
+      hasReplies: false,
     };
-    
+
     // Optimistically add the comment to the UI (at the top since it's newest)
-    setCommentsData(prevComments => [tempComment, ...prevComments]);
-    setPost(prevPost => ({
+    setCommentsData((prevComments) => [tempComment, ...prevComments]);
+    setPost((prevPost) => ({
       ...prevPost,
-      commentCount: prevPost.commentCount + 1
+      commentCount: prevPost.commentCount + 1,
     }));
-    
+
     // Clear the input field
     setNewComment("");
-    
+
     // Send the API request
     const result = await executePostComment({
       postId,
-      comment: commentText
+      comment: commentText,
     });
-    
+
     if (!result.success) {
       // API call failed, revert the optimistic update
-      setCommentsData(prevComments => 
-        prevComments.filter(comment => comment.commentId !== tempCommentId)
+      setCommentsData((prevComments) =>
+        prevComments.filter((comment) => comment.commentId !== tempCommentId)
       );
-      setPost(prevPost => ({
+      setPost((prevPost) => ({
         ...prevPost,
-        commentCount: prevPost.commentCount - 1
+        commentCount: prevPost.commentCount - 1,
       }));
-      
+
       // Restore the comment text to the input field
       setNewComment(commentText);
       setPendingComment(null);
-      
+
       // Show error toast
       toast.error("Failed to post comment. Please try again.");
     } else {
@@ -307,12 +321,12 @@ export default function CommentsPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const commentData = result.data.comment as any;
         const insertedId = commentData?.insertedId;
-        
+
         if (insertedId) {
           // Replace the temporary comment with the real one using the insertedId from the API
-          setCommentsData(prevComments => 
-            prevComments.map(comment => 
-              comment.commentId === tempCommentId 
+          setCommentsData((prevComments) =>
+            prevComments.map((comment) =>
+              comment.commentId === tempCommentId
                 ? {
                     ...comment,
                     commentId: insertedId, // Use the actual insertedId from the API
@@ -323,11 +337,11 @@ export default function CommentsPage() {
         } else {
           // If for some reason insertedId is not available, use a fallback ID
           const permanentId = `comment-${Date.now()}`;
-          
+
           // Important: Replace the temp ID with a permanent one to remove the "sending" indicator
-          setCommentsData(prevComments => 
-            prevComments.map(comment => 
-              comment.commentId === tempCommentId 
+          setCommentsData((prevComments) =>
+            prevComments.map((comment) =>
+              comment.commentId === tempCommentId
                 ? {
                     ...comment,
                     commentId: permanentId, // Fallback ID
@@ -335,17 +349,19 @@ export default function CommentsPage() {
                 : comment
             )
           );
-          
-          console.warn('Comment was added but no insertedId was returned from the API');
+
+          console.warn(
+            "Comment was added but no insertedId was returned from the API"
+          );
         }
       } else {
         // If the API doesn't return any data, just remove the temporary flag
         const permanentId = `comment-${Date.now()}`;
-        
+
         // Important: Replace the temp ID with a permanent one to remove the "sending" indicator
-        setCommentsData(prevComments => 
-          prevComments.map(comment => 
-            comment.commentId === tempCommentId 
+        setCommentsData((prevComments) =>
+          prevComments.map((comment) =>
+            comment.commentId === tempCommentId
               ? {
                   ...comment,
                   commentId: permanentId, // This ensures the "sending" indicator is removed
@@ -360,12 +376,12 @@ export default function CommentsPage() {
 
   // Handle Enter key press
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmitComment();
     }
   };
-  
+
   return (
     <div className="relative max-w-2xl mx-auto bg-background min-h-screen flex flex-col">
       {/* Show LogoLoader while page is loading */}
@@ -377,9 +393,9 @@ export default function CommentsPage() {
         <>
           {/* Header */}
           <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => navigate(-1)}
               className="mr-2 cursor-pointer"
             >
@@ -393,7 +409,7 @@ export default function CommentsPage() {
             {/* Post Summary and Comment Input */}
             <div className="flex-none">
               {post && (
-                <Post 
+                <Post
                   user={post.name}
                   userId={post.userId}
                   avatar={post.profilePic}
@@ -412,8 +428,15 @@ export default function CommentsPage() {
               {/* Comment Input */}
               <div className="p-4 border-b flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={currentUser.avatar || avatarImage} alt="Your avatar" />
-                  <AvatarFallback>{currentUser.nickname?.charAt(0) || currentUser.username?.charAt(0) || 'U'}</AvatarFallback>
+                  <AvatarImage
+                    src={currentUser.avatar || avatarImage}
+                    alt="Your avatar"
+                  />
+                  <AvatarFallback>
+                    {currentUser.nickname?.charAt(0) ||
+                      currentUser.username?.charAt(0) ||
+                      "U"}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 relative">
                   <Input
@@ -424,8 +447,8 @@ export default function CommentsPage() {
                     className="pr-12 rounded-full bg-muted"
                     disabled={isPosting}
                   />
-                  <Button 
-                    size="icon" 
+                  <Button
+                    size="icon"
                     variant="ghost"
                     className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
                     onClick={handleSubmitComment}
@@ -441,7 +464,13 @@ export default function CommentsPage() {
             <div className="flex-1 overflow-y-auto">
               {error ? (
                 <div className="p-4 text-center text-destructive">
-                  {error}. <Button variant="link" onClick={() => window.location.reload()}>Try again</Button>
+                  {error}.{" "}
+                  <Button
+                    variant="link"
+                    onClick={() => window.location.reload()}
+                  >
+                    Try again
+                  </Button>
                 </div>
               ) : commentsData.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
@@ -451,25 +480,33 @@ export default function CommentsPage() {
                 commentsData.map((comment, index) => (
                   <div
                     key={`${comment.commentId}-${index}`}
-                    ref={index === commentsData.length - 1 ? lastCommentRef : undefined}
+                    ref={
+                      index === commentsData.length - 1
+                        ? lastCommentRef
+                        : undefined
+                    }
                   >
-                    <Comment 
+                    <Comment
                       comment={{
                         ...comment,
                         likes: 0,
-                        hasReplies: false
+                        hasReplies: false,
                       }}
                       postId={postId}
-                      currentUserId={localStorage.getItem('userId') || undefined}
+                      currentUserId={
+                        localStorage.getItem("userId") || undefined
+                      }
                       postAuthorId={post.userId}
                       onCommentDeleted={(commentId) => {
-                        setCommentsData(prev => prev.filter(c => c.commentId !== commentId));
-                        setPost(prevPost => ({
+                        setCommentsData((prev) =>
+                          prev.filter((c) => c.commentId !== commentId)
+                        );
+                        setPost((prevPost) => ({
                           ...prevPost,
-                          commentCount: prevPost.commentCount - 1
+                          commentCount: prevPost.commentCount - 1,
                         }));
                       }}
-                      isPending={comment.commentId.startsWith('temp-')}
+                      isPending={comment.commentId.startsWith("temp-")}
                     />
                   </div>
                 ))

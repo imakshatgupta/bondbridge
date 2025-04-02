@@ -153,7 +153,10 @@ export interface ProfilePostData {
   };
   content: string;
   createdAt: number;
-  imageSrc: string;
+  media: Array<{
+    url: string;
+    type: string;
+  }>;
   stats: {
     commentCount: number;
     hasReacted: boolean;

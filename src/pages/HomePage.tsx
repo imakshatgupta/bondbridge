@@ -70,7 +70,7 @@ export default function HomePage() {
     };
 
     fetchCompleteUserProfile();
-  }, [currentUserId, currentUser]);
+  }, [currentUserId]);
 
   // Load initial data
   useEffect(() => {
