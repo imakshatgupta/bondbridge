@@ -1,4 +1,4 @@
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -22,8 +22,12 @@ import {
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
-// import { toast } from "sonner";
 import { PostProps } from "@/types/post";
+import {
+    Dialog,
+    DialogContent,
+} from "@/components/ui/dialog";
+import SharePostPage from "./SharePostPage";
 
 export function Post({ 
     user, 
@@ -48,6 +52,7 @@ export function Post({
     const [isLoadingReactions, setIsLoadingReactions] = useState(false);
     const [showHeartAnimation, setShowHeartAnimation] = useState(false);
     const [heartPosition, setHeartPosition] = useState({ x: 0, y: 0 });
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
@@ -287,10 +292,41 @@ export function Post({
                         >
                             <MessageCircle className="w-5 h-5" /> {comments}
                         </button>
+                        <button
+                            className="flex items-center gap-1 hover:text-primary cursor-pointer"
+                            onClick={() => setIsShareDialogOpen(true)}
+                        >
+                            <Share2 className="w-5 h-5" />
+                        </button>
                     </div>
                     <div className="text-sm text-muted-foreground">{datePosted}</div>
                 </div>
             </CardContent>
+
+            {/* Share Dialog */}
+            {feedId && (
+                <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+                    <DialogContent className="sm:max-w-md h-[80vh]">
+                        <SharePostPage
+                            postData={{
+                                _id: feedId,
+                                author: userId,
+                                data: {
+                                    content: caption,
+                                    media: media && media.length > 0 
+                                        ? media 
+                                        : image 
+                                            ? [{ url: image, type: "image" }] 
+                                            : []
+                                },
+                                feedId: feedId,
+                                name: user
+                            }}
+                            onClose={() => setIsShareDialogOpen(false)}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
         </Card>
     );
 }

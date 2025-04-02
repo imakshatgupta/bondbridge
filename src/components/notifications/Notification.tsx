@@ -17,6 +17,7 @@ interface NotificationProps {
       feedId?: string;
     };
   };
+  senderId: string;
 }
 
 const Notification = ({
@@ -27,6 +28,7 @@ const Notification = ({
   seen,
   onMarkAsSeen,
   entityDetails,
+  senderId,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
   const navigate = useNavigate();
@@ -50,20 +52,29 @@ const Notification = ({
     }
   };
 
+  const visitProfile = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the notification click event from firing
+    if (senderId) {
+      navigate(`/profile/${senderId}`);
+    }
+  };
+
   return (
     <div
-      className={`flex items-center gap-4 p-4 border-b hover:bg-muted cursor-pointer`}
-      onClick={handleClick}
+      className={`flex items-center gap-4 p-4 border-b hover:bg-muted`}
     >
       <div className="w-12 h-12">
         <img
           src={profilePic}
           alt="User avatar"
-          className="w-full h-full rounded-full object-cover"
+          onClick={visitProfile}
+          className="w-full h-full rounded-full object-cover cursor-pointer"
         />
       </div>
-      <div className="flex-1">
-        <h3 className="font-medium text-xl text-foreground capitalize">{title}</h3>
+      <div className="flex-1 cursor-pointer" onClick={handleClick}>
+        <h3 className="font-medium text-xl text-foreground capitalize">
+          {title}
+        </h3>
       </div>
       <div className="text-sm capitalize text-muted-foreground">
         {getRelativeTime(new Date(timestamp))}

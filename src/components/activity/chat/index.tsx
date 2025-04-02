@@ -21,6 +21,7 @@ import { EditGroupModal } from "../EditGroupModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchFollowersList } from "@/apis/commonApiCalls/profileApi";
 import { SimpleFollower } from "./InviteFollowers";
+import { isPostShare } from "@/utils/messageUtils";
 
 // Components
 import ChatHeader from "./ChatHeader";
@@ -236,10 +237,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // Clear suggestions when receiving a message
         setSuggestions([]);
 
-        // Find sender info from participants
-        if (data.senderId === userId) {
+        console.log("Received message:", data);
+
+        // Check if the message is from current user - bypass this check for post shares
+        const isPost = isPostShare(data.content);
+        
+        // If it's not a post share and it's from the current user, ignore it (already added locally)
+        if (!isPost && data.senderId === userId) {
+          console.log("Ignoring own message (not a post share)");
           return;
         }
+        
         const sender = chat?.participants.find(
           (p) => p.userId === data.senderId
         );
@@ -263,6 +271,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               ? userAvatar
               : sender?.profilePic || data.senderAvatar || "",
         };
+        
+        // Add additional logging for post shares
+        if (isPost) {
+          console.log("Received a post share:", { from: data.senderId, isOwnPost: data.senderId === userId });
+        }
+        
         dispatch(addMessage(newMsg));
       };
 

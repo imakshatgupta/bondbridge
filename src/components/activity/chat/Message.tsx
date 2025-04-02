@@ -2,6 +2,8 @@ import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { Message as MessageType } from "@/store/chatSlice";
+import { ExternalLink } from "lucide-react";
+import { isPostShare, parsePostShare } from "@/utils/messageUtils";
 
 interface MessageProps {
   message: MessageType;
@@ -10,12 +12,41 @@ interface MessageProps {
   userId: string;
 }
 
+// Interface for shared post data
+interface SharedPostData {
+  _id: string;
+  author: string;
+  data: {
+    content: string;
+    media?: Array<{
+      url: string;
+      type: string;
+    }>;
+  };
+  feedId: string;
+  name: string;
+}
+
 const Message: React.FC<MessageProps> = ({ 
   message, 
   isFirstInSequence, 
   isGroupChat, 
   userId 
 }) => {
+  // Check if message is a shared post using useState
+  const [sharedPost, setSharedPost] = React.useState<SharedPostData | null>(null);
+
+  React.useEffect(() => {
+    // Check if the message is a post share using the utility function
+    if (isPostShare(message.text)) {
+      // Parse the post content using the utility function
+      const parsedPost = parsePostShare(message.text as string);
+      setSharedPost(parsedPost);
+    } else {
+      setSharedPost(null);
+    }
+  }, [message.text]);
+
   return (
     <div
       className={`flex items-start gap-2 ${message.isUser ? "flex-row-reverse" : "flex-row"}`}
@@ -60,7 +91,50 @@ const Message: React.FC<MessageProps> = ({
               {message.senderName || "Unknown"}
             </p>
           )}
-        <p>{message.text}</p>
+        
+        {/* Render shared post if available */}
+        {sharedPost ? (
+          <div className="shared-post">
+            <div className="border rounded-md overflow-hidden bg-background text-foreground mb-2">
+              {/* Post image if available */}
+              {sharedPost.data.media && 
+               sharedPost.data.media.length > 0 && 
+               sharedPost.data.media[0].type === 'image' && (
+                <div className="w-full h-[150px] overflow-hidden">
+                  <img 
+                    src={sharedPost.data.media[0].url} 
+                    alt="Shared post"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error("Failed to load shared post image");
+                      // Replace with default image on error
+                      e.currentTarget.src = '/placeholder-image.jpg';
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Post content */}
+              <div className="p-2">
+                <p className="text-xs font-medium mb-1">
+                  Shared a post from {sharedPost.name || 'Unknown'}
+                </p>
+                <p className="text-sm line-clamp-2">
+                  {sharedPost.data.content || 'No caption'}
+                </p>
+                <Link 
+                  to={`/post/${sharedPost._id}`} 
+                  className="flex items-center gap-1 text-xs text-primary mt-1"
+                >
+                  View Post <ExternalLink size={12} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p>{typeof message.text === 'string' ? message.text : JSON.stringify(message.text)}</p>
+        )}
+        
         <span className="text-xs opacity-70 block text-right mt-1">
           {message.timestamp}
         </span>

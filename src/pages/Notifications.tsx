@@ -162,6 +162,7 @@ const Notifications = () => {
                       timestamp={notification.timestamp}
                       seen={notification.seen}
                       onMarkAsSeen={handleMarkAsSeen}
+                      senderId={notification.sender.id}
                       entityDetails={{
                         entityType: notification.details.entityType,
                         entityId: notification.details.entityId,
