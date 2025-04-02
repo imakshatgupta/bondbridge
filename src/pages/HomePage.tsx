@@ -305,6 +305,7 @@ export default function HomePage() {
                   user={formattedSelfStory.user}
                   userId={formattedSelfStory.userId}
                   avatar={formattedSelfStory.avatar}
+                  profilePic={formattedSelfStory.profilePic}
                   isLive={formattedSelfStory.isLive}
                   hasStory={formattedSelfStory.hasStory}
                   stories={formattedSelfStory.stories}

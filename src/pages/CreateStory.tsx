@@ -73,16 +73,19 @@ const storyThemes: StoryTheme[] = [
 ];
 
 const CreateStory = () => {
-  const { avatar, username, profilePic } = useAppSelector((state) => state.currentUser);
-  const [stories, setStories] = useState<Story[]>([{
-    type: 'text',
-    content: '',
-    theme: {
-      bgColor: storyThemes[0].bgColor,
-      textColor: storyThemes[0].textColor
+  const { avatar, username, profilePic } = useAppSelector(
+    (state) => state.currentUser
+  );
+  const [stories, setStories] = useState<Story[]>([
+    {
+      type: "text",
+      content: "",
+      theme: {
+        bgColor: storyThemes[0].bgColor,
+        textColor: storyThemes[0].textColor,
+      },
+      privacy: 1,
     },
-    privacy: 1,
-  }
   ]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -90,12 +93,32 @@ const CreateStory = () => {
 
   const [executeUploadStory, isUploading] = useApiCall(uploadStory);
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleTextChange = (newText: string) => {
-    setStories((prev) =>
-      prev.map((story, idx) =>
-        idx === currentPage ? { ...story, content: newText } : story
-      )
-    );
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      
+      // Temporarily update value to check if it would cause overflow
+      textarea.value = newText;
+      
+      // If adding this text would exceed 5 lines (5 × line height)
+      const lineHeight = 24; // Line height as set in the textarea style
+      const maxHeight = lineHeight * 5;
+      
+      if (textarea.scrollHeight > maxHeight) {
+        // Revert to previous text
+        textarea.value = currentContentText;
+        return;
+      }
+      
+      // If no overflow, update the state
+      setStories((prev) =>
+        prev.map((story, idx) =>
+          idx === currentPage ? { ...story, content: newText } : story
+        )
+      );
+    }
   };
 
   const handleClear = () => {
@@ -418,7 +441,7 @@ const CreateStory = () => {
 
     if (textStoryExceedingLimit) {
       toast.error(
-        `Your story exceeds the ${WORD_LIMIT} character limit. Please shorten your text.`
+        `Your story exceeds the ${WORD_LIMIT} word limit. Please shorten your text.`
       );
       return;
     }
@@ -550,7 +573,9 @@ const CreateStory = () => {
       <div className="flex items-center justify-between p-4">
         <Avatar className="h-8 w-8">
           <AvatarImage src={profilePic || avatar} alt="Profile" />
-          <AvatarFallback>{username ? username.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+          <AvatarFallback>
+            {username ? username.charAt(0).toUpperCase() : "U"}
+          </AvatarFallback>
         </Avatar>
 
         <div className="flex items-center gap-3">
@@ -743,14 +768,21 @@ const CreateStory = () => {
               {currentStory.type === "text" && (
                 <div className="w-full px-4">
                   <textarea
+                    ref={textareaRef}
                     value={currentContentText}
                     onChange={(e) => {
                       handleTextChange(e.target.value);
                     }}
                     // maxLength={150}
                     placeholder="What's on your mind..."
-                    className="w-full bg-transparent resize-none outline-none text-center"
-                    style={{ color: currentTheme.textColor }}
+                    className="w-full bg-transparent resize-none outline-none text-center overflow-hidden"
+                    style={{
+                      color: currentTheme.textColor,
+                      height: "120px", // Fixed height for 5 lines
+                      lineHeight: "24px",
+                      padding: "0",
+                      boxSizing: "border-box",
+                    }}
                     rows={5}
                     autoFocus
                   />

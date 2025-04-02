@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import ThreeDotsMenu, { 
-    ShareMenuItem, 
     ReportMenuItem, 
     DeleteMenuItem,
     EditPostMenuItem
@@ -202,10 +201,6 @@ export function Post({
 
     // Prepare menu items based on post ownership
     const menuItems = [
-        {
-            ...ShareMenuItem,
-            onClick: () => console.log('Share clicked')
-        }
     ];
 
     // Add different items based on whether it's the user's own post

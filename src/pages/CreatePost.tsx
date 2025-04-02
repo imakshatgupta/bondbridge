@@ -19,12 +19,18 @@ import {
 } from '../types/speech-recognition';
 import { WORD_LIMIT } from '@/lib/constants';
 import { countWords } from '@/lib/utils';
+import { CreatePostRequest } from '@/apis/apiTypes/request';
+
+interface PostData extends Partial<CreatePostRequest> {
+  content: string;
+  postId?: string;
+}
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
   uploadMedia?: boolean;
   submitButtonText?: string;
-  submitHandler?: (data: any) => void;
+  submitHandler?: (data: PostData) => void;
   initialContent?: string;
   postId?: string;
   onCancel?: () => void;
@@ -69,6 +75,17 @@ const CreatePost = ({
     if (!uploadMedia) return;
     
     const files = Array.from(e.target.files || []);
+    
+    // Check for video files exceeding 1MB limit
+    const invalidFiles = files.filter(file => 
+      file.type.startsWith('video/') && file.size > 1024 * 1024
+    );
+    
+    if (invalidFiles.length > 0) {
+      toast.error('Videos must be less than 1MB in size');
+      return;
+    }
+    
     const newFiles = [...mediaFiles, ...files].slice(0, 4);
     
     setMediaFiles(newFiles);
@@ -225,7 +242,7 @@ const CreatePost = ({
       setIsSubmitting(true);
       
       // Prepare the post data
-      let postData: any = {
+      let postData: PostData = {
         content: content.trim(),
       };
       
@@ -250,7 +267,15 @@ const CreatePost = ({
         await submitHandler(postData);
       } else {
         // Execute the default API call with error handling
-        const { data, success } = await executeCreatePost(postData);
+        const apiPostData: CreatePostRequest = {
+          content: postData.content,
+          whoCanComment: postData.whoCanComment ?? 1,
+          privacy: postData.privacy ?? 1,
+          image: postData.image,
+          document: postData.document
+        };
+        
+        const { data, success } = await executeCreatePost(apiPostData);
         
         if (success && data) {
           // Show success message

@@ -26,6 +26,7 @@ export interface StoryProps {
     user: string;
     userId: string;
     avatar: string;
+    profilePic?: string;
     isLive: boolean;
     hasStory: boolean;
     stories: Array<{
@@ -45,7 +46,7 @@ export interface StoryProps {
     liveRingColor?: string;
     defaultRingColor?: string;
     unseenRingColor?: string;
-    allStories?: Array<any>; // All stories from the homepage
+    allStories?: StoryUser[]; // All stories from the homepage
     storyIndex?: number; // Index of this story in the allStories array
     usernameLengthLimit?: number; // Maximum length for username display
   }
