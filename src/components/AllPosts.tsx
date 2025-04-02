@@ -71,8 +71,6 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts, userId }) => {
         const feedId = `${postId}:${creationDate}`;
         const postWithUserId = { ...post, userId };
 
-        console.log("First Media ", firstMedia.type);
-
         return (
           <div
             key={postId.toString()}
