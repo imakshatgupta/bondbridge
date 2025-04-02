@@ -184,7 +184,7 @@ const Layout: React.FC<LayoutProps> = ({
 
                     <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
                       <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground text-center">
-                        People
+                        Suggested Friends
                       </h3>
                       {isLoadingSuggested ? (
                         <SidebarPeopleSkeleton />

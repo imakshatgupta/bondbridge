@@ -199,7 +199,7 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
 export default function BondChat() {
   const [messages, setMessages] = useState<ExtendedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [voiceType, setVoiceType] = useState<"male" | "female">("male"); // Default voice type is male
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);

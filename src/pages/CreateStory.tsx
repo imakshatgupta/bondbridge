@@ -1,16 +1,25 @@
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '../components/ui/button';
-import { Type, Image, Video, Palette, Smile, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
-import EmojiPicker from 'emoji-picker-react';
-import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { useNavigate } from 'react-router-dom';
-import { uploadStory } from '../apis/commonApiCalls/storyApi';
-import { useApiCall } from '../apis/globalCatchError';
-import { Story, StoryData } from '../apis/apiTypes/request';
-import { useAppSelector } from '../store';
-import { WORD_LIMIT } from '@/lib/constants';
-import { countCharacters, exceededCharLimit } from '@/lib/utils';
-import { toast } from 'sonner';
+import { useState, useRef, useEffect } from "react";
+import { Button } from "../components/ui/button";
+import {
+  Type,
+  Image,
+  Video,
+  Palette,
+  Smile,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+} from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { useNavigate } from "react-router-dom";
+import { uploadStory } from "../apis/commonApiCalls/storyApi";
+import { useApiCall } from "../apis/globalCatchError";
+import { Story, StoryData } from "../apis/apiTypes/request";
+import { useAppSelector } from "../store";
+import { WORD_LIMIT } from "@/lib/constants";
+import { countCharacters, exceededCharLimit } from "@/lib/utils";
+import { toast } from "sonner";
 
 type StoryTheme = {
   name: string;
@@ -20,28 +29,28 @@ type StoryTheme = {
 };
 const storyThemes: StoryTheme[] = [
   {
-    name: 'Purple',
-    bgColor: '#4A148C', // Deep purple
-    textColor: '#FFFFFF', // White
-    thumbnailColor: '#6A1B9A'
+    name: "Purple",
+    bgColor: "#4A148C", // Deep purple
+    textColor: "#FFFFFF", // White
+    thumbnailColor: "#6A1B9A",
   },
   {
-    name: 'Blue', 
-    bgColor: '#1A237E', // Dark blue
-    textColor: '#FFFFFF', // White
-    thumbnailColor: '#283593'
+    name: "Blue",
+    bgColor: "#1A237E", // Dark blue
+    textColor: "#FFFFFF", // White
+    thumbnailColor: "#283593",
   },
   {
-    name: 'Orange',
-    bgColor: '#E65100', // Deep orange
-    textColor: '#FFFFFF', // White text for contrast
-    thumbnailColor: '#F57C00'
+    name: "Orange",
+    bgColor: "#E65100", // Deep orange
+    textColor: "#FFFFFF", // White text for contrast
+    thumbnailColor: "#F57C00",
   },
   {
-    name: 'Green',
-    bgColor: '#1B5E20', // Dark green
-    textColor: '#FFFFFF', // White text for contrast
-    thumbnailColor: '#2E7D32' // Slightly lighter dark green for thumbnail
+    name: "Green",
+    bgColor: "#1B5E20", // Dark green
+    textColor: "#FFFFFF", // White text for contrast
+    thumbnailColor: "#2E7D32", // Slightly lighter dark green for thumbnail
   },
   // {
   //   name: 'Yellow',
@@ -50,10 +59,10 @@ const storyThemes: StoryTheme[] = [
   //   thumbnailColor: '#FFE44D' // Slightly darker bright yellow
   // },
   {
-    name: 'Grey',
-    bgColor: '#424242', // Dark grey
-    textColor: '#FFFFFF', // White text for contrast
-    thumbnailColor: '#616161' // Slightly lighter grey for thumbnail
+    name: "Grey",
+    bgColor: "#424242", // Dark grey
+    textColor: "#FFFFFF", // White text for contrast
+    thumbnailColor: "#616161", // Slightly lighter grey for thumbnail
   },
   // {
   //   name: 'Cream',
@@ -65,57 +74,67 @@ const storyThemes: StoryTheme[] = [
 
 const CreateStory = () => {
   const { avatar, username } = useAppSelector((state) => state.currentUser);
-  const [stories, setStories] = useState<Story[]>([{ 
-    type: 'text', 
-    content: '', 
-    theme: {
-      bgColor: storyThemes[0].bgColor,
-      textColor: storyThemes[0].textColor
+  const [stories, setStories] = useState<Story[]>([
+    {
+      type: "text",
+      content: "",
+      theme: {
+        bgColor: storyThemes[0].bgColor,
+        textColor: storyThemes[0].textColor,
+      },
+      privacy: 1,
     },
-    privacy: 1 
-  }]);
+  ]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  
+
   const [executeUploadStory, isUploading] = useApiCall(uploadStory);
 
   const handleTextChange = (newText: string) => {
-    setStories(prev => prev.map((story, idx) => 
-      idx === currentPage ? { ...story, content: newText } : story
-    ));
+    setStories((prev) =>
+      prev.map((story, idx) =>
+        idx === currentPage ? { ...story, content: newText } : story
+      )
+    );
   };
 
   const handleClear = () => {
-    setStories(prev => prev.map((story, idx) => {
-      if (idx === currentPage) {
-        // Create default empty content based on story type
-        let emptyContent: string | File | Blob = '';
-        
-        if (story.type === 'text') {
-          emptyContent = '';
-        } 
-        // For other types, keep the type but reset content properties
-        return {
-          ...story,
-          content: emptyContent,
-          previewUrl: undefined
-        };
-      }
-      return story;
-    }));
+    setStories((prev) =>
+      prev.map((story, idx) => {
+        if (idx === currentPage) {
+          // Create default empty content based on story type
+          let emptyContent: string | File | Blob = "";
+
+          if (story.type === "text") {
+            emptyContent = "";
+          }
+          // For other types, keep the type but reset content properties
+          return {
+            ...story,
+            content: emptyContent,
+            previewUrl: undefined,
+          };
+        }
+        return story;
+      })
+    );
   };
 
   const handleThemeChange = (theme: StoryTheme) => {
-    setStories(prev => prev.map((story, idx) => 
-      idx === currentPage ? { 
-        ...story, 
-        theme: {
-          bgColor: theme.bgColor,
-          textColor: theme.textColor
-        }
-      } : story
-    ));
+    setStories((prev) =>
+      prev.map((story, idx) =>
+        idx === currentPage
+          ? {
+              ...story,
+              theme: {
+                bgColor: theme.bgColor,
+                textColor: theme.textColor,
+              },
+            }
+          : story
+      )
+    );
   };
 
   // not showing add page and delete page buttons for now as multiple stories not working
@@ -139,14 +158,18 @@ const CreateStory = () => {
   // Use these values from stories state
   const currentStory = stories[currentPage];
   const currentTheme = currentStory.theme;
-  const currentContentText = typeof currentStory.content === 'string' ? currentStory.content : '';
-  const currentPreviewUrl = currentStory.previewUrl || '';
+  const currentContentText =
+    typeof currentStory.content === "string" ? currentStory.content : "";
+  const currentPreviewUrl = currentStory.previewUrl || "";
 
-  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'video') => {
+  const handleMediaUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "photo" | "video"
+  ) => {
     const file = e.target.files?.[0];
     if (file) {
       const newStories = [...stories];
-      
+
       const reader = new FileReader();
       reader.onloadend = () => {
         if (reader.result) {
@@ -155,7 +178,7 @@ const CreateStory = () => {
             content: file,
             theme: currentTheme,
             privacy: 1,
-            previewUrl: reader.result as string
+            previewUrl: reader.result as string,
           };
           setStories(newStories);
         }
@@ -163,43 +186,46 @@ const CreateStory = () => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   const navigate = useNavigate();
   const handleCancel = () => {
-    navigate('/');
+    navigate("/");
   };
 
   // New utility function to render text to canvas and return as image
-  const renderTextToImage = (text: string, theme: { bgColor: string; textColor: string }): Promise<Blob> => {
+  const renderTextToImage = (
+    text: string,
+    theme: { bgColor: string; textColor: string }
+  ): Promise<Blob> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = 400;
       canvas.height = 600;
-      const ctx = canvas.getContext('2d');
-      
+      const ctx = canvas.getContext("2d");
+
       if (!ctx) {
-        throw new Error('Could not get canvas context');
+        throw new Error("Could not get canvas context");
       }
-      
+
       // Fill background with the theme color
       ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Set text properties
       ctx.fillStyle = theme.textColor;
-      ctx.textAlign = 'center';
-      ctx.font = '24px sans-serif';
-      
+      ctx.textAlign = "center";
+      ctx.font = "24px sans-serif";
+
       // Word wrap text
-      const words = text.split(' ');
+      const words = text.split(" ");
       const lines = [];
-      let currentLine = '';
+      let currentLine = "";
       const maxWidth = canvas.width - 40; // Padding on both sides
-      
+
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const metrics = ctx.measureText(testLine);
-        
+
         if (metrics.width > maxWidth && currentLine) {
           lines.push(currentLine);
           currentLine = word;
@@ -207,60 +233,63 @@ const CreateStory = () => {
           currentLine = testLine;
         }
       }
-      
+
       if (currentLine) {
         lines.push(currentLine);
       }
-      
+
       // Draw text
       const lineHeight = 30;
-      const startY = (canvas.height - (lines.length * lineHeight)) / 2;
-      
+      const startY = (canvas.height - lines.length * lineHeight) / 2;
+
       lines.forEach((line, index) => {
-        ctx.fillText(line, canvas.width / 2, startY + (index * lineHeight));
+        ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
       });
-      
+
       // Convert canvas to blob
       canvas.toBlob((blob) => {
         if (blob) {
           resolve(blob);
         } else {
           // Fallback if toBlob fails
-          canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
-          fetch(canvas.toDataURL('image/png'))
-            .then(res => res.blob())
+          canvas.toDataURL("image/png").replace(/^data:image\/png;base64,/, "");
+          fetch(canvas.toDataURL("image/png"))
+            .then((res) => res.blob())
             .then(resolve);
         }
-      }, 'image/png');
+      }, "image/png");
     });
   };
 
   // Utility function to process image with theme
-  const renderImageWithTheme = (file: File, theme: { bgColor: string; textColor: string }): Promise<Blob> => {
+  const renderImageWithTheme = (
+    file: File,
+    theme: { bgColor: string; textColor: string }
+  ): Promise<Blob> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
       if (!ctx) {
-        throw new Error('Could not get canvas context');
+        throw new Error("Could not get canvas context");
       }
-      
+
       // Set canvas dimensions (10:16 aspect ratio)
       canvas.width = 400;
       canvas.height = 640;
-      
+
       // Fill background with theme color
       ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Create image element and load file
-      const img = document.createElement('img');
+      const img = document.createElement("img");
       const reader = new FileReader();
-      
+
       reader.onload = () => {
         img.src = reader.result as string;
       };
-      
+
       img.onload = () => {
         // Calculate dimensions to maintain aspect ratio
         const scale = Math.min(
@@ -269,62 +298,59 @@ const CreateStory = () => {
         );
         const x = (canvas.width - img.width * scale) / 2;
         const y = (canvas.height - img.height * scale) / 2;
-        
+
         // Draw image maintaining aspect ratio
-        ctx.drawImage(
-          img,
-          x,
-          y,
-          img.width * scale,
-          img.height * scale
-        );
-        
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+
         // Convert canvas to blob
         canvas.toBlob((blob) => {
           if (blob) {
             resolve(blob);
           } else {
             // Fallback if toBlob fails
-            fetch(canvas.toDataURL('image/png'))
-              .then(res => res.blob())
+            fetch(canvas.toDataURL("image/png"))
+              .then((res) => res.blob())
               .then(resolve);
           }
-        }, 'image/png');
+        }, "image/png");
       };
-      
+
       reader.readAsDataURL(file);
     });
   };
 
   // Utility function to process video and create thumbnail
-  const renderVideoWithTheme = (file: File, theme: { bgColor: string; textColor: string }): Promise<{ 
+  const renderVideoWithTheme = (
+    file: File,
+    theme: { bgColor: string; textColor: string }
+  ): Promise<{
     thumbnail: Blob;
     video: File;
   }> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const videoElement = document.createElement('video');
-      
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const videoElement = document.createElement("video");
+
       if (!ctx) {
-        throw new Error('Could not get canvas context');
+        throw new Error("Could not get canvas context");
       }
-      
+
       // Set canvas dimensions (10:16 aspect ratio)
       canvas.width = 400;
       canvas.height = 640;
-      
+
       // Fill background with theme color
       ctx.fillStyle = theme.bgColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Load video and capture first frame
       videoElement.src = URL.createObjectURL(file);
-      
+
       videoElement.onloadeddata = () => {
         videoElement.currentTime = 0;
       };
-      
+
       videoElement.onseeked = () => {
         // Calculate video dimensions to maintain aspect ratio
         const scale = Math.min(
@@ -333,7 +359,7 @@ const CreateStory = () => {
         );
         const x = (canvas.width - videoElement.videoWidth * scale) / 2;
         const y = (canvas.height - videoElement.videoHeight * scale) / 2;
-        
+
         // Draw video frame
         ctx.drawImage(
           videoElement,
@@ -342,32 +368,34 @@ const CreateStory = () => {
           videoElement.videoWidth * scale,
           videoElement.videoHeight * scale
         );
-        
+
         // Convert canvas to blob for thumbnail
         canvas.toBlob((blob) => {
           if (blob) {
             resolve({
               thumbnail: blob,
-              video: file
+              video: file,
             });
           } else {
             // Fallback if toBlob fails
-            fetch(canvas.toDataURL('image/png'))
-              .then(res => res.blob())
-              .then(blob => resolve({
-                thumbnail: blob,
-                video: file
-              }));
+            fetch(canvas.toDataURL("image/png"))
+              .then((res) => res.blob())
+              .then((blob) =>
+                resolve({
+                  thumbnail: blob,
+                  video: file,
+                })
+              );
           }
-        }, 'image/png');
+        }, "image/png");
       };
     });
   };
 
   const handleCreateStory = async () => {
     // Validate stories content exists
-    const emptyStory = stories.find(story => {
-      if (typeof story.content === 'string') {
+    const emptyStory = stories.find((story) => {
+      if (typeof story.content === "string") {
         return !story.content.trim();
       }
       if (story.content instanceof File || story.content instanceof Blob) {
@@ -375,93 +403,121 @@ const CreateStory = () => {
       }
       return false;
     });
-    
+
     if (emptyStory) {
-      toast.error('Please add content to your story');
+      toast.error("Please add content to your story");
       return;
     }
-    
+
     // Validate character count for text stories
-    const textStoryExceedingLimit = stories.find(story => 
-      story.type === 'text' && 
-      typeof story.content === 'string' && 
-      exceededCharLimit(story.content, WORD_LIMIT)
+    const textStoryExceedingLimit = stories.find(
+      (story) =>
+        story.type === "text" &&
+        typeof story.content === "string" &&
+        exceededCharLimit(story.content, WORD_LIMIT)
     );
-    
+
     if (textStoryExceedingLimit) {
-      toast.error(`Your story exceeds the ${WORD_LIMIT} character limit. Please shorten your text.`);
+      toast.error(
+        `Your story exceeds the ${WORD_LIMIT} character limit. Please shorten your text.`
+      );
       return;
     }
-    
+
     // Process all stories and store rendered images
     const processedStories = await Promise.all(
       stories.map(async (story) => {
         try {
-          if (story.type === 'text' && typeof story.content === 'string') {
-            const imageBlob = await renderTextToImage(story.content, story.theme);
-            const filename = `story-text-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
-            const imageFile = new File([imageBlob], filename, { type: 'image/png' });
-            
+          if (story.type === "text" && typeof story.content === "string") {
+            const imageBlob = await renderTextToImage(
+              story.content,
+              story.theme
+            );
+            const filename = `story-text-${Date.now()}-${Math.random()
+              .toString(36)
+              .substr(2, 9)}.png`;
+            const imageFile = new File([imageBlob], filename, {
+              type: "image/png",
+            });
+
             return {
               ...story,
-              type: 'photo',
+              type: "photo",
               content: imageFile,
               originalText: story.content,
             };
-          } 
-          else if (story.type === 'photo' && story.content instanceof File) {
-            const processedBlob = await renderImageWithTheme(story.content, story.theme);
-            const filename = `story-photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`;
-            const processedFile = new File([processedBlob], filename, { type: 'image/png' });
-            
+          } else if (story.type === "photo" && story.content instanceof File) {
+            const processedBlob = await renderImageWithTheme(
+              story.content,
+              story.theme
+            );
+            const filename = `story-photo-${Date.now()}-${Math.random()
+              .toString(36)
+              .substr(2, 9)}.png`;
+            const processedFile = new File([processedBlob], filename, {
+              type: "image/png",
+            });
+
             return {
               ...story,
               content: processedFile,
               originalImage: story.content,
             };
-          }
-          else if (story.type === 'video' && story.content instanceof File) {
-            const { thumbnail, video } = await renderVideoWithTheme(story.content, story.theme);
-            const thumbnailFile = new File(
-              [thumbnail], 
-              `thumbnail-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`, 
-              { type: 'image/png' }
+          } else if (story.type === "video" && story.content instanceof File) {
+            const { thumbnail, video } = await renderVideoWithTheme(
+              story.content,
+              story.theme
             );
-            
+            const thumbnailFile = new File(
+              [thumbnail],
+              `thumbnail-${Date.now()}-${Math.random()
+                .toString(36)
+                .substr(2, 9)}.png`,
+              { type: "image/png" }
+            );
+
             return {
               ...story,
               content: video,
               thumbnail: thumbnailFile,
             };
           }
-          
+
           return story;
         } catch (error) {
-          console.error('Error processing story:', error);
+          console.error("Error processing story:", error);
           return story;
         }
       })
     );
-    
+
     // Ensure all stories have a privacy value
-    const storiesWithPrivacy = processedStories.map(story => ({
+    const storiesWithPrivacy = processedStories.map((story) => ({
       ...story,
-      privacy: story.privacy || 1
+      privacy: story.privacy || 1,
     }));
-    
+
     // Call the API using the useApiCall hook
     const result = await executeUploadStory(storiesWithPrivacy as StoryData[]);
-    
+
     if (result.success && result.data) {
-      navigate('/');
+      navigate("/");
     }
   };
 
   const handleSetTextType = () => {
     // Set the current story type to text
-    setStories(prev => prev.map((story, idx) => 
-      idx === currentPage ? { ...story, type: 'text', content: typeof story.content === 'string' ? story.content : '' } : story
-    ));
+    setStories((prev) =>
+      prev.map((story, idx) =>
+        idx === currentPage
+          ? {
+              ...story,
+              type: "text",
+              content: typeof story.content === "string" ? story.content : "",
+            }
+          : story
+      )
+    );
   };
 
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -470,8 +526,8 @@ const CreateStory = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        showEmojiPicker && 
-        emojiPickerRef.current && 
+        showEmojiPicker &&
+        emojiPickerRef.current &&
         emojiButtonRef.current &&
         !emojiPickerRef.current.contains(event.target as Node) &&
         !emojiButtonRef.current.contains(event.target as Node)
@@ -481,11 +537,11 @@ const CreateStory = () => {
     };
 
     // Use mousedown instead of click to handle the event before the emoji picker's click event
-    document.addEventListener('mousedown', handleClickOutside);
-    
+    document.addEventListener("mousedown", handleClickOutside);
+
     // Cleanup function to remove event listener
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showEmojiPicker]);
 
@@ -495,14 +551,16 @@ const CreateStory = () => {
       <div className="flex items-center justify-between p-4">
         <Avatar className="h-8 w-8">
           <AvatarImage src={avatar} alt="Profile" />
-          <AvatarFallback>{username ? username.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+          <AvatarFallback>
+            {username ? username.charAt(0).toUpperCase() : "U"}
+          </AvatarFallback>
         </Avatar>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            className="text-muted-foreground hover:text-foreground cursor-pointer border border-primary"
             onClick={handleCancel}
           >
             Cancel
@@ -517,9 +575,7 @@ const CreateStory = () => {
           </Button>
         </div>
       </div>
-
       <div className="h-px bg-border" /> {/* Separator */}
-
       <div className="flex h-[calc(100vh-145px)]">
         {/* Left Sidebar Tools */}
         <div className="w-16 flex flex-col gap-8 p-4 pt-16">
@@ -541,7 +597,7 @@ const CreateStory = () => {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => handleMediaUpload(e, 'photo')}
+                onChange={(e) => handleMediaUpload(e, "photo")}
               />
               <Image className="w-5 h-5 text-foreground" />
             </label>
@@ -554,7 +610,7 @@ const CreateStory = () => {
                 type="file"
                 accept="video/*"
                 className="hidden"
-                onChange={(e) => handleMediaUpload(e, 'video')}
+                onChange={(e) => handleMediaUpload(e, "video")}
               />
               <Video className="w-5 h-5 text-foreground" />
             </label>
@@ -596,7 +652,10 @@ const CreateStory = () => {
             </Button>
             <span className="text-xs">Emoji</span>
             {showEmojiPicker && (
-              <div ref={emojiPickerRef} className="absolute left-20 top-1/2 -translate-y-1/2 z-96">
+              <div
+                ref={emojiPickerRef}
+                className="absolute left-20 top-1/2 -translate-y-1/2 z-96"
+              >
                 <EmojiPicker
                   onEmojiClick={(emojiObject) => {
                     handleTextChange(currentContentText + emojiObject.emoji);
@@ -623,11 +682,27 @@ const CreateStory = () => {
 
         {/* Story Content Area */}
         <div className="flex-1 p-4 relative z-50">
+          <div className="flex justify-center  absolute -bottom-1.5 left-1/2 -translate-x-1/2">
+            <span
+              className="text-xs"
+              style={{
+                color: exceededCharLimit(currentContentText, WORD_LIMIT)
+                  ? "hsl(var(--destructive))"
+                  : currentTheme.textColor,
+              }}
+            >
+              {countCharacters(currentContentText)}/{WORD_LIMIT} characters
+            </span>
+          </div>
           <div
             className={`max-w-xs mx-auto rounded-lg h-full relative`}
             style={{ backgroundColor: currentTheme.bgColor }}
           >
-            {currentTheme.bgColor.startsWith('bg-') && <div className={`absolute inset-0 ${currentTheme.bgColor} rounded-lg`}></div>}
+            {currentTheme.bgColor.startsWith("bg-") && (
+              <div
+                className={`absolute inset-0 ${currentTheme.bgColor} rounded-lg`}
+              ></div>
+            )}
 
             {/* Delete and Add Page Buttons
             {stories.length > 1 && (
@@ -668,53 +743,42 @@ const CreateStory = () => {
 
             {/* Story Content - Incorporating improved media handling from first file */}
             <div className="h-full w-full flex items-center justify-center relative z-10">
-              {currentStory.type === 'text' && (
+              {currentStory.type === "text" && (
                 <div className="w-full px-4">
                   <textarea
                     value={currentContentText}
                     onChange={(e) => {
                       handleTextChange(e.target.value);
                     }}
+                    // maxLength={150}
                     placeholder="What's on your mind..."
                     className="w-full bg-transparent resize-none outline-none text-center"
                     style={{ color: currentTheme.textColor }}
                     rows={5}
                     autoFocus
                   />
-                  <div className="flex justify-center mt-1">
-                    <span 
-                      className="text-xs"
-                      style={{ 
-                        color: exceededCharLimit(currentContentText, WORD_LIMIT) 
-                          ? 'hsl(var(--destructive))' 
-                          : currentTheme.textColor 
-                      }}
-                    >
-                      {countCharacters(currentContentText)}/{WORD_LIMIT} characters
-                    </span>
-                  </div>
                 </div>
               )}
-              
+
               {/* Improved image handling from first file */}
-              {currentStory.type === 'photo' && (
+              {currentStory.type === "photo" && (
                 <div className="w-full h-full px-4 py-18 overflow-y-auto flex items-center justify-center">
                   <img
                     src={currentPreviewUrl}
                     alt="Story"
                     className="max-w-full object-contain"
-                    style={{ maxHeight: 'calc(100% - 40px)' }} // Subtract space for buttons
+                    style={{ maxHeight: "calc(100% - 40px)" }} // Subtract space for buttons
                   />
                 </div>
               )}
-              
+
               {/* Improved video handling from first file */}
-              {currentStory.type === 'video' && (
+              {currentStory.type === "video" && (
                 <div className="w-full h-full px-4 py-18 overflow-y-auto flex items-center justify-center">
                   <video
                     src={currentPreviewUrl}
                     className="max-w-full object-contain"
-                    style={{ maxHeight: 'calc(100% - 40px)' }} // Subtract space for buttons
+                    style={{ maxHeight: "calc(100% - 40px)" }} // Subtract space for buttons
                     controls
                   />
                 </div>
@@ -723,13 +787,17 @@ const CreateStory = () => {
               {/* Show color picker only for text type */}
               {showColorPicker && (
                 <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-background/50 rounded-full animate-in fade-in duration-200">
-                  {storyThemes.map(theme => (
+                  {storyThemes.map((theme) => (
                     <button
                       key={theme.name}
-                      className={`w-6 h-6 rounded-full ${currentTheme.bgColor === theme.bgColor ? 'ring-2 ring-foreground' : ''}`}
-                      style={{ 
+                      className={`w-6 h-6 rounded-full ${
+                        currentTheme.bgColor === theme.bgColor
+                          ? "ring-2 ring-foreground"
+                          : ""
+                      }`}
+                      style={{
                         backgroundColor: theme.bgColor,
-                        border: `1px solid ${theme.textColor}`
+                        border: `1px solid ${theme.textColor}`,
                       }}
                       onClick={() => {
                         handleThemeChange(theme);
@@ -739,7 +807,7 @@ const CreateStory = () => {
                   ))}
                 </div>
               )}
-              
+
               {/* Navigation Arrows - Keeping EXACTLY as in the second file */}
               {currentPage > 0 && (
                 <button

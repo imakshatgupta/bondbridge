@@ -271,11 +271,11 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
 
         
 
-        <div className="flex items-center gap-6 ml-auto">
+        <div className="flex items-center gap-3 ml-auto">
           <Button
             variant="ghost"
             size="sm"
-            className="text-[var(--muted-foreground)] px-8 border cursor-pointer"
+            className="text-[var(--muted-foreground)] border cursor-pointer border-primary"
             onClick={() => navigate('/')}
             disabled={isSubmitting || isCreatingPost}
           >
