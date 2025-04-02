@@ -265,7 +265,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
       <div className="flex items-start gap-3 pb-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={profilePic || "/activity/cat.png"} alt={nickname || "Profile"} />
+          <AvatarImage src={profilePic || avatar} alt={nickname || "Profile"} />
           <AvatarFallback>{nickname ? nickname[0].toUpperCase() : "U"}</AvatarFallback>
         </Avatar>
 

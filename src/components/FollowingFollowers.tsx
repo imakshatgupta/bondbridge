@@ -89,7 +89,7 @@ const FollowingFollowers = () => {
                 onClick={() => handleUserClick(user._id)}
               >
                 <Avatar className="h-12 w-12 border-2 border-border/50">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.profilePic || user.avatar} alt={user.name} />
                   <AvatarFallback className="bg-primary/5 text-primary font-medium">
                     {user.name[0]}
                   </AvatarFallback>
@@ -149,7 +149,7 @@ const FollowingFollowers = () => {
                 onClick={() => handleUserClick(user._id)}
               >
                 <Avatar className="h-12 w-12 border-2 border-border/50">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.profilePic || user.avatar} alt={user.name} />
                   <AvatarFallback className="bg-primary/5 text-primary font-medium">
                     {user.name[0]}
                   </AvatarFallback>

@@ -33,7 +33,7 @@ export default function HomePage() {
   // Use our custom hook for API calls
   const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
   const [executeGetSelfStories, isLoadingSelfStories] = useApiCall(getSelfStories);
-  const [executeProfileFetch, isLoadingProfile] = useApiCall(fetchUserProfile);
+  const [executeProfileFetch,] = useApiCall(fetchUserProfile);
 
   // Get current user ID from localStorage
   useEffect(() => {
