@@ -8,6 +8,7 @@ import {
   Smile,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
@@ -17,7 +18,7 @@ import { useApiCall } from "../apis/globalCatchError";
 import { Story, StoryData } from "../apis/apiTypes/request";
 import { useAppSelector } from "../store";
 import { WORD_LIMIT } from "@/lib/constants";
-import { countWords } from "@/lib/utils";
+import { countCharacters, exceededCharLimit } from "@/lib/utils";
 import { toast } from "sonner";
 
 type StoryTheme = {
@@ -97,16 +98,20 @@ const CreateStory = () => {
   const handleTextChange = (newText: string) => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
-
-      // First update the textarea with the new text
+      
+      // Temporarily update value to check if it would cause overflow
       textarea.value = newText;
-
-      // If there's any vertical overflow, revert to previous text
-      if (textarea.scrollHeight > textarea.clientHeight) {
+      
+      // If adding this text would exceed 5 lines (5 × line height)
+      const lineHeight = 24; // Line height as set in the textarea style
+      const maxHeight = lineHeight * 5;
+      
+      if (textarea.scrollHeight > maxHeight) {
+        // Revert to previous text
         textarea.value = currentContentText;
         return;
       }
-
+      
       // If no overflow, update the state
       setStories((prev) =>
         prev.map((story, idx) =>
@@ -114,6 +119,28 @@ const CreateStory = () => {
         )
       );
     }
+  };
+
+  const handleClear = () => {
+    setStories((prev) =>
+      prev.map((story, idx) => {
+        if (idx === currentPage) {
+          // Create default empty content based on story type
+          let emptyContent: string | File | Blob = "";
+
+          if (story.type === "text") {
+            emptyContent = "";
+          }
+          // For other types, keep the type but reset content properties
+          return {
+            ...story,
+            content: emptyContent,
+            previewUrl: undefined,
+          };
+        }
+        return story;
+      })
+    );
   };
 
   const handleThemeChange = (theme: StoryTheme) => {
@@ -404,12 +431,12 @@ const CreateStory = () => {
       return;
     }
 
-    // Validate word count for text stories
+    // Validate character count for text stories
     const textStoryExceedingLimit = stories.find(
       (story) =>
         story.type === "text" &&
         typeof story.content === "string" &&
-        countWords(story.content) > WORD_LIMIT
+        exceededCharLimit(story.content, WORD_LIMIT)
     );
 
     if (textStoryExceedingLimit) {
@@ -662,20 +689,31 @@ const CreateStory = () => {
               </div>
             )}
           </div>
+          <div className="flex flex-col items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-foreground h-auto p-2 cursor-pointer"
+              onClick={handleClear}
+            >
+              <Trash2 className="w-5 h-5" />
+            </Button>
+            <span className="text-xs">Clear</span>
+          </div>
         </div>
 
         {/* Story Content Area */}
         <div className="flex-1 p-4 relative z-50">
           <div className="flex justify-center  absolute -bottom-1.5 left-1/2 -translate-x-1/2">
             <span
-              className={`text-xs ${
-                currentContentText.length > 150
-                  ? "text-destructive"
-                  : "text-muted-foreground"
-              }`}
-              style={{ color: currentTheme.textColor }}
+              className="text-xs"
+              style={{
+                color: exceededCharLimit(currentContentText, WORD_LIMIT)
+                  ? "hsl(var(--destructive))"
+                  : currentTheme.textColor,
+              }}
             >
-              {currentContentText.length}/150 chars
+              {countCharacters(currentContentText)}/{WORD_LIMIT} characters
             </span>
           </div>
           <div
@@ -732,8 +770,10 @@ const CreateStory = () => {
                   <textarea
                     ref={textareaRef}
                     value={currentContentText}
-                    onChange={(e) => handleTextChange(e.target.value)}
-                    maxLength={150}
+                    onChange={(e) => {
+                      handleTextChange(e.target.value);
+                    }}
+                    // maxLength={150}
                     placeholder="What's on your mind..."
                     className="w-full bg-transparent resize-none outline-none text-center overflow-hidden"
                     style={{

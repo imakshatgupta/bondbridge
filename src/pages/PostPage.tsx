@@ -18,6 +18,7 @@ import {
 } from "@/apis/apiTypes/response";
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/store";
+import LogoLoader from "@/components/LogoLoader";
 
 export default function CommentsPage() {
   const navigate = useNavigate();
@@ -102,14 +103,18 @@ export default function CommentsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [, setPendingComment] = useState<string | null>(null);
-
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  
   // Get current user from Redux store
   const currentUser = useAppSelector((state) => state.currentUser);
 
   // Use our custom hook for API calls
-  const [executeFetchComments, isLoading] = useApiCall(fetchComments);
+  const [executeFetchComments, isLoadingComments] = useApiCall(fetchComments);
   const [executePostComment, isPosting] = useApiCall(postComment);
   const [executeGetPostDetails, isLoadingPost] = useApiCall(getPostDetails);
+  
+  // Combined loading state for the entire page
+  const pageLoading = (isLoadingPost || (isLoadingComments && !initialDataLoaded));
 
   // Get current user ID from localStorage
   useEffect(() => {
@@ -207,6 +212,9 @@ export default function CommentsPage() {
       } else {
         setError(result.data?.message || "Failed to load comments");
       }
+      
+      // Mark initial data as loaded
+      setInitialDataLoaded(true);
     };
 
     loadCommentsData();
@@ -214,8 +222,8 @@ export default function CommentsPage() {
 
   // Function to load more comments
   const loadMoreComments = async () => {
-    if (isLoading || !hasMore || !postId) return;
-
+    if (isLoadingPost || !hasMore || !postId) return;
+    
     const nextPage = page + 1;
     const result = await executeFetchComments({
       feedId: postId,
@@ -240,7 +248,7 @@ export default function CommentsPage() {
 
   // Use infinite scroll hook
   const lastCommentRef = useInfiniteScroll({
-    isLoading,
+    isLoading: isLoadingPost,
     hasMore,
     onLoadMore: loadMoreComments,
   });
@@ -375,135 +383,116 @@ export default function CommentsPage() {
 
   return (
     <div className="relative max-w-2xl mx-auto bg-background min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-          className="mr-2 cursor-pointer"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-lg font-semibold">Comments</h1>
-      </div>
+      {/* Show LogoLoader while page is loading */}
+      {pageLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <LogoLoader size="md" />
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate(-1)}
+              className="mr-2 cursor-pointer"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-semibold">Comments</h1>
+          </div>
 
-      {/* Content Container */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Post Summary and Comment Input */}
-        <div className="flex-none">
-          {isLoadingPost ? (
-            <div className="p-4 flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          {/* Content Container */}
+          <div className="flex flex-col flex-1 overflow-hidden">
+            {/* Post Summary and Comment Input */}
+            <div className="flex-none">
+              {post && (
+                <Post 
+                  user={post.name}
+                  userId={post.userId}
+                  avatar={post.profilePic}
+                  caption={post.data.content}
+                  media={post.data.media || []}
+                  likes={post.reactionCount}
+                  comments={post.commentCount}
+                  datePosted={post.ago_time}
+                  feedId={post.feedId}
+                  isOwner={currentUserId === post.userId}
+                  onCommentClick={() => {}}
+                  onLikeClick={() => {}}
+                />
+              )}
+
+              {/* Comment Input */}
+              <div className="p-4 border-b flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={currentUser.avatar || avatarImage} alt="Your avatar" />
+                  <AvatarFallback>{currentUser.nickname?.charAt(0) || currentUser.username?.charAt(0) || 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 relative">
+                  <Input
+                    placeholder="Add Your Comment"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="pr-12 rounded-full bg-muted"
+                    disabled={isPosting}
+                  />
+                  <Button 
+                    size="icon" 
+                    variant="ghost"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
+                    onClick={handleSubmitComment}
+                    disabled={!newComment.trim() || isPosting}
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-          ) : (
-            post && (
-              <Post
-                user={post.name}
-                userId={post.userId}
-                avatar={post.profilePic}
-                caption={post.data.content}
-                media={post.data.media || []}
-                likes={post.reactionCount}
-                comments={post.commentCount}
-                datePosted={post.ago_time}
-                feedId={post.feedId}
-                isOwner={currentUserId === post.userId}
-                onCommentClick={() => {}}
-                onLikeClick={() => {}}
-              />
-            )
-          )}
 
-          {/* Comment Input */}
-          <div className="p-4 border-b flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage
-                src={currentUser.avatar || avatarImage}
-                alt="Your avatar"
-              />
-              <AvatarFallback>
-                {currentUser.nickname?.charAt(0) ||
-                  currentUser.username?.charAt(0) ||
-                  "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 relative">
-              <Input
-                placeholder="Add Your Comment"
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="pr-12 rounded-full bg-muted"
-                disabled={isPosting}
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
-                onClick={handleSubmitComment}
-                disabled={!newComment.trim() || isPosting}
-              >
-                {isPosting ? (
-                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                ) : (
-                  <ArrowRight className="h-4 w-4" />
-                )}
-              </Button>
+            {/* Comments List */}
+            <div className="flex-1 overflow-y-auto">
+              {error ? (
+                <div className="p-4 text-center text-destructive">
+                  {error}. <Button variant="link" onClick={() => window.location.reload()}>Try again</Button>
+                </div>
+              ) : commentsData.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  No comments yet. Be the first to comment!
+                </div>
+              ) : (
+                commentsData.map((comment, index) => (
+                  <div
+                    key={`${comment.commentId}-${index}`}
+                    ref={index === commentsData.length - 1 ? lastCommentRef : undefined}
+                  >
+                    <Comment 
+                      comment={{
+                        ...comment,
+                        likes: 0,
+                        hasReplies: false
+                      }}
+                      postId={postId}
+                      currentUserId={localStorage.getItem('userId') || undefined}
+                      postAuthorId={post.userId}
+                      onCommentDeleted={(commentId) => {
+                        setCommentsData(prev => prev.filter(c => c.commentId !== commentId));
+                        setPost(prevPost => ({
+                          ...prevPost,
+                          commentCount: prevPost.commentCount - 1
+                        }));
+                      }}
+                      isPending={comment.commentId.startsWith('temp-')}
+                    />
+                  </div>
+                ))
+              )}
             </div>
           </div>
-        </div>
-
-        {/* Comments List */}
-        <div className="flex-1 overflow-y-auto">
-          {isLoading && commentsData.length === 0 ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : error ? (
-            <div className="p-4 text-center text-destructive">
-              {error}.{" "}
-              <Button variant="link" onClick={() => window.location.reload()}>
-                Try again
-              </Button>
-            </div>
-          ) : commentsData.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              No comments yet. Be the first to comment!
-            </div>
-          ) : (
-            commentsData.map((comment, index) => (
-              <div
-                key={`${comment.commentId}-${index}`}
-                ref={
-                  index === commentsData.length - 1 ? lastCommentRef : undefined
-                }
-              >
-                <Comment
-                  comment={{
-                    ...comment,
-                    likes: 0,
-                    hasReplies: false,
-                  }}
-                  postId={postId}
-                  currentUserId={localStorage.getItem("userId") || undefined}
-                  postAuthorId={post.userId}
-                  onCommentDeleted={(commentId) => {
-                    setCommentsData((prev) =>
-                      prev.filter((c) => c.commentId !== commentId)
-                    );
-                    setPost((prevPost) => ({
-                      ...prevPost,
-                      commentCount: prevPost.commentCount - 1,
-                    }));
-                  }}
-                  isPending={comment.commentId.startsWith("temp-")}
-                />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

@@ -322,14 +322,14 @@ const Login: React.FC = () => {
           <div className="flex justify-center absolute bottom-8 pt-4">
             {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
             <div className="flex justify-center gap-4">
-              <Link to="#" className="h-44">
+              <Link to="#" className="h-36 md:h-44 lg:h-48">
                 <img
                   src="/assets/stores/appstore.svg"
                   alt="Download on App Store"
                   className="h-full"
                 />
               </Link>
-              <Link to="#" className="h-44">
+              <Link to="#" className="h-36 md:h-44 lg:h-48">
                 <img
                   src="/assets/stores/googleplay.svg"
                   alt="Get it on Google Play"
