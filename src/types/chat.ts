@@ -1,6 +1,6 @@
 export interface Message {
   id: number;
-  text: string;
+  text: string | object;
   timestamp: string;
   isUser: boolean;
   avatar: string;
@@ -27,13 +27,13 @@ export interface ChatProps {
   showAvatar?: boolean;
 }
 
-export type ChatType = "dm" | "group" | "bot" | "community";
+export type ChatType = 'dm' | 'group' | 'community';
 
 export interface ChatParticipant {
   userId: string;
   name: string;
   profilePic: string;
-  status: string;
+  status?: 'active' | 'left';
 }
 
 export interface Chat {
@@ -49,4 +49,9 @@ export interface Chat {
     timestamp: string;
   };
   unreadCount?: number;
+}
+
+export interface ChatInputRef {
+  focus: () => void;
+  clear: () => void;
 }

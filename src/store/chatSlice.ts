@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ChatRoom } from "@/apis/apiTypes/response";
+import { isPostShare } from "@/utils/messageUtils";
 
 export interface ChatParticipantInfo {
   userId: string;
@@ -30,7 +31,7 @@ export interface ChatItem {
 
 export interface Message {
   id: string;
-  text: string;
+  text: string | object;
   timestamp: string;
   isUser: boolean;
   senderName?: string;
@@ -150,13 +151,28 @@ const chatSlice = createSlice({
           const lastMessage = chatRoom.lastMessage as LastMessageType;
 
           if (typeof lastMessage === "string") {
-            lastMessageText = lastMessage;
+            // Check if the string message is a post share
+            if (isPostShare(lastMessage)) {
+              lastMessageText = "Shared a post";
+            } else {
+              lastMessageText = lastMessage;
+            }
           } else if (lastMessage) {
             // Handle different possible formats of lastMessage
             if ("text" in lastMessage) {
-              lastMessageText = lastMessage.text;
+              // Check if text property is a post share
+              if (isPostShare(lastMessage.text)) {
+                lastMessageText = "Shared a post";
+              } else {
+                lastMessageText = lastMessage.text;
+              }
             } else if ("content" in lastMessage) {
-              lastMessageText = lastMessage.content;
+              // Check if content property is a post share
+              if (isPostShare(lastMessage.content)) {
+                lastMessageText = "Shared a post";
+              } else {
+                lastMessageText = lastMessage.content;
+              }
             }
           }
 

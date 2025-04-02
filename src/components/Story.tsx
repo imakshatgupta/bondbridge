@@ -15,7 +15,8 @@ export const Story: FC<StoryProps> = ({
   unseenRingColor = 'ring-blue-500',
   allStories = [],
   storyIndex = 0,
-  usernameLengthLimit = 10
+  usernameLengthLimit = 10,
+  profilePic
 }) => {
   const navigate = useNavigate();
 
@@ -29,6 +30,7 @@ export const Story: FC<StoryProps> = ({
           user,
           userId,
           avatar,
+          profilePic,
           isLive,
           hasStory,
           stories,
@@ -64,7 +66,7 @@ export const Story: FC<StoryProps> = ({
             : `ring-2 ${defaultRingColor}`
       }`}>
         <img 
-          src={avatar} 
+          src={profilePic || avatar} 
           alt={user} 
           className="w-full h-full rounded-full object-cover p-[2px] bg-background"
         />

@@ -9,6 +9,14 @@ export function countWords(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
 }
 
+export function countCharacters(text: string): number {
+  return text.length;
+}
+
+export function exceededCharLimit(text: string, limit: number): boolean {
+  return countCharacters(text) > limit;
+}
+
 /**
  * Converts a timestamp to a relative time string (e.g., "2m ago", "3h ago", "5d ago")
  * @param timestamp - ISO string or Date object

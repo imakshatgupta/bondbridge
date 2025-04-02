@@ -297,11 +297,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
               onClick={toggleLiked}
               disabled={isAddingReaction || isDeletingReaction || isCommentPending || !currentUserId || isLoadingReactions}
             >
-              {isAddingReaction || isDeletingReaction || isLoadingReactions ? (
-                <div className="h-4 w-4 mr-1 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              ) : (
-                <Heart className={`h-4 w-4 mr-1 ${liked ? "text-destructive fill-destructive" : ""}`} />
-              )}
+              <Heart className={`h-4 w-4 mr-1 ${liked ? "text-destructive fill-destructive" : ""}`} />
               {formattedLikeCount}
             </Button>
 

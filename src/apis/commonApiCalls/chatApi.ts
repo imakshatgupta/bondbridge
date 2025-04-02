@@ -7,6 +7,21 @@ import {
 } from "../apiTypes/response";
 import { StartMessageRequest } from "../apiTypes/request";
 
+// Define shared post data type
+export interface SharedPostData {
+  _id: string;
+  author: string;
+  data: {
+    content: string;
+    media?: Array<{
+      url: string;
+      type: string;
+    }>;
+  };
+  feedId: string;
+  name: string;
+}
+
 export const getMessages = async (
   request: GetMessagesRequest
 ): Promise<GetMessagesResponse> => {
