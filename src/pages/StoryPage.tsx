@@ -44,7 +44,7 @@ export default function StoryPage() {
                     const formattedStories = passedStories.map((story: any) => ({
                         user: story.name,
                         userId: story.userId,
-                        avatar: story.avatar || story.profilePic,
+                        avatar: story.profilePic || story.avatar,
                         isLive: story.isLive,
                         hasStory: story.hasStory,
                         stories: story.stories,
@@ -114,7 +114,7 @@ export default function StoryPage() {
             const formattedStories = data.stories.map((story: any) => ({
                 user: story.name,
                 userId: story.userId,
-                avatar: story.profilePic,
+                avatar: story.profilePic || story.avatar,
                 isLive: story.isLive,
                 hasStory: story.hasStory,
                 stories: story.stories,

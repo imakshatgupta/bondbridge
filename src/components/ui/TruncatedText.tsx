@@ -25,7 +25,7 @@ export function TruncatedText({
   limit,
   placeholderText = "",
   className = "",
-  buttonClassName = "text-primary text-xs mt-1 cursor-pointer hover:underline",
+  buttonClassName = "text-foreground text-xs mt-1 cursor-pointer hover:underline",
   showToggle = true
 }: TruncatedTextProps) {
   const [showFull, setShowFull] = useState(false);
