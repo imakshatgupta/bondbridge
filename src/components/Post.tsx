@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import ThreeDotsMenu, { 
     ShareMenuItem, 
     ReportMenuItem, 
-    DeleteMenuItem 
+    DeleteMenuItem,
+    EditPostMenuItem
 } from "@/components/global/ThreeDotsMenu";
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -22,7 +23,7 @@ import {
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
-// import { toast } from "sonner";
+import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 
 export function Post({ 
@@ -172,7 +173,7 @@ export function Post({
         const result = await executeDeletePost(feedId);
         
         if (result.success) {
-            // toast.success("Post deleted successfully");
+            toast.success("Post deleted successfully");
             // You might want to add a callback prop to handle post deletion
             // For now, we'll just refresh the page
             if(window.location.pathname === `/post/${feedId}`) {
@@ -180,6 +181,17 @@ export function Post({
             }
             else window.location.reload();
         }
+    };
+
+    const handleEditPost = () => {
+        // Navigate to the edit post page with the post data
+        navigate(`/edit-post/${feedId}`, { 
+            state: { 
+                caption,
+                postId: feedId,
+                media
+            }
+        });
     };
 
     // Prepare menu items based on post ownership
@@ -192,11 +204,17 @@ export function Post({
 
     // Add different items based on whether it's the user's own post
     if (isOwner) {
-        // my post -> share, delete
-        menuItems.push({
-            ...DeleteMenuItem,
-            onClick: handleDeletePost
-        });
+        // my post -> share, edit, delete
+        menuItems.push(
+            {
+                ...EditPostMenuItem,
+                onClick: handleEditPost
+            },
+            {
+                ...DeleteMenuItem,
+                onClick: handleDeletePost
+            }
+        );
     } else {
         // other post -> share, report
         menuItems.push({

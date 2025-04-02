@@ -5,7 +5,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Share2, Flag, Trash, UserX, Settings } from "lucide-react";
+import { MoreHorizontal, Share2, Flag, Trash, UserX, Settings, Pencil } from "lucide-react";
 import { ReactNode } from "react";
 
 export interface MenuItemProps {
@@ -44,6 +44,11 @@ export const DeleteMenuItem: MenuItemProps = {
 export const EditGroupMenuItem: MenuItemProps = {
   icon: <Settings className="w-4 h-4 mr-2" />,
   label: "Edit Group",
+};
+
+export const EditPostMenuItem: MenuItemProps = {
+  icon: <Pencil className="w-4 h-4 mr-2" />,
+  label: "Edit Post",
 };
 
 export default function ThreeDotsMenu({ items }: ThreeDotsMenuProps) {

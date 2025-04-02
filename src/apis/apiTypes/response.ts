@@ -286,6 +286,7 @@ export interface Person {
   name: string;
   bio: string;
   avatar: string;
+  profilePic?: string;
 }
 
 export interface SearchResponse {
@@ -469,6 +470,7 @@ interface FollowingUser {
   _id: string;
   name: string;
   avatar: string;
+  profilePic?: string;
   bio?: string;
   email: string;
   interests: string[];

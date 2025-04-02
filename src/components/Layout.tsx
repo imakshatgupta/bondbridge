@@ -157,7 +157,7 @@ const Layout: React.FC<LayoutProps> = ({
                       <div className="flex flex-col items-center">
                         <Link to={`/profile/${currentUserId}`}>
                           <img
-                            src={currentUser?.avatar || "/profile/avatars/1.png"}
+                            src={currentUser?.profilePic || currentUser?.avatar || "/profile/avatars/1.png"}
                             alt="Profile"
                             className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
                           />

@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings, Loader2 } from "lucide-react";
+import { ArrowLeft, Settings, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThreeDotsMenu, { 
   BlockMenuItem, 
@@ -32,9 +32,9 @@ import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
 import AllCommunities from "@/components/AllCommunities";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
 import { Community } from "@/lib/constants";
-import { ProfilePictureUploadModal } from "@/components/ProfilePictureUploadModal";
 import { TruncatedText } from "@/components/ui/TruncatedText";
 import { TruncatedList } from "@/components/ui/TruncatedList";
+import { setActivePage, setSettingsActive } from "@/store/settingsSlice";
 // import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
 // import type { StoryData } from "@/apis/apiTypes/response";
 
@@ -45,6 +45,7 @@ interface ProfileProps {
   followers: number;
   following: number;
   avatarSrc: string;
+  profilePic?: string;
   isCurrentUser?: boolean;
   isFollowing?: boolean;
   isFollower?: boolean;
@@ -61,6 +62,7 @@ const   Profile: React.FC<ProfileProps> = ({
   followers,
   following,
   avatarSrc,
+  profilePic,
   isCurrentUser: propsIsCurrentUser = false,
   isFollowing = false,
   isFollower = false,
@@ -85,7 +87,6 @@ const   Profile: React.FC<ProfileProps> = ({
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
-  const [isProfilePictureModalOpen, setIsProfilePictureModalOpen] = useState(false);
 
   // Get user data from Redux store
   const { privacyLevel, nickname } = useAppSelector(
@@ -259,7 +260,7 @@ const   Profile: React.FC<ProfileProps> = ({
               const chatItem: ChatItem = {
                 id: newChatRoomId,
                 name: username,
-                avatar: avatarSrc,
+                avatar: profilePic || avatarSrc,
                 lastMessage: "No Messages Yet",
                 timestamp: new Date().toLocaleTimeString([], {
                   hour: "2-digit",
@@ -309,6 +310,15 @@ const   Profile: React.FC<ProfileProps> = ({
     }
   ];
 
+  const handleProfilePictureClick = () => {
+    if (isCurrentUser) {
+      // Navigate to settings and open the profile tab
+      dispatch(setSettingsActive(true));
+      dispatch(setActivePage("profile"));
+      navigate('/settings');
+    }
+  };
+
   return (
     <div className="mx-auto bg-background">
       {/* Header */}
@@ -332,8 +342,7 @@ const   Profile: React.FC<ProfileProps> = ({
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
-          className="relative w-24 h-24 cursor-pointer"
-          onClick={() => isCurrentUser && setIsProfilePictureModalOpen(true)}
+          className="relative w-24 h-24"
         >
           {!isCurrentUser && compatibility >= 0 && (
             <div className="absolute -inset-1 flex items-center justify-center z-20">
@@ -359,11 +368,20 @@ const   Profile: React.FC<ProfileProps> = ({
             </div>
           )}
           <img
-            src={avatarSrc || "avatar.png"}
+            src={profilePic || avatarSrc || "avatar.png"}
             alt={username}
             className="w-full h-full object-cover rounded-full absolute z-10"
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
+          
+          {/* Edit icon for profile picture - only show for current user */}
+          {isCurrentUser && (
+            <div className="absolute bottom-0 right-0 z-20 cursor-pointer" onClick={handleProfilePictureClick}>
+              <div className="bg-primary rounded-full p-1.5 shadow-md">
+                <Pencil className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+          )}
         </div>
         <h1 className="text-xl font-semibold">
           {isCurrentUser
@@ -470,18 +488,6 @@ const   Profile: React.FC<ProfileProps> = ({
           </div>
         )}
       </div>
-
-      {/* Add the Profile Picture Upload Modal */}
-      {isCurrentUser && (
-        <ProfilePictureUploadModal
-          isOpen={isProfilePictureModalOpen}
-          onClose={() => setIsProfilePictureModalOpen(false)}
-          currentAvatar={avatarSrc}
-          username={username}
-          privacyLevel={privacyLevel}
-          bio={bio}
-        />
-      )}
 
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">

@@ -64,7 +64,7 @@ const storyThemes: StoryTheme[] = [
 ];
 
 const CreateStory = () => {
-  const { avatar, username } = useAppSelector((state) => state.currentUser);
+  const { avatar, username, profilePic } = useAppSelector((state) => state.currentUser);
   const [stories, setStories] = useState<Story[]>([{
     type: 'text',
     content: '',
@@ -474,7 +474,7 @@ const CreateStory = () => {
       {/* Top Controls */}
       <div className="flex items-center justify-between p-4">
         <Avatar className="h-8 w-8">
-          <AvatarImage src={avatar} alt="Profile" />
+          <AvatarImage src={profilePic || avatar} alt="Profile" />
           <AvatarFallback>{username ? username.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
         </Avatar>
 

@@ -19,6 +19,7 @@ import Activity from "@/pages/Activity";
 import BondChat from "./pages/BondChat";
 import StoryPage from "@/pages/StoryPage";
 import CreatePost from "./pages/CreatePost";
+import EditPost from "./pages/EditPost";
 import CreateStory from "./pages/CreateStory";
 import Settings from "./pages/Settings";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -141,6 +142,14 @@ const AuthenticatedRoutes: React.FC = () => {
             element={
               <Layout showSidebars={true}>
                 <CreatePost />
+              </Layout>
+            }
+          />
+          <Route
+            path="/edit-post/:postId"
+            element={
+              <Layout showSidebars={true}>
+                <EditPost />
               </Layout>
             }
           />

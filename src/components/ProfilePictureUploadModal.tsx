@@ -89,7 +89,10 @@ export function ProfilePictureUploadModal({
     if (result.success && result.data) {
       toast.success("Profile picture updated successfully");
       if (result.data.user?.profilePic) {
-        dispatch(updateCurrentUser({ profilePic: result.data.user.profilePic }));
+        dispatch(updateCurrentUser({ 
+          profilePic: result.data.user.profilePic,
+          avatar: result.data.user.profilePic
+        }));
       }
       onClose();
     } else {

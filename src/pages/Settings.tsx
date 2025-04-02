@@ -25,7 +25,7 @@ const Settings = () => {
   const navigate = useNavigate();
 
   // Get user data from Redux store
-  const { username, nickname, email, avatar, privacyLevel } =
+  const { username, nickname, email, avatar, privacyLevel, profilePic } =
     useAppSelector((state) => state.currentUser);
 
   const handleSettingsClick = (page: SettingPage) => {
@@ -137,7 +137,7 @@ const Settings = () => {
       ) : (
         <div className="p-4 flex items-center gap-4 ">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={avatar || "/profile/user.png"} alt="Profile" />
+            <AvatarImage src={profilePic || avatar || "/profile/user.png"} alt="Profile" />
             <AvatarFallback>{username?.substring(0, 2) || "U"}</AvatarFallback>
           </Avatar>
           <div>
