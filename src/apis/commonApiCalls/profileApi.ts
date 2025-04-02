@@ -54,7 +54,7 @@ export const fetchUserPosts = async (
 
   const posts = response.data.posts.map((post: PostData) => ({
     id: post._id,
-    imageSrc: post.data.media?.[0]?.url || "",
+    media: post.data.media || [],
     content: post.data.content,
     createdAt: post.createdAt,
     author: {
@@ -91,7 +91,7 @@ export const updateUserProfile = async (
     formDataObj.append("interests", JSON.stringify(profileData.interests));
   }
   formDataObj.append("privacyLevel", profileData.privacyLevel.toString());
-  
+
   // Append bio if it exists
   if (profileData.bio !== undefined) {
     formDataObj.append("bio", profileData.bio);
@@ -99,7 +99,7 @@ export const updateUserProfile = async (
 
   // Handle avatar - could be a string URL or a File
   if (profileData.avatar) {
-    if (typeof profileData.avatar === 'string') {
+    if (typeof profileData.avatar === "string") {
       // For pre-defined avatars, just send the path
       formDataObj.append("avatar", profileData.avatar);
     } else if (profileData.avatar instanceof File) {
@@ -123,41 +123,45 @@ export const updateUserProfile = async (
   };
 };
 
-export const fetchFollowingList = async (): Promise<FollowingFollowersResponse> => {
-  const response = await apiClient.get("/followings");
-  
-  return {
-    success: true,
-    data: response.data.result.map((user: any) => ({
-      _id: user._id,
-      name: user.name,
-      nickName: user.nickName,
-      email: user.email,
-      avatar: user.avatar || user.profilePic,
-      profilePic: user.profilePic || user.avatar,
-      interests: user.interests || []
-    }))
-  };
-};
+export const fetchFollowingList =
+  async (): Promise<FollowingFollowersResponse> => {
+    const response = await apiClient.get("/followings");
 
-export const fetchFollowersList = async (): Promise<FollowingFollowersResponse> => {
-  const response = await apiClient.get("/followers");
-  
-  return {
-    success: true,
-    data: response.data.result.map((user: any) => ({
-      _id: user._id,
-      name: user.name,
-      nickName: user.nickName,
-      email: user.email,
-      avatar: user.avatar || user.profilePic,
-      profilePic: user.profilePic || user.avatar,
-      interests: user.interests || []
-    }))
+    return {
+      success: true,
+      data: response.data.result.map((user: any) => ({
+        _id: user._id,
+        name: user.name,
+        nickName: user.nickName,
+        email: user.email,
+        avatar: user.avatar || user.profilePic,
+        profilePic: user.profilePic || user.avatar,
+        interests: user.interests || [],
+      })),
+    };
   };
-};
 
-export const fetchProfileById = async (userId: string): Promise<FollowingFollowerUser> => {
+export const fetchFollowersList =
+  async (): Promise<FollowingFollowersResponse> => {
+    const response = await apiClient.get("/followers");
+
+    return {
+      success: true,
+      data: response.data.result.map((user: any) => ({
+        _id: user._id,
+        name: user.name,
+        nickName: user.nickName,
+        email: user.email,
+        avatar: user.avatar || user.profilePic,
+        profilePic: user.profilePic || user.avatar,
+        interests: user.interests || [],
+      })),
+    };
+  };
+
+export const fetchProfileById = async (
+  userId: string
+): Promise<FollowingFollowerUser> => {
   const response = await apiClient.get("/showProfile", {
     params: {
       other: userId,
@@ -165,12 +169,12 @@ export const fetchProfileById = async (userId: string): Promise<FollowingFollowe
   });
 
   const userData = response.data.result[0];
-  
+
   return {
     _id: userData._id,
     name: userData.name,
     nickName: userData.nickName || "",
-    email: "",  // We don't need to expose email
+    email: "", // We don't need to expose email
     avatar: userData.avatar || userData.profilePic || "/profile/user.png",
     profilePic: userData.profilePic || userData.avatar || "/profile/user.png",
     interests: userData.interests || [],
