@@ -286,6 +286,7 @@ export interface Person {
   name: string;
   bio: string;
   avatar: string;
+  profilePic?: string;
 }
 
 export interface SearchResponse {

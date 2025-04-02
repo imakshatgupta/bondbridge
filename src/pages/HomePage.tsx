@@ -12,6 +12,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { RefreshCw, ImageIcon, AlertCircle, Plus } from "lucide-react";
 import { getSelfStories } from "@/apis/commonApiCalls/storyApi";
 import { useAppSelector } from "@/store";
+import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
+import { useAppDispatch } from "@/store";
+import { updateCurrentUser } from "@/store/currentUserSlice";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -25,16 +28,49 @@ export default function HomePage() {
   const [preloadedMedia, setPreloadedMedia] = useState<Set<string>>(new Set());
   const preloadContainerRef = useRef<HTMLDivElement>(null);
   const currentUser = useAppSelector(state => state.currentUser);
+  const dispatch = useAppDispatch();
 
   // Use our custom hook for API calls
   const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
   const [executeGetSelfStories, isLoadingSelfStories] = useApiCall(getSelfStories);
+  const [executeProfileFetch, isLoadingProfile] = useApiCall(fetchUserProfile);
 
   // Get current user ID from localStorage
   useEffect(() => {
     const userId = localStorage.getItem('userId');
     setCurrentUserId(userId);
   }, []);
+
+  // Load complete user profile data if needed
+  useEffect(() => {
+    const fetchCompleteUserProfile = async () => {
+      // Only fetch if we have userId but missing user data
+      if (currentUserId && 
+          (!currentUser.interests?.length || 
+           !currentUser.profilePic || 
+           !currentUser.bio)) {
+        
+        const result = await executeProfileFetch(currentUserId, currentUserId);
+        
+        if (result.success && result.data) {
+          // Update Redux store with complete user data
+          dispatch(updateCurrentUser({
+            username: result.data.data.username,
+            nickname: result.data.data.nickName,
+            email: result.data.data.email,
+            avatar: result.data.data.avatarSrc,
+            profilePic: result.data.data.profilePic,
+            bio: result.data.data.bio,
+            interests: result.data.data.interests,
+            privacyLevel: result.data.data.privacyLevel,
+            userId: currentUserId
+          }));
+        }
+      }
+    };
+
+    fetchCompleteUserProfile();
+  }, [currentUserId, currentUser]);
 
   // Load initial data
   useEffect(() => {
@@ -222,6 +258,8 @@ export default function HomePage() {
     );
   }
 
+  console.log("currentUser: ", currentUser);
+
   // Prepare stories for display - format self story only once
   const formattedSelfStory = selfStories ? {
     user: "Your Story",
@@ -232,7 +270,7 @@ export default function HomePage() {
     stories: selfStories.stories || [],
     latestStoryTime: selfStories.latestStoryTime || Date.now(),
     name: "Your Story",
-    profilePic: currentUser.avatar || '/profile/avatars/1.png'
+    profilePic: currentUser.profilePic || '/profile/avatars/1.png'
   } : null;
 
   // Format all stories for the StoryPage component
@@ -278,7 +316,7 @@ export default function HomePage() {
                 <div className="flex flex-col items-center space-y-1 mx-2 my-1">
                   <div className="relative w-16 h-16 rounded-full ring-2 ring-muted">
                     <img
-                      src={currentUser.avatar || '/profile/avatars/1.png'}
+                      src={currentUser.profilePic || '/profile/avatars/1.png'}
                       alt="Your Story"
                       className="w-full h-full rounded-full object-cover p-[2px] bg-background"
                     />

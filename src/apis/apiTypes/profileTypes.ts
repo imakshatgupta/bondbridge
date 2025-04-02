@@ -6,6 +6,7 @@ export interface UserProfileData {
   followers: number;
   following: number;
   avatarSrc: string;
+  profilePic?: string;
   interests: string[];
   isCurrentUser?: boolean;
   privacyLevel?: number;

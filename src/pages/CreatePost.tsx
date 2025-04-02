@@ -40,7 +40,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
   
   
   // Get the current user's avatar from Redux store
-  const { avatar, nickname } = useAppSelector(state => state.currentUser);
+  const { avatar, nickname, profilePic } = useAppSelector(state => state.currentUser);
   
   // Use the API call hook for the createPost function
   const [executeCreatePost, isCreatingPost] = useApiCall(createPost);
@@ -265,7 +265,7 @@ const CreatePost = ({ onSubmit }: CreatePostProps) => {
     <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
       <div className="flex items-start gap-3 pb-4">
         <Avatar className="h-10 w-10">
-          <AvatarImage src={avatar || "/activity/cat.png"} alt={nickname || "Profile"} />
+          <AvatarImage src={profilePic || "/activity/cat.png"} alt={nickname || "Profile"} />
           <AvatarFallback>{nickname ? nickname[0].toUpperCase() : "U"}</AvatarFallback>
         </Avatar>
 

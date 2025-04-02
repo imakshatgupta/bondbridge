@@ -138,7 +138,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user.profilePic || user.avatar} alt={user.name} className="h-12 w-12 rounded-full"/>
                     <AvatarFallback>
                       {user.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>

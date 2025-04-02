@@ -11,6 +11,7 @@ export default function OthersProfilePage() {
     followers: 20034,
     following: 3987,
     avatarSrc: avatar,
+    profilePic: avatar, // Add profilePic with same value as avatar for demo
     isCurrentUser: false, // This ensures we show the Message/Add Friend buttons instead of Settings
   };
 
@@ -23,6 +24,7 @@ export default function OthersProfilePage() {
       followers={userData.followers}
       following={userData.following}
       avatarSrc={userData.avatarSrc}
+      profilePic={userData.profilePic}
       isCurrentUser={userData.isCurrentUser}
     />
   );
