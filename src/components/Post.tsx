@@ -63,8 +63,6 @@ export function Post({
         if (feedId) {
             fetchReactions();
         }
-
-        console.log(JSON.stringify(media, null, 2));
     }, [feedId]);
 
     const fetchReactions = async () => {
