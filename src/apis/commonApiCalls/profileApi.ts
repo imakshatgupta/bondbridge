@@ -31,6 +31,7 @@ export const fetchUserProfile = async (
       followers: userData.followers || 0,
       following: userData.followings || 0,
       avatarSrc: userData.avatar || userData.profilePic || "/profile/user.png",
+      profilePic: userData.profilePic || userData.avatar || "/profile/user.png",
       bio: userData.bio || "",
       interests: userData.interests || [],
       isCurrentUser,

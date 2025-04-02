@@ -5,12 +5,14 @@ import { X, Loader2, Search } from "lucide-react";
 import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
+import { Avatar } from "@/components/ui/avatar";
 
 interface SelectedUser {
   id: string;
   name: string;
   avatar: string;
   bio: string;
+  profilePic: string;
 }
 
 interface SelectFriendsTabProps {
@@ -82,6 +84,7 @@ const SelectFriendsTab: React.FC<SelectFriendsTabProps> = ({
         name: user.name,
         avatar: user.avatar,
         bio: user.bio,
+        profilePic: user.profilePic || user.avatar,
       };
       onParticipantsChange([...selectedParticipants, user.id]);
       setSelectedUsers((prev) => [...prev, newUser]);
@@ -171,13 +174,9 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onToggle }) => (
     }`}
   >
     <div className="flex items-center space-x-3">
-      <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
+        <Avatar className="h-12 w-12">
+          <img src={user.profilePic || user.avatar} alt={user.name} className="h-12 w-12 rounded-full"/>
+        </Avatar>
       <div>
         <h3 className="font-medium">{user.name}</h3>
         <p className="text-sm text-muted-foreground">{user.bio}</p>

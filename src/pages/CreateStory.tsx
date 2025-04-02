@@ -73,17 +73,16 @@ const storyThemes: StoryTheme[] = [
 ];
 
 const CreateStory = () => {
-  const { avatar, username } = useAppSelector((state) => state.currentUser);
-  const [stories, setStories] = useState<Story[]>([
-    {
-      type: "text",
-      content: "",
-      theme: {
-        bgColor: storyThemes[0].bgColor,
-        textColor: storyThemes[0].textColor,
-      },
-      privacy: 1,
+  const { avatar, username, profilePic } = useAppSelector((state) => state.currentUser);
+  const [stories, setStories] = useState<Story[]>([{
+    type: 'text',
+    content: '',
+    theme: {
+      bgColor: storyThemes[0].bgColor,
+      textColor: storyThemes[0].textColor
     },
+    privacy: 1,
+  }
   ]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -550,10 +549,8 @@ const CreateStory = () => {
       {/* Top Controls */}
       <div className="flex items-center justify-between p-4">
         <Avatar className="h-8 w-8">
-          <AvatarImage src={avatar} alt="Profile" />
-          <AvatarFallback>
-            {username ? username.charAt(0).toUpperCase() : "U"}
-          </AvatarFallback>
+          <AvatarImage src={profilePic || avatar} alt="Profile" />
+          <AvatarFallback>{username ? username.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
         </Avatar>
 
         <div className="flex items-center gap-3">

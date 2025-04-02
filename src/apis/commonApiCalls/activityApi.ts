@@ -23,6 +23,7 @@ export const fetchFollowings = async (): Promise<SearchResponse> => {
         id: user._id,
         name: user.name,
         avatar: user.avatar,
+        profilePic: user.profilePic || user.avatar,
         bio: user.interests.join(", "), // Using interests as bio since it's required in Person type
       })),
     };

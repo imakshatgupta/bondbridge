@@ -36,7 +36,7 @@ const SearchResults = ({ person }: Props) => {
     >
       <div className="flex items-center gap-3">
         <Avatar className="h-12 w-12">
-          <img src={person.avatar} alt={person.name} />
+          <img src={person.profilePic || person.avatar} alt={person.name} className="h-12 w-12 rounded-full"/>
         </Avatar>
         <div>
           <h3 className="font-medium">{person.name}</h3>

@@ -63,6 +63,7 @@ const ProfilePage: React.FC = () => {
         followers={userData.followers}
         following={userData.following}
         avatarSrc={userData.avatarSrc}
+        profilePic={userData.profilePic}
         isCurrentUser={userData.isCurrentUser}
         isFollowing={userData.isFollowing}
         isFollower={userData.isFollower}
