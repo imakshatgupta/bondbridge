@@ -28,7 +28,7 @@ export function TruncatedList<T>({
   emptyMessage = "No items to display",
   className = "",
   itemsContainerClassName = "",
-  buttonClassName = "text-primary text-xs mt-2 cursor-pointer hover:underline"
+  buttonClassName = "text-foreground text-xs mt-2 cursor-pointer hover:underline"
 }: TruncatedListProps<T>) {
   const [showAll, setShowAll] = useState(false);
   
