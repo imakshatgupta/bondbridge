@@ -299,19 +299,19 @@ export default function Activity() {
               <TabsList className="bg-transparent gap-4 *:px-5 *:py-1.5 mb-4">
                 <TabsTrigger
                   value="chats"
-                  className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground cursor-pointer"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer"
                 >
                   Chats ({filteredChats.dms.length})
                 </TabsTrigger>
                 <TabsTrigger
                   value="my-groups"
-                  className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground cursor-pointer"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer"
                 >
                   My Groups ({filteredChats.groups.length})
                 </TabsTrigger>
                 <TabsTrigger
                   value="communities"
-                  className="data-[state=active]:bg-primary/60 data-[state=active]:text-primary-foreground cursor-pointer"
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground cursor-pointer"
                 >
                   Communities ({userCommunities.length})
                 </TabsTrigger>

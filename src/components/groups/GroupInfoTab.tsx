@@ -64,7 +64,7 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
               id="group-image-upload"
             />
             <button 
-              className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors"
+              className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors cursor-pointer"
               onClick={handleButtonClick}
               type="button"
             >

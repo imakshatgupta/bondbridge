@@ -178,24 +178,20 @@ export const setPassword = async (data: SetPasswordRequest): Promise<SetPassword
 // commented out for now as we are not using password reset
 
 // Function to reset password
-// export const resetPassword = async (resetData: { phoneNumber: string; countryCode: string; otp: string; newPassword: string }) => {
-//   const { phoneNumber, countryCode, otp, newPassword } = resetData;
+export const resetPassword = async (resetData: { phoneNumber: string; countryCode: string; oldPassword: string; password: string }) => {
+  const { phoneNumber, countryCode, oldPassword, password } = resetData;
   
-//   // Validate required fields
-//   if (!phoneNumber || !countryCode || !otp || !newPassword) {
-//     throw new Error('All fields are required');
-//   }
+  // Validate required fields
+  if (!phoneNumber || !countryCode || !oldPassword || !password) {
+    throw new Error('All fields are required');
+  }
   
-//   const response = await apiClient.post(`/reset-password`, {
-//     phoneNumber,
-//     countryCode,
-//     otp,
-//     newPassword
-//   });
+  const response = await apiClient.post(`/reset-password`, {
+    phoneNumber,
+    countryCode,
+    oldPassword,
+    password
+  });
   
-//   if (response.status === 200) {
-//     return response.data;
-//   } else {
-//     throw new Error(response.data.message || 'Failed to reset password');
-//   }
-// };
+  return response.data;
+};

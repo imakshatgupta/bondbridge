@@ -3,6 +3,7 @@ import { fetchProfileById } from "@/apis/commonApiCalls/profileApi";
 import { FollowingFollowerUser } from "@/apis/apiTypes/profileTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "react-router-dom";
 // import { Loader2 } from "lucide-react";
 
 interface CommunityMemberListProps {
@@ -71,8 +72,9 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
   return (
     <div className="space-y-1">
       {members.map((member) => (
-        <div
+        <Link
           key={member._id}
+          to={`/profile/${member._id}`}
           className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/30 transition-colors"
         >
           <Avatar className="h-10 w-10 bg-purple-900/40 border-2 border-purple-500/30">
@@ -87,7 +89,7 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
               {member.nickName || "member"}
             </span>
           </div>
-        </div>
+        </Link>
       ))}
       
       {memberIds.length > members.length && (

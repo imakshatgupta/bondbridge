@@ -69,10 +69,10 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
-            <Button variant="outline" onClick={onBack}>
+            <Button variant="outline" onClick={onBack} className="cursor-pointer">
               Back
             </Button>
-            <Button onClick={onNext} disabled={isNextLoading}>
+            <Button onClick={onNext} disabled={isNextLoading} className="cursor-pointer">
               {isNextLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
