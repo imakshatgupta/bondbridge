@@ -33,77 +33,71 @@ const CommunityProfilePage = () => {
   useEffect(() => {
     const loadCommunity = async () => {
       setLoading(true);
-      try {
-        const result = await executeFetchCommunities();
-        if (result.success && result.data) {
-          const foundCommunity = result.data.find((c) => c._id === communityId);
-          if (foundCommunity) {
-            setCommunity(foundCommunity);
+      const result = await executeFetchCommunities();
+      if (result.success && result.data) {
+        const foundCommunity = result.data.find((c) => c._id === communityId);
+        if (foundCommunity) {
+          setCommunity(foundCommunity);
 
-            // Check if current user is a member
-            const userId = localStorage.getItem("userId");
-            if (userId && foundCommunity.members) {
-              setIsUserMember(foundCommunity.members.includes(userId));
-            }
+          // Check if current user is a member
+          const userId = localStorage.getItem("userId");
+          if (userId && foundCommunity.members) {
+            setIsUserMember(foundCommunity.members.includes(userId));
+          }
 
-            // For actual implementation, you would fetch the real posts using the post IDs
-            // from foundCommunity.posts array
-            if (foundCommunity.posts && foundCommunity.posts.length > 0) {
-              // This should be replaced with an actual API call to fetch posts by ID
-              // For now, we create representative posts with the correct count
-              const realPostCount =
-                foundCommunity.postCount || foundCommunity.posts.length;
-              const communityPosts: ProfilePostData[] = Array(realPostCount)
-                .fill(null)
-                .map((_, index) => ({
-                  id: foundCommunity.posts?.[index] || `post-${index}`,
-                  userId: foundCommunity._id,
-                  author: {
-                    name: foundCommunity.name,
-                    profilePic: foundCommunity.profilePicture || "",
-                  },
-                  content: `Community post ${index + 1}`,
-                  createdAt: Date.now() - index * 3600000, // Decreasing timestamps
-                  media: foundCommunity.backgroundImage
-                    ? [
-                        {
-                          url: foundCommunity.backgroundImage,
-                          type: "image",
-                        },
-                      ]
-                    : [],
-                  stats: {
-                    commentCount: Math.floor(Math.random() * 10),
-                    hasReacted: false,
-                    reactionCount: Math.floor(Math.random() * 20),
-                    reactionType: null,
-                  },
-                  community: {
-                    id: foundCommunity._id,
-                    name: foundCommunity.name,
-                    members: foundCommunity.memberCount,
-                    pfp: foundCommunity.profilePicture || "",
-                    description: foundCommunity.description,
-                    backgroundImage: foundCommunity.backgroundImage,
-                    bio: foundCommunity.bio,
-                  },
-                }));
-              setPosts(communityPosts);
-            } else {
-              setPosts([]);
-            }
+          // For actual implementation, you would fetch the real posts using the post IDs
+          // from foundCommunity.posts array
+          if (foundCommunity.posts && foundCommunity.posts.length > 0) {
+            // This should be replaced with an actual API call to fetch posts by ID
+            // For now, we create representative posts with the correct count
+            const realPostCount =
+              foundCommunity.postCount || foundCommunity.posts.length;
+            const communityPosts: ProfilePostData[] = Array(realPostCount)
+              .fill(null)
+              .map((_, index) => ({
+                id: foundCommunity.posts?.[index] || `post-${index}`,
+                userId: foundCommunity._id,
+                author: {
+                  name: foundCommunity.name,
+                  profilePic: foundCommunity.profilePicture || "",
+                },
+                content: `Community post ${index + 1}`,
+                createdAt: Date.now() - index * 3600000, // Decreasing timestamps
+                media: foundCommunity.backgroundImage
+                  ? [
+                      {
+                        url: foundCommunity.backgroundImage,
+                        type: "image",
+                      },
+                    ]
+                  : [],
+                stats: {
+                  commentCount: Math.floor(Math.random() * 10),
+                  hasReacted: false,
+                  reactionCount: Math.floor(Math.random() * 20),
+                  reactionType: null,
+                },
+                community: {
+                  id: foundCommunity._id,
+                  name: foundCommunity.name,
+                  members: foundCommunity.memberCount,
+                  pfp: foundCommunity.profilePicture || "",
+                  description: foundCommunity.description,
+                  backgroundImage: foundCommunity.backgroundImage,
+                  bio: foundCommunity.bio,
+                },
+              }));
+            setPosts(communityPosts);
           } else {
-            setError("Community not found");
+            setPosts([]);
           }
         } else {
-          setError("Failed to load Community Data");
+          setError("Community not found");
         }
-      } catch (err) {
-        console.error("Error loading community:", err);
-        setError("An error occurred while loading community data");
-      } finally {
-        setLoading(false);
+      } else {
+        setError("Failed to load Community Data");
       }
+      setLoading(false);
     };
 
     if (communityId) {
@@ -123,31 +117,23 @@ const CommunityProfilePage = () => {
     }
 
     setIsMembershipLoading(true);
-    try {
-      const result = await executeJoinCommunity({
-        communityId,
-        userId,
-        action: "join",
-      });
+    const result = await executeJoinCommunity({
+      communityId,
+      userId,
+      action: "join",
+    });
 
-      if (result.success) {
-        setIsUserMember(true);
-        toast.success("Success", {
-          description: "You have joined the community!",
-        });
-      } else {
-        toast.error("Error", {
-          description: "Failed to Join Community",
-        });
-      }
-    } catch (err) {
-      console.error("Error joining community:", err);
+    if (result.success) {
+      setIsUserMember(true);
+      toast.success("Success", {
+        description: "You have joined the community!",
+      });
+    } else {
       toast.error("Error", {
         description: "Failed to Join Community",
       });
-    } finally {
-      setIsMembershipLoading(false);
     }
+    setIsMembershipLoading(false);
   };
 
   const handleLeaveCommunity = async () => {
@@ -157,31 +143,23 @@ const CommunityProfilePage = () => {
     if (!userId) return;
 
     setIsMembershipLoading(true);
-    try {
-      const result = await executeJoinCommunity({
-        communityId,
-        userId,
-        action: "remove",
-      });
+    const result = await executeJoinCommunity({
+      communityId,
+      userId,
+      action: "remove",
+    });
 
-      if (result.success) {
-        setIsUserMember(false);
-        toast.success("Success", {
-          description: "You have left the community",
-        });
-      } else {
-        toast.error("Error", {
-          description: "Failed to Leave Community",
-        });
-      }
-    } catch (err) {
-      console.error("Error leaving community:", err);
+    if (result.success) {
+      setIsUserMember(false);
+      toast.success("Success", {
+        description: "You have left the community",
+      });
+    } else {
       toast.error("Error", {
         description: "Failed to Leave Community",
       });
-    } finally {
-      setIsMembershipLoading(false);
     }
+    setIsMembershipLoading(false);
   };
 
   if (loading) {
@@ -201,7 +179,7 @@ const CommunityProfilePage = () => {
         </p>
         <Button
           variant="outline"
-          className="mt-4"
+          className="mt-4 cursor-pointer"
           onClick={() => navigate("/activity")}
         >
           Go Back
@@ -226,7 +204,7 @@ const CommunityProfilePage = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-4 left-4 bg-background/60 backdrop-blur-sm rounded-full"
+          className="absolute top-4 left-4 bg-background/60 backdrop-blur-sm rounded-full cursor-pointer"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
