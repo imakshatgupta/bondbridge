@@ -294,7 +294,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
           variant="ghost"
           onClick={toggleListening}
           disabled={disabled || isAudioPlaying}
-          className={`p-0 h-6 w-6 rounded-full ${
+          className={`p-0 h-6 w-6 rounded-full cursor-pointer ${
             isListening && !isAudioPlaying ? 'text-primary animate-pulse' : 
             isAudioPlaying && wasListeningBeforeAudio ? 'text-yellow-500' : 
             'text-muted-foreground/60'
@@ -306,7 +306,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
       <Button 
         onClick={handleSend}
         disabled={!message.trim() || disabled}
-        className="rounded-full aspect-square h-11 w-11 bg-primary"
+        className="rounded-full aspect-square h-11 w-11 bg-primary cursor-pointer"
       >
         <ArrowRight className="h-full w-full" />
       </Button>

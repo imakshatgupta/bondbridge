@@ -178,24 +178,31 @@ export const setPassword = async (data: SetPasswordRequest): Promise<SetPassword
 // commented out for now as we are not using password reset
 
 // Function to reset password
-// export const resetPassword = async (resetData: { phoneNumber: string; countryCode: string; otp: string; newPassword: string }) => {
-//   const { phoneNumber, countryCode, otp, newPassword } = resetData;
+export const resetPassword = async (resetData: { phoneNumber: string; countryCode: string; oldPassword: string; password: string }) => {
+  const { phoneNumber, countryCode, oldPassword, password } = resetData;
   
-//   // Validate required fields
-//   if (!phoneNumber || !countryCode || !otp || !newPassword) {
-//     throw new Error('All fields are required');
-//   }
+  // Validate required fields
+  if (!phoneNumber || !countryCode || !oldPassword || !password) {
+    throw new Error('All fields are required');
+  }
   
-//   const response = await apiClient.post(`/reset-password`, {
-//     phoneNumber,
-//     countryCode,
-//     otp,
-//     newPassword
-//   });
-  
-//   if (response.status === 200) {
-//     return response.data;
-//   } else {
-//     throw new Error(response.data.message || 'Failed to reset password');
-//   }
-// };
+  try {
+    const response = await apiClient.post(`/reset-password`, {
+      phoneNumber,
+      countryCode,
+      oldPassword,
+      password
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const errorMessage = error.response.data?.message || 'Failed to reset password';
+      throw new Error(errorMessage);
+    } else if (error.request) {
+      throw new Error('No response received from server');
+    } else {
+      throw new Error(error.message || 'Failed to reset password');
+    }
+  }
+};
