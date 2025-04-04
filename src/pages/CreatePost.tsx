@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
-import { Pencil, Trash2, Image, Smile, Video, Mic } from 'lucide-react';
+import { Trash2, Image, Smile, Video, Mic } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { createPost, rewriteWithBondChat } from '../apis/commonApiCalls/createPostApi';
 import { useApiCall } from '../apis/globalCatchError';

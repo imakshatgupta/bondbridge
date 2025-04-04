@@ -17,6 +17,12 @@ export interface CroppedFile extends File {
   previewUrl?: string;
 }
 
+export interface VideoFileWithThumbnail extends File {
+  thumbnail: File;
+  cropData?: CropData;
+  previewUrl?: string;
+}
+
 interface MediaCropModalProps {
   open: boolean;
   onClose: () => void;
@@ -73,7 +79,7 @@ export function MediaCropModal({ open, onClose, media, onCropComplete }: MediaCr
     if (!mediaRef.current || !cropFrameRef.current || !containerRef.current) return;
     
     const media = mediaRef.current;
-    const cropFrame = cropFrameRef.current;
+    // const crpFrame = cropFrameRef.current;
     const container = containerRef.current;
     
     // Calculate dimensions
@@ -84,7 +90,7 @@ export function MediaCropModal({ open, onClose, media, onCropComplete }: MediaCr
       ? (media as HTMLVideoElement).videoHeight 
       : (media as HTMLImageElement).naturalHeight;
     
-    const frameRect = cropFrame.getBoundingClientRect();
+    // const frameRect = cropFrame.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     
     // Calculate the scaled media dimensions
@@ -130,12 +136,12 @@ export function MediaCropModal({ open, onClose, media, onCropComplete }: MediaCr
     
     // Adjust position to keep the center point
     if (mediaRef.current && cropFrameRef.current && containerRef.current) {
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const cropFrameRect = cropFrameRef.current.getBoundingClientRect();
+      // const containerRect = containerRef.current.getBoundingClientRect();
+      // const cropFrameRect = cropFrameRef.current.getBoundingClientRect();
       
       // Find the center point of the crop frame relative to the container
-      const centerX = cropFrameRect.left - containerRect.left + cropFrameRect.width / 2;
-      const centerY = cropFrameRect.top - containerRect.top + cropFrameRect.height / 2;
+      // const centerX = cropFrameRect.left - containerRect.left + cropFrameRect.width / 2;
+      // const centerY = cropFrameRect.top - containerRect.top + cropFrameRect.height / 2;
       
       // Calculate relative point from current media position
       const mediaWidth = isVideo 
