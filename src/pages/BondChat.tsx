@@ -633,9 +633,11 @@ export default function BondChat() {
         <div className="flex items-center gap-2">
           <img src="/bondchat.svg" alt="Bond Chat" className="w-8 h-8" />
           <span className="font-medium grad">BondChat</span>
-          <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
-            Basic
-          </span>
+          <div className="bg-muted rounded-full">
+            <span className="text-xs px-2 py-0.5 grad">
+              Basic
+            </span>
+          </div>
         </div>
         <div className="ml-auto gap-2 flex items-center">
           {/* <Button

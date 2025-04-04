@@ -17,6 +17,7 @@ import { Toaster } from "./ui/sonner";
 import { useApiCall } from "@/apis/globalCatchError";
 import CommunityFeed from "./activity/CommunityFeed";
 import { TruncatedText } from "./ui/TruncatedText";
+import MobileAppDownload from "./MobileAppDownload";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -36,6 +37,15 @@ const Layout: React.FC<LayoutProps> = ({
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
   const [fetchSuggestedUsers, isLoadingSuggested] = useApiCall(getSuggestedUsers);
+
+  // Mobile detection - check for cookie to override
+  const [useWebVersion, setUseWebVersion] = useState(false);
+  
+  useEffect(() => {
+    // Check for cookie that allows mobile users to use the web version
+    const hasWebVersionCookie = document.cookie.split(';').some(item => item.trim().startsWith('useWebVersion='));
+    setUseWebVersion(hasWebVersionCookie);
+  }, []);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -104,10 +114,12 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <>
-    <div className="flex justify-center items-center h-screen w-screen overflow-x-hidden md:hidden">
-      <div className="text-2xl font-bold">Please open on app</div>
-    </div>
-    <div className=" flex-col overflow-hidden h-screen w-screen overflow-x-hidden hidden md:flex">
+    {!useWebVersion && (
+      <div className="md:hidden">
+        <MobileAppDownload />
+      </div>
+    )}
+    <div className={`flex-col overflow-hidden h-screen w-screen overflow-x-hidden ${!useWebVersion ? 'hidden md:flex' : 'flex'}`}>
       <Toaster/>
       {/* Navbar */}
       <Navbar />

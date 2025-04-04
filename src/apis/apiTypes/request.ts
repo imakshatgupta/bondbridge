@@ -1,3 +1,6 @@
+// At the top of the file, import the VideoFileWithThumbnail type
+import { VideoFileWithThumbnail } from '../../components/MediaCropModal';
+
 // Base phone type used in multiple requests
 export interface BasePhoneRequest {
   phoneNumber: string;
@@ -141,6 +144,7 @@ export interface StoryData {
     textColor: string;
   };
   privacy: number;
+  thumbnail?: File;
 }
 
 export interface Story {
@@ -186,7 +190,7 @@ export interface CreatePostRequest {
   content: string;
   whoCanComment: number;
   privacy: number;
-  image?: File[];
+  image?: (File | VideoFileWithThumbnail)[];
   document?: File[];
 }
 

@@ -62,8 +62,8 @@ const CreateGroup: React.FC = () => {
         return;
       }
 
-      if (selectedParticipants.length < 1) {
-        toast.error("Please select at least one friend to create a group");
+      if (selectedParticipants.length <= 1) {
+        toast.error("Please select atleast two friends to create a group");
         return;
       }
 
