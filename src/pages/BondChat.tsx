@@ -669,7 +669,7 @@ export default function BondChat() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => selectVoice("male")}>
+                  <DropdownMenuItem onClick={() => selectVoice("male")} className="cursor-pointer">
                     <Check
                       className={`mr-2 h-4 w-4 ${
                         voiceType === "male" ? "opacity-100" : "opacity-0"
@@ -677,7 +677,7 @@ export default function BondChat() {
                     />
                     Michael
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => selectVoice("female")}>
+                  <DropdownMenuItem onClick={() => selectVoice("female")} className="cursor-pointer">
                     <Check
                       className={`mr-2 h-4 w-4 ${
                         voiceType === "female" ? "opacity-100" : "opacity-0"

@@ -151,7 +151,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           onClick={toggleSpeechRecognition}
           disabled={disabled}
           variant="ghost"
-          className="p-2 hover:bg-muted rounded-full"
+          className="p-2 hover:bg-muted rounded-full cursor-pointer"
           type="button"
           aria-label={isListening ? "Stop dictation" : "Start dictation"}
         >
@@ -165,7 +165,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <Button
           onClick={handleSendMessage}
           disabled={!newMessage.trim() || disabled}
-          className="bg-primary text-primary-foreground rounded-full"
+          className="bg-primary text-primary-foreground rounded-full cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { resetPassword } from "@/apis/commonApiCalls/authenticationApi";
 
 interface ResetPasswordData {
   phoneNumber: string;
@@ -32,7 +33,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ResetPasswordData>({
     phoneNumber: "",
-    countryCode: "+91",
+    countryCode: "+1",
     password: "",
     oldPassword: ""
   });
@@ -50,29 +51,27 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      await resetPassword({
+        phoneNumber: formData.phoneNumber,
+        countryCode: formData.countryCode,
+        oldPassword: formData.oldPassword,
+        password: formData.password
       });
-
-      if (response.ok) {
-        toast.success("Password reset successfully");
-        onOpenChange(false);
-        setFormData({
-          phoneNumber: "",
-          countryCode: "+91",
-          password: "",
-          oldPassword: ""
-        });
-      } else {
-        const data = await response.json();
-        toast.error(data.message || "Failed to reset password");
-      }
+      
+      toast.success("Password reset successfully");
+      onOpenChange(false);
+      setFormData({
+        phoneNumber: "",
+        countryCode: "+1",
+        password: "",
+        oldPassword: ""
+      });
     } catch (error) {
-      toast.error("An error occurred while resetting password");
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An error occurred while resetting password");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -100,7 +99,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                 name="countryCode"
                 value={formData.countryCode}
                 onChange={handleInputChange}
-                placeholder="+91"
+                placeholder="+1"
                 required
               />
             </div>
