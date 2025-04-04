@@ -175,7 +175,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} className="cursor-pointer">
             Cancel
           </Button>
         </DialogFooter>

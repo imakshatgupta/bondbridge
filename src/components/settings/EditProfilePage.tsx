@@ -225,7 +225,7 @@ const EditProfilePage: React.FC = () => {
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
         <ArrowLeft
-          className="h-4 w-4 mr-2 inline"
+          className="h-4 w-4 mr-2 inline cursor-pointer"
           onClick={handleCloseSettings}
         />
         Edit Profile
