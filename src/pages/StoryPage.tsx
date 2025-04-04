@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Play, Heart, Share } from 'lucide-react';
+import { ArrowLeft, Send, Play, Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
