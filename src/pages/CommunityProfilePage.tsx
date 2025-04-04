@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Users, MessageSquare, Share2 } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import {
   fetchCommunities,
@@ -270,7 +270,7 @@ const CommunityProfilePage = () => {
           {isUserMember ? (
             <Button
               variant="outline"
-              className="rounded-full text-destructive border-destructive"
+              className="rounded-full text-destructive border-destructive cursor-pointer"
               onClick={handleLeaveCommunity}
               disabled={isMembershipLoading}
             >
@@ -281,7 +281,7 @@ const CommunityProfilePage = () => {
             </Button>
           ) : (
             <Button
-              className="rounded-full"
+              className="rounded-full cursor-pointer"
               onClick={handleJoinCommunity}
               disabled={isMembershipLoading}
             >
@@ -291,7 +291,7 @@ const CommunityProfilePage = () => {
               Join
             </Button>
           )}
-          <Button
+          {/* <Button
             variant="outline"
             size="icon"
             className="rounded-full"
@@ -301,16 +301,16 @@ const CommunityProfilePage = () => {
             }}
           >
             <Share2 className="h-4 w-4" />
-          </Button>
+          </Button> */}
         </div>
       </div>
 
       <div className="flex-1 mt-8">
         <Tabs defaultValue="about" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-background/30 rounded-lg backdrop-blur-sm mb-4 *:rounded-md *:m-1 *:data-[state=active]:bg-accent *:data-[state=active]:text-foreground *:text-muted-foreground">
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="posts">Posts</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="about" className="cursor-pointer">About</TabsTrigger>
+            <TabsTrigger value="posts" className="cursor-pointer">Posts</TabsTrigger>
+            <TabsTrigger value="members" className="cursor-pointer">Members</TabsTrigger>
           </TabsList>
 
           <TabsContent value="about" className="p-4">
