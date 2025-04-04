@@ -75,6 +75,7 @@ const   Profile: React.FC<ProfileProps> = ({
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
   const [userStories, setUserStories] = useState<StoryData | null>(null);
+  const [isLoadingStories, setIsLoadingStories] = useState(true);
   const [localRequestSent, setLocalRequestSent] = useState(requestSent);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] =
@@ -140,10 +141,12 @@ const   Profile: React.FC<ProfileProps> = ({
 
   useEffect(() => {
     const loadStories = async () => {
+      setIsLoadingStories(true);
       const result = await executeGetStoryForUser(userId);
       if (result.success && result.data && result.data.stories && result.data.stories.length > 0) {
         setUserStories(result.data.stories[0]);
       }
+      setIsLoadingStories(false);
     };
 
     loadStories();
@@ -399,7 +402,8 @@ const   Profile: React.FC<ProfileProps> = ({
             </div>
           )}
 
-          {isCurrentUser && !userStories?.hasStory && (
+          {/* Add story button - only show for current user when they have no stories and stories are done loading */}
+          {isCurrentUser && !isLoadingStories && !userStories?.hasStory && (
             <div className="absolute -inset-1 flex items-center justify-center z-20">              
               {/* Add story button */}
               <div 
