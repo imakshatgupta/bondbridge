@@ -186,6 +186,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onToggle }) => (
       variant={isSelected ? "destructive" : "outline"}
       onClick={onToggle}
       size="sm"
+      className="cursor-pointer"
     >
       {isSelected ? <X className="h-4 w-4" /> : "Add"}
     </Button>

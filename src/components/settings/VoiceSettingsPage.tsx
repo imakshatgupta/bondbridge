@@ -86,7 +86,7 @@ const VoiceSettingsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium"> <ArrowLeft className="h-4 w-4 mr-2 inline" onClick={handleCloseSettings} /> Bond Chat Voice Settings</h3>
+        <h3 className="text-lg font-medium"> <ArrowLeft className="h-4 w-4 mr-2 inline cursor-pointer" onClick={handleCloseSettings} /> Bond Chat Voice Settings</h3>
       </div>
       
       <p className="text-muted-foreground">
@@ -118,7 +118,7 @@ const VoiceSettingsPage: React.FC = () => {
                   <Square className="h-4 w-4 mr-1" /> Stop
                 </span>
               ) : (
-                <span className="flex items-center">
+                <span className="flex items-center cursor-pointer">
                   <Play className="h-4 w-4 mr-1" /> Preview
                 </span>
               )}
