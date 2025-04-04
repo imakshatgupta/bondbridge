@@ -90,23 +90,101 @@ export function MediaCropModal({
 
     console.log("Calculated min zoom:", newMinZoom);
 
-    // Set the new minimum zoom
-    setMinZoom(newMinZoom);
-
-    setZoom(newMinZoom);
-
-    // Center the image after setting the zoom
-    // setTimeout(() => centerMedia(), 100);
+    return newMinZoom;
   };
 
-  // Handle media element loaded
+  // Center the media in the crop frame - improved precise centering
+  const centerMedia = () => {
+    if (!mediaRef.current || !cropFrameRef.current || !containerRef.current)
+      return;
+
+    const media = mediaRef.current;
+    const cropFrame = cropFrameRef.current;
+    const container = containerRef.current;
+
+    // Get dimensions
+    const mediaWidth = media.naturalWidth;
+    const mediaHeight = media.naturalHeight;
+
+    // Get the crop frame dimensions and position
+    const frameRect = cropFrame.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // Calculate the scaled media dimensions
+    const scaledMediaWidth = mediaWidth * zoom;
+    const scaledMediaHeight = mediaHeight * zoom;
+
+    // Calculate the frame's center position relative to the container
+    const frameCenterX =
+      frameRect.width / 2 + (frameRect.left - containerRect.left);
+    const frameCenterY =
+      frameRect.height / 2 + (frameRect.top - containerRect.top);
+
+    // Position the image so its center aligns exactly with the frame's center
+    const newX = frameCenterX - scaledMediaWidth / 2;
+    const newY = frameCenterY - scaledMediaHeight / 2;
+
+    // Set the position
+    setPosition({ x: newX, y: newY });
+  };
+
+  // Handle media element loaded - with improved precise positioning
   const onMediaLoad = () => {
-    // Calculate minimum zoom
-    calculateMinZoom();
-    // Center the media initially
-    if (mediaRef.current && cropFrameRef.current) {
-      centerMedia();
-    }
+    if (!mediaRef.current || !cropFrameRef.current || !containerRef.current)
+      return;
+
+    // First ensure image is visible by setting a default position in the center
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const initialX = containerRect.width / 2;
+    const initialY = containerRect.height / 2;
+    setPosition({ x: initialX, y: initialY });
+
+    // Calculate minimum zoom and apply it
+    const newMinZoom = calculateMinZoom();
+    if (!newMinZoom) return;
+
+    // Apply minimum zoom with slight buffer to prevent edge cases
+    const zoomToApply = newMinZoom * 1.05; // 5% larger to ensure no edge issues
+
+    // Important: Set min zoom state first
+    setMinZoom(newMinZoom);
+
+    // Set the zoom to our buffered value
+    setZoom(zoomToApply);
+
+    // Use a synchronous approach to reduce flickering
+    setTimeout(() => {
+      if (mediaRef.current && cropFrameRef.current && containerRef.current) {
+        const media = mediaRef.current;
+        const cropFrame = cropFrameRef.current;
+
+        // Get dimensions
+        const mediaWidth = media.naturalWidth;
+        const mediaHeight = media.naturalHeight;
+
+        // Calculate the scaled media dimensions
+        const scaledMediaWidth = mediaWidth * zoomToApply;
+        const scaledMediaHeight = mediaHeight * zoomToApply;
+
+        // Get frame position
+        const frameRect = cropFrame.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+
+        // Calculate the exact center position
+        const frameCenterX =
+          frameRect.left - containerRect.left + frameRect.width / 2;
+        const frameCenterY =
+          frameRect.top - containerRect.top + frameRect.height / 2;
+
+        // Calculate the position that will center the media on the frame
+        const newX = frameCenterX - scaledMediaWidth / 2;
+        const newY = frameCenterY - scaledMediaHeight / 2;
+
+        // Apply the position directly
+        setPosition({ x: newX, y: newY });
+      }
+    }, 50);
   };
 
   // Handle drag start
@@ -117,37 +195,6 @@ export function MediaCropModal({
       x: e.clientX - position.x,
       y: e.clientY - position.y,
     });
-  };
-
-  // Center the media in the crop frame
-  const centerMedia = () => {
-    if (!mediaRef.current || !cropFrameRef.current || !containerRef.current)
-      return;
-
-    const media = mediaRef.current;
-    const container = containerRef.current;
-
-    // Calculate dimensions
-    const mediaWidth = media.naturalWidth;
-    const mediaHeight = media.naturalHeight;
-
-    // Get the container rect
-    const containerRect = container.getBoundingClientRect();
-
-    // Calculate the scaled media dimensions
-    const scaledMediaWidth = mediaWidth * zoom;
-    const scaledMediaHeight = mediaHeight * zoom;
-
-    // Calculate center point of container
-    const containerCenterX = containerRect.width / 2;
-    const containerCenterY = containerRect.height / 2;
-
-    // Set position to center the image
-    const newX = containerCenterX - scaledMediaWidth / 2;
-    const newY = containerCenterY - scaledMediaHeight / 2;
-
-    // Set the position
-    setPosition({ x: newX, y: newY });
   };
 
   // Fix the crop frame if image becomes smaller than it
