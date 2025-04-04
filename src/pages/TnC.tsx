@@ -13,7 +13,7 @@ const TnC: React.FC = () => {
       {/* Back button */}
       <button
         onClick={() => navigate("/signup")}
-        className="absolute top-6 left-6 flex items-center gap-1 text-foreground hover:text-gray-900 transition-colors cursor-pointer"
+        className="absolute top-6 left-6 flex items-center gap-1 text-foreground hover:text-muted-foreground transition-colors cursor-pointer"
       >
         <ChevronLeft className="h-5 w-5" />
         <span>Back</span>
