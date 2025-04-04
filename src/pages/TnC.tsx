@@ -13,21 +13,21 @@ const TnC: React.FC = () => {
       {/* Back button */}
       <button
         onClick={() => navigate("/signup")}
-        className="absolute top-6 left-6 flex items-center gap-1 text-gray-700 hover:text-gray-900 transition-colors cursor-pointer"
+        className="absolute top-6 left-6 flex items-center gap-1 text-foreground hover:text-gray-900 transition-colors cursor-pointer"
       >
         <ChevronLeft className="h-5 w-5" />
         <span>Back</span>
       </button>
 
-      <div className="container mx-auto px-4 py-16 max-w-5xl">
-        <div className="h-[200px] bg-[url('/assets/stores/privacy-policy-banner.svg')] bg-cover bg-center">
-          <h1 className="flex items-center text-4xl md:text-5xl font-bold mb-16">
-            <span className="text-gray-800">Terms &&nbsp;</span>{" "}
+      <div className="container mx-auto px-4 py-16 max-w-6xl">
+        <div className="h-[200px] bg-[url('/assets/stores/privacy-policy-banner.svg')] flex items-center bg-cover bg-top mb-10">
+          <h1 className="flex items-center text-4xl md:text-5xl font-bold">
+            <span className="text-foreground">Terms &&nbsp;</span>{" "}
             <span className="grad">Conditions</span>
           </h1>
         </div>
 
-        <div className="space-y-6 text-gray-800">
+        <div className="space-y-6 text-foreground/70">
           <h2 className="text-2xl font-semibold">Acceptance of Terms</h2>
           <p className="leading-relaxed">
             The services that BondBridge provides to all users are subject to
