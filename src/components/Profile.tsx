@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings, Loader2, Pencil } from "lucide-react";
+import { ArrowLeft, Settings, Loader2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThreeDotsMenu, { 
   BlockMenuItem, 
@@ -34,9 +34,8 @@ import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
 import { Community } from "@/lib/constants";
 import { TruncatedText } from "@/components/ui/TruncatedText";
 import { TruncatedList } from "@/components/ui/TruncatedList";
-import { setActivePage, setSettingsActive } from "@/store/settingsSlice";
-// import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
-// import type { StoryData } from "@/apis/apiTypes/response";
+import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
+import type { StoryData } from "@/apis/apiTypes/response";
 
 interface ProfileProps {
   userId: string;
@@ -75,7 +74,7 @@ const   Profile: React.FC<ProfileProps> = ({
   const dispatch = useAppDispatch();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
-  // const [userStories, setUserStories] = useState<StoryData | null>(null);
+  const [userStories, setUserStories] = useState<StoryData | null>(null);
   const [localRequestSent, setLocalRequestSent] = useState(requestSent);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] =
@@ -86,7 +85,7 @@ const   Profile: React.FC<ProfileProps> = ({
   const [executeBlockUser] = useApiCall(blockUserApi);
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
-  // const [executeGetStoryForUser] = useApiCall(getStoryForUser);
+  const [executeGetStoryForUser] = useApiCall(getStoryForUser);
 
   // Get user data from Redux store
   const { privacyLevel, nickname } = useAppSelector(
@@ -139,43 +138,26 @@ const   Profile: React.FC<ProfileProps> = ({
     loadCommunities();
   }, [userId]);
 
-  // useEffect(() => {
-  //   const loadStories = async () => {
-  //     const result = await executeGetStoryForUser(userId);
-  //     if (result.success && result.data && result.data.stories && result.data.stories.length > 0) {
-  //       setUserStories(result.data.stories[0]);
-  //     }
-  //   };
+  useEffect(() => {
+    const loadStories = async () => {
+      const result = await executeGetStoryForUser(userId);
+      if (result.success && result.data && result.data.stories && result.data.stories.length > 0) {
+        setUserStories(result.data.stories[0]);
+      }
+    };
 
-  //   loadStories();
-  // }, [userId]);
+    loadStories();
+  }, [userId]);
 
-  // const handleStoryClick = () => {
-  //   if (!userStories) return;
+  // Check if user has any unseen stories
+  const hasUnseenStories = userStories?.stories?.some(story => story.seen === 0);
 
-  //   navigate(`/story/${userId}`, {
-  //     state: {
-  //       currentStory: {
-  //         user: userStories.name,
-  //         userId: userStories.userId,
-  //         avatar: userStories.profilePic,
-  //         isLive: userStories.isLive,
-  //         hasStory: userStories.hasStory,
-  //         stories: userStories.stories,
-  //         latestStoryTime: userStories.latestStoryTime
-  //       },
-  //       allStories: [userStories],
-  //       initialUserIndex: 0
-  //     }
-  //   });
-  // };
   useEffect(() => {
     setLocalRequestSent(requestSent);
   }, [requestSent]);
 
   const handleSendFriendRequest = async () => {
     try {
-      console.log("aksh user id", userId);
       const result = await executeSendFriendRequest({ userId: userId });
       if (result.success && result.data) {
         setLocalRequestSent(true);
@@ -310,13 +292,40 @@ const   Profile: React.FC<ProfileProps> = ({
     }
   ];
 
-  const handleProfilePictureClick = () => {
+  const handleEditClick = () => {
     if (isCurrentUser) {
-      // Navigate to settings and open the profile tab
-      dispatch(setSettingsActive(true));
-      dispatch(setActivePage("profile"));
-      navigate('/settings');
+      // Navigate to settings with query parameter for profile tab
+      navigate('/settings?tab=profile');
     }
+  };
+
+  const handleStoryClick = () => {
+    if (userStories) {
+      navigate(`/story/${userId}`, {
+        state: {
+          currentStory: {
+            user: userStories.name,
+            userId: userStories.userId,
+            avatar: userStories.profilePic,
+            isLive: userStories.isLive,
+            hasStory: userStories.hasStory,
+            stories: userStories.stories,
+            latestStoryTime: userStories.latestStoryTime
+          },
+          allStories: [userStories],
+          initialUserIndex: 0
+        }
+      });
+    } else if (isCurrentUser) {
+      // Navigate to create story page if current user has no stories
+      navigate('/create-story');
+    }
+  };
+
+  // Function to handle adding a new story
+  const handleAddStory = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the parent click event
+    navigate('/create-story');
   };
 
   return (
@@ -342,21 +351,27 @@ const   Profile: React.FC<ProfileProps> = ({
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
-          className="relative w-24 h-24"
+          className="relative w-24 h-24 cursor-pointer"
         >
-          {!isCurrentUser && compatibility >= 0 && (
-            <div className="absolute -inset-1 flex items-center justify-center z-20">
-              {/* SVG for the ring */}
+          {/* Story ring */}
+          {userStories?.hasStory && (
+            <div className="absolute -inset-1 flex items-center justify-center z-10">
               <svg viewBox="0 0 110 110" className="absolute">
                 <circle 
                   cx="55" 
                   cy="55" 
                   r="52" 
                   fill="none" 
-                  stroke="var(--primary)" 
+                  stroke={hasUnseenStories ? "var(--primary)" : "var(--muted)"} 
                   strokeWidth="4"
                 />
               </svg>
+            </div>
+          )}
+          
+          {/* Compatibility ring - keep at z-20 to appear above story ring */}
+          {!isCurrentUser && compatibility >= 0 && (
+            <div className="absolute -inset-1 flex items-center justify-center z-20">
               {/* Compatibility percentage badge */}
               <div className="absolute -bottom-2 -right-2 bg-background rounded-full shadow-sm">
                 <div 
@@ -371,17 +386,31 @@ const   Profile: React.FC<ProfileProps> = ({
             src={profilePic || avatarSrc || "avatar.png"}
             alt={username}
             className="w-full h-full object-cover rounded-full absolute z-10"
+            onClick={userStories?.hasStory ? handleStoryClick : undefined}
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
           
           {/* Edit icon for profile picture - only show for current user */}
           {isCurrentUser && (
-            <div className="absolute bottom-0 right-0 z-20 cursor-pointer" onClick={handleProfilePictureClick}>
+            <div className="absolute bottom-0 right-0 z-20 cursor-pointer" onClick={handleEditClick}>
               <div className="bg-primary rounded-full p-1.5 shadow-md">
                 <Pencil className="h-4 w-4 text-primary-foreground" />
               </div>
             </div>
           )}
+
+          {isCurrentUser && !userStories?.hasStory && (
+            <div className="absolute -inset-1 flex items-center justify-center z-20">              
+              {/* Add story button */}
+              <div 
+                className="absolute top-0 right-0 bg-primary rounded-full p-1.5 shadow-md z-30 cursor-pointer"
+                onClick={handleAddStory}
+              >
+                <Plus className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+          )}
+
         </div>
         <h1 className="text-xl font-semibold">
           {isCurrentUser

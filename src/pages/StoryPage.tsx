@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Play, Heart } from 'lucide-react';
+import { ArrowLeft, Send, Play, Heart, Share } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -22,9 +22,11 @@ export default function StoryPage() {
     const [videoEnded, setVideoEnded] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [hasShownControlsTooltip, setHasShownControlsTooltip] = useState(false);
+    const [likedStories, setLikedStories] = useState<{[key: string]: boolean}>({});
     const videoRef = useRef<HTMLVideoElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [animationEndDetector, setAnimationEndDetector] = useState(0);
+    const currentLoggedInUserId = localStorage.getItem('userId') || "";
     
     // Use our custom hook for API calls
     const [executeSaveInteraction] = useApiCall(saveStoryInteraction);
@@ -168,7 +170,7 @@ export default function StoryPage() {
                 }
             } else {
                 // If it's the last user's last story, go back to home
-                navigate('/');
+                navigate(-1);
             }
         }
         
@@ -204,6 +206,16 @@ export default function StoryPage() {
         setVideoEnded(false);
         setIsPaused(false);
     }, [currentUserIndex, currentStoryIndex]);
+
+    // Log story ID when story changes
+    useEffect(() => {
+        if (!isLoading && allStories.length > 0) {
+            const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+            if (currentStoryItem) {
+                console.log('Current Story ID:', currentStoryItem._id);
+            }
+        }
+    }, [currentUserIndex, currentStoryIndex, isLoading, allStories]);
 
     // Mark story as seen when it's viewed
     useEffect(() => {
@@ -472,9 +484,12 @@ export default function StoryPage() {
                     </div>
                 </div>
 
+                {/* Top Gradient Overlay for better visibility */}
+                <div className="absolute top-0 left-0 right-0 h-40 z-[5] bg-gradient-to-b from-black/70 to-transparent pointer-events-none"></div>
+
                 {/* Story Content */}
                 <div
-                    className="h-[calc(100vh-98px)] w-full flex items-center justify-center bg-background relative"
+                    className="h-[calc(100vh-104px)] w-full flex items-center justify-center bg-background relative rounded-2xl"
                     onClick={toggleStoryPlayback}
                 >
                     {isVideo ? (
@@ -527,7 +542,7 @@ export default function StoryPage() {
                             <img
                                 src={currentStoryItem.url}
                                 alt="Story content"
-                                className="w-full h-full p-2 rounded-lg object-contain"
+                                className="w-full h-full p-2 pb-16 object-contain"
                             />
                             {/* Image Controls Overlay */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -548,8 +563,8 @@ export default function StoryPage() {
                 </div>
 
                 {/* Reply Input */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 mx-1s">
-                    <div className="flex gap-2 items-center">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm">
+                    <div className="flex gap-1 items-center">
                         <Input
                             ref={inputRef}
                             placeholder="What's on your mind..."
@@ -557,7 +572,7 @@ export default function StoryPage() {
                             onClick={(e) => e.stopPropagation()} // Prevent triggering the parent's onClick
                         />
                         <button 
-                            className="p-2 rounded-full bg-primary text-primary-foreground"
+                            className="p-2 rounded-full text-primary-foreground flex-shrink-0"
                             onClick={(e) => {
                                 e.stopPropagation(); // Prevent triggering the parent's onClick
                                 /* Add send message logic here */
@@ -565,10 +580,26 @@ export default function StoryPage() {
                         >
                             <Send className="h-5 w-5" />
                         </button>
-                        {/* like story button */}
-                        <button className="p-2 rounded-full bg-primary text-primary-foreground">
-                            <Heart className="h-5 w-5" />
-                        </button>
+                        {/* like story button - only show if not the current user's story */}
+                        {currentUser.userId !== currentLoggedInUserId && (
+                            <button 
+                                className="p-2 rounded-full text-primary-foreground flex-shrink-0"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent triggering the parent's onClick
+                                    // Toggle like status for current story
+                                    const storyId = currentStoryItem._id;
+                                    setLikedStories(prev => ({
+                                        ...prev,
+                                        [storyId]: !prev[storyId]
+                                    }));
+                                    // Here you would also call API to update like status
+                                }}
+                            >
+                                <Heart 
+                                    className={`h-5 w-5 ${likedStories[currentStoryItem._id] ? 'fill-red-500 text-red-500' : ''}`} 
+                                />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
