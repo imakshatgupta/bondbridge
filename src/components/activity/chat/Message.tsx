@@ -109,6 +109,24 @@ const Message: React.FC<MessageProps> = ({
                     </div>
                   )}
 
+                {/* Post video if available */}
+                {sharedPost.data.media &&
+                  sharedPost.data.media.length > 0 &&
+                  sharedPost.data.media[0].type === "video" && (
+                    <div className="w-full h-[150px] overflow-hidden">
+                      <video
+                        src={sharedPost.data.media[0].url}
+                        className="w-full h-full object-cover"
+                        controls
+                        onError={(e) => {
+                          console.error("Failed to load shared post video");
+                          // We can't set a fallback for video, but we can handle the error
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+
                 {/* Post content */}
                 <div className="p-2 cursor-pointer">
                   <p className="text-xs font-medium mb-1">

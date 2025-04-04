@@ -186,23 +186,12 @@ export const resetPassword = async (resetData: { phoneNumber: string; countryCod
     throw new Error('All fields are required');
   }
   
-  try {
-    const response = await apiClient.post(`/reset-password`, {
-      phoneNumber,
-      countryCode,
-      oldPassword,
-      password
-    });
-    
-    return response.data;
-  } catch (error: any) {
-    if (error.response) {
-      const errorMessage = error.response.data?.message || 'Failed to reset password';
-      throw new Error(errorMessage);
-    } else if (error.request) {
-      throw new Error('No response received from server');
-    } else {
-      throw new Error(error.message || 'Failed to reset password');
-    }
-  }
+  const response = await apiClient.post(`/reset-password`, {
+    phoneNumber,
+    countryCode,
+    oldPassword,
+    password
+  });
+  
+  return response.data;
 };

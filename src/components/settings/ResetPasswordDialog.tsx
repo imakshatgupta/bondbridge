@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { resetPassword } from "@/apis/commonApiCalls/authenticationApi";
+import { useApiCall } from "@/apis/globalCatchError";
 
 interface ResetPasswordData {
   phoneNumber: string;
@@ -37,6 +38,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     password: "",
     oldPassword: ""
   });
+  const [executeResetPassword] = useApiCall(resetPassword);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -50,14 +52,14 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      await resetPassword({
-        phoneNumber: formData.phoneNumber,
-        countryCode: formData.countryCode,
-        oldPassword: formData.oldPassword,
-        password: formData.password
-      });
-      
+    const { success } = await executeResetPassword({
+      phoneNumber: formData.phoneNumber,
+      countryCode: formData.countryCode,
+      oldPassword: formData.oldPassword,
+      password: formData.password
+    });
+    
+    if (success) {
       toast.success("Password reset successfully");
       onOpenChange(false);
       setFormData({
@@ -66,15 +68,9 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
         password: "",
         oldPassword: ""
       });
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("An error occurred while resetting password");
-      }
-    } finally {
-      setIsSubmitting(false);
     }
+    
+    setIsSubmitting(false);
   };
 
   return (
