@@ -4,6 +4,7 @@ import {
   CreatePostResponse,
   RewriteWithBondChatResponse,
 } from "../apiTypes/response";
+import { VideoFileWithThumbnail } from "../../components/MediaCropModal";
 
 /**
  * Creates a new post with optional media attachments
@@ -22,11 +23,22 @@ export const createPost = async (
 
   // Handle media files while maintaining sequence
   if (postData.image && postData.image.length > 0) {
-    postData.image.forEach((file) => {
+    postData.image.forEach((file, index) => {
       if (file.type.startsWith("image/")) {
         formData.append(`image`, file);
       } else if (file.type.startsWith("video/")) {
         formData.append(`video`, file);
+        
+        // Check if this is a video with thumbnail
+        if ('thumbnail' in file && file.thumbnail instanceof File) {
+          const videoFile = file as VideoFileWithThumbnail;
+          
+          // Add the thumbnail for the video
+          formData.append(`thumbnail`, videoFile.thumbnail);
+          
+          // Add crop data as JSON string
+          formData.append(`videoCropData_${index}`, JSON.stringify(videoFile.cropData));
+        }
       }
     });
   }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
-import { Pencil, Trash2, Image, Smile, Video, Mic } from 'lucide-react';
+import { Trash2, Image, Smile, Video, Mic } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { createPost, rewriteWithBondChat } from '../apis/commonApiCalls/createPostApi';
 import { useApiCall } from '../apis/globalCatchError';
@@ -20,6 +20,7 @@ import {
 import { WORD_LIMIT } from '@/lib/constants';
 import { countWords } from '@/lib/utils';
 import { CreatePostRequest } from '@/apis/apiTypes/request';
+import { MediaCropModal, CroppedFile } from '@/components/MediaCropModal';
 
 interface PostData extends Partial<CreatePostRequest> {
   content: string;
@@ -47,7 +48,7 @@ const CreatePost = ({
 }: CreatePostProps) => {
   const navigate = useNavigate();
   const [content, setContent] = useState(initialContent);
-  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<CroppedFile[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [documentFiles, setDocumentFiles] = useState<File[]>([]);
@@ -57,6 +58,10 @@ const CreatePost = ({
   const recognitionActiveRef = useRef(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Media cropping state
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [currentMediaFile, setCurrentMediaFile] = useState<File | null>(null);
   
   // Update content when initialContent changes (for edit mode)
   useEffect(() => {
@@ -86,23 +91,33 @@ const CreatePost = ({
       return;
     }
     
-    const newFiles = [...mediaFiles, ...files].slice(0, 4);
-    
+    if (files.length > 0) {
+      // Open crop modal with the first file
+      setCurrentMediaFile(files[0]);
+      setIsCropModalOpen(true);
+    }
+  };
+
+  const handleCropComplete = (croppedFile: CroppedFile) => {
+    const newFiles = [...mediaFiles, croppedFile].slice(0, 4);
     setMediaFiles(newFiles);
     
-    newFiles.forEach(file => {
+    // Create preview for the cropped file
+    if (croppedFile.type.startsWith('video/') && croppedFile.previewUrl) {
+      // For videos, use the preview image URL directly for thumbnail display
+      setMediaPreviews(prev => [...prev, croppedFile.previewUrl!].slice(0, 4));
+    } else {
+      // For images, generate preview from the file
       const reader = new FileReader();
       reader.onloadend = () => {
         setMediaPreviews(prev => [...prev, reader.result as string].slice(0, 4));
       };
-      reader.readAsDataURL(file);
-    });
+      reader.readAsDataURL(croppedFile);
+    }
+    
+    // Reset crop modal state
+    setCurrentMediaFile(null);
   };
-
-  // const handleDocumentUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = Array.from(e.target.files || []);
-  //   setDocumentFiles(prev => [...prev, ...files]);
-  // };
 
   const handleRemoveMedia = (index: number) => {
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
@@ -252,7 +267,7 @@ const CreatePost = ({
           ...postData,
           whoCanComment: 1, // Default value
           privacy: 1, // Default value
-          image: mediaFiles,
+          image: mediaFiles as unknown as File[],
           document: documentFiles
         };
       }
@@ -337,8 +352,6 @@ const CreatePost = ({
           <AvatarFallback>{nickname ? nickname[0].toUpperCase() : "U"}</AvatarFallback>
         </Avatar>
 
-        
-
         <div className="flex items-center gap-3 ml-auto">
           <Button
             variant="ghost"
@@ -359,8 +372,6 @@ const CreatePost = ({
           </Button>
         </div>
       </div>
-
-      
 
       <div className="flex justify-between items-center">
         <div className="flex gap-3">
@@ -441,8 +452,6 @@ const CreatePost = ({
             )}
           </Button>
         </div>
-
-
       </div>
 
       <Separator className="my-3 bg-[var(--border)]" />
@@ -482,18 +491,37 @@ const CreatePost = ({
               }`}>
                 <div className={`relative ${mediaPreviews.length > 2 ? 'row-span-2' : ''}`}>
                   {mediaFiles[0]?.type.startsWith('video/') ? (
-                    <video 
-                      src={mediaPreviews[0]} 
-                      className="w-full h-full object-cover"
-                      style={{ maxHeight: mediaPreviews.length === 1 ? '400px' : '300px' }}
-                      controls
-                    />
+                    <div className="relative w-full pt-[100%] overflow-hidden">
+                      {/* Use stored preview image for video thumbnail if available */}
+                      {mediaFiles[0].previewUrl ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black">
+                          <img 
+                            src={mediaFiles[0].previewUrl} 
+                            alt="Video thumbnail"
+                            className="w-full h-full object-contain"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-16 h-16 rounded-full bg-primary/20 backdrop-blur-sm flex items-center justify-center">
+                              <Video className="h-8 w-8 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <video 
+                          key={`video-preview-0-${mediaPreviews[0]}`}
+                          src={mediaPreviews[0]} 
+                          className="absolute inset-0 w-full h-full object-cover"
+                          controls
+                          preload="metadata"
+                          playsInline
+                        />
+                      )}
+                    </div>
                   ) : (
                     <img 
                       src={mediaPreviews[0]} 
                       alt="Preview" 
-                      className="w-full h-full object-cover"
-                      style={{ maxHeight: mediaPreviews.length === 1 ? '400px' : '300px' }}
+                      className="w-full h-full object-cover aspect-square"
                     />
                   )}
                   <MediaControls onRemove={() => handleRemoveMedia(0)} />
@@ -502,18 +530,37 @@ const CreatePost = ({
                 {mediaPreviews.length > 1 && (
                   <div className="relative">
                     {mediaFiles[1]?.type.startsWith('video/') ? (
-                      <video 
-                        src={mediaPreviews[1]} 
-                        className="w-full h-full object-cover"
-                        style={{ height: '150px' }}
-                        controls
-                      />
+                      <div className="relative w-full pt-[100%] overflow-hidden">
+                        {/* Use stored preview image for video thumbnail if available */}
+                        {mediaFiles[1].previewUrl ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black">
+                            <img 
+                              src={mediaFiles[1].previewUrl} 
+                              alt="Video thumbnail"
+                              className="w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-primary/20 backdrop-blur-sm flex items-center justify-center">
+                                <Video className="h-6 w-6 text-white" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <video 
+                            key={`video-preview-1-${mediaPreviews[1]}`}
+                            src={mediaPreviews[1]} 
+                            className="absolute inset-0 w-full h-full object-cover"
+                            controls
+                            preload="metadata"
+                            playsInline
+                          />
+                        )}
+                      </div>
                     ) : (
                       <img 
                         src={mediaPreviews[1]} 
                         alt="Preview" 
-                        className="w-full h-full object-cover"
-                        style={{ height: '150px' }}
+                        className="w-full h-full object-cover aspect-square"
                       />
                     )}
                     <MediaControls onRemove={() => handleRemoveMedia(1)} />
@@ -523,18 +570,37 @@ const CreatePost = ({
                 {mediaPreviews.length > 2 && (
                   <div className="relative">
                     {mediaFiles[2]?.type.startsWith('video/') ? (
-                      <video 
-                        src={mediaPreviews[2]} 
-                        className="w-full h-full object-cover"
-                        style={{ height: '150px' }}
-                        controls
-                      />
+                      <div className="relative w-full pt-[100%] overflow-hidden">
+                        {/* Use stored preview image for video thumbnail if available */}
+                        {mediaFiles[2].previewUrl ? (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black">
+                            <img 
+                              src={mediaFiles[2].previewUrl} 
+                              alt="Video thumbnail"
+                              className="w-full h-full object-contain"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="w-12 h-12 rounded-full bg-primary/20 backdrop-blur-sm flex items-center justify-center">
+                                <Video className="h-6 w-6 text-white" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <video 
+                            key={`video-preview-2-${mediaPreviews[2]}`}
+                            src={mediaPreviews[2]} 
+                            className="absolute inset-0 w-full h-full object-cover"
+                            controls
+                            preload="metadata"
+                            playsInline
+                          />
+                        )}
+                      </div>
                     ) : (
                       <img 
                         src={mediaPreviews[2]} 
                         alt="Preview" 
-                        className="w-full h-full object-cover"
-                        style={{ height: '150px' }}
+                        className="w-full h-full object-cover aspect-square"
                       />
                     )}
                     <MediaControls onRemove={() => handleRemoveMedia(2)} />
@@ -571,19 +637,22 @@ const CreatePost = ({
           )}
         </div>
 
-
+      {/* Media Crop Modal */}
+      <MediaCropModal
+        open={isCropModalOpen}
+        onClose={() => {
+          setIsCropModalOpen(false);
+          setCurrentMediaFile(null);
+        }}
+        media={currentMediaFile}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 };
 
 const MediaControls = ({ onRemove }: { onRemove: () => void }) => (
   <div className="absolute top-2 right-2 flex gap-2">
-    <button
-      onClick={() => {/* Edit functionality */}}
-      className="bg-black/70 p-1.5 rounded-full"
-    >
-      <Pencil size={16} className="text-white" />
-    </button>
     <button
       onClick={onRemove}
       className="bg-black/70 p-1.5 rounded-full"

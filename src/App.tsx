@@ -23,6 +23,8 @@ import EditPost from "./pages/EditPost";
 import CreateStory from "./pages/CreateStory";
 import Settings from "./pages/Settings";
 import ForgotPassword from "./pages/ForgotPassword";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TnC from "./pages/TnC";
 import FollowingFollowers from "@/components/FollowingFollowers";
 import AuthGuard from "@/components/AuthGuard";
 import CommunityProfilePage from "@/pages/CommunityProfilePage";
@@ -198,10 +200,26 @@ const App: React.FC = () => {
             }
           />
           <Route
-          path="/forgot-password"
-          element={
+            path="/forgot-password"
+            element={
               <Layout>
                 <ForgotPassword />
+              </Layout>
+            }
+          />
+          <Route
+            path="/privacy"
+            element={
+              <Layout>
+                <PrivacyPolicy />
+              </Layout>
+            }
+          />
+          <Route
+            path="/terms"
+            element={
+              <Layout>
+                <TnC />
               </Layout>
             }
           />

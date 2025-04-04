@@ -2,8 +2,8 @@ import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
-import ThreeDotsMenu, { 
-    ReportMenuItem, 
+import ThreeDotsMenu, {
+    ReportMenuItem,
     DeleteMenuItem,
     EditPostMenuItem
 } from "@/components/global/ThreeDotsMenu";
@@ -16,9 +16,9 @@ import {
     CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useApiCall } from "@/apis/globalCatchError";
-import { 
-    addReaction, 
-    deleteReaction, 
+import {
+    addReaction,
+    deleteReaction,
     getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
@@ -45,17 +45,17 @@ const REACTIONS = {
 
 type ReactionType = keyof typeof REACTIONS;
 
-export function Post({ 
-    user, 
-    userId, 
-    avatar, 
-    caption, 
-    media = [], 
-    likes: initialLikes, 
-    comments, 
-    datePosted, 
-    isOwner = false, 
-    onCommentClick, 
+export function Post({
+    user,
+    userId,
+    avatar,
+    caption,
+    media = [],
+    likes: initialLikes,
+    comments,
+    datePosted,
+    isOwner = false,
+    onCommentClick,
     onLikeClick,
     feedId,
     isLiked: initialIsLiked = false
@@ -98,16 +98,16 @@ export function Post({
 
     const fetchReactions = async () => {
         if (!feedId || isLoadingReactions) return;
-        
+
         setIsLoadingReactions(true);
         const result = await executeGetAllReactions(feedId, 'feed');
-        
+
         if (result.success && result.data) {
             // Find all reaction types from the response
             const currentUserId = localStorage.getItem('userId');
             let totalLikes = 0;
             let userReaction: ReactionType | null = null;
-            
+
             // Initialize reaction counts
             const newReactionCounts: Record<ReactionType, number> = {
                 like: 0,
@@ -115,16 +115,16 @@ export function Post({
                 haha: 0,
                 lulu: 0
             };
-            
+
             result.data.reactions.forEach(r => {
                 // All reaction types contribute to the total "likes" count
                 totalLikes += r.count;
-                
+
                 // Update individual reaction counts
                 if (r.reactionType in newReactionCounts) {
                     newReactionCounts[r.reactionType as ReactionType] = r.count;
                 }
-                
+
                 // Check if current user has any reaction
                 const userHasReacted = r.users.some(u => u.userId === currentUserId);
                 if (userHasReacted) {
@@ -132,7 +132,7 @@ export function Post({
                     userReaction = r.reactionType as ReactionType;
                 }
             });
-            
+
             setReactionCounts(newReactionCounts);
             setCurrentReaction(userReaction);
             setLikes(totalLikes);
@@ -142,44 +142,44 @@ export function Post({
 
     const handleReactionSelect = async (reactionType: ReactionType) => {
         if (isLikeLoading || !feedId) return;
-        
+
         const isSameReaction = currentReaction === reactionType;
         const wasLiked = isLiked;
-        
+
         // Update UI optimistically
         setIsLiked(!isSameReaction);
         setCurrentReaction(isSameReaction ? null : reactionType);
         setLikes(prev => isSameReaction ? prev - 1 : (wasLiked ? prev : prev + 1));
-        
+
         // Update reaction counts optimistically
         setReactionCounts(prev => {
-            const newCounts = {...prev};
-            
+            const newCounts = { ...prev };
+
             if (isSameReaction) {
                 // Removing reaction
                 newCounts[reactionType] = Math.max(0, newCounts[reactionType] - 1);
             } else {
                 // Adding new reaction
                 newCounts[reactionType] += 1;
-                
+
                 // If switching from another reaction, decrease the previous one
                 if (wasLiked && currentReaction) {
                     newCounts[currentReaction] = Math.max(0, newCounts[currentReaction] - 1);
                 }
             }
-            
+
             return newCounts;
         });
-        
+
         setIsLikeLoading(true);
         setShowReactionPopover(false);
-        
+
         const reactionData = {
             entityId: feedId,
             entityType: 'feed',
             reactionType
         };
-        
+
         let result;
         if (isSameReaction) {
             // If clicking the same reaction, remove it
@@ -196,7 +196,7 @@ export function Post({
             // Then add the new reaction
             result = await executeAddReaction(reactionData);
         }
-        
+
         if (!result.success || !result.data) {
             // Revert UI changes if API call fails
             setIsLiked(wasLiked);
@@ -205,19 +205,19 @@ export function Post({
         } else {
             onLikeClick?.();
         }
-        
+
         setIsLikeLoading(false);
     };
-    
+
     const handleLikeButtonClick = () => {
         // Simply show the reaction popover, don't auto-select or de-select reactions
         setShowReactionPopover(prev => !prev);
-        
+
         // Clear auto-hide timeout if it exists
         if (reactionTimeoutRef.current) {
             window.clearTimeout(reactionTimeoutRef.current);
         }
-        
+
         // Set a new auto-hide timeout
         reactionTimeoutRef.current = window.setTimeout(() => {
             setShowReactionPopover(false);
@@ -231,10 +231,10 @@ export function Post({
     const handleDeletePost = async () => {
         if (!feedId) return;
         const result = await executeDeletePost(feedId);
-        
+
         if (result.success) {
             toast.success("Post deleted successfully");
-            if(window.location.pathname === `/post/${feedId}`) {
+            if (window.location.pathname === `/post/${feedId}`) {
                 navigate(-1);
             }
             else window.location.reload();
@@ -242,8 +242,8 @@ export function Post({
     };
 
     const handleEditPost = () => {
-        navigate(`/edit-post/${feedId}`, { 
-            state: { 
+        navigate(`/edit-post/${feedId}`, {
+            state: {
                 caption,
                 postId: feedId,
                 media
@@ -294,7 +294,7 @@ export function Post({
             </div>
             <CardContent className="p-4 pt-0">
                 <p className="text-card-foreground">{caption}</p>
-                
+
                 {hasMultipleMedia && media && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         <Carousel className="w-full">
@@ -342,12 +342,12 @@ export function Post({
                         )}
                     </div>
                 )}
-                
+
                 <div className="flex items-center justify-between mt-4 text-muted-foreground">
                     <div className="flex items-center gap-3">
                         <Popover open={showReactionPopover} onOpenChange={setShowReactionPopover}>
                             <PopoverTrigger asChild>
-                                <button 
+                                <button
                                     className={`flex items-center gap-1 ${isLiked ? '' : 'hover:text-destructive'}`}
                                     onClick={handleLikeButtonClick}
                                     disabled={isLikeLoading || isLoadingReactions}
@@ -356,11 +356,11 @@ export function Post({
                                         <span className="text-lg">{displayedReaction}</span>
                                     ) : (
                                         <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                                    )} 
+                                    )}
                                     {likes}
                                 </button>
                             </PopoverTrigger>
-                            <PopoverContent 
+                            <PopoverContent
                                 className="p-2 bg-card rounded-full w-fit border shadow-md"
                                 side="top"
                                 align="start"
@@ -374,9 +374,8 @@ export function Post({
                                         return (
                                             <button
                                                 key={key}
-                                                className={`flex items-center rounded-full py-1 px-2 transition-all hover:bg-accent ${
-                                                    currentReaction === key ? 'bg-accent' : ''
-                                                }`}
+                                                className={`flex items-center rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''
+                                                    }`}
                                                 onClick={() => {
                                                     if (currentReaction === key) {
                                                         // Remove reaction only if clicking the same one
@@ -423,9 +422,9 @@ export function Post({
                                 author: userId,
                                 data: {
                                     content: caption,
-                                    media: media && media.length > 0 
-                                        ? media 
-                                            : []
+                                    media: media && media.length > 0
+                                        ? media
+                                        : []
                                 },
                                 feedId: feedId,
                                 name: user
