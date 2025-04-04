@@ -241,6 +241,10 @@ export default function HomePage() {
     navigate(`/post/${postId}`, { state: { post } });
   };
 
+  const handlePostDelete = (postId: string) => {
+    setPosts(prevPosts => prevPosts.filter(post => post.feedId !== postId));
+  };
+
   // Render error state
   if (error) {
     return (
@@ -376,6 +380,7 @@ export default function HomePage() {
                 onCommentClick={() => handleCommentClick(post.feedId, post)}
                 onLikeClick={() => handleLikeClick(post._id)}
                 feedId={post.feedId}
+                onDelete={handlePostDelete}
               />
             </div>
           ))
