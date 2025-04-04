@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Play } from 'lucide-react';
+import { ArrowLeft, Send, Play, Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -411,7 +411,7 @@ export default function StoryPage() {
                 {/* Keyboard Controls Tooltip */}
                 {showControls && (
                     <div className="absolute bottom-20 left-0 right-0 z-20 flex justify-center">
-                        <div className="px-4 py-2 bg-background/90 rounded-md border border-border shadow-sm text-xs text-muted-foreground animate-fade-in-out">
+                        <div className="px-4 py-2 bg-background/90 rounded-md border border-border shadow-sm text-xs text-foreground animate-fade-in-out">
                             <p>Space: Pause/Play | ← →: Navigate | Esc: Exit</p>
                         </div>
                     </div>
@@ -451,7 +451,7 @@ export default function StoryPage() {
                 <div className="absolute top-5 left-0 right-0 z-10 flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                         <button onClick={() => navigate(-1)} className="p-1">
-                            <ArrowLeft className="h-5 w-5 text-white cursor-pointer" />
+                            <ArrowLeft className="h-5 w-5 text-foreground cursor-pointer" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
@@ -465,8 +465,8 @@ export default function StoryPage() {
                                     navigate(`/profile/${currentUser.userId}`);
                                 }}
                             >
-                                <p className="font-semibold text-sm text-white">{currentUser.user}</p>
-                                <p className="text-xs text-gray-300">{currentStoryItem.ago_time}</p>
+                                <p className="font-semibold text-sm text-foreground">{currentUser.user}</p>
+                                <p className="text-xs text-muted-foreground">{currentStoryItem.ago_time}</p>
                             </div>
                         </div>
                     </div>
@@ -474,7 +474,7 @@ export default function StoryPage() {
 
                 {/* Story Content */}
                 <div
-                    className="h-[calc(100vh-104px)] w-full flex items-center justify-center bg-background relative"
+                    className="h-[calc(100vh-98px)] w-full flex items-center justify-center bg-background relative"
                     onClick={toggleStoryPlayback}
                 >
                     {isVideo ? (
@@ -547,24 +547,6 @@ export default function StoryPage() {
                     )}
                 </div>
 
-                {/* Emojis */}
-                <div className="absolute bottom-15 left-0 right-0 flex justify-center">
-                    <div className="flex space-x-1 px-2">
-                        {["🔥", "😍", "😎", "😂"].map((emoji, index) => (
-                            <button
-                                key={index}
-                                className="w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border hover:bg-muted transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary active:bg-primary/20"
-                                onClick={(e) => {
-                                    e.stopPropagation(); // Prevent triggering the parent's onClick
-                                    /* Add reaction logic here */
-                                }}
-                            >
-                                {emoji}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
                 {/* Reply Input */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 mx-1s">
                     <div className="flex gap-2 items-center">
@@ -582,6 +564,10 @@ export default function StoryPage() {
                             }}
                         >
                             <Send className="h-5 w-5" />
+                        </button>
+                        {/* like story button */}
+                        <button className="p-2 rounded-full bg-primary text-primary-foreground">
+                            <Heart className="h-5 w-5" />
                         </button>
                     </div>
                 </div>
