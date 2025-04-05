@@ -305,18 +305,22 @@ export function Post({
                                 {media.map((item, index) => (
                                     <CarouselItem key={`${userId}-media-${index}`}>
                                         {item.type === "image" && (
-                                            <img
-                                                src={item.url}
-                                                alt={`Post media ${index + 1}`}
-                                                className="w-full max-h-[500px] object-contain bg-muted"
-                                            />
+                                            <div className="aspect-square w-full relative bg-muted">
+                                                <img
+                                                    src={item.url}
+                                                    alt={`Post media ${index + 1}`}
+                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                />
+                                            </div>
                                         )}
                                         {item.type === "video" && (
-                                            <video
-                                                src={item.url}
-                                                controls
-                                                className="w-full max-h-[500px] object-contain bg-muted"
-                                            />
+                                            <div className="aspect-square w-full relative bg-muted">
+                                                <video
+                                                    src={item.url}
+                                                    controls
+                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                />
+                                            </div>
                                         )}
                                     </CarouselItem>
                                 ))}
@@ -330,18 +334,22 @@ export function Post({
                 {!hasMultipleMedia && hasSingleMedia && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         {media && media.length > 0 && media[0].type === "image" && (
-                            <img
-                                src={media[0].url}
-                                alt="Post"
-                                className="w-full max-h-[500px] object-contain bg-muted"
-                            />
+                            <div className="aspect-square w-full relative bg-muted">
+                                <img
+                                    src={media[0].url}
+                                    alt="Post"
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                            </div>
                         )}
                         {media && media.length > 0 && media[0].type === "video" && (
-                            <video
-                                src={media[0].url}
-                                controls
-                                className="w-full max-h-[500px] object-contain bg-muted"
-                            />
+                            <div className="aspect-square w-full relative bg-muted">
+                                <video
+                                    src={media[0].url}
+                                    controls
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                            </div>
                         )}
                     </div>
                 )}

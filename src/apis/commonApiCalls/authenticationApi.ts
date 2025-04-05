@@ -193,7 +193,7 @@ export const forgotPassword = async (forgotData: {
   const response = await apiClient.post('/forgot-password', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
-      'Authorization': `Basic OG==`
+      // 'Authorization': `Basic OG==`
     },
   });
   
