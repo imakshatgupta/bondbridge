@@ -144,8 +144,8 @@ export const getStoryForUser = async (userId: string) => {
     throw new Error('User ID is required');
   }
   
-  const response = await formDataApiClient.get('/get-story-for-user', {
-    params: { userId }
+  const response = await formDataApiClient.post('/get-story-for-user', {
+    userId: userId
   });
   
   if (response.status === 200) {

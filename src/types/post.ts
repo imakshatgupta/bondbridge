@@ -18,4 +18,5 @@ export interface PostProps {
     onLikeClick?: () => void;
     feedId: string;
     isLiked?: boolean;
+    onDelete?: (postId: string) => void; // Callback when post is deleted
 }

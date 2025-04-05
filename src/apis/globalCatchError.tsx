@@ -40,10 +40,10 @@ export const handleApiError = (error: unknown): ApiError => {
     };
   }
 
-  if(apiError?.message && apiError.message === "Unauthorised") {
-    localStorage.clear();
-    window.location.href = "/login";
-  }
+  // if(apiError?.message && apiError.message === "Unauthorized") {
+  //   localStorage.clear();
+  //   window.location.href = "/login";
+  // }
 
   // Add console log to debug
   console.log('Showing error toast:', apiError);

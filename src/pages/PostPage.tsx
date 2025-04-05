@@ -382,6 +382,10 @@ export default function CommentsPage() {
     }
   };
 
+  const handlePostDelete = () => {
+    navigate("/");
+  };
+
   return (
     <div className="relative max-w-2xl mx-auto bg-background min-h-screen flex flex-col">
       {/* Show LogoLoader while page is loading */}
@@ -422,6 +426,7 @@ export default function CommentsPage() {
                   isOwner={currentUserId === post.userId}
                   onCommentClick={() => {}}
                   onLikeClick={() => {}}
+                  onDelete={handlePostDelete}
                 />
               )}
 
