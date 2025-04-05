@@ -279,7 +279,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({
 
   return (
     <div className="p-3 flex items-center gap-2">
-      <div className="flex-1 flex items-center gap-3 bg-muted/50 rounded-full px-4 py-2 relative">
+      <div className="flex-1 flex items-center gap-3 bg-muted/50 rounded-full px-4 py-2">
         <Input 
           value={message}
           onChange={(e) => setMessage(e.target.value)}
