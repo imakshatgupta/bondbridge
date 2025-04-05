@@ -92,17 +92,27 @@ export interface AvatarUrls {
   female: AvatarItem[];
 }
 
-export type CreateProfileResponse = ApiResponse<{
-  user: {
+export type CreateProfileResponse = {
+  success: boolean;
+  message: string;
+  userDetails: {
     statusCode: number;
-    userId: string;
     _id: string;
-    name: string;
-    email: string;
+    mobileNumber: string;
+    countryCode: string;
+    nickName: string;
+    privacyLevel: string;
     avatar: string;
+    bio?: string;
+    email: string;
+    entityType: string;
     interests: string[];
+    name: string;
+    profilePic?: string;
   };
-}>;
+  apiToken: string;
+  socketToken: string;
+};
 
 export type FetchAvatarsResponse = {
   success: boolean;

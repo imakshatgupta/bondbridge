@@ -52,6 +52,7 @@ export interface CreateProfileRequest {
   image?: File;
   avatar?: string;
   communitiesSelected?: Community[];
+  generateToken?: string;
 }
 
 export interface FetchAvatarsRequest {
