@@ -16,13 +16,14 @@ import {
 import { Loader2 } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Settings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useAppDispatch();
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Get user data from Redux store
   const { username, nickname, email, avatar, privacyLevel, profilePic } =
@@ -106,11 +107,22 @@ const Settings = () => {
 
     loadCurrentUser();
 
+    // Get tab from URL query parameter
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      // Validate that the tab parameter is a valid SettingPage
+      const validTabs = ['profile', 'privacy', 'notifications', 'blocked', 'voice', 'help', 'account'];
+      if (validTabs.includes(tabParam)) {
+        dispatch(setSettingsActive(true));
+        dispatch(setActivePage(tabParam as SettingPage));
+      }
+    }
+
     // Deactivate settings sidebar when component unmounts
     return () => {
       dispatch(setSettingsActive(false));
     };
-  }, [dispatch]);
+  }, [dispatch, searchParams]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">

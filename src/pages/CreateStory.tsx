@@ -296,9 +296,9 @@ const CreateStory = () => {
         throw new Error("Could not get canvas context");
       }
 
-      // Set canvas dimensions (10:16 aspect ratio)
+      // Set canvas dimensions (9:16 aspect ratio)
       canvas.width = 400;
-      canvas.height = 640;
+      canvas.height = 711;
 
       // Fill background with theme color
       ctx.fillStyle = theme.bgColor;

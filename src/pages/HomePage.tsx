@@ -241,6 +241,10 @@ export default function HomePage() {
     navigate(`/post/${postId}`, { state: { post } });
   };
 
+  const handlePostDelete = (postId: string) => {
+    setPosts(prevPosts => prevPosts.filter(post => post.feedId !== postId));
+  };
+
   // Render error state
   if (error) {
     return (
@@ -323,7 +327,7 @@ export default function HomePage() {
                     />
                     <button
                       onClick={() => navigate('/create-story')}
-                      className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 border-2 border-background"
+                      className="absolute cursor-pointer -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 border-2 border-background"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -376,6 +380,7 @@ export default function HomePage() {
                 onCommentClick={() => handleCommentClick(post.feedId, post)}
                 onLikeClick={() => handleLikeClick(post._id)}
                 feedId={post.feedId}
+                onDelete={handlePostDelete}
               />
             </div>
           ))
