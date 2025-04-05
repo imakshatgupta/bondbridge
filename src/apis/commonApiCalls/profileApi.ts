@@ -116,6 +116,11 @@ export const updateUserProfile = async (
   // Make the API call
   const response = await formDataApiClient.put("/edit-profile", formDataObj);
 
+  // Save apiToken to localStorage if it exists in the response
+  if (response.data.apiToken) {
+    localStorage.setItem('token', response.data.apiToken);
+  }
+
   return {
     success: response.status === 200,
     message: response.data.message || "Profile updated successfully",
