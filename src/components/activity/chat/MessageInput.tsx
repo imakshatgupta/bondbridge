@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import QuickSuggestions from "./QuickSuggestions";
-import { Mic } from "lucide-react";
+import { Mic, Smile } from "lucide-react";
 import { 
   SpeechRecognition, 
   SpeechRecognitionEvent, 
@@ -10,6 +10,7 @@ import {
   registerRecognitionInstance,
   unregisterRecognitionInstance
 } from "@/types/speech-recognition";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 interface MessageInputProps {
   newMessage: string;
@@ -37,6 +38,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
   // Cleanup effect to stop speech recognition when component unmounts
   useEffect(() => {
@@ -52,6 +56,26 @@ const MessageInput: React.FC<MessageInputProps> = ({
       }
     };
   }, [recognition]);
+
+  // Add click outside handler for emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
 
   const handleSuggestionClick = (suggestion: string) => {
     setNewMessage(suggestion);
@@ -121,6 +145,46 @@ const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    // Get current value
+    const currentValue = newMessage;
+    
+    // If input has focus, use cursor position, otherwise append to end
+    let start = 0;
+    let end = 0;
+    
+    if (inputRef.current) {
+      start = inputRef.current.selectionStart || currentValue.length;
+      end = inputRef.current.selectionEnd || currentValue.length;
+    } else {
+      start = currentValue.length;
+      end = currentValue.length;
+    }
+    
+    // Create new value with emoji inserted at cursor position
+    const newValue = 
+      currentValue.substring(0, start) + 
+      emojiData.emoji + 
+      currentValue.substring(end);
+    
+    // Update message state
+    setNewMessage(newValue);
+    
+    // Call typing handler
+    handleTyping();
+    
+    // Focus the input and set cursor position after emoji
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.selectionStart = start + emojiData.emoji.length;
+        inputRef.current.selectionEnd = start + emojiData.emoji.length;
+      }
+    }, 0);
+    
+    setShowEmojiPicker(false);
+  };
+
   return (
     <div className="p-3">
       {/* Quick suggestion section */}
@@ -134,38 +198,69 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       {/* Input field */}
       <div className="flex items-center gap-2 py-3">
-        <Input
-          ref={inputRef}
-          value={newMessage}
-          onChange={(e) => {
-            setNewMessage(e.target.value);
-            handleTyping();
-          }}
-          onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-          placeholder={disabled ? disabledMessage : "Type Your Message Here..."}
-          className="flex-1"
-          disabled={disabled}
-        />
+        <div className="flex-1 flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 relative">
+          <Input
+            ref={inputRef}
+            value={newMessage}
+            onChange={(e) => {
+              setNewMessage(e.target.value);
+              handleTyping();
+            }}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            placeholder={disabled ? disabledMessage : "Type Your Message Here..."}
+            className="flex-1 border-0 bg-transparent rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+            disabled={disabled}
+          />
 
-        <Button
-          onClick={toggleSpeechRecognition}
-          disabled={disabled}
-          variant="ghost"
-          className="p-2 hover:bg-muted rounded-full cursor-pointer"
-          type="button"
-          aria-label={isListening ? "Stop dictation" : "Start dictation"}
-        >
-          {isListening ? (
-            <Mic size={20} className="text-primary animate-pulse" />
-          ) : (
-            <Mic size={20} className="text-[var(--foreground)]" />
-          )}
-        </Button>
+          <div className="relative">
+            <Button
+              ref={emojiButtonRef}
+              variant="ghost"
+              size="icon"
+              type="button"
+              className="h-7 w-7 p-0 cursor-pointer text-muted-foreground/60"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              disabled={disabled}
+            >
+              <Smile className="h-4 w-4" />
+            </Button>
+            
+            {showEmojiPicker && (
+              <div
+                ref={emojiPickerRef}
+                className="absolute bottom-12 right-0 z-[100]"
+                style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)' }}
+              >
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  width={280}
+                  height={350}
+                />
+              </div>
+            )}
+          </div>
+
+          <Button
+            onClick={toggleSpeechRecognition}
+            disabled={disabled}
+            variant="ghost"
+            size="icon"
+            className="p-0 h-6 w-6 rounded-full cursor-pointer"
+            type="button"
+            aria-label={isListening ? "Stop dictation" : "Start dictation"}
+          >
+            {isListening ? (
+              <Mic size={20} className="text-primary animate-pulse" />
+            ) : (
+              <Mic size={20} className="text-muted-foreground/60" />
+            )}
+          </Button>
+        </div>
         
         <Button
           onClick={handleSendMessage}
           disabled={!newMessage.trim() || disabled}
-          className="bg-primary text-primary-foreground rounded-full cursor-pointer"
+          className="bg-primary text-primary-foreground rounded-full h-11 w-11 aspect-square cursor-pointer"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
