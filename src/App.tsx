@@ -36,14 +36,6 @@ const AuthenticatedRoutes: React.FC = () => {
       <AuthGuard>
         <Routes>
           <Route
-            path="/setup-profile"
-            element={
-              <Layout>
-                <SetupProfile />
-              </Layout>
-            }
-          />
-          <Route
             path="/"
             element={
               <Layout showSidebars={true}>
@@ -220,6 +212,14 @@ const App: React.FC = () => {
             element={
               <Layout>
                 <TnC />
+              </Layout>
+            }
+          />
+          <Route
+            path="/setup-profile"
+            element={
+              <Layout>
+                <SetupProfile />
               </Layout>
             }
           />

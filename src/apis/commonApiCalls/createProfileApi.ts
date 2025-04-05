@@ -14,6 +14,7 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
     avatar,
     image,
     // communities
+    generateToken
   } = profileData;
   
   // Validate required fields
@@ -42,18 +43,35 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
     formData.append('avatar', avatar);
   }
   
+  // Construct the URL with generateToken as a query parameter if it exists
+  let url = '/edit-profile';
+  if (generateToken !== undefined) {
+    url += `?generateToken=${generateToken}`;
+  }
+
   // commented out as not being uploaded currently
   // if (communities && communities.length > 0) {
   //   formData.append('communities', JSON.stringify(communities));
   // }
 
   const response = await formDataApiClient.put<CreateProfileResponse>(
-    `/edit-profile`,
+    url, // Use the constructed URL
     formData
   );
   
   if (response.status === 200) {
     console.log("Profile creation successful:", response.data);
+    
+    // Save apiToken and socketToken to localStorage if they exist
+    if (response.data.apiToken) {
+      console.log("Saving apiToken to localStorage:", response.data.apiToken);
+      localStorage.setItem('token', response.data.apiToken);
+    }
+    if (response.data.socketToken) {
+      console.log("Saving socketToken to localStorage:", response.data.socketToken);
+      localStorage.setItem('socketToken', response.data.socketToken);
+    }
+    
     return response.data;
   } else {
     throw new Error(response.data.message || 'Failed to create profile');

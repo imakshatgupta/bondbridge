@@ -58,7 +58,8 @@ export function Post({
     onCommentClick,
     onLikeClick,
     feedId,
-    isLiked: initialIsLiked = false
+    isLiked: initialIsLiked = false,
+    onDelete
 }: PostProps) {
     const navigate = useNavigate();
     const [likes, setLikes] = useState(initialLikes);
@@ -237,7 +238,9 @@ export function Post({
             if (window.location.pathname === `/post/${feedId}`) {
                 navigate(-1);
             }
-            else window.location.reload();
+            else if (onDelete) {
+                onDelete(feedId);
+            }
         }
     };
 

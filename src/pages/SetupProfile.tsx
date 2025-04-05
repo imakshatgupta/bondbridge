@@ -53,6 +53,7 @@ const SetupProfile: React.FC = () => {
       skillSelected,
       image: image || undefined,
       avatar: avatar || undefined,
+      generateToken: "1",
     });
     
     if (result.success && result.data) {
