@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import OTPForm from "../components/auth/OTPForm";
 
 // Import the API function (you'll need to create this)
-import { sendOTP, verifyOTP, setPassword } from "../apis/commonApiCalls/authenticationApi";
+import { sendOTP, verifyOTP, forgotPassword } from "../apis/commonApiCalls/authenticationApi";
 import { BasePhoneRequest } from '@/apis/apiTypes/request';
 
 // Assuming BasePhoneRequest is defined somewhere, extend it to include 'forgot'
@@ -97,7 +97,7 @@ const ForgotPassword: React.FC = () => {
     // Use our custom hooks for API calls
     const [executeSendOTP, isSendingOTP] = useApiCall(sendOTP);
     const [executeVerifyOTP, isVerifyingOTP] = useApiCall(verifyOTP);
-    const [executeSetPassword, isSettingPassword] = useApiCall(setPassword);
+    const [executeForgotPassword, isResettingPassword] = useApiCall(forgotPassword);
 
     // Add effect to apply styles to the phone input after it's rendered
     useEffect(() => {
@@ -216,8 +216,11 @@ const ForgotPassword: React.FC = () => {
 
         setPasswordError('');
 
-        // Call the setPassword function to set the new password
-        const result = await executeSetPassword({
+        // Call the forgotPassword function to reset the password
+        const validCountryCode = "+" + countryCode;
+        const result = await executeForgotPassword({
+            phoneNumber,
+            countryCode: validCountryCode,
             password: newPassword
         });
 
@@ -273,7 +276,7 @@ const ForgotPassword: React.FC = () => {
                         <Button
                             onClick={() => setStep('phone')}
                             variant="link"
-                            className="mt-4 text-foreground hover:underline w-full text-center"
+                            className="mt-4 text-foreground hover:underline w-full text-center cursor-pointer"
                         >
                             Back
                         </Button>
@@ -359,9 +362,9 @@ const ForgotPassword: React.FC = () => {
                         <Button
                             type="submit"
                             className="w-full cursor-pointer"
-                            disabled={isSettingPassword}
+                            disabled={isResettingPassword}
                         >
-                            {isSettingPassword ? "Resetting Password..." : "Set New Password"}
+                            {isResettingPassword ? "Resetting Password..." : "Set New Password"}
                         </Button>
                     </form>
                 );

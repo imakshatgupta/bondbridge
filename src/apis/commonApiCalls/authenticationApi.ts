@@ -152,31 +152,6 @@ export const setPassword = async (data: SetPasswordRequest): Promise<SetPassword
   }
 };
 
-// commented out for now as we are not using password reset
-
-// Function to request password reset
-// export const requestPasswordReset = async (resetData: { phoneNumber: string; countryCode: string }) => {
-//   const { phoneNumber, countryCode } = resetData;
-  
-//   // Validate required fields
-//   if (!phoneNumber || !countryCode) {
-//     throw new Error('Phone number and country code are required');
-//   }
-  
-//   const response = await apiClient.post(`/request-password-reset`, {
-//     phoneNumber,
-//     countryCode
-//   });
-  
-//   if (response.status === 200) {
-//     return response.data;
-//   } else {
-//     throw new Error(response.data.message || 'Failed to request password reset');
-//   }
-// };
-
-// commented out for now as we are not using password reset
-
 // Function to reset password
 export const resetPassword = async (resetData: { phoneNumber: string; countryCode: string; oldPassword: string; password: string }) => {
   const { phoneNumber, countryCode, oldPassword, password } = resetData;
@@ -194,4 +169,38 @@ export const resetPassword = async (resetData: { phoneNumber: string; countryCod
   });
   
   return response.data;
+};
+
+// Function to execute forgot password
+export const forgotPassword = async (forgotData: { 
+  phoneNumber: string; 
+  countryCode: string; 
+  password: string 
+}): Promise<{ message: string; success: boolean }> => {
+  const { phoneNumber, countryCode, password } = forgotData;
+  
+  // Validate required fields
+  if (!phoneNumber || !countryCode || !password) {
+    throw new Error('Phone number, country code, and new password are required');
+  }
+  
+  // Create FormData
+  const formData = new FormData();
+  formData.append('phoneNumber', phoneNumber);
+  formData.append('countryCode', countryCode);
+  formData.append('password', password);
+  
+  const response = await apiClient.post('/forgot-password', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Basic OG==`
+    },
+  });
+  
+  if (response.status === 200) {
+    console.log("Password reset successfully:", response.data);
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to reset password');
+  }
 };
