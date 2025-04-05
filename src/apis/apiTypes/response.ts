@@ -195,7 +195,7 @@ export interface HomePostData {
     media: Array<{
       url: string;
       type: string;
-    }>;
+    }> | null;
   };
   feedId: string;
   weekIndex: string;
@@ -210,6 +210,10 @@ export interface HomePostData {
   name: string;
   profilePic: string;
   isLiked?: boolean;
+  isCommunity?: boolean;
+  communityId?: string;
+  content?: string;
+  mediaUrls?: string[];
 }
 
 export interface StoryData {
@@ -490,6 +494,7 @@ export interface FetchPostsResponse {
   message: string;
   posts: HomePostData[];
   hasMore: boolean;
+  count?: number;
 }
 
 export interface FetchStoriesResponse {
