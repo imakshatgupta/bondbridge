@@ -463,7 +463,7 @@ export default function StoryPage() {
                 <div className="absolute top-5 left-0 right-0 z-10 flex items-center justify-between p-4">
                     <div className="flex items-center gap-3">
                         <button onClick={() => navigate(-1)} className="p-1">
-                            <ArrowLeft className="h-5 w-5 text-foreground cursor-pointer" />
+                            <ArrowLeft className="h-5 w-5 text-white cursor-pointer" />
                         </button>
                         <div className="flex items-center gap-2">
                             <Avatar className="h-8 w-8">
@@ -477,8 +477,8 @@ export default function StoryPage() {
                                     navigate(`/profile/${currentUser.userId}`);
                                 }}
                             >
-                                <p className="font-semibold text-sm text-foreground">{currentUser.user}</p>
-                                <p className="text-xs text-muted-foreground">{currentStoryItem.ago_time}</p>
+                                <p className="font-semibold text-sm text-white">{currentUser.user}</p>
+                                <p className="text-xs text-white/60">{currentStoryItem.ago_time}</p>
                             </div>
                         </div>
                     </div>

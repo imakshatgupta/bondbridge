@@ -137,7 +137,15 @@ const EditProfilePage: React.FC = () => {
     }
     
     // Prepare the request data
-    const profileData: any = {
+    const profileData: {
+      name: string;
+      email: string;
+      interests: string[];
+      privacyLevel: number;
+      bio: string;
+      avatar?: string;
+      image?: File;
+    } = {
       name: formData.username,
       email: formData.email,
       interests: selectedInterests,
@@ -158,7 +166,13 @@ const EditProfilePage: React.FC = () => {
 
     if (success && data) {
       // Update Redux store with appropriate profile picture data
-      const updatedUserData: any = {
+      const updatedUserData: {
+        username: string;
+        email: string;
+        bio: string;
+        profilePic?: string;
+        avatar?: string;
+      } = {
         username: formData.username,
         email: formData.email,
         bio: formData.bio

@@ -359,7 +359,7 @@ export function Post({
                         <Popover open={showReactionPopover} onOpenChange={setShowReactionPopover}>
                             <PopoverTrigger asChild>
                                 <button
-                                    className={`flex items-center gap-1 ${isLiked ? '' : 'hover:text-destructive'}`}
+                                    className={`flex cursor-pointer items-center gap-1 ${isLiked ? '' : 'hover:text-destructive'}`}
                                     onClick={handleLikeButtonClick}
                                     disabled={isLikeLoading || isLoadingReactions}
                                 >
@@ -385,7 +385,7 @@ export function Post({
                                         return (
                                             <button
                                                 key={key}
-                                                className={`flex items-center rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''
+                                                className={`flex items-center cursor-pointer rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''
                                                     }`}
                                                 onClick={() => {
                                                     if (currentReaction === key) {

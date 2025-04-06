@@ -87,6 +87,7 @@ const   Profile: React.FC<ProfileProps> = ({
   const [userCommunities, setUserCommunities] = useState<Community[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   const [executeGetStoryForUser] = useApiCall(getStoryForUser);
+  // const [postDisplayType, setPostDisplayType] = useState<'images' | 'text'>('images');
 
   // Get user data from Redux store
   const { privacyLevel, nickname } = useAppSelector(
@@ -303,7 +304,9 @@ const   Profile: React.FC<ProfileProps> = ({
   };
 
   const handleStoryClick = () => {
+    console.log("Story click triggered", { userStories, isCurrentUser, userId });
     if (userStories) {
+      console.log("Navigating to story page", userStories);
       navigate(`/story/${userId}`, {
         state: {
           currentStory: {
@@ -321,6 +324,7 @@ const   Profile: React.FC<ProfileProps> = ({
       });
     } else if (isCurrentUser) {
       // Navigate to create story page if current user has no stories
+      console.log("Navigating to create story page");
       navigate('/create-story');
     }
   };
@@ -354,7 +358,8 @@ const   Profile: React.FC<ProfileProps> = ({
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
-          className="relative w-24 h-24 cursor-pointer"
+          className={`relative w-24 h-24 ${userStories?.hasStory ? 'cursor-pointer' : ''}`}
+          onClick={userStories?.hasStory ? handleStoryClick : undefined}
         >
           {/* Story ring */}
           {userStories?.hasStory && (
@@ -389,7 +394,6 @@ const   Profile: React.FC<ProfileProps> = ({
             src={profilePic || avatarSrc || "avatar.png"}
             alt={username}
             className="w-full h-full object-cover rounded-full absolute z-10"
-            onClick={userStories?.hasStory ? handleStoryClick : undefined}
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
           
@@ -541,12 +545,23 @@ const   Profile: React.FC<ProfileProps> = ({
         </TabsList>
 
         <TabsContent value="posts" className="p-4">
+          {/* <Tabs value={postDisplayType} onValueChange={(value) => setPostDisplayType(value as 'images' | 'text')} className="w-full mb-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="images" className="cursor-pointer">Media</TabsTrigger>
+              <TabsTrigger value="text" className="cursor-pointer">Text</TabsTrigger>
+            </TabsList>
+          </Tabs> */}
+          
           {isLoadingPosts ? (
             <div className="flex justify-center items-center min-h-[200px]">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : (
-            <AllPosts posts={posts} userId={userId} />
+            <AllPosts 
+              posts={posts} 
+              userId={userId} 
+              // displayType={postDisplayType}
+            />
           )}
         </TabsContent>
 
