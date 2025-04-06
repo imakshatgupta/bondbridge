@@ -304,9 +304,7 @@ const   Profile: React.FC<ProfileProps> = ({
   };
 
   const handleStoryClick = () => {
-    console.log("Story click triggered", { userStories, isCurrentUser, userId });
     if (userStories) {
-      console.log("Navigating to story page", userStories);
       navigate(`/story/${userId}`, {
         state: {
           currentStory: {
@@ -323,8 +321,6 @@ const   Profile: React.FC<ProfileProps> = ({
         }
       });
     } else if (isCurrentUser) {
-      // Navigate to create story page if current user has no stories
-      console.log("Navigating to create story page");
       navigate('/create-story');
     }
   };
