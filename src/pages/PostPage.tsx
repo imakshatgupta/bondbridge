@@ -434,7 +434,7 @@ export default function CommentsPage() {
               <div className="p-4 border-b flex items-center gap-2">
                 <Avatar className="h-8 w-8">
                   <AvatarImage
-                    src={currentUser.avatar || avatarImage}
+                    src={currentUser.profilePic || currentUser.avatar}
                     alt="Your avatar"
                   />
                   <AvatarFallback>

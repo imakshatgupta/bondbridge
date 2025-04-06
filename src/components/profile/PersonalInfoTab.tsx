@@ -20,9 +20,11 @@ const PersonalInfoTab: React.FC = () => {
     const { id, value } = e.target;
     
     switch (id) {
-      case "name":
-        dispatch(setName(value));
+      case "name": {
+        const capitalizedName = value.charAt(0).toUpperCase() + value.slice(1);
+        dispatch(setName(capitalizedName));
         break;
+      }
       case "email":
         dispatch(setEmail(value));
         break;

@@ -84,16 +84,43 @@ const EditProfilePage: React.FC = () => {
     };
     
     getAvatars();
+    
+    // Ensure user has at least 3 interests when component mounts
+    if (selectedInterests.length < 3) {
+      // Add random interests from available interests until we have at least 3
+      const interestsToAdd = [...selectedInterests];
+      const availableToAdd = AVAILABLE_INTERESTS.filter(
+        interest => !interestsToAdd.includes(interest)
+      );
+      
+      while (interestsToAdd.length < 3 && availableToAdd.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableToAdd.length);
+        interestsToAdd.push(availableToAdd[randomIndex]);
+        availableToAdd.splice(randomIndex, 1);
+      }
+      
+      setSelectedInterests(interestsToAdd);
+    }
   }, []);
   
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    
+    // Capitalize first letter of username
+    if (name === 'username' && value.length > 0) {
+      const capitalizedValue = value.charAt(0).toUpperCase() + value.slice(1);
+      setFormData({
+        ...formData,
+        [name]: capitalizedValue,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleAvatarSelect = (avatarUrl: string) => {
@@ -107,6 +134,11 @@ const EditProfilePage: React.FC = () => {
   };
 
   const handleRemoveInterest = (interest: string) => {
+    // Prevent removing if it would result in less than 3 interests
+    if (selectedInterests.length <= 3) {
+      toast.error('You must have at least 3 interests');
+      return;
+    }
     const newInterests = selectedInterests.filter((i) => i !== interest);
     setSelectedInterests(newInterests);
   };
@@ -129,6 +161,12 @@ const EditProfilePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if at least 3 interests are selected
+    if (selectedInterests.length < 3) {
+      toast.error('Please select at least 3 interests');
+      return;
+    }
+    
     // Check bio word count
     const bioWordCount = countWords(formData.bio);
     if (bioWordCount > WORD_LIMIT) {
@@ -137,7 +175,15 @@ const EditProfilePage: React.FC = () => {
     }
     
     // Prepare the request data
-    const profileData: any = {
+    const profileData: {
+      name: string;
+      email: string;
+      interests: string[];
+      privacyLevel: number;
+      bio: string;
+      avatar?: string;
+      image?: File;
+    } = {
       name: formData.username,
       email: formData.email,
       interests: selectedInterests,
@@ -158,7 +204,13 @@ const EditProfilePage: React.FC = () => {
 
     if (success && data) {
       // Update Redux store with appropriate profile picture data
-      const updatedUserData: any = {
+      const updatedUserData: {
+        username: string;
+        email: string;
+        bio: string;
+        profilePic?: string;
+        avatar?: string;
+      } = {
         username: formData.username,
         email: formData.email,
         bio: formData.bio
@@ -398,6 +450,7 @@ const EditProfilePage: React.FC = () => {
             className="mb-4"
             itemsContainerClassName="flex flex-wrap gap-2 overflow-y-auto"
             emptyMessage="No interests selected yet"
+            buttonClassName="text-foreground text-xs mt-2 cursor-pointer hover:underline"
             renderItem={(interest, index) => (
               <Badge key={`interest-${index}`} variant="secondary" className="flex items-center gap-1">
                 {interest}
@@ -419,7 +472,7 @@ const EditProfilePage: React.FC = () => {
             <p className="text-sm text-muted-foreground mb-2">
               Suggested interests:
             </p>  
-            <div className="flex flex-wrap gap-2 overflow-y-auto h-[20vh]">
+            <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[20vh]">
               {availableInterestsFiltered.map((interest) => (
                 <Badge 
                   key={`suggested-interest-${interest}`} 
