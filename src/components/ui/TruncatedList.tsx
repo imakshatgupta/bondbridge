@@ -51,6 +51,7 @@ export function TruncatedList<T>({
       
       {needsTruncation && (
         <button 
+          type="button"
           onClick={() => setShowAll(!showAll)}
           className={buttonClassName}
         >
