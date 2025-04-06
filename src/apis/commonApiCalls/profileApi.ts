@@ -134,7 +134,7 @@ export const fetchFollowingList =
 
     return {
       success: true,
-      data: response.data.result.map((user: any) => ({
+      data: response.data.result.map((user: FollowingFollowerUser) => ({
         _id: user._id,
         name: user.name,
         nickName: user.nickName,
@@ -152,7 +152,7 @@ export const fetchFollowersList =
 
     return {
       success: true,
-      data: response.data.result.map((user: any) => ({
+      data: response.data.result.map((user: FollowingFollowerUser) => ({
         _id: user._id,
         name: user.name,
         nickName: user.nickName,

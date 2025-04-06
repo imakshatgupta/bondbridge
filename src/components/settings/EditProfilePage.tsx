@@ -161,6 +161,12 @@ const EditProfilePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Check if email is provided
+    if (!formData.email || formData.email.trim() === '') {
+      toast.error('Email is required');
+      return;
+    }
+    
     // Check if at least 3 interests are selected
     if (selectedInterests.length < 3) {
       toast.error('Please select at least 3 interests');
@@ -273,6 +279,19 @@ const EditProfilePage: React.FC = () => {
     );
   };
 
+  // Add a new handler for deleting the profile picture
+  const handleDeleteProfilePic = () => {
+    if (activeProfileTab === "custom") {
+      // Clear custom profile pic
+      setCustomProfilePic(null);
+      setCustomProfilePicPreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+    // toast.success('Profile picture removed');
+  };
+
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
@@ -356,19 +375,29 @@ const EditProfilePage: React.FC = () => {
             <TabsContent value="custom" className="space-y-4 mt-4">
               <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 border-border">
                 {customProfilePicPreview ? (
-                  <div 
-                    className="relative w-36 h-36 rounded-full cursor-pointer group"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <img 
-                      src={customProfilePicPreview} 
-                      alt="Custom profile" 
-                      className="w-full h-full rounded-full object-cover" 
-                    />
-                    {/* Hover overlay with upload icon */}
-                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Upload className="h-8 w-8 text-white" />
+                  <div className="relative">
+                    <div 
+                      className="relative w-36 h-36 rounded-full cursor-pointer group"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <img 
+                        src={customProfilePicPreview} 
+                        alt="Custom profile" 
+                        className="w-full h-full rounded-full object-cover" 
+                      />
+                      {/* Hover overlay with upload icon */}
+                      <div className="absolute inset-0 bg-background/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Upload className="h-8 w-8 text-foreground" />
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleDeleteProfilePic}
+                      className="absolute -top-2 -right-2 h-6 w-6 bg-destructive hover:bg-destructive-foreground cursor-pointer rounded-full flex items-center justify-center text-foreground"
+                      title="Delete custom photo"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
                 ) : (
                   <>
