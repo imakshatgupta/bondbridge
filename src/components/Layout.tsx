@@ -54,6 +54,7 @@ const Layout: React.FC<LayoutProps> = ({
       if (result.success) {
         dispatch(
           updateCurrentUser({
+            profilePic: result.data.profilePic,
             username: result.data.username,
             nickname: result.data.nickName,
             email: result.data.email,
@@ -169,7 +170,7 @@ const Layout: React.FC<LayoutProps> = ({
                       <div className="flex flex-col items-center">
                         <Link to={`/profile/${currentUserId}`}>
                           <img
-                            src={currentUser?.profilePic || currentUser?.avatar || "/profile/avatars/1.png"}
+                            src={currentUser?.profilePic || currentUser?.avatar}
                             alt="Profile"
                             className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
                           />

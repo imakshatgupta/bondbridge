@@ -296,7 +296,8 @@ const   Profile: React.FC<ProfileProps> = ({
     }
   ];
 
-  const handleEditClick = () => {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Stop event propagation to prevent triggering parent click handler
     if (isCurrentUser) {
       // Navigate to settings with query parameter for profile tab
       navigate('/settings?tab=profile');
