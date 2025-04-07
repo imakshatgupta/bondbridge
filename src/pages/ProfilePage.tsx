@@ -1,34 +1,50 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Profile from "@/components/Profile";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import type { UserProfileData } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { addToSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
+import { toast } from "sonner";
 
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
+  const location = useLocation();
   const [userData, setUserData] = useState<UserProfileData | null>(null);
   const [executeProfileFetch, isLoading] = useApiCall(fetchUserProfile);
+  const [executeAddToSearchHistory] = useApiCall(addToSearchHistory);
+  const hasAddedToHistory = useRef(false);
   
   // Get currentUserId from Redux store instead of localStorage
   const currentUserId = useSelector((state: RootState) => state.currentUser.userId);
 
+
+  // Add to search history when profile is viewed from search results
   useEffect(() => {
-    console.log("userId", userId);
-    console.log("userData", userData);
-  }, [userId, userData]);
+    const addToHistory = async () => {
+      const fromSearch = location.state?.fromSearch;
+      if (!userId || userId === currentUserId || !fromSearch || hasAddedToHistory.current) return;
+      
+      hasAddedToHistory.current = true;
+      const { success } = await executeAddToSearchHistory(userId);
+      if (!success) {
+        toast.error("Failed to add to search history");
+        hasAddedToHistory.current = false; // Reset if failed
+      }
+    };
+    
+    addToHistory();
+  }, [userId, currentUserId]); // Removed location.state from dependencies
 
   useEffect(() => {
     const loadUserData = async () => {
-      console.log("userId", userId);
       if (!userId) return;
       
       // Use currentUserId from Redux instead of localStorage
       const result = await executeProfileFetch(userId, currentUserId);
-      console.log("result", result);
       if (result.success && result.data) {
         setUserData(result.data.data);
       }

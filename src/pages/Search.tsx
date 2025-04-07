@@ -7,14 +7,68 @@ import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { SearchResultsListSkeleton } from "@/components/skeletons/SearchSkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { SearchHistoryItem } from "@/components/SearchHistoryItem";
+import { SearchHistoryUser } from "@/apis/apiTypes/searchHistory";
+import { getSearchHistory, clearSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryUser[]>([]);
+  const [prevSearchHistory, setPrevSearchHistory] = useState<SearchHistoryUser[]>([]);
 
+  // Using useApiCall for all API operations
   const [executeSearch, isLoading] = useApiCall(searchPeople);
+  const [executeGetSearchHistory, isLoadingHistory] = useApiCall(getSearchHistory);
+  const [executeClearHistory, isClearingHistory] = useApiCall(clearSearchHistory);
+
+  // Fetch search history when component mounts
+  useEffect(() => {
+    fetchSearchHistory();
+  }, []);
+
+  const fetchSearchHistory = async () => {
+    const { success, data } = await executeGetSearchHistory();
+    if (success && data) {
+      setSearchHistory(data);
+      setPrevSearchHistory(data);
+    }
+  };
+
+  const handleClearAllHistory = async () => {
+    if (isClearingHistory) return;
+    
+    // Store current history for potential revert
+    setPrevSearchHistory(searchHistory);
+    // Optimistically clear the history
+    setSearchHistory([]);
+    
+    const { success } = await executeClearHistory();
+    if (!success) {
+      // Revert to previous state if the API call fails
+      setSearchHistory(prevSearchHistory);
+      toast.error("Failed to clear search history");
+    }
+  };
+
+  const handleRemoveHistoryItem = (userId: string) => {
+    setSearchHistory(prev => prev.filter(user => user.userId !== userId));
+  };
+
+  const handleRevertHistoryItem = (userId: string) => {
+    // Find the removed user in the previous state and add it back
+    setSearchHistory(prev => {
+      const removedUser = searchHistory.find(user => user.userId === userId);
+      if (removedUser) {
+        return [...prev, removedUser];
+      }
+      return prev;
+    });
+  };
 
   useEffect(() => {
     const fetchPeople = async () => {
@@ -24,20 +78,14 @@ export default function Search() {
         return;
       }
 
-      try {
-        const result = await executeSearch(searchQuery);
-        setHasSearched(true);
+      const result = await executeSearch(searchQuery);
+      setHasSearched(true);
 
-        if (result.success) {
-          setPeople(result.data?.users || []);
-          setError(null);
-        } else {
-          setError(result.data?.message || "Failed to search for people");
-          setPeople([]);
-        }
-      } catch (err) {
-        console.log("err: ", err);
-        setError("An error occurred while searching");
+      if (result.success) {
+        setPeople(result.data?.users || []);
+        setError(null);
+      } else {
+        setError(result.data?.message || "Failed to search for people");
         setPeople([]);
       }
     };
@@ -72,8 +120,45 @@ export default function Search() {
         
         {/* Recent Searches */}
         {searchQuery === "" && !hasSearched && (
-          <div className="text-sm text-muted-foreground mb-4">
-            Recent Searches
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm text-muted-foreground">Recent Searches</div>
+              {searchHistory.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-xs text-muted-foreground h-7 cursor-pointer"
+                  onClick={handleClearAllHistory}
+                  disabled={isClearingHistory}
+                >
+                  {isClearingHistory ? "Clearing..." : "Clear All"}
+                </Button>
+              )}
+            </div>
+            
+            {isLoadingHistory ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="animate-spin text-muted-foreground" />
+              </div>
+            ) : searchHistory.length > 0 ? (
+              <div className="space-y-2">
+                {searchHistory.map((user) => (
+                  <SearchHistoryItem 
+                    key={user.userId} 
+                    user={user} 
+                    onRemove={() => handleRemoveHistoryItem(user.userId)}
+                    onRevert={() => handleRevertHistoryItem(user.userId)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Users}
+                title="No Recent Searches"
+                description="Your search history will appear here"
+                className="my-8"
+              />
+            )}
           </div>
         )}
         
