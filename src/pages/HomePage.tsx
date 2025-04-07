@@ -294,7 +294,9 @@ export default function HomePage() {
     );
   }
 
-  console.log("currentUser: ", currentUser);
+  useEffect(() => {
+    console.log("currentUser: ", currentUser);
+  }, [currentUser]);
 
   // Prepare stories for display - format self story only once
   const formattedSelfStory = selfStories
@@ -427,6 +429,18 @@ export default function HomePage() {
                 }
                 onLikeClick={() => handleLikeClick(post._id)}
                 feedId={post.feedId}
+                isLiked={post.reaction?.hasReacted}
+                reactionType={post.reaction?.reactionType}
+                reactionDetails={post.reactionDetails || { 
+                  total: post.reactionCount, 
+                  types: { 
+                    like: post.reactionCount, 
+                    love: 0, 
+                    haha: 0, 
+                    lulu: 0 
+                  } 
+                }}
+                reaction={post.reaction}
                 onDelete={handlePostDelete}
               />
             </div>

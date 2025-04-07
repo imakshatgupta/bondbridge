@@ -213,6 +213,12 @@ export interface HomePostData {
   ago_time: string;
   commentCount: number;
   reactionCount: number;
+  reactionDetails?: {
+    total: number;
+    types: {
+      [key: string]: number;
+    };
+  };
   reaction: {
     hasReacted: boolean;
     reactionType: string | null;

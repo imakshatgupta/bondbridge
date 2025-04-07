@@ -123,12 +123,6 @@ export default function CommentsPage() {
     setCurrentUserId(userId);
   }, []);
 
-  useEffect(() => {
-    console.log("post", post);
-    console.log("locationPost", locationPost);
-    console.log("postId", postId);
-  }, [post, locationPost, postId]);
-
   // Fetch post details if not provided in state
   useEffect(() => {
     const fetchPostDetails = async () => {
@@ -426,6 +420,17 @@ export default function CommentsPage() {
                   isOwner={currentUserId === post.userId}
                   onCommentClick={() => {}}
                   onLikeClick={() => {}}
+                  reactionType={post.reaction?.reactionType}
+                  reactionDetails={post.reactionDetails || { 
+                    total: post.reactionCount, 
+                    types: { 
+                      like: post.reactionCount, 
+                      love: 0, 
+                      haha: 0, 
+                      lulu: 0 
+                    } 
+                  }}
+                  reaction={post.reaction}
                   onDelete={handlePostDelete}
                 />
               )}
