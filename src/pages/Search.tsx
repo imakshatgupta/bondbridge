@@ -18,10 +18,11 @@ export default function Search() {
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryUser[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  const [isClearingHistory, setIsClearingHistory] = useState(false);
 
+  // Using useApiCall for all API operations
   const [executeSearch, isLoading] = useApiCall(searchPeople);
+  const [executeGetSearchHistory, isLoadingHistory] = useApiCall(getSearchHistory);
+  const [executeClearHistory, isClearingHistory] = useApiCall(clearSearchHistory);
 
   // Fetch search history when component mounts
   useEffect(() => {
@@ -29,19 +30,19 @@ export default function Search() {
   }, []);
 
   const fetchSearchHistory = async () => {
-    setIsLoadingHistory(true);
-    const history = await getSearchHistory();
-    setSearchHistory(history);
-    setIsLoadingHistory(false);
+    const { success, data } = await executeGetSearchHistory();
+    if (success && data) {
+      setSearchHistory(data);
+    }
   };
 
   const handleClearAllHistory = async () => {
     if (isClearingHistory) return;
     
-    setIsClearingHistory(true);
-    await clearSearchHistory();
-    setSearchHistory([]);
-    setIsClearingHistory(false);
+    const { success } = await executeClearHistory();
+    if (success) {
+      setSearchHistory([]);
+    }
   };
 
   const handleRemoveHistoryItem = (userId: string) => {

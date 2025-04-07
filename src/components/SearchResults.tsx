@@ -6,6 +6,7 @@ import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { TruncatedText } from "./ui/TruncatedText";
 import { addToSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
+import { useApiCall } from "@/apis/globalCatchError";
 // import { toast } from "sonner";
 
 type Props = {
@@ -15,6 +16,9 @@ type Props = {
 const SearchResults = ({ person }: Props) => {
   // const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  // Use the useApiCall hook to handle API call with error handling
+  const [executeAddToSearchHistory, isAddingToHistory] = useApiCall(addToSearchHistory);
+  
   // const handleSendFriendRequest = async () => {
   //   try {
   //     setIsLoading(true);
@@ -29,9 +33,12 @@ const SearchResults = ({ person }: Props) => {
 
   const handleProfileClick = async (userId: string) => {
     // Add to search history when user clicks on view profile
-    await addToSearchHistory(userId);
-    // Navigate to profile page
-    navigate(`/profile/${userId}`);
+    const { success } = await executeAddToSearchHistory(userId);
+    // Only navigate if the API call was successful
+    if (success) {
+      // Navigate to profile page
+      navigate(`/profile/${userId}`);
+    }
   };
 
   return (
@@ -54,8 +61,13 @@ const SearchResults = ({ person }: Props) => {
         </div>
       </div>
       <div className="flex gap-2 ">
-        <Button variant="outline" className="text-primary border-primary cursor-pointer" onClick={() => handleProfileClick(person.id)}>
-          View Profile
+        <Button 
+          variant="outline" 
+          className="text-primary border-primary cursor-pointer" 
+          onClick={() => handleProfileClick(person.id)}
+          disabled={isAddingToHistory}
+        >
+          {isAddingToHistory ? "Loading..." : "View Profile"}
         </Button>
         {/* <Button 
           className="bg-primary hover:bg-primary/90 cursor-pointer"

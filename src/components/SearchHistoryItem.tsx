@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { removeFromSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
-import { useState } from "react";
+import { useApiCall } from "@/apis/globalCatchError";
 
 interface SearchHistoryItemProps {
   user: SearchHistoryUser;
@@ -13,7 +13,8 @@ interface SearchHistoryItemProps {
 
 export const SearchHistoryItem = ({ user, onRemove }: SearchHistoryItemProps) => {
   const navigate = useNavigate();
-  const [isRemoving, setIsRemoving] = useState(false);
+  // Use the useApiCall hook to handle API call with error handling
+  const [executeRemoveFromHistory, isRemoving] = useApiCall(removeFromSearchHistory);
 
   const handleProfileClick = () => {
     navigate(`/profile/${user.userId}`);
@@ -23,10 +24,11 @@ export const SearchHistoryItem = ({ user, onRemove }: SearchHistoryItemProps) =>
     e.stopPropagation();
     if (isRemoving) return;
 
-    setIsRemoving(true);
-    await removeFromSearchHistory(user.userId);
-    onRemove();
-    setIsRemoving(false);
+    const { success } = await executeRemoveFromHistory(user.userId);
+    // Only trigger the onRemove callback if the API call was successful
+    if (success) {
+      onRemove();
+    }
   };
 
   return (
@@ -47,7 +49,7 @@ export const SearchHistoryItem = ({ user, onRemove }: SearchHistoryItemProps) =>
         onClick={handleRemove}
         disabled={isRemoving}
       >
-        <X className="h-4 w-4 text-foreground" />
+        <X className={`h-4 w-4 ${isRemoving ? "animate-spin" : "text-foreground"}`} />
       </Button>
     </div>
   );
