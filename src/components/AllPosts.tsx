@@ -389,7 +389,7 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts, userId }) => {
         // Determine if it's a ProfilePostData or a regular Post
         const isProfilePost = "createdAt" in post;
 
-        console.log(JSON.stringify(post, null, 2));
+        // console.log(JSON.stringify(post, null, 2));
 
         // Extract the properties based on the type
         const postId = isProfilePost

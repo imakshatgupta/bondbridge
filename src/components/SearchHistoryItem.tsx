@@ -5,16 +5,17 @@ import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { removeFromSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
 import { useApiCall } from "@/apis/globalCatchError";
+import { toast } from "sonner";
 
 interface SearchHistoryItemProps {
   user: SearchHistoryUser;
   onRemove: () => void;
+  onRevert: () => void;
 }
 
-export const SearchHistoryItem = ({ user, onRemove }: SearchHistoryItemProps) => {
+export const SearchHistoryItem = ({ user, onRemove, onRevert }: SearchHistoryItemProps) => {
   const navigate = useNavigate();
-  // Use the useApiCall hook to handle API call with error handling
-  const [executeRemoveFromHistory, isRemoving] = useApiCall(removeFromSearchHistory);
+  const [executeRemoveFromHistory] = useApiCall(removeFromSearchHistory);
 
   const handleProfileClick = () => {
     navigate(`/profile/${user.userId}`);
@@ -22,12 +23,15 @@ export const SearchHistoryItem = ({ user, onRemove }: SearchHistoryItemProps) =>
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isRemoving) return;
-
+    
+    // Optimistically remove the item
+    onRemove();
+    
     const { success } = await executeRemoveFromHistory(user.userId);
-    // Only trigger the onRemove callback if the API call was successful
-    if (success) {
-      onRemove();
+    if (!success) {
+      // Revert the optimistic update if the API call fails
+      onRevert();
+      toast.error("Failed to remove from search history");
     }
   };
 
@@ -47,9 +51,8 @@ export const SearchHistoryItem = ({ user, onRemove }: SearchHistoryItemProps) =>
         size="icon"
         className="h-7 w-7 cursor-pointer border-1 border-destructive hover:border-foreground hover:bg-foreground/10"
         onClick={handleRemove}
-        disabled={isRemoving}
       >
-        <X className={`h-4 w-4 ${isRemoving ? "animate-spin" : "text-foreground"}`} />
+        <X className="h-4 w-4 text-foreground" />
       </Button>
     </div>
   );

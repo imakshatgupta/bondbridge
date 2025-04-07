@@ -1,44 +1,18 @@
 import { Person } from "@/apis/apiTypes/response";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
-// import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
-// import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TruncatedText } from "./ui/TruncatedText";
-import { addToSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
-import { useApiCall } from "@/apis/globalCatchError";
-// import { toast } from "sonner";
 
 type Props = {
   person: Person;
 };
 
 const SearchResults = ({ person }: Props) => {
-  // const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  // Use the useApiCall hook to handle API call with error handling
-  const [executeAddToSearchHistory, isAddingToHistory] = useApiCall(addToSearchHistory);
-  
-  // const handleSendFriendRequest = async () => {
-  //   try {
-  //     setIsLoading(true);
-  //     await sendFriendRequest({ userId: person.id });
-  //     toast.success(`Friend request sent to ${person.name}`);
-  //   } catch (error) {
-  //     toast.error(error instanceof Error ? error.message : "Failed to send friend request");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
-  const handleProfileClick = async (userId: string) => {
-    // Add to search history when user clicks on view profile
-    const { success } = await executeAddToSearchHistory(userId);
-    // Only navigate if the API call was successful
-    if (success) {
-      // Navigate to profile page
-      navigate(`/profile/${userId}`);
-    }
+  const handleProfileClick = (userId: string) => {
+    navigate(`/profile/${userId}`, { state: { fromSearch: true } });
   };
 
   return (
@@ -65,17 +39,9 @@ const SearchResults = ({ person }: Props) => {
           variant="outline" 
           className="text-primary border-primary cursor-pointer" 
           onClick={() => handleProfileClick(person.id)}
-          disabled={isAddingToHistory}
         >
-          {isAddingToHistory ? "Loading..." : "View Profile"}
+          View Profile
         </Button>
-        {/* <Button 
-          className="bg-primary hover:bg-primary/90 cursor-pointer"
-          onClick={handleSendFriendRequest}
-          disabled={isLoading}
-        >
-          {isLoading ? "Sending..." : "Follow"}
-        </Button> */}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import { SearchHistoryItem } from "@/components/SearchHistoryItem";
 import { SearchHistoryUser } from "@/apis/apiTypes/searchHistory";
 import { getSearchHistory, clearSearchHistory } from "@/apis/commonApiCalls/searchHistoryApi";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function Search() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +19,7 @@ export default function Search() {
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryUser[]>([]);
+  const [prevSearchHistory, setPrevSearchHistory] = useState<SearchHistoryUser[]>([]);
 
   // Using useApiCall for all API operations
   const [executeSearch, isLoading] = useApiCall(searchPeople);
@@ -33,20 +35,39 @@ export default function Search() {
     const { success, data } = await executeGetSearchHistory();
     if (success && data) {
       setSearchHistory(data);
+      setPrevSearchHistory(data);
     }
   };
 
   const handleClearAllHistory = async () => {
     if (isClearingHistory) return;
     
+    // Store current history for potential revert
+    setPrevSearchHistory(searchHistory);
+    // Optimistically clear the history
+    setSearchHistory([]);
+    
     const { success } = await executeClearHistory();
-    if (success) {
-      setSearchHistory([]);
+    if (!success) {
+      // Revert to previous state if the API call fails
+      setSearchHistory(prevSearchHistory);
+      toast.error("Failed to clear search history");
     }
   };
 
   const handleRemoveHistoryItem = (userId: string) => {
     setSearchHistory(prev => prev.filter(user => user.userId !== userId));
+  };
+
+  const handleRevertHistoryItem = (userId: string) => {
+    // Find the removed user in the previous state and add it back
+    setSearchHistory(prev => {
+      const removedUser = searchHistory.find(user => user.userId === userId);
+      if (removedUser) {
+        return [...prev, removedUser];
+      }
+      return prev;
+    });
   };
 
   useEffect(() => {
@@ -125,7 +146,8 @@ export default function Search() {
                   <SearchHistoryItem 
                     key={user.userId} 
                     user={user} 
-                    onRemove={() => handleRemoveHistoryItem(user.userId)} 
+                    onRemove={() => handleRemoveHistoryItem(user.userId)}
+                    onRevert={() => handleRevertHistoryItem(user.userId)}
                   />
                 ))}
               </div>
