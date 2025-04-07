@@ -606,6 +606,7 @@ export default function BondChat() {
         <Button
           variant="ghost"
           size="icon"
+          className="cursor-pointer"
           onClick={() => {
             // Always clean up audio regardless of speech state
             if (audioRef) {
@@ -625,7 +626,7 @@ export default function BondChat() {
             }
             
             // Always navigate back using react-router
-            navigate(-1);
+            navigate("/");
           }}
         >
           <ArrowLeft className="h-5 w-5" />
