@@ -6,7 +6,7 @@ const PrivacyPolicy: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-[100vh] relative overflow-y-auto pb-10">
+    <div className="h-[100vh] relative overflow-y-auto pb-10 league-font">
       {/* Background shape */}
       <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-br from-blue-50 to-gray-100 rounded-bl-[100%] -z-10"></div>
 
@@ -27,7 +27,7 @@ const PrivacyPolicy: React.FC = () => {
           </h1>
         </div>
 
-        <div className="space-y-6 text-foreground/70 text-justify">
+        <div className="space-y-6 text-foreground text-justify">
           <p className="leading-relaxed">
             The Officers of BondBridge LLC are firmly committed to guarding the
             confidence you have placed in our company and to use, responsibly

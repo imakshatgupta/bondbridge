@@ -1,12 +1,12 @@
 import React from "react";
 import { ChevronLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const TnC: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-[100vh] relative overflow-y-auto pb-10 text-justify">
+    <div className="h-[100vh] relative overflow-y-auto pb-10 text-justify league-font">
       {/* Background shape */}
       <div className="absolute right-0 top-0 w-2/3 h-full bg-gradient-to-br from-blue-50 to-gray-100 rounded-bl-[100%] -z-10"></div>
 
@@ -27,7 +27,7 @@ const TnC: React.FC = () => {
           </h1>
         </div>
 
-        <div className="space-y-6 text-foreground/70">
+        <div className="space-y-6 text-foreground">
           <h2 className="text-2xl font-semibold">Acceptance of Terms</h2>
           <p className="leading-relaxed">
             The services that BondBridge provides to all users are subject to
@@ -65,8 +65,14 @@ const TnC: React.FC = () => {
             Privacy and Protection of Personal Information
           </h2>
           <p className="leading-relaxed">
-            See the Privacy Statement disclosures relating to the collection and
-            use of your personal data.
+            See the{" "}
+            <Link
+              to="/privacy"
+              className="text-primary hover:text-primary/80 underline"
+            >
+              Privacy Statement
+            </Link>{" "}
+            disclosures relating to the collection and use of your personal data.
           </p>
 
           <h2 className="text-2xl font-semibold">Content</h2>
