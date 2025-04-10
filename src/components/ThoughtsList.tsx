@@ -101,23 +101,6 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
     );
   }
 
-  // Helper function to get feedId from post
-  const getFeedId = (post: Post | ProfilePostData): string => {
-    const isProfilePost = "createdAt" in post;
-    const postId = isProfilePost ? (post as ProfilePostData).id : (post as Post).id;
-    
-    let creationDate = "2025-03-16";
-    if (isProfilePost) {
-      creationDate = new Date((post as ProfilePostData)?.createdAt * 1000)
-        .toISOString()
-        .split("T")[0];
-    } else if ("creationDate" in post && post?.creationDate) {
-      creationDate = post?.creationDate;
-    }
-
-    return `${postId}:${creationDate}`;
-  };
-
   // Helper function to initialize reaction counts for a post
   const getInitialReactionCounts = (post: Post | ProfilePostData): Record<ReactionType, number> => {
     const isProfilePost = "createdAt" in post;
