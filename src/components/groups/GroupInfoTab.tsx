@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -12,11 +12,23 @@ interface GroupInfo {
 interface GroupInfoTabProps {
   groupInfo: GroupInfo;
   onChange: (info: GroupInfo) => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
-const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
+const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange, onValidationChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Validate required fields and update parent component
+  useEffect(() => {
+    const isNameValid = groupInfo.name.trim().length > 0;
+    const isDescriptionValid = groupInfo.description.trim().length > 0;
+    const isValid = isNameValid && isDescriptionValid;
+    
+    if (onValidationChange) {
+      onValidationChange(isValid);
+    }
+  }, [groupInfo.name, groupInfo.description, onValidationChange]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,7 +103,7 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
 
       <div className="space-y-2">
         <label htmlFor="groupName" className="text-sm font-medium">
-          Group Name
+          Group Name <span className="text-destructive -ml-1">*</span>
         </label>
         <Input
           id="groupName"
@@ -103,7 +115,7 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange }) => {
 
       <div className="space-y-2">
         <label htmlFor="description" className="text-sm font-medium">
-          Description
+          Description <span className="text-destructive -ml-1">*</span>
         </label>
         <Textarea
           id="description"

@@ -53,11 +53,11 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
               </div>
               
               {isLogin && (
-                <p className="text-sm text-foreground mb-4">Welcome back, I'm so happy to see you again!</p>
+                <p className="text-sm text-foreground mb-4">Welcome Back, We are so happy to see you again!</p>
               )}
               
               {!isLogin && (
-                <p className="text-sm text-foreground mb-4">Welcome, we are glad to see you!</p>
+                <p className="text-sm text-foreground mb-4">Welcome, We are glad to see you!</p>
               )}
             </>
           )}

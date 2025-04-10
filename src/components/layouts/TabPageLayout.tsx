@@ -19,6 +19,10 @@ interface TabPageLayoutProps {
   children: React.ReactNode;
   nextButtonText?: string;
   isNextLoading?: boolean;
+  isNextDisabled?: boolean;
+  validatedTabs?: string[]; // Array of tab IDs that have been validated
+  onTabChange?: (tabId: string) => void; // Handler for tab changes
+  customIsTabAccessible?: (tabId: string) => boolean; // Custom function to determine if a tab is accessible
   decorativeImages: {
     clipboard: string;
     deco1: string;
@@ -35,8 +39,54 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
   children,
   nextButtonText = "Next",
   isNextLoading = false,
+  isNextDisabled = false,
+  validatedTabs = [],
+  onTabChange,
+  customIsTabAccessible,
   decorativeImages,
 }) => {
+  // Check if a tab is accessible
+  const isTabAccessible = (tabId: string) => {
+    // If custom function is provided, use it
+    if (customIsTabAccessible) {
+      return customIsTabAccessible(tabId);
+    }
+    
+    // Default accessibility logic
+    const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
+    const targetIndex = tabs.findIndex((tab) => tab.id === tabId);
+    
+    // Current tab is always accessible
+    if (tabId === currentTab) return true;
+    
+    // Previous tabs are always accessible
+    if (targetIndex < currentIndex) return true;
+    
+    // For any forward navigation (future tabs), check that ALL previous tabs are validated
+    if (targetIndex > currentIndex) {
+      // Check if all tabs before the target tab are validated
+      for (let i = 0; i < targetIndex; i++) {
+        if (!validatedTabs.includes(tabs[i].id)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    
+    return false;
+  };
+  
+  const handleTabClick = (e: React.MouseEvent<HTMLAnchorElement>, tabId: string) => {
+    if (!isTabAccessible(tabId)) {
+      e.preventDefault();
+      return;
+    }
+    
+    if (onTabChange) {
+      onTabChange(tabId);
+    }
+  };
+
   return (
     <Grid className="h-[calc(100vh-64px)] grid items-center">
       {/* Left Section: Heading + Nav */}
@@ -47,12 +97,14 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
           {tabs.map((tab) => (
             <Link
               key={tab.id}
-              to={`#${tab.id}`}
+              to={isTabAccessible(tab.id) ? `#${tab.id}` : "#"}
+              onClick={(e) => handleTabClick(e, tab.id)}
               className={cn(
                 "block py-2 text-lg",
                 currentTab === tab.id
                   ? "font-semibold text-foreground text-xl"
-                  : "text-muted-foreground"
+                  : "text-muted-foreground",
+                !isTabAccessible(tab.id) && "opacity-50 cursor-default"
               )}
             >
               {tab.label}
@@ -72,7 +124,11 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
             <Button variant="outline" onClick={onBack} className="cursor-pointer">
               Back
             </Button>
-            <Button onClick={onNext} disabled={isNextLoading} className="cursor-pointer">
+            <Button 
+              onClick={onNext} 
+              disabled={isNextLoading || isNextDisabled} 
+              className="cursor-pointer"
+            >
               {isNextLoading && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}

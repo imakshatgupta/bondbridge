@@ -27,13 +27,26 @@ const AvailableInterestItem = ({ interest, onAdd }: { interest: string; onAdd: (
   );
 };
 
-const SkillsInterestsTab: React.FC = () => {
+interface SkillsInterestsTabProps {
+  onValidationChange?: (isValid: boolean) => void;
+}
+
+const SkillsInterestsTab: React.FC<SkillsInterestsTabProps> = ({ onValidationChange }) => {
   const dispatch = useAppDispatch();
   const { skillSelected } = useAppSelector(
     (state) => state.createProfile
   );
   
   const MIN_REQUIRED_INTERESTS = 3;
+  
+  // Validate selection and notify parent component
+  useEffect(() => {
+    const isValid = skillSelected.length >= MIN_REQUIRED_INTERESTS;
+    if (onValidationChange) {
+      onValidationChange(isValid);
+    }
+  }, [skillSelected, onValidationChange, MIN_REQUIRED_INTERESTS]);
+  
   const isValidSelection = skillSelected.length >= MIN_REQUIRED_INTERESTS;
 
   const handleAddSkill = (skill: string) => {
@@ -51,38 +64,46 @@ const SkillsInterestsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[20vh]">
-        {skillSelected.map((selectedSkill) => (
-          <button
-          key={selectedSkill}
-          className="bg-primary text-primary-foreground px-3 py-1 rounded-full flex items-center"
-          onClick={() => handleRemoveSkill(selectedSkill)}
-        >
-          {selectedSkill} <span className="ml-2 cursor-pointer">✕</span>
-        </button>
-        ))}
+      <div>
+        <h3 className="mb-2 text-sm font-medium">
+          Selected Interests <span className="text-red-500">*</span>
+        </h3>
+        <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[20vh]">
+          {skillSelected.map((selectedSkill) => (
+            <button
+            key={selectedSkill}
+            className="bg-primary text-primary-foreground px-3 py-1 rounded-full flex items-center"
+            onClick={() => handleRemoveSkill(selectedSkill)}
+          >
+            {selectedSkill} <span className="ml-2 cursor-pointer">✕</span>
+          </button>
+          ))}
+        </div>
       </div>
       
       {!isValidSelection && (
-        <div className="text-destructive text-sm">
+        <div className="text-sm text-muted-foreground mt-1">
           Please select at least {MIN_REQUIRED_INTERESTS} interests
         </div>
       )}
 
-      <TruncatedList
-        items={availableInterests}
-        limit={15}
-        className="h-[30vh] overflow-y-auto"
-        itemsContainerClassName="grid grid-cols-2 md:grid-cols-3 gap-3"
-        emptyMessage="No more available interests"
-        renderItem={(interest) => (
-          <AvailableInterestItem 
-            key={interest} 
-            interest={interest} 
-            onAdd={handleAddSkill} 
-          />
-        )}
-      />
+      <div>
+        <h3 className="mb-2 text-sm font-medium">Available Interests</h3>
+        <TruncatedList
+          items={availableInterests}
+          limit={15}
+          className="h-[30vh] overflow-y-auto"
+          itemsContainerClassName="grid grid-cols-2 md:grid-cols-3 gap-3"
+          emptyMessage="No more available interests"
+          renderItem={(interest) => (
+            <AvailableInterestItem 
+              key={interest} 
+              interest={interest} 
+              onAdd={handleAddSkill} 
+            />
+          )}
+        />
+      </div>
     </div>
   );
 };
