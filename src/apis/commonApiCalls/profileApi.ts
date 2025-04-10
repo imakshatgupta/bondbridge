@@ -185,3 +185,37 @@ export const fetchProfileById = async (
     interests: userData.interests || [],
   };
 };
+
+// Unfollow a user
+export const unfollowUser = async (otherId: string): Promise<{ success: boolean; message: string }> => {
+  const formData = new FormData();
+  formData.append('otherId', otherId);
+  
+  const response = await apiClient.post('/unfollow', formData);
+  
+  if (response.status === 200) {
+    return {
+      success: true,
+      message: response.data.message || 'Successfully unfollowed user',
+    };
+  } else {
+    throw new Error(response.data.message || 'Failed to unfollow user');
+  }
+};
+
+// Remove a follower
+export const removeFollower = async (otherId: string): Promise<{ success: boolean; message: string }> => {
+  const formData = new FormData();
+  formData.append('otherId', otherId);
+  
+  const response = await apiClient.post('/follower/remove', formData);
+  
+  if (response.status === 200) {
+    return {
+      success: true,
+      message: response.data.message || 'Successfully removed follower',
+    };
+  } else {
+    throw new Error(response.data.message || 'Failed to remove follower');
+  }
+};
