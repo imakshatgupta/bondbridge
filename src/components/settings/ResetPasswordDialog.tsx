@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeyRound, Loader2 } from "lucide-react";
+import { KeyRound, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { resetPassword } from "@/apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "@/apis/globalCatchError";
@@ -32,6 +32,8 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
   onOpenChange,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [formData, setFormData] = useState<ResetPasswordData>({
     phoneNumber: "",
     countryCode: "+1",
@@ -114,28 +116,64 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="oldPassword">Current Password</Label>
-            <Input
-              id="oldPassword"
-              name="oldPassword"
-              type="password"
-              value={formData.oldPassword}
-              onChange={handleInputChange}
-              placeholder="Enter your current password"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="oldPassword"
+                name="oldPassword"
+                type={showOldPassword ? "text" : "password"}
+                value={formData.oldPassword}
+                onChange={handleInputChange}
+                placeholder="Enter your current password"
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                onClick={() => setShowOldPassword(!showOldPassword)}
+              >
+                {showOldPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {showOldPassword ? "Hide password" : "Show password"}
+                </span>
+              </Button>
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="password">New Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="Enter your new password"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showNewPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Enter your new password"
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              >
+                {showNewPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                <span className="sr-only">
+                  {showNewPassword ? "Hide password" : "Show password"}
+                </span>
+              </Button>
+            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
