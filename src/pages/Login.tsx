@@ -221,7 +221,7 @@ const Login: React.FC = () => {
       <AuthLayout
         title={
           <>
-            Welcome Back,<br />Your Friends Are Waiting
+            Welcome Back, Your <br /> Friends Are Waiting
           </>
         }
         subtitle="Log in to unlock a world of endless possibilities"
