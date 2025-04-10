@@ -40,8 +40,23 @@ interface ApiNotification {
   seen: boolean;
 }
 
+// New interface to match the updated API response structure
+interface UpdatedNotificationsResponse {
+  success: boolean;
+  message: string;
+  data: {
+    currentPage: number;
+    hasMore: boolean;
+    seen: ApiNotification[];
+    unseen: ApiNotification[];
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<ApiNotification[]>([]);
+  const [unseenNotifications, setUnseenNotifications] = useState<ApiNotification[]>([]);
+  const [seenNotifications, setSeenNotifications] = useState<ApiNotification[]>([]);
   const [friendRequests, setFriendRequests] = useState<FollowRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,13 +72,13 @@ const Notifications = () => {
     const result = await executeMarkAsSeen(notificationId);
     
     if (result.success) {
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((n) =>
-          n._id === notificationId
-            ? { ...n, seen: true }
-            : n
-        )
-      );
+      // Move the notification from unseen to seen
+      const notificationToMove = unseenNotifications.find(n => n._id === notificationId);
+      if (notificationToMove) {
+        const updatedNotification = { ...notificationToMove, seen: true };
+        setUnseenNotifications(prev => prev.filter(n => n._id !== notificationId));
+        setSeenNotifications(prev => [updatedNotification, ...prev]);
+      }
     }
   };
 
@@ -72,9 +87,20 @@ const Notifications = () => {
     const notificationsResult = await executeNotificationsFetch();
     console.log("notificationsResult: ", notificationsResult);
     if (notificationsResult.success && notificationsResult.data?.success) {
-      setNotifications(notificationsResult.data.notifications as unknown as ApiNotification[]);
+      // Cast the response to our updated interface
+      const response = notificationsResult.data as unknown as UpdatedNotificationsResponse;
+      
+      if (response.data) {
+        setUnseenNotifications(Array.isArray(response.data.unseen) ? response.data.unseen : []);
+        setSeenNotifications(Array.isArray(response.data.seen) ? response.data.seen : []);
+      } else {
+        setUnseenNotifications([]);
+        setSeenNotifications([]);
+      }
       setError(null);
     } else {
+      setUnseenNotifications([]);
+      setSeenNotifications([]);
       setError(notificationsResult.data?.message || "Failed to load notifications");
     }
 
@@ -85,6 +111,8 @@ const Notifications = () => {
     });
     if (followRequestsResult.success && followRequestsResult.data) {
       setFriendRequests(followRequestsResult.data.result || []);
+    } else {
+      setFriendRequests([]);
     }
   };
 
@@ -112,6 +140,9 @@ const Notifications = () => {
     loadData();
   };
 
+  // Get total notifications count
+  const totalNotificationsCount = unseenNotifications.length + seenNotifications.length;
+
   return (
     <div className="w-full">
       <h1 className="text-4xl font-semibold mb-5">Notifications</h1>
@@ -134,8 +165,7 @@ const Notifications = () => {
           <TabsList className="grid grid-cols-2  ">
             <TabsTrigger value="notifications" className="cursor-pointer ">
               Notifications{" "}
-              {notifications.filter((n) => !n.seen).length > 0 &&
-                `(${notifications.filter((n) => !n.seen).length})`}
+              {unseenNotifications.length > 0 && `(${unseenNotifications.length})`}
             </TabsTrigger>
             <TabsTrigger value="friend-requests" className="cursor-pointer">
               Friend Requests{" "}
@@ -145,31 +175,24 @@ const Notifications = () => {
 
           <TabsContent value="notifications" className="mt-4 ">
             <div className="space-y-4 ">
-              {notifications.length > 0 ? (
-                notifications
-                  .filter(notification => !notification.seen)
-                  .concat(
-                    notifications
-                      .filter(notification => notification.seen)
-                      .slice(0, 5)
-                  )
-                  .map((notification) => (
-                    <Notification
-                      key={notification._id}
-                      _id={notification._id}
-                      title={notification.details.notificationText}
-                      profilePic={notification.sender.profilePic}
-                      timestamp={notification.timestamp}
-                      seen={notification.seen}
-                      onMarkAsSeen={handleMarkAsSeen}
-                      senderId={notification.sender.id}
-                      entityDetails={{
-                        entityType: notification.details.entityType,
-                        entityId: notification.details.entityId,
-                        entity: notification.details.entity
-                      }}
-                    />
-                  ))
+              {totalNotificationsCount > 0 ? (
+                [...unseenNotifications, ...seenNotifications.slice(0, 5)].map((notification) => (
+                  <Notification
+                    key={notification._id}
+                    _id={notification._id}
+                    title={notification.details.notificationText}
+                    profilePic={notification.sender.profilePic}
+                    timestamp={notification.timestamp}
+                    seen={notification.seen}
+                    onMarkAsSeen={handleMarkAsSeen}
+                    senderId={notification.sender.id}
+                    entityDetails={{
+                      entityType: notification.details.entityType,
+                      entityId: notification.details.entityId,
+                      entity: notification.details.entity
+                    }}
+                  />
+                ))
               ) : (
                 <EmptyState
                   icon={Bell}
