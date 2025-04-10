@@ -179,6 +179,7 @@ export function Post({
             setCurrentReaction(wasLiked ? currentReaction : null);
             setLikes(prev => isSameReaction ? prev + 1 : (wasLiked ? prev : prev - 1));
         } else {
+            // Call onLikeClick to update the parent components
             onLikeClick?.();
         }
 

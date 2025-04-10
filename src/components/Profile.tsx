@@ -36,6 +36,7 @@ import { TruncatedText } from "@/components/ui/TruncatedText";
 import { TruncatedList } from "@/components/ui/TruncatedList";
 import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
 import type { StoryData } from "@/apis/apiTypes/response";
+import ThoughtsList from "@/components/ThoughtsList";
 
 interface ProfileProps {
   userId: string;
@@ -526,12 +527,17 @@ const   Profile: React.FC<ProfileProps> = ({
       {/* Tabs */}
       <Tabs defaultValue="posts" className="w-full">
         <TabsList
-          className="grid w-full grid-cols-2 bg-transparent *:rounded-none *:border-transparent 
+          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
         *:data-[state=active]:text-foreground"
         >
           <TabsTrigger value="posts" className="group cursor-pointer">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
               Posts
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="thoughts" className="group cursor-pointer">
+            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+              Thoughts
             </span>
           </TabsTrigger>
           <TabsTrigger value="community" className="group cursor-pointer">
@@ -558,6 +564,19 @@ const   Profile: React.FC<ProfileProps> = ({
               posts={posts} 
               userId={userId} 
               // displayType={postDisplayType}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="thoughts" className="p-4">
+          {isLoadingPosts ? (
+            <div className="flex justify-center items-center min-h-[200px]">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <ThoughtsList 
+              posts={posts} 
+              userId={userId}
             />
           )}
         </TabsContent>
