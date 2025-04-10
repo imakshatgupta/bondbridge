@@ -3,6 +3,17 @@ export interface MediaItem {
     type: string;
 }
 
+export interface ReactionDetails {
+    total: number;
+    types: {
+        like?: number;
+        love?: number;
+        haha?: number;
+        lulu?: number;
+        [key: string]: number | undefined;
+    };
+}
+
 export interface PostProps {
     user: string;
     userId: string;
@@ -18,5 +29,11 @@ export interface PostProps {
     onLikeClick?: () => void;
     feedId: string;
     isLiked?: boolean;
+    reactionType?: string | null;
+    reactionDetails?: ReactionDetails;
+    reaction: {
+        hasReacted: boolean;
+        reactionType: string | null;
+    };
     onDelete?: (postId: string) => void; // Callback when post is deleted
 }

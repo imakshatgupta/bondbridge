@@ -19,7 +19,6 @@ import { useApiCall } from "@/apis/globalCatchError";
 import {
     addReaction,
     deleteReaction,
-    getAllReactions,
 } from "@/apis/commonApiCalls/reactionApi";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
 import { toast } from "sonner";
@@ -59,34 +58,54 @@ export function Post({
     onLikeClick,
     feedId,
     isLiked: initialIsLiked = false,
+    reactionType: initialReactionType = null,
+    reactionDetails = { total: 0, types: { like: 0, love: 0, haha: 0, lulu: 0 } },
+    reaction = { hasReacted: false, reactionType: null },
     onDelete
 }: PostProps) {
     const navigate = useNavigate();
     const [likes, setLikes] = useState(initialLikes);
-    const [isLiked, setIsLiked] = useState(initialIsLiked);
-    const [currentReaction, setCurrentReaction] = useState<ReactionType | null>(null);
+    const [isLiked, setIsLiked] = useState(reaction.hasReacted || initialIsLiked);
+    const [currentReaction, setCurrentReaction] = useState<ReactionType | null>(
+        reaction.reactionType && reaction.reactionType in REACTIONS 
+            ? reaction.reactionType as ReactionType 
+            : (initialReactionType && initialReactionType in REACTIONS 
+                ? initialReactionType as ReactionType 
+                : null)
+    );
     const [isLikeLoading, setIsLikeLoading] = useState(false);
-    const [isLoadingReactions, setIsLoadingReactions] = useState(false);
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [showReactionPopover, setShowReactionPopover] = useState(false);
     const reactionTimeoutRef = useRef<number | null>(null);
     const [reactionCounts, setReactionCounts] = useState<Record<ReactionType, number>>({
-        like: 0,
-        love: 0,
-        haha: 0,
-        lulu: 0
+        like: reactionDetails.types.like || 0,
+        love: reactionDetails.types.love || 0,
+        haha: reactionDetails.types.haha || 0,
+        lulu: reactionDetails.types.lulu || 0
     });
 
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
-    const [executeGetAllReactions] = useApiCall(getAllReactions);
     const [executeDeletePost] = useApiCall(deletePost);
 
     useEffect(() => {
-        if (feedId) {
-            fetchReactions();
-        }
-    }, [feedId]);
+        // Update reaction state when props change (for example, when navigating between posts)
+        setLikes(initialLikes);
+        setIsLiked(reaction.hasReacted || initialIsLiked);
+        setCurrentReaction(
+            reaction.reactionType && reaction.reactionType in REACTIONS 
+                ? reaction.reactionType as ReactionType 
+                : (initialReactionType && initialReactionType in REACTIONS 
+                    ? initialReactionType as ReactionType 
+                    : null)
+        );
+        setReactionCounts({
+            like: reactionDetails.types.like || 0,
+            love: reactionDetails.types.love || 0,
+            haha: reactionDetails.types.haha || 0,
+            lulu: reactionDetails.types.lulu || 0
+        });
+    }, [initialLikes, initialIsLiked, initialReactionType, reactionDetails, reaction]);
 
     useEffect(() => {
         // Cleanup timeout on unmount
@@ -96,50 +115,6 @@ export function Post({
             }
         };
     }, []);
-
-    const fetchReactions = async () => {
-        if (!feedId || isLoadingReactions) return;
-
-        setIsLoadingReactions(true);
-        const result = await executeGetAllReactions(feedId, 'feed');
-
-        if (result.success && result.data) {
-            // Find all reaction types from the response
-            const currentUserId = localStorage.getItem('userId');
-            let totalLikes = 0;
-            let userReaction: ReactionType | null = null;
-
-            // Initialize reaction counts
-            const newReactionCounts: Record<ReactionType, number> = {
-                like: 0,
-                love: 0,
-                haha: 0,
-                lulu: 0
-            };
-
-            result.data.reactions.forEach(r => {
-                // All reaction types contribute to the total "likes" count
-                totalLikes += r.count;
-
-                // Update individual reaction counts
-                if (r.reactionType in newReactionCounts) {
-                    newReactionCounts[r.reactionType as ReactionType] = r.count;
-                }
-
-                // Check if current user has any reaction
-                const userHasReacted = r.users.some(u => u.userId === currentUserId);
-                if (userHasReacted) {
-                    setIsLiked(true);
-                    userReaction = r.reactionType as ReactionType;
-                }
-            });
-
-            setReactionCounts(newReactionCounts);
-            setCurrentReaction(userReaction);
-            setLikes(totalLikes);
-        }
-        setIsLoadingReactions(false);
-    };
 
     const handleReactionSelect = async (reactionType: ReactionType) => {
         if (isLikeLoading || !feedId) return;
@@ -361,7 +336,7 @@ export function Post({
                                 <button
                                     className={`flex cursor-pointer items-center gap-1 ${isLiked ? '' : 'hover:text-destructive'}`}
                                     onClick={handleLikeButtonClick}
-                                    disabled={isLikeLoading || isLoadingReactions}
+                                    disabled={isLikeLoading}
                                 >
                                     {displayedReaction ? (
                                         <span className="text-lg">{displayedReaction}</span>
