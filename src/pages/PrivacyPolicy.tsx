@@ -27,7 +27,7 @@ const PrivacyPolicy: React.FC = () => {
           </h1>
         </div>
 
-        <div className="space-y-6 text-foreground text-justify">
+        <div className="space-y-6 text-foreground text-justify text-sm">
           <p className="leading-relaxed">
             The Officers of BondBridge LLC are firmly committed to guarding the
             confidence you have placed in our company and to use, responsibly

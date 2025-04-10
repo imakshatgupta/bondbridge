@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PersonalInfoTab from "@/components/profile/PersonalInfoTab";
 import SkillsInterestsTab from "@/components/profile/SkillsInterestsTab";
@@ -11,6 +11,7 @@ import { submitProfile } from "../apis/commonApiCalls/createProfileApi";
 import { setPassword } from "../apis/commonApiCalls/authenticationApi";
 import { joinMultipleCommunities } from "../apis/commonApiCalls/communitiesApi";
 import { useApiCall } from "../apis/globalCatchError";
+import { toast } from "sonner";
 
 const tabs = [
   { id: "personal", label: "Personal Information" },
@@ -20,10 +21,51 @@ const tabs = [
   { id: "communities", label: "Select Communities" },
 ];
 
+// Tabs that require validation
+const VALIDATED_TABS = ["personal", "skills"];
+
 const SetupProfile: React.FC = () => {
   const location = useLocation();
   const currentTab = location.hash.replace("#", "") || "personal";
   const navigate = useNavigate();
+  
+  // Validation state for different tabs
+  const [personalInfoValid, setPersonalInfoValid] = useState(false);
+  const [skillsInterestsValid, setSkillsInterestsValid] = useState(false);
+  
+  // Track validated tabs
+  const [validatedTabs, setValidatedTabs] = useState<string[]>([]);
+  
+  // Update validated tabs when validation status changes
+  useEffect(() => {
+    const newValidatedTabs = [...validatedTabs];
+    
+    // Handle "personal" tab validation
+    if (personalInfoValid) {
+      if (!newValidatedTabs.includes("personal")) {
+        newValidatedTabs.push("personal");
+      }
+    } else {
+      const personalIndex = newValidatedTabs.indexOf("personal");
+      if (personalIndex !== -1) {
+        newValidatedTabs.splice(personalIndex, 1);
+      }
+    }
+    
+    // Handle "skills" tab validation
+    if (skillsInterestsValid) {
+      if (!newValidatedTabs.includes("skills")) {
+        newValidatedTabs.push("skills");
+      }
+    } else {
+      const skillsIndex = newValidatedTabs.indexOf("skills");
+      if (skillsIndex !== -1) {
+        newValidatedTabs.splice(skillsIndex, 1);
+      }
+    }
+    
+    setValidatedTabs(newValidatedTabs);
+  }, [personalInfoValid, skillsInterestsValid]);
 
   // Get profile data from Redux store
   const {
@@ -91,10 +133,29 @@ const SetupProfile: React.FC = () => {
     // If on the last tab (communities), submit the form instead of navigating
     if (currentIndex === tabs.length - 1) {
       handleSubmit();
-    } else if (currentIndex < tabs.length - 1) {
-      // Otherwise, navigate to the next tab
-      navigate(`#${tabs[currentIndex + 1].id}`);
+      return;
     }
+    
+    const nextTabIndex = currentIndex + 1;
+    const nextTabId = tabs[nextTabIndex].id;
+    
+    // Only validate for tabs that require validation
+    if (VALIDATED_TABS.includes(currentTab)) {
+      // Current tab requires validation - check if it's validated
+      if (!validatedTabs.includes(currentTab)) {
+        toast.error("Please complete all required fields in this tab before proceeding.");
+        return;
+      }
+      
+      // If next tab is "skills" and "personal" is not validated, don't allow navigation
+      if (nextTabId === "skills" && !validatedTabs.includes("personal")) {
+        toast.error("Please complete the Personal Information tab first.");
+        navigate("#personal");
+        return;
+      }
+    } 
+    // Otherwise, allow navigation to the next tab
+    navigate(`#${nextTabId}`);
   };
 
   const handleBack = () => {
@@ -105,9 +166,44 @@ const SetupProfile: React.FC = () => {
       navigate(-1);
     }
   };
+  
+  // Custom function to check if a tab is accessible
+  const isTabAccessible = (tabId: string) => {
+    // Current tab is always accessible
+    if (tabId === currentTab) return true;
+    
+    // Get tab indices
+    const currentIndex = tabs.findIndex((tab) => tab.id === currentTab);
+    const targetIndex = tabs.findIndex((tab) => tab.id === tabId);
+    
+    // Previous tabs are always accessible
+    if (targetIndex < currentIndex) return true;
+    
+    // Only validate the specific tabs we care about
+    if (tabId === "skills") {
+      // Skills tab requires Personal Info tab to be validated
+      return validatedTabs.includes("personal");
+    }
+    
+    // For all other tabs, only require completion of the validated tabs
+    if (tabId === "avatar" || tabId === "photos" || tabId === "communities") {
+      return validatedTabs.includes("personal") && validatedTabs.includes("skills");
+    }
+    
+    return true;
+  };
+  
+  const handleTabChange = (tabId: string) => {
+    navigate(`#${tabId}`);
+  };
 
   // Check if we're on the last tab
   const isLastTab = currentTab === tabs[tabs.length - 1].id;
+  
+  // Determine if the Next button should be disabled based on the current tab
+  const isNextDisabled = 
+    (currentTab === "personal" && !personalInfoValid) || 
+    (currentTab === "skills" && !skillsInterestsValid);
 
   return (
     <div className="max-h-screen overflow-auto">
@@ -117,6 +213,10 @@ const SetupProfile: React.FC = () => {
         currentTab={currentTab}
         onNext={isLastTab ? handleSubmit : handleNext}
         onBack={handleBack}
+        isNextDisabled={isNextDisabled}
+        validatedTabs={validatedTabs}
+        onTabChange={handleTabChange}
+        customIsTabAccessible={isTabAccessible}
         decorativeImages={{
           clipboard: "/profile/clipboard.png",
           deco1: "/profile/deco1.png",
@@ -124,8 +224,8 @@ const SetupProfile: React.FC = () => {
         }}
       >
         {/* Render tab content */}
-        {currentTab === "personal" && <PersonalInfoTab />}
-        {currentTab === "skills" && <SkillsInterestsTab />}
+        {currentTab === "personal" && <PersonalInfoTab onValidationChange={setPersonalInfoValid} />}
+        {currentTab === "skills" && <SkillsInterestsTab onValidationChange={setSkillsInterestsValid} />}
         {currentTab === "avatar" && <SelectAvatarTab />}
         {currentTab === "photos" && <CoverProfilePhotosTab />}
         {currentTab === "communities" && <SelectCommunitiesTab />}

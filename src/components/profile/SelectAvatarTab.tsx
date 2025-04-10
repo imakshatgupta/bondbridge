@@ -108,8 +108,8 @@ const SelectAvatarTab: React.FC = () => {
       ) : (
         <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="female">Female</TabsTrigger>
-            <TabsTrigger value="male">Male</TabsTrigger>
+            <TabsTrigger value="female" className="cursor-pointer">Female</TabsTrigger>
+            <TabsTrigger value="male" className="cursor-pointer">Male</TabsTrigger>
           </TabsList>
           
           <div className="mt-4 max-h-[50vh] overflow-y-auto p-1">
