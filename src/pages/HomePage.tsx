@@ -247,7 +247,17 @@ export default function HomePage() {
   });
 
   const handleLikeClick = (postId: string) => {
-    console.log(postId);
+    // Update the posts array with the latest reaction data
+    setPosts(prevPosts => prevPosts.map(post => {
+      if (post._id === postId || post.feedId === postId) {
+        // Get the updated reaction from the API response
+        // Since we don't have the new reaction details here yet,
+        // we'll rely on the Post component's optimistic UI updates for now
+        // The next API call to fetch posts will get the correct data
+        return post;
+      }
+      return post;
+    }));
   };
 
   const handleCommentClick = (postId: string, post: HomePostData) => {
