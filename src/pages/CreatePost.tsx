@@ -20,8 +20,8 @@ import {
   registerRecognitionInstance,
   unregisterRecognitionInstance,
 } from "../types/speech-recognition";
-import { WORD_LIMIT } from "@/lib/constants";
-import { countWords } from "@/lib/utils";
+// Define character limit constant
+const CHARACTER_LIMIT = 150;
 import { CreatePostRequest } from "@/apis/apiTypes/request";
 import { MediaCropModal, CroppedFile } from "@/components/MediaCropModal";
 
@@ -525,9 +525,9 @@ const CreatePost = ({
   };
 
   const handleSubmit = async () => {
-    // Check word count
-    if (countWords(content) > WORD_LIMIT) {
-      toast.error(`Your post exceeds the ${WORD_LIMIT} word limit.`);
+    // Check character count instead of word count
+    if (content.length > CHARACTER_LIMIT) {
+      toast.error(`Your post exceeds the ${CHARACTER_LIMIT} character limit.`);
       return;
     }
 
@@ -793,12 +793,12 @@ const CreatePost = ({
             <div className="flex justify-end mt-1">
               <span
                 className={`text-xs ${
-                  countWords(content) > WORD_LIMIT
+                  content.length > CHARACTER_LIMIT
                     ? "text-destructive-foreground"
                     : "text-muted-foreground"
                 }`}
               >
-                {countWords(content)}/{WORD_LIMIT} words
+                {content.length}/{CHARACTER_LIMIT} characters
               </span>
             </div>
           </>

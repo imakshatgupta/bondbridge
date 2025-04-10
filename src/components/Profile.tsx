@@ -419,7 +419,7 @@ const   Profile: React.FC<ProfileProps> = ({
           
           {/* Edit icon for profile picture - only show for current user */}
           {isCurrentUser && (
-            <div className="absolute bottom-0 right-0 z-20 cursor-pointer" onClick={handleEditClick}>
+            <div className="absolute bottom-0 right-0 z-30 cursor-pointer" onClick={handleEditClick}>
               <div className="bg-primary rounded-full p-1.5 shadow-md">
                 <Pencil className="h-4 w-4 text-primary-foreground" />
               </div>

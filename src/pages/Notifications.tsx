@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import FriendRequest from "@/components/notifications/FriendRequest";
 import Notification from "@/components/notifications/Notification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +12,7 @@ import {
 import { useApiCall } from "@/apis/globalCatchError";
 import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Bell, UserPlus, AlertCircle } from "lucide-react";
+import { Bell, UserPlus, AlertCircle, ArrowLeft } from "lucide-react";
 
 // Define the actual notification structure from the API
 interface ApiNotification {
@@ -145,7 +146,12 @@ const Notifications = () => {
 
   return (
     <div className="w-full">
-      <h1 className="text-4xl font-semibold mb-5">Notifications</h1>
+      <div className="flex items-center mb-5 relative">
+        <Link to="/" className="absolute left-0 flex items-center text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-5 w-5" />
+        </Link>
+        <h1 className="text-4xl font-semibold w-full text-center">Notifications</h1>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center h-[65vh]">
@@ -180,7 +186,7 @@ const Notifications = () => {
                   <Notification
                     key={notification._id}
                     _id={notification._id}
-                    title={notification.details.notificationText}
+                    title={(notification.details.notificationText || notification.details.content || "")}
                     profilePic={notification.sender.profilePic}
                     timestamp={notification.timestamp}
                     seen={notification.seen}
