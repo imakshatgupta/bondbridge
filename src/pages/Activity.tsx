@@ -16,7 +16,7 @@ import {
   setLoading,
   transformAndSetChats,
 } from "@/store/chatSlice";
-import { Plus, UserPlus, MessageSquare, Users, Building2 } from "lucide-react";
+import { Plus, UserPlus, MessageSquare, Users, Building2, ArrowLeft } from "lucide-react";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
 import { ChatRoom } from "@/apis/apiTypes/response";
 import UserSearchDialog from "@/components/common/UserSearchDialog";
@@ -215,8 +215,11 @@ export default function Activity() {
       ) : (
         <div className={`p-6 w-full`}>
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-semibold">Activity</h1>
+          <div className="flex items-center justify-between mb-6 relative">
+            <Link to="/" className="absolute left-0 -ml-2 flex items-center text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <h1 className="text-3xl font-semibold ml-6">Activity</h1>
             <div className="flex gap-2">
               <Link to="/create-group">
                 <Button

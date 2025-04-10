@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Search as SearchIcon, Loader2, Users, AlertCircle } from "lucide-react";
+import { Search as SearchIcon, Loader2, Users, AlertCircle, ArrowLeft } from "lucide-react";
 import SearchResults from "@/components/SearchResults";
-// import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { SearchResultsListSkeleton } from "@/components/skeletons/SearchSkeleton";
@@ -101,9 +101,13 @@ export default function Search() {
   return (
     <>
       <div className="max-w-2xl mx-auto bg-background px-4 pb-4">
-        <div className="sticky bg-background py-4 z-10 -top-10 ">
+        <div className="sticky bg-background py-4 z-10 -top-10 flex items-center relative">
+          <Link to="/" className="absolute left-0 flex items-center text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          
           {/* Search Bar */}
-          <div className="relative ">
+          <div className="relative w-full ml-6">
             <Input
               placeholder="Search"
               className="w-full bg-muted border-none"

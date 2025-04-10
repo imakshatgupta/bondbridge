@@ -393,7 +393,7 @@ const EditProfilePage: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleDeleteProfilePic}
-                      className="absolute -top-2 -right-2 h-6 w-6 bg-destructive hover:bg-destructive-foreground cursor-pointer rounded-full flex items-center justify-center text-foreground"
+                      className="absolute -top-2 -right-2 h-6 w-6 bg-destructive hover:bg-destructive-foreground cursor-pointer rounded-full flex items-center justify-center text-white"
                       title="Delete custom photo"
                     >
                       <X className="h-4 w-4" />
