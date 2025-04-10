@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { fetchFollowingList, fetchFollowersList } from "@/apis/commonApiCalls/profileApi";
+import { fetchFollowingList, fetchFollowersList, unfollowUser, removeFollower } from "@/apis/commonApiCalls/profileApi";
 import { FollowingFollowerUser } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 const FollowingFollowers = () => {
   const navigate = useNavigate();
@@ -18,9 +19,13 @@ const FollowingFollowers = () => {
   
   const [following, setFollowing] = useState<FollowingFollowerUser[]>([]);
   const [followers, setFollowers] = useState<FollowingFollowerUser[]>([]);
+  const [unfollowingUserId, setUnfollowingUserId] = useState<string | null>(null);
+  const [removingFollowerId, setRemovingFollowerId] = useState<string | null>(null);
   
   const [executeFetchFollowing, isLoadingFollowing] = useApiCall(fetchFollowingList);
   const [executeFetchFollowers, isLoadingFollowers] = useApiCall(fetchFollowersList);
+  const [executeUnfollow] = useApiCall(unfollowUser);
+  const [executeRemoveFollower] = useApiCall(removeFollower);
 
   useEffect(() => {
     const loadData = async () => {
@@ -44,16 +49,26 @@ const FollowingFollowers = () => {
     navigate(`/profile/${userId}`);
   };
 
-  const handleUnfollow = (userId: string) => {
-    // This is a dummy function for the unfollow button
-    console.log(`Unfollowed user: ${userId}`);
-    // In a real implementation, you would call an API and update the state
+  const handleUnfollow = async (userId: string) => {
+    setUnfollowingUserId(userId);
+    const result = await executeUnfollow(userId);
+    if (result.success) {
+      // Remove the unfollowed user from the following list
+      setFollowing(following.filter(user => user._id !== userId));
+      toast.success("Successfully unfollowed user");
+    }
+    setUnfollowingUserId(null);
   };
 
-  const handleRemoveFollower = (userId: string) => {
-    // This is a dummy function for the remove button
-    console.log(`Removed follower: ${userId}`);
-    // In a real implementation, you would call an API and update the state
+  const handleRemoveFollower = async (userId: string) => {
+    setRemovingFollowerId(userId);
+    const result = await executeRemoveFollower(userId);
+    if (result.success) {
+      // Remove the user from the followers list
+      setFollowers(followers.filter(user => user._id !== userId));
+      toast.success("Successfully removed follower");
+    }
+    setRemovingFollowerId(null);
   };
 
   const FollowingList = ({ users, isLoading }: { users: FollowingFollowerUser[], isLoading: boolean }) => {
@@ -106,8 +121,14 @@ const FollowingFollowers = () => {
                   e.stopPropagation();
                   handleUnfollow(user._id);
                 }}
+                disabled={unfollowingUserId === user._id}
+                className="min-w-[80px] justify-center cursor-pointer"
               >
-                Unfollow
+                {unfollowingUserId === user._id ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Unfollowing</>
+                ) : (
+                  'Unfollow'
+                )}
               </Button>
             </div>
           </Card>
@@ -166,8 +187,14 @@ const FollowingFollowers = () => {
                   e.stopPropagation();
                   handleRemoveFollower(user._id);
                 }}
+                disabled={removingFollowerId === user._id}
+                className="min-w-[80px] justify-center cursor-pointer"
               >
-                Remove
+                {removingFollowerId === user._id ? (
+                  <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Removing</>
+                ) : (
+                  'Remove'
+                )}
               </Button>
             </div>
           </Card>

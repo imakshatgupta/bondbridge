@@ -14,6 +14,7 @@ import {
   fetchUserPosts,
   updateUserProfile,
   fetchUserProfile,
+  unfollowUser,
 } from "@/apis/commonApiCalls/profileApi";
 import { sendFriendRequest } from "@/apis/commonApiCalls/friendRequestApi";
 import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
@@ -75,12 +76,15 @@ const   Profile: React.FC<ProfileProps> = ({
   const dispatch = useAppDispatch();
   const [posts, setPosts] = useState<UserPostsResponse["posts"]>([]);
   const [isMessageLoading, setIsMessageLoading] = useState(false);
+  const [isUnfollowingUser, setIsUnfollowingUser] = useState(false);
   const [userStories, setUserStories] = useState<StoryData | null>(null);
   const [isLoadingStories, setIsLoadingStories] = useState(true);
   const [localRequestSent, setLocalRequestSent] = useState(requestSent);
+  const [localIsFollowing, setLocalIsFollowing] = useState(isFollowing);
   const [executePostsFetch, isLoadingPosts] = useApiCall(fetchUserPosts);
   const [executeSendFriendRequest, isSendingFriendRequest] =
     useApiCall(sendFriendRequest);
+  const [executeUnfollowUser] = useApiCall(unfollowUser);
   const [executeStartMessage] = useApiCall(startMessage);
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
@@ -161,6 +165,10 @@ const   Profile: React.FC<ProfileProps> = ({
     setLocalRequestSent(requestSent);
   }, [requestSent]);
 
+  useEffect(() => {
+    setLocalIsFollowing(isFollowing);
+  }, [isFollowing]);
+
   const handleSendFriendRequest = async () => {
     try {
       const result = await executeSendFriendRequest({ userId: userId });
@@ -174,6 +182,20 @@ const   Profile: React.FC<ProfileProps> = ({
       console.error("Error sending friend request:", error);
       // toast.error("An error occurred while sending friend request");
     }
+  };
+
+  const handleUnfollow = async () => {
+    if (!userId) return;
+    
+    setIsUnfollowingUser(true);
+    const result = await executeUnfollowUser(userId);
+    if (result.success) {
+      setLocalIsFollowing(false);
+      toast.success("Successfully unfollowed user");
+    } else {
+      toast.error("Failed to unfollow user");
+    }
+    setIsUnfollowingUser(false);
   };
 
   const handleAnonymousToggle = async (checked: boolean) => {
@@ -506,14 +528,15 @@ const   Profile: React.FC<ProfileProps> = ({
             </Button>
             <Button
               className="flex-1 cursor-pointer"
-              onClick={handleSendFriendRequest}
-              disabled={isSendingFriendRequest || isFollowing || localRequestSent}
+              onClick={localIsFollowing ? handleUnfollow : handleSendFriendRequest}
+              disabled={isSendingFriendRequest || isUnfollowingUser || (!localIsFollowing && localRequestSent)}
+              variant={localIsFollowing ? "outline" : "default"}
             >
-              {isSendingFriendRequest ? (
+              {isSendingFriendRequest || isUnfollowingUser ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              {isFollowing 
-                ? "Following" 
+              {localIsFollowing 
+                ? "Unfollow" 
                 : localRequestSent 
                   ? "Request Sent" 
                   : isFollower 
@@ -537,7 +560,7 @@ const   Profile: React.FC<ProfileProps> = ({
           </TabsTrigger>
           <TabsTrigger value="thoughts" className="group cursor-pointer">
             <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Thoughts
+              Quotes
             </span>
           </TabsTrigger>
           <TabsTrigger value="community" className="group cursor-pointer">
