@@ -81,7 +81,7 @@ const GroupList = ({ groups, isLoading, onSelectGroup }: GroupListProps) => {
                 <img
                   src={group.avatar || "/activity/group.svg"}
                   alt={group.name}
-                  className={`w-full h-full object-cover ${!group.avatar ? 'theme-svg' : ''}`}
+                  className={`w-full h-full object-cover ${!group.avatar ? 'theme-svg p-2' : ''}`}
                 />
               </div>
               <div>
