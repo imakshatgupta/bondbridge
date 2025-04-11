@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { getRelativeTime } from "../../lib/utils";
 import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import { deleteNotification } from "../../apis/commonApiCalls/notificationsApi";
+import { useApiCall } from "../../apis/globalCatchError";
 
 interface NotificationProps {
   _id: string;
@@ -9,6 +12,7 @@ interface NotificationProps {
   timestamp: string;
   seen: boolean;
   onMarkAsSeen: (id: string) => void;
+  onDelete?: (id: string) => void;
   entityDetails?: {
     entityType: string;
     entityId: string;
@@ -27,11 +31,13 @@ const Notification = ({
   timestamp,
   seen,
   onMarkAsSeen,
+  onDelete,
   entityDetails,
   senderId,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
   const navigate = useNavigate();
+  const [executeDelete, isDeleting] = useApiCall(deleteNotification);
   // console.log("notifi data: ",_id,
   //   title,
   //   profilePic,
@@ -59,6 +65,15 @@ const Notification = ({
     }
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the notification click event from firing
+    const { success } = await executeDelete(_id);
+    
+    if (success && onDelete) {
+      onDelete(_id);
+    }
+  };
+
   return (
     <div
       className={`flex items-center gap-4 p-4 border-b hover:bg-muted`}
@@ -71,8 +86,8 @@ const Notification = ({
           className="w-full h-full rounded-full object-cover cursor-pointer"
         />
       </div>
-      <div className="flex-1 cursor-pointer" onClick={handleClick}>
-        <h3 className="font-medium text-xl text-foreground capitalize">
+      <div className="flex-1 cursor-pointer">
+        <h3 className="font-medium text-xl text-foreground capitalize" onClick={handleClick}>
           {title}
         </h3>
       </div>
@@ -82,6 +97,14 @@ const Notification = ({
       {!localseen && (
         <span className="h-2 w-2 bg-green-500 rounded-full"></span>
       )}
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="p-1.5 text-foreground cursor-pointer hover:text-muted-foreground hover:bg-destructive/10 rounded-full transition-colors"
+        aria-label="Delete notification"
+      >
+        <X className="h-4 w-4" />
+      </button>
     </div>
   );
 };
