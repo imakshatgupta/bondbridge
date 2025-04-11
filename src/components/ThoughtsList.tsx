@@ -96,7 +96,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
   if (sortedThoughtPosts.length === 0) {
     return (
       <div className="flex justify-center items-center p-8 text-muted-foreground">
-        No thoughts to display
+        No Quotes
       </div>
     );
   }
@@ -129,7 +129,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
 
   // Initialize reaction counts if not already set
   sortedThoughtPosts.forEach(post => {
-    const postId = (post as any).id?.toString() || "";
+    const postId = (post as Post | ProfilePostData).id?.toString() || "";
     if (postId && !reactionCounts[postId]) {
       reactionCounts[postId] = getInitialReactionCounts(post);
       
