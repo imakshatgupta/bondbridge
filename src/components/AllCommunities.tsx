@@ -19,7 +19,7 @@ const AllCommunities: React.FC<AllCommunitiesProps> = ({ communities, isLoadingC
   if (communities.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        No communities joined yet
+        No Communities joined
       </div>
     );
   }
