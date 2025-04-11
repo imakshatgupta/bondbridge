@@ -82,6 +82,7 @@ const Login: React.FC = () => {
   const [countryCode, setCountryCode] = useState("+1"); // Default to India (+1)
   const [, setIsValidPhone] = useState(false);
   const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
   const phoneInputRef = useRef(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -161,6 +162,7 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
 
     const validCountryCode = "+" + countryCode;
 
@@ -170,7 +172,10 @@ const Login: React.FC = () => {
       password,
     });
 
-    console.log("result", result);
+    if (!result.success) {
+      setAuthError("Invalid credentials. Please check your phone number and password.");
+      return;
+    }
 
     const data = result.data as LoginResponse;
 
@@ -306,6 +311,11 @@ const Login: React.FC = () => {
                 </svg>
               </Button>
             </div>
+            {authError && (
+              <div className="mt-2 text-sm font-medium text-destructive-foreground">
+                {authError}
+              </div>
+            )}
           </div>
           <div className="flex justify-end w-full">
             <Link

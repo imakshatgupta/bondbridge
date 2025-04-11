@@ -4,6 +4,7 @@ import { FollowingFollowerUser } from "@/apis/apiTypes/profileTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
+import { useApiCall } from "@/apis/globalCatchError";
 // import { Loader2 } from "lucide-react";
 
 interface CommunityMemberListProps {
@@ -14,6 +15,8 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
   const [members, setMembers] = useState<FollowingFollowerUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [fetchProfile] = useApiCall(fetchProfileById);
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -25,10 +28,17 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
 
       setLoading(true);
       try {
-        // Fetch member profiles in parallel with a limit of 10 at a time
+        // Fetch member profiles in parallel with a limit of 30 at a time
         const memberChunks = memberIds.slice(0, 30); // Limit to 30 for performance
-        const memberPromises = memberChunks.map((memberId) => fetchProfileById(memberId));
-        const memberProfiles = await Promise.all(memberPromises);
+        const memberPromises = memberChunks.map(async (memberId) => {
+          const response = await fetchProfile(memberId);
+          return response.data;
+        });
+        
+        const memberProfiles = (await Promise.all(memberPromises)).filter(
+          (profile): profile is FollowingFollowerUser => profile !== null
+        );
+        
         setMembers(memberProfiles);
       } catch (err) {
         console.error("Error fetching community members:", err);
@@ -39,7 +49,7 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
     };
 
     fetchMembers();
-  }, [memberIds]);
+  }, []);
 
   if (loading) {
     return (
@@ -78,7 +88,7 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
           className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/30 transition-colors"
         >
           <Avatar className="h-10 w-10 bg-purple-900/40 border-2 border-purple-500/30">
-            <AvatarImage src={member.avatar} alt={member.name} />
+            <AvatarImage src={member.profilePic || member.avatar} alt={member.name} />
             <AvatarFallback className="bg-purple-900/50 text-white">
               {member.name.charAt(0).toUpperCase()}
             </AvatarFallback>
@@ -94,7 +104,7 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
       
       {memberIds.length > members.length && (
         <div className="text-center py-2 text-sm text-muted-foreground">
-          + {memberIds.length - members.length} more members
+          + {memberIds.length - members.length} More members
         </div>
       )}
     </div>
