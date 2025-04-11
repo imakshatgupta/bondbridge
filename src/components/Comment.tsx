@@ -14,6 +14,7 @@ import { CommentProps } from "../types/home";
 import { deleteComment } from "@/apis/commonApiCalls/commentsApi";
 import { Link } from "react-router-dom";
 import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
+import { ReportModal } from './ReportModal';
 
 // Memoized reply component to prevent unnecessary re-renders
 const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCommentDeleted, isPending }: 
@@ -212,6 +213,13 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
     }
   }, [comment.commentId, postId, onCommentDeleted, executeDeleteComment, isCommentPending]);
 
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const reporterId = localStorage.getItem('userId') || '';
+
+  const handleReportClick = () => {
+    setIsReportModalOpen(true);
+  };
+
   // Early return for empty content
   if (!comment.comment) return null;
 
@@ -233,14 +241,14 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
     });
     menuItems.push({
       ...ReportMenuItem,
-      onClick: () => console.log('Report clicked')
+      onClick: handleReportClick
     });
   } 
   // For other comments in others' post -> report
   else {
     menuItems.push({
       ...ReportMenuItem,
-      onClick: () => console.log('Report clicked')
+      onClick: handleReportClick
     });
   }
 
@@ -366,6 +374,12 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
           )}
         </div>
       </div>
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        postId={postId ?? ''}
+        reporterId={reporterId}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useApiCall } from "@/apis/globalCatchError";
 import { addReaction, deleteReaction } from "@/apis/commonApiCalls/reactionApi";
 import { useRef } from "react";
+import { ReportModal } from './ReportModal';
 
 // Reaction types and their emojis
 const REACTIONS = {
@@ -74,6 +75,9 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
   const reactionTimeoutRefs = useRef<Record<string, number | null>>({});
   const [executeAddReaction] = useApiCall(addReaction);
   const [executeDeleteReaction] = useApiCall(deleteReaction);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const currentUserId = localStorage.getItem('userId') || '';
   
   // Filter posts with no media
   const thoughtPosts = posts.filter(post => {
@@ -287,6 +291,14 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
     }));
   };
 
+  const handleReportClick = (postId: string | number) => {
+    setSelectedPostId(postId.toString());
+    setIsReportModalOpen(true);
+  };
+
+  // Check if the current user is viewing their own profile
+  const isOwnProfile = userId === currentUserId;
+
   return (
     <div className="flex flex-col space-y-4">
       {sortedThoughtPosts.map((post) => {
@@ -342,7 +354,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
         const menuItems = [
           {
             ...ReportMenuItem,
-            onClick: () => console.log('Report post', postId)
+            onClick: () => handleReportClick(postId)
           }
         ];
 
@@ -368,7 +380,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
                   <div className="text-sm text-muted-foreground">{timeAgo}</div>
                 </div>
               </div>
-              <ThreeDotsMenu items={menuItems} />
+              {!isOwnProfile && <ThreeDotsMenu items={menuItems} />}
             </div>
             
             <div 
@@ -472,6 +484,15 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
           </div>
         );
       })}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setSelectedPostId(null);
+        }}
+        postId={selectedPostId || ''}
+        reporterId={currentUserId}
+      />
     </div>
   );
 };
