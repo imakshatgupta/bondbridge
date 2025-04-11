@@ -56,7 +56,7 @@ interface ProfileProps {
   interests?: string[];
 }
 
-const   Profile: React.FC<ProfileProps> = ({
+const Profile: React.FC<ProfileProps> = ({
   userId,
   username,
   bio = "",
@@ -451,7 +451,7 @@ const   Profile: React.FC<ProfileProps> = ({
           text={bio} 
           limit={100}
           placeholderText={isCurrentUser ? "Add a bio in your profile settings" : "No bio available"}
-          className="text-muted-foreground text-sm max-w-[80%] text-center mx-auto"
+          className="text-foreground text-sm max-w-[80%] text-center mx-auto"
         />
 
         {/* Interests section */}
@@ -464,7 +464,7 @@ const   Profile: React.FC<ProfileProps> = ({
             renderItem={(interest, index) => (
               <span 
                 key={index} 
-                className="bg-muted text-foreground border border-primary text-xs px-2 py-1 rounded-full"
+                className="bg-muted font-semibold text-foreground border border-primary text-xs px-2 py-1 rounded-full"
               >
                 {interest}
               </span>
@@ -477,17 +477,17 @@ const   Profile: React.FC<ProfileProps> = ({
             <>
               <Link 
                 to="/following-followers?tab=followers" 
-                className="text-center cursor-pointer hover:text-primary transition-colors"
+                className="text-center cursor-pointer hover:text-muted-foreground transition-colors"
               >
                 <div className="font-semibold">{followers.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Followers</div>
+                <div className="text-sm text-foreground">Followers</div>
               </Link>
               <Link 
                 to="/following-followers?tab=following" 
-                className="text-center cursor-pointer hover:text-primary transition-colors"
+                className="text-center cursor-pointer hover:text-muted-foreground transition-colors"
               >
                 <div className="font-semibold">{following.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Following</div>
+                <div className="text-sm text-foreground">Following</div>
               </Link>
             </>
           ) : (

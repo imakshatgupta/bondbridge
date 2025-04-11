@@ -9,7 +9,6 @@ import {
   StoryData,
 } from "@/apis/apiTypes/response";
 import { useApiCall } from "@/apis/globalCatchError";
-import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { PostSkeleton } from "@/components/skeletons/PostSkeleton";
 import { StoryRowSkeleton } from "@/components/skeletons/StorySkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -25,7 +24,6 @@ export default function HomePage() {
   const [posts, setPosts] = useState<HomePostData[]>([]);
   const [stories, setStories] = useState<StoryData[]>([]);
   const [selfStories, setSelfStories] = useState<StoryData | null>(null);
-  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -223,41 +221,25 @@ export default function HomePage() {
     };
   }, [stories, selfStories, isLoading, isLoadingSelfStories]);
 
-  // Function to load more posts
-  const loadMorePosts = async () => {
-    if (isLoading || !hasMore) return;
-
-    const nextPage = page + 1;
-    const result = await executeFetchHomepageData(nextPage);
-
-    if (result.success && result.data) {
-      const { postsData } = result.data as HomepageResponse;
-
-      setPosts((prev) => [...prev, ...postsData.posts]);
-      setHasMore(postsData.hasMore || false);
-      setPage(nextPage);
-    }
-  };
-
-  // Use infinite scroll hook
-  const lastPostElementRef = useInfiniteScroll({
-    isLoading,
-    hasMore,
-    onLoadMore: loadMorePosts,
-  });
+  // Log currentUser changes
+  useEffect(() => {
+    console.log("currentUser: ", currentUser);
+  }, [currentUser]);
 
   const handleLikeClick = (postId: string) => {
     // Update the posts array with the latest reaction data
-    setPosts(prevPosts => prevPosts.map(post => {
-      if (post._id === postId || post.feedId === postId) {
-        // Get the updated reaction from the API response
-        // Since we don't have the new reaction details here yet,
-        // we'll rely on the Post component's optimistic UI updates for now
-        // The next API call to fetch posts will get the correct data
+    setPosts((prevPosts) =>
+      prevPosts.map((post) => {
+        if (post._id === postId || post.feedId === postId) {
+          // Get the updated reaction from the API response
+          // Since we don't have the new reaction details here yet,
+          // we'll rely on the Post component's optimistic UI updates for now
+          // The next API call to fetch posts will get the correct data
+          return post;
+        }
         return post;
-      }
-      return post;
-    }));
+      })
+    );
   };
 
   const handleCommentClick = (postId: string, post: HomePostData) => {
@@ -284,7 +266,7 @@ export default function HomePage() {
     return post;
   };
   const handlePostDelete = (postId: string) => {
-    setPosts(prevPosts => prevPosts.filter(post => post.feedId !== postId));
+    setPosts((prevPosts) => prevPosts.filter((post) => post.feedId !== postId));
   };
 
   // Render error state
@@ -303,10 +285,6 @@ export default function HomePage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    console.log("currentUser: ", currentUser);
-  }, [currentUser]);
 
   // Prepare stories for display - format self story only once
   const formattedSelfStory = selfStories
@@ -374,7 +352,7 @@ export default function HomePage() {
                       className="w-full h-full rounded-full object-cover p-[2px] bg-background"
                     />
                     <button
-                      onClick={() => navigate('/create-story')}
+                      onClick={() => navigate("/create-story")}
                       className="absolute cursor-pointer -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 border-2 border-background"
                     >
                       <Plus className="w-4 h-4" />
@@ -414,10 +392,7 @@ export default function HomePage() {
         posts.map((post, index) => {
           const processedPost = processPostData(post);
           return (
-            <div
-              key={`post-${post._id || index}`}
-              ref={index === posts.length - 1 ? lastPostElementRef : undefined}
-            >
+            <div key={`post-${post._id || index}`}>
               <Post
                 user={post.name}
                 avatar={post.profilePic}

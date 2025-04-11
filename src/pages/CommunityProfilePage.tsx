@@ -249,15 +249,15 @@ const CommunityProfilePage = () => {
           </Badge>
         </div>
 
-        <p className="text-muted-foreground text-center mt-2 max-w-md">
-          {community.bio || community.description}
+        <p className="text-foreground text-center mt-2 max-w-md">
+          {community.description || community.bio}
         </p>
 
         <div className="flex gap-3 mt-6">
           {isUserMember ? (
             <Button
               variant="outline"
-              className="rounded-full text-destructive border-destructive cursor-pointer"
+              className="rounded-full text-foreground border-destructive cursor-pointer"
               onClick={handleLeaveCommunity}
               disabled={isMembershipLoading}
             >
@@ -327,7 +327,7 @@ const CommunityProfilePage = () => {
               <>
                 <p className="text-muted-foreground mb-4">
                   Showing {posts.length} of{" "}
-                  {community.postCount || community.posts?.length || 0} posts
+                  {community.postCount || community.posts?.length || 0} Posts
                 </p>
                 <AllPosts posts={posts} userId={community._id} />
               </>

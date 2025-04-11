@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Grid, { GridContentPanel } from "@/components/grid";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,8 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
   customIsTabAccessible,
   decorativeImages,
 }) => {
+  const navigate = useNavigate();
+  
   // Check if a tab is accessible
   const isTabAccessible = (tabId: string) => {
     // If custom function is provided, use it
@@ -87,6 +89,21 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
     }
   };
 
+  const handleBack = () => {
+    // If on the first tab, handle based on tab ID
+    if (currentTab === tabs[0]?.id) {
+      if (tabs[0]?.id === "personal") {
+        // Disable back button for personal tab
+        return;
+      } else if (tabs[0]?.id === "info") {
+        navigate("/activity");
+      }
+    } else {
+      // Otherwise use the provided onBack function for tab navigation
+      onBack();
+    }
+  };
+
   return (
     <Grid className="h-[calc(100vh-64px)] grid items-center">
       {/* Left Section: Heading + Nav */}
@@ -121,7 +138,15 @@ const TabPageLayout: React.FC<TabPageLayoutProps> = ({
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
-            <Button variant="outline" onClick={onBack} className="cursor-pointer">
+            <Button 
+              variant="outline" 
+              onClick={handleBack} 
+              className={cn(
+                "cursor-pointer",
+                currentTab === tabs[0]?.id && tabs[0]?.id === "personal" && "opacity-50 cursor-not-allowed"
+              )}
+              disabled={currentTab === tabs[0]?.id && tabs[0]?.id === "personal"}
+            >
               Back
             </Button>
             <Button 

@@ -41,7 +41,17 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         >
           <Avatar className="h-10 w-10">
             <AvatarImage src={avatar} alt={name} />
-            <AvatarFallback>{name?.[0]}</AvatarFallback>
+            <AvatarFallback>
+              {chatType === "dm" ? (
+                name?.[0]
+              ) : (
+                <img 
+                  src="/activity/group.svg" 
+                  alt="Group" 
+                  className="theme-svg w-full h-full p-2" 
+                />
+              )}
+            </AvatarFallback>
           </Avatar>
           <div>
             <h3 className="font-medium">{name}</h3>
@@ -60,4 +70,4 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   );
 };
 
-export default ChatHeader; 
+export default ChatHeader;

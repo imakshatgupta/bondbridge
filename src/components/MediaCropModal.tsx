@@ -48,7 +48,7 @@ export function MediaCropModal({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-
+  
   const cropFrameRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -201,18 +201,18 @@ export function MediaCropModal({
   const ensureCropFrameWithinImage = () => {
     if (!mediaRef.current || !cropFrameRef.current || !containerRef.current)
       return;
-
+    
     const media = mediaRef.current;
     const cropFrame = cropFrameRef.current;
     const container = containerRef.current;
-
+    
     // Get dimensions
     const mediaWidth = media.naturalWidth * zoom;
     const mediaHeight = media.naturalHeight * zoom;
 
     const frameRect = cropFrame.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-
+    
     // If the image is smaller than the crop frame in any dimension,
     // we need to center it
     if (mediaWidth < frameRect.width || mediaHeight < frameRect.height) {
@@ -262,7 +262,7 @@ export function MediaCropModal({
 
     // Update position if needed
     if (needsUpdate) {
-      setPosition({ x: newX, y: newY });
+    setPosition({ x: newX, y: newY });
     }
   };
 
@@ -348,7 +348,7 @@ export function MediaCropModal({
   // Handle zoom change
   const handleZoomChange = (value: number[]) => {
     const newZoom = value[0];
-
+    
     // Adjust position to keep the center of the crop frame aligned with the center of the image
     if (mediaRef.current && cropFrameRef.current && containerRef.current) {
       const media = mediaRef.current;
@@ -375,7 +375,7 @@ export function MediaCropModal({
       // Calculate new image dimensions
       const newWidth = mediaWidth * newZoom;
       const newHeight = mediaHeight * newZoom;
-
+      
       // Calculate offset from the center
       const offsetX = oldCenterX - containerCenterX;
       const offsetY = oldCenterY - containerCenterY;
@@ -451,18 +451,18 @@ export function MediaCropModal({
     const mediaElement = mediaRef.current as HTMLImageElement;
     const cropFrame = cropFrameRef.current;
     const ctx = canvas.getContext("2d");
-
+    
     if (!ctx) {
       console.error("Failed to get canvas context");
       return;
     }
 
     try {
-      // Get the crop frame position relative to the media
-      const frameRect = cropFrame.getBoundingClientRect();
-      const mediaRect = mediaElement.getBoundingClientRect();
-
-      // Calculate the crop area in original media coordinates
+    // Get the crop frame position relative to the media
+    const frameRect = cropFrame.getBoundingClientRect();
+    const mediaRect = mediaElement.getBoundingClientRect();
+    
+    // Calculate the crop area in original media coordinates
       const cropX = Math.max(0, (frameRect.left - mediaRect.left) / zoom);
       const cropY = Math.max(0, (frameRect.top - mediaRect.top) / zoom);
       const cropWidth = Math.min(
@@ -482,12 +482,12 @@ export function MediaCropModal({
         onClose();
         return;
       }
-
-      // Set canvas dimensions to be square (1:1 aspect ratio)
-      const outputSize = 512; // Output size for the square crop
-      canvas.width = outputSize;
-      canvas.height = outputSize;
-
+    
+    // Set canvas dimensions to be square (1:1 aspect ratio)
+    const outputSize = 512; // Output size for the square crop
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    
       // Draw the media to the canvas
       ctx.drawImage(
         mediaElement,
@@ -500,11 +500,11 @@ export function MediaCropModal({
         outputSize,
         outputSize // Destination rectangle
       );
-
+      
       // Create the crop data object
       const mediaWidth = mediaElement.naturalWidth;
       const mediaHeight = mediaElement.naturalHeight;
-
+        
       const cropData: CropData = {
         x: cropX / mediaWidth, // Store as percentage of original dimensions
         y: cropY / mediaHeight,
@@ -525,12 +525,12 @@ export function MediaCropModal({
 
           try {
             // Create a new cropped image file
-            const fileName = `cropped-${Date.now()}.jpg`;
+          const fileName = `cropped-${Date.now()}.jpg`;
             const croppedFile = new File([blob], fileName, {
               type: "image/jpeg",
             }) as CroppedFile;
-            croppedFile.cropData = cropData;
-
+          croppedFile.cropData = cropData;
+          
             // Log to debug
             console.log(
               "Crop completed, calling onCropComplete with:",
@@ -538,14 +538,14 @@ export function MediaCropModal({
             );
 
             // Call the callback with the cropped file
-            onCropComplete(croppedFile);
-            onClose();
+          onCropComplete(croppedFile);
+          onClose();
           } catch (fileError) {
             console.error("Error creating File:", fileError);
             const fallbackFile = media as CroppedFile;
             onCropComplete(fallbackFile);
             onClose();
-          }
+        }
         },
         "image/jpeg",
         0.95
@@ -568,27 +568,27 @@ export function MediaCropModal({
             Crop Image to 1:1 Ratio
           </DialogTitle>
         </DialogHeader>
-
+        
         <div className="flex flex-col gap-4 flex-1 overflow-hidden">
           {/* Crop container */}
-          <div
+          <div 
             className="relative w-full bg-muted rounded-md overflow-hidden flex-1"
             style={{ minHeight: "450px" }}
             ref={containerRef}
           >
             {/* Fixed square crop frame - centered */}
-            <div
+            <div 
               ref={cropFrameRef}
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-transparent border-4 border-white rounded-sm z-10 pointer-events-none"
-              style={{
+              style={{ 
                 width: "280px",
                 height: "280px",
                 boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.7)",
               }}
             />
-
+            
             {/* Draggable media container */}
-            <div
+            <div 
               className="absolute w-full h-full overflow-hidden cursor-move active:cursor-grabbing"
               onMouseDown={handleDragStart}
               style={{ touchAction: "none" }}
@@ -599,7 +599,7 @@ export function MediaCropModal({
                   alt="Crop preview"
                   ref={mediaRef as React.RefObject<HTMLImageElement>}
                   onLoad={onMediaLoad}
-                  style={{
+                  style={{ 
                     position: "absolute",
                     left: `${position.x}px`,
                     top: `${position.y}px`,
@@ -615,36 +615,36 @@ export function MediaCropModal({
                 />
               )}
             </div>
-
+            
             {/* Instructions overlay */}
             <div className="absolute z-50 bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs py-1 px-3 rounded-full">
               Drag to position • Use slider to zoom
             </div>
+            </div>
           </div>
-        </div>
 
         {/* Zoom controls - moved outside of the flex container and above footer */}
         <div className="flex items-center gap-2 py-4">
-          <ZoomOut className="h-4 w-4 text-muted-foreground" />
-          <Slider
-            value={[zoom]}
+            <ZoomOut className="h-4 w-4 text-muted-foreground" />
+            <Slider
+              value={[zoom]}
             min={minZoom}
-            max={3}
+              max={3}
             step={0.01}
-            onValueChange={handleZoomChange}
-            className="flex-1"
-          />
-          <ZoomIn className="h-4 w-4 text-muted-foreground" />
-        </div>
+              onValueChange={handleZoomChange}
+              className="flex-1"
+            />
+            <ZoomIn className="h-4 w-4 text-muted-foreground" />
+          </div>
 
-        {/* Hidden canvas used for cropping */}
+          {/* Hidden canvas used for cropping */}
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
+          <Button 
             onClick={handleCropComplete}
             className="bg-primary text-primary-foreground font-medium"
           >
@@ -654,4 +654,4 @@ export function MediaCropModal({
       </DialogContent>
     </Dialog>
   );
-}
+} 
