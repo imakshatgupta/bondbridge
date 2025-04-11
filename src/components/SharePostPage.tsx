@@ -51,13 +51,14 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
         );
         setUsers(filteredFollowings);
         setFilteredUsers(filteredFollowings);
+        console.log("filteredFollowings", filteredFollowings);
       }
       setIsLoading(false);
     };
 
     fetchUsers();
   }, []);
-
+  console.log("users", users);
   // Filter users based on search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
@@ -256,7 +257,7 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
                     onClick={(e) => e.stopPropagation()}
                   />
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={user.avatar} alt={user.name} />
+                    <AvatarImage src={user.profilePic || user.avatar} alt={user.name} />
                     <AvatarFallback>
                       {user.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>

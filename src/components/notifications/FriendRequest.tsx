@@ -69,7 +69,7 @@ const FriendRequest = ({
         <Button  className="cursor-pointer" onClick={handleAccept} disabled={isLoading}>
           Accept
         </Button>
-        <Button variant="outline" className="text-destructive-foreground border-destructive-foreground cursor-pointer" onClick={handleReject} disabled={isLoading}>
+        <Button variant="outline" className="text-foreground border-destructive-foreground cursor-pointer" onClick={handleReject} disabled={isLoading}>
           Decline
         </Button>
       </div>

@@ -77,6 +77,7 @@ const Signup: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("1"); // Default to USA (+1)
   const [, setIsValidPhone] = useState(false);
+  const [receivedOTP, setReceivedOTP] = useState<string>("");
   const navigate = useNavigate();
   const phoneInputRef = useRef(null);
 
@@ -184,6 +185,11 @@ const Signup: React.FC = () => {
     });
 
     if (result.success && result.data) {
+      // For testing purposes - extract OTP from response
+      // In a production environment, this would come via SMS
+      // @ts-expect-error - accessing OTP for testing purposes
+      const otpValue = result.data.otp || "Check your phone for OTP";
+      setReceivedOTP(otpValue.toString());
       setShowOTP(true);
     }
   };
@@ -317,7 +323,7 @@ const Signup: React.FC = () => {
                 We've sent a verification code to your phone
               </p>
             </div>
-            <OTPForm onVerify={handleVerifyOTP} />
+            <OTPForm onVerify={handleVerifyOTP} receivedOTP={receivedOTP} />
             <button
               onClick={() => setShowOTP(false)}
               className="mt-4 text-primary hover:underline w-full text-center"

@@ -38,7 +38,7 @@ export const BlockMenuItem: MenuItemProps = {
 export const DeleteMenuItem: MenuItemProps = {
   icon: <Trash className="w-4 h-4 mr-2" />,
   label: "Delete",
-  className: "text-destructive",
+  className: "text-destructive-foreground",
 };
 
 export const EditGroupMenuItem: MenuItemProps = {

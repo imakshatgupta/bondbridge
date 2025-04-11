@@ -91,6 +91,7 @@ const ForgotPassword: React.FC = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [receivedOTP, setReceivedOTP] = useState<string>('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
 
@@ -182,6 +183,11 @@ const ForgotPassword: React.FC = () => {
         });
 
         if (result.success && result.data) {
+            // For testing purposes - extract OTP from response
+            // In a production environment, this would come via SMS
+            // @ts-expect-error - accessing OTP for testing purposes
+            const otpValue = result.data.otp || "Check your phone for OTP";
+            setReceivedOTP(otpValue.toString());
             setStep('otp');
         }
     };
@@ -272,7 +278,7 @@ const ForgotPassword: React.FC = () => {
                                 We've sent a verification code to your phone
                             </p>
                         </div>
-                        <OTPForm onVerify={handleVerifyOTP} />
+                        <OTPForm onVerify={handleVerifyOTP} receivedOTP={receivedOTP} />
                         <Button
                             onClick={() => setStep('phone')}
                             variant="link"
