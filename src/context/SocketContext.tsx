@@ -43,6 +43,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     // Connection event handlers
     newSocket.on("connect", () => {
       console.log("Connected to server with ID:", newSocket.id);
+
+      newSocket.emit("ping");
+
       setIsConnected(true);
     });
 

@@ -9,7 +9,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { CropIcon, ZoomIn, ZoomOut } from "lucide-react";
+import { CropIcon, ZoomIn, ZoomOut, Check, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface CropData {
   x: number;
@@ -28,6 +34,45 @@ export interface VideoFileWithThumbnail extends File {
   cropData?: CropData;
   previewUrl?: string;
 }
+
+// Define all aspect ratio types
+type AspectRatioType = "1:1" | "4:5" | "16:9" | "original";
+
+// Define aspect ratio options
+const aspectRatioOptions: { value: AspectRatioType; label: string }[] = [
+  { value: "1:1", label: "Square (1:1)" },
+  { value: "4:5", label: "Portrait (4:5)" },
+  { value: "16:9", label: "Landscape (16:9)" },
+  { value: "original", label: "Original" },
+];
+
+// Calculate aspect ratio dimensions function
+const getAspectRatioDimensions = (
+  type: AspectRatioType,
+  baseSize: number,
+  mediaWidth?: number,
+  mediaHeight?: number
+): { width: number; height: number } => {
+  switch (type) {
+    case "1:1":
+      return { width: baseSize, height: baseSize };
+    case "4:5":
+      return { width: baseSize * 0.8, height: baseSize };
+    case "16:9":
+      return { width: baseSize, height: baseSize * (9 / 16) };
+    case "original": {
+      if (!mediaWidth || !mediaHeight)
+        return { width: baseSize, height: baseSize };
+      // Maintain original ratio but fit within baseSize
+      const ratio = mediaWidth / mediaHeight;
+      return ratio >= 1
+        ? { width: baseSize, height: baseSize / ratio }
+        : { width: baseSize * ratio, height: baseSize };
+    }
+    default:
+      return { width: baseSize, height: baseSize };
+  }
+};
 
 interface MediaCropModalProps {
   open: boolean;
@@ -48,7 +93,12 @@ export function MediaCropModal({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  
+  const [aspectRatio, setAspectRatio] = useState<AspectRatioType>("1:1");
+  const [mediaDimensions, setMediaDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
   const cropFrameRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,6 +112,7 @@ export function MediaCropModal({
       // Reset position and zoom when media changes
       setPosition({ x: 0, y: 0 });
       setZoom(1);
+      setMediaDimensions(null);
       return () => URL.revokeObjectURL(url);
     }
   }, [media]);
@@ -91,6 +142,92 @@ export function MediaCropModal({
     console.log("Calculated min zoom:", newMinZoom);
 
     return newMinZoom;
+  };
+
+  // Handle aspect ratio change
+  const handleAspectRatioChange = (newAspectRatio: AspectRatioType) => {
+    setAspectRatio(newAspectRatio);
+
+    if (!mediaRef.current || !containerRef.current || !mediaDimensions) return;
+
+    const media = mediaRef.current;
+    const container = containerRef.current;
+    const mediaWidth = media.naturalWidth;
+    const mediaHeight = media.naturalHeight;
+
+    // Calculate the new target crop frame dimensions
+    const baseSize = 280;
+    const targetCropDimensions = getAspectRatioDimensions(
+      newAspectRatio,
+      baseSize,
+      mediaDimensions.width,
+      mediaDimensions.height
+    );
+
+    // Recalculate minZoom based on target frame dimensions
+    const widthRatio = targetCropDimensions.width / mediaWidth;
+    const heightRatio = targetCropDimensions.height / mediaHeight;
+    const newMinZoom = Math.max(widthRatio, heightRatio);
+
+    if (newMinZoom) {
+      // Apply minimum zoom with slight buffer
+      const zoomToApply = newMinZoom * 1.05;
+      setMinZoom(newMinZoom);
+      setZoom(zoomToApply); // Set zoom state immediately
+
+      // Center the media using the new zoom and target dimensions, applying constraints
+      const containerRect = container.getBoundingClientRect();
+      const scaledMediaWidth = mediaWidth * zoomToApply;
+      const scaledMediaHeight = mediaHeight * zoomToApply;
+
+      // Frame center relative to container
+      const containerCenterX = containerRect.width / 2;
+      const containerCenterY = containerRect.height / 2;
+
+      // Ideal centered position (top-left corner of the image)
+      const centeredX = containerCenterX - scaledMediaWidth / 2;
+      const centeredY = containerCenterY - scaledMediaHeight / 2;
+
+      // Apply constraints IMMEDIATELY based on target frame dimensions
+      const frameWidth = targetCropDimensions.width;
+      const frameHeight = targetCropDimensions.height;
+
+      // Frame boundaries relative to the container (assuming centered frame)
+      const frameLeft = (containerRect.width - frameWidth) / 2;
+      const frameRight = frameLeft + frameWidth;
+      const frameTop = (containerRect.height - frameHeight) / 2;
+      const frameBottom = frameTop + frameHeight;
+
+      // Calculate allowed movement range for the image's top-left corner
+      // The image's left edge cannot go past the frame's left edge
+      // The image's right edge cannot go past the frame's right edge
+      const minX = frameRight - scaledMediaWidth;
+      const maxX = frameLeft;
+      const minY = frameBottom - scaledMediaHeight;
+      const maxY = frameTop;
+
+      let finalX = centeredX;
+      let finalY = centeredY;
+
+      // If image is smaller than frame, center it within the frame
+      if (scaledMediaWidth < frameWidth) {
+        finalX = frameLeft + (frameWidth - scaledMediaWidth) / 2;
+      } else {
+        // Otherwise, clamp the position so the frame is always covered
+        finalX = Math.max(minX, Math.min(maxX, centeredX));
+      }
+
+      if (scaledMediaHeight < frameHeight) {
+        finalY = frameTop + (frameHeight - scaledMediaHeight) / 2;
+      } else {
+        finalY = Math.max(minY, Math.min(maxY, centeredY));
+      }
+
+      // Set the constrained position
+      setPosition({ x: finalX, y: finalY });
+
+      // Constraint check is now synchronous, remove setTimeout
+    }
   };
 
   // Center the media in the crop frame - improved precise centering
@@ -132,6 +269,14 @@ export function MediaCropModal({
   const onMediaLoad = () => {
     if (!mediaRef.current || !cropFrameRef.current || !containerRef.current)
       return;
+
+    // Store original media dimensions
+    if (mediaRef.current) {
+      setMediaDimensions({
+        width: mediaRef.current.naturalWidth,
+        height: mediaRef.current.naturalHeight,
+      });
+    }
 
     // First ensure image is visible by setting a default position in the center
     const container = containerRef.current;
@@ -201,18 +346,18 @@ export function MediaCropModal({
   const ensureCropFrameWithinImage = () => {
     if (!mediaRef.current || !cropFrameRef.current || !containerRef.current)
       return;
-    
+
     const media = mediaRef.current;
     const cropFrame = cropFrameRef.current;
     const container = containerRef.current;
-    
+
     // Get dimensions
     const mediaWidth = media.naturalWidth * zoom;
     const mediaHeight = media.naturalHeight * zoom;
 
     const frameRect = cropFrame.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    
+
     // If the image is smaller than the crop frame in any dimension,
     // we need to center it
     if (mediaWidth < frameRect.width || mediaHeight < frameRect.height) {
@@ -262,7 +407,7 @@ export function MediaCropModal({
 
     // Update position if needed
     if (needsUpdate) {
-    setPosition({ x: newX, y: newY });
+      setPosition({ x: newX, y: newY });
     }
   };
 
@@ -272,6 +417,45 @@ export function MediaCropModal({
       ensureCropFrameWithinImage();
     }
   }, [zoom, open]);
+
+  // Effect to recalculate min zoom when aspect ratio changes
+  useEffect(() => {
+    if (open && mediaRef.current && containerRef.current && mediaDimensions) {
+      // Calculate target dimensions based on current aspect ratio
+      const baseSize = 280;
+      const targetCropDimensions = getAspectRatioDimensions(
+        aspectRatio,
+        baseSize,
+        mediaDimensions.width,
+        mediaDimensions.height
+      );
+
+      const media = mediaRef.current;
+      const mediaWidth = media.naturalWidth;
+      const mediaHeight = media.naturalHeight;
+
+      // Recalculate minZoom based on target frame dimensions
+      const widthRatio = targetCropDimensions.width / mediaWidth;
+      const heightRatio = targetCropDimensions.height / mediaHeight;
+      const newMinZoom = Math.max(widthRatio, heightRatio);
+
+      if (newMinZoom) {
+        const currentMinZoom = minZoom; // Capture current minZoom state
+        if (newMinZoom !== currentMinZoom) {
+          // Only update if minZoom actually changes
+          setMinZoom(newMinZoom);
+        }
+
+        // If current zoom is less than new min zoom, update it
+        // This hook ONLY ensures zoom validity, no recentering here.
+        if (zoom < newMinZoom) {
+          setZoom(newMinZoom * 1.05);
+          // Constraint check will be handled by the zoom useEffect
+        }
+      }
+    }
+    // Depend on minZoom instead of zoom
+  }, [aspectRatio, open, mediaDimensions, minZoom]);
 
   // Handle dragging
   useEffect(() => {
@@ -348,7 +532,7 @@ export function MediaCropModal({
   // Handle zoom change
   const handleZoomChange = (value: number[]) => {
     const newZoom = value[0];
-    
+
     // Adjust position to keep the center of the crop frame aligned with the center of the image
     if (mediaRef.current && cropFrameRef.current && containerRef.current) {
       const media = mediaRef.current;
@@ -375,7 +559,7 @@ export function MediaCropModal({
       // Calculate new image dimensions
       const newWidth = mediaWidth * newZoom;
       const newHeight = mediaHeight * newZoom;
-      
+
       // Calculate offset from the center
       const offsetX = oldCenterX - containerCenterX;
       const offsetY = oldCenterY - containerCenterY;
@@ -451,18 +635,18 @@ export function MediaCropModal({
     const mediaElement = mediaRef.current as HTMLImageElement;
     const cropFrame = cropFrameRef.current;
     const ctx = canvas.getContext("2d");
-    
+
     if (!ctx) {
       console.error("Failed to get canvas context");
       return;
     }
 
     try {
-    // Get the crop frame position relative to the media
-    const frameRect = cropFrame.getBoundingClientRect();
-    const mediaRect = mediaElement.getBoundingClientRect();
-    
-    // Calculate the crop area in original media coordinates
+      // Get the crop frame position relative to the media
+      const frameRect = cropFrame.getBoundingClientRect();
+      const mediaRect = mediaElement.getBoundingClientRect();
+
+      // Calculate the crop area in original media coordinates
       const cropX = Math.max(0, (frameRect.left - mediaRect.left) / zoom);
       const cropY = Math.max(0, (frameRect.top - mediaRect.top) / zoom);
       const cropWidth = Math.min(
@@ -482,12 +666,39 @@ export function MediaCropModal({
         onClose();
         return;
       }
-    
-    // Set canvas dimensions to be square (1:1 aspect ratio)
-    const outputSize = 512; // Output size for the square crop
-    canvas.width = outputSize;
-    canvas.height = outputSize;
-    
+
+      // Set canvas dimensions to match the aspect ratio
+      let outputWidth = 512;
+      let outputHeight = 512;
+
+      // Set appropriate dimensions based on aspect ratio
+      switch (aspectRatio) {
+        case "1:1":
+          outputWidth = 512;
+          outputHeight = 512;
+          break;
+        case "4:5":
+          outputWidth = 410; // 512 * 0.8
+          outputHeight = 512;
+          break;
+        case "16:9":
+          outputWidth = 512;
+          outputHeight = 288; // 512 * (9/16)
+          break;
+        case "original":
+          if (cropWidth >= cropHeight) {
+            outputWidth = 512;
+            outputHeight = (cropHeight / cropWidth) * 512;
+          } else {
+            outputHeight = 512;
+            outputWidth = (cropWidth / cropHeight) * 512;
+          }
+          break;
+      }
+
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
+
       // Draw the media to the canvas
       ctx.drawImage(
         mediaElement,
@@ -497,14 +708,14 @@ export function MediaCropModal({
         cropHeight, // Source rectangle
         0,
         0,
-        outputSize,
-        outputSize // Destination rectangle
+        outputWidth,
+        outputHeight // Destination rectangle
       );
-      
+
       // Create the crop data object
       const mediaWidth = mediaElement.naturalWidth;
       const mediaHeight = mediaElement.naturalHeight;
-        
+
       const cropData: CropData = {
         x: cropX / mediaWidth, // Store as percentage of original dimensions
         y: cropY / mediaHeight,
@@ -525,12 +736,12 @@ export function MediaCropModal({
 
           try {
             // Create a new cropped image file
-          const fileName = `cropped-${Date.now()}.jpg`;
+            const fileName = `cropped-${Date.now()}.jpg`;
             const croppedFile = new File([blob], fileName, {
               type: "image/jpeg",
             }) as CroppedFile;
-          croppedFile.cropData = cropData;
-          
+            croppedFile.cropData = cropData;
+
             // Log to debug
             console.log(
               "Crop completed, calling onCropComplete with:",
@@ -538,14 +749,14 @@ export function MediaCropModal({
             );
 
             // Call the callback with the cropped file
-          onCropComplete(croppedFile);
-          onClose();
+            onCropComplete(croppedFile);
+            onClose();
           } catch (fileError) {
             console.error("Error creating File:", fileError);
             const fallbackFile = media as CroppedFile;
             onCropComplete(fallbackFile);
             onClose();
-        }
+          }
         },
         "image/jpeg",
         0.95
@@ -559,36 +770,86 @@ export function MediaCropModal({
     }
   };
 
+  // Get current aspect ratio dimensions
+  const getCropFrameDimensions = () => {
+    const baseSize = 280; // Base size for crop frame
+    return getAspectRatioDimensions(
+      aspectRatio,
+      baseSize,
+      mediaDimensions?.width,
+      mediaDimensions?.height
+    );
+  };
+
+  // Get aspect ratio title
+  const getAspectRatioTitle = () => {
+    const option = aspectRatioOptions.find((opt) => opt.value === aspectRatio);
+    return option ? option.label : "Crop Image";
+  };
+
+  // Calculate crop frame dimensions
+  const cropDimensions = getCropFrameDimensions();
+
   return (
     <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CropIcon className="h-5 w-5" />
-            Crop Image to 1:1 Ratio
+            Crop Image ({getAspectRatioTitle()})
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="flex flex-col gap-4 flex-1 overflow-hidden">
+          {/* Aspect ratio selector */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Aspect Ratio:</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex justify-between gap-2 w-40"
+                >
+                  {getAspectRatioTitle()}
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {aspectRatioOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    className="flex justify-between"
+                    onClick={() => handleAspectRatioChange(option.value)}
+                  >
+                    {option.label}
+                    {aspectRatio === option.value && (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           {/* Crop container */}
-          <div 
+          <div
             className="relative w-full bg-muted rounded-md overflow-hidden flex-1"
             style={{ minHeight: "450px" }}
             ref={containerRef}
           >
-            {/* Fixed square crop frame - centered */}
-            <div 
+            {/* Dynamic crop frame - centered */}
+            <div
               ref={cropFrameRef}
               className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-transparent border-4 border-white rounded-sm z-10 pointer-events-none"
-              style={{ 
-                width: "280px",
-                height: "280px",
+              style={{
+                width: `${cropDimensions.width}px`,
+                height: `${cropDimensions.height}px`,
                 boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.7)",
               }}
             />
-            
+
             {/* Draggable media container */}
-            <div 
+            <div
               className="absolute w-full h-full overflow-hidden cursor-move active:cursor-grabbing"
               onMouseDown={handleDragStart}
               style={{ touchAction: "none" }}
@@ -599,7 +860,7 @@ export function MediaCropModal({
                   alt="Crop preview"
                   ref={mediaRef as React.RefObject<HTMLImageElement>}
                   onLoad={onMediaLoad}
-                  style={{ 
+                  style={{
                     position: "absolute",
                     left: `${position.x}px`,
                     top: `${position.y}px`,
@@ -615,36 +876,36 @@ export function MediaCropModal({
                 />
               )}
             </div>
-            
+
             {/* Instructions overlay */}
             <div className="absolute z-50 bottom-8 left-1/2 transform -translate-x-1/2 bg-black/50 text-white text-xs py-1 px-3 rounded-full">
               Drag to position • Use slider to zoom
             </div>
-            </div>
           </div>
+        </div>
 
         {/* Zoom controls - moved outside of the flex container and above footer */}
         <div className="flex items-center gap-2 py-4">
-            <ZoomOut className="h-4 w-4 text-muted-foreground" />
-            <Slider
-              value={[zoom]}
+          <ZoomOut className="h-4 w-4 text-muted-foreground" />
+          <Slider
+            value={[zoom]}
             min={minZoom}
-              max={3}
+            max={3}
             step={0.01}
-              onValueChange={handleZoomChange}
-              className="flex-1"
-            />
-            <ZoomIn className="h-4 w-4 text-muted-foreground" />
-          </div>
+            onValueChange={handleZoomChange}
+            className="flex-1"
+          />
+          <ZoomIn className="h-4 w-4 text-muted-foreground" />
+        </div>
 
-          {/* Hidden canvas used for cropping */}
+        {/* Hidden canvas used for cropping */}
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleCropComplete}
             className="bg-primary text-primary-foreground font-medium"
           >
@@ -654,4 +915,4 @@ export function MediaCropModal({
       </DialogContent>
     </Dialog>
   );
-} 
+}

@@ -21,6 +21,15 @@ interface Post {
     name: string;
     profilePic: string;
   };
+  reactionDetails?: {
+    total: number;
+    types: {
+      like: number;
+      love: number;
+      haha: number;
+      lulu: number;
+    };
+  };
   stats?: {
     commentCount: number;
     hasReacted: boolean;
