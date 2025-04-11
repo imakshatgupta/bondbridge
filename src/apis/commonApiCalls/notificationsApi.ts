@@ -94,3 +94,17 @@ export const markNotificationAsSeen = async (
     throw new Error(response.data.message || "Failed to mark notification as seen");
   }
 };
+
+export const deleteNotification = async (
+  notificationId: string
+): Promise<ApiResponse> => {
+  const response = await apiClient.delete<ApiResponse>(
+    `/delete-notification?notificationId=${notificationId}`
+  );
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to delete notification");
+  }
+};
