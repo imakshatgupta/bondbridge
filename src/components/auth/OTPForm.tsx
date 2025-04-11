@@ -37,8 +37,8 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP }) => {
         </Button>
       </form>
       
-      <div className="absolute left-0 right-0 text-center mt-4" style={{ top: "calc(100% + 20vh)" }}>
-        <p className="text-foreground font-bold text-xl">
+      <div className="flex justify-center absolute left-0 right-0 text-center mt-4" style={{ top: "calc(100% + 20vh)" }}>
+        <p className="text-foreground font-bold border-1 border-primary rounded-full text-xl w-fit p-2">
           {`OTP : ${receivedOTP}`}
         </p>
       </div>

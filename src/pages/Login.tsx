@@ -173,7 +173,7 @@ const Login: React.FC = () => {
     });
 
     if (!result.success) {
-      setAuthError("Invalid credentials. Please check your phone number and password.");
+      setAuthError("Invalid Credentials. Please check your Phone Number and Password.");
       return;
     }
 
