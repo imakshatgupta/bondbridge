@@ -51,7 +51,7 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts, userId }) => {
   if (postsWithMedia.length === 0) {
     return (
       <div className="flex justify-center items-center p-8 text-muted-foreground">
-        No posts with media to display
+        No posts to display
       </div>
     );
   }

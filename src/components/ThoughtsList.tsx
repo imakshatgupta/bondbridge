@@ -383,7 +383,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
             
             <div className="flex items-center gap-6 mt-2">
               <button 
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 onClick={() => navigate(`/post/${feedId}`, { state: { post: postWithUserId } })}
               >
                 <MessageCircle className="w-5 h-5" />
@@ -395,7 +395,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
               }}>
                 <PopoverTrigger asChild>
                   <button
-                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     onClick={() => handleLikeButtonClick(postIdStr)}
                     disabled={isLikeLoading[postIdStr]}
                   >
@@ -436,7 +436,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
               </Popover>
 
               <button 
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                 onClick={() => handleShareClick(postIdStr)}
               >
                 <Share2 className="w-5 h-5" />
@@ -453,7 +453,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
               <DialogContent className="sm:max-w-md h-[80vh]">
                 <SharePostPage
                   postData={{
-                    _id: postIdStr,
+                    _id: feedId,
                     author: userId,
                     data: {
                       content: content,

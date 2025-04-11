@@ -206,8 +206,28 @@ body {
   background-clip: text;
 }
 
+/* Theme-aware SVG icons */
+.theme-svg {
+  color: var(--foreground);
+}
 
+.dark .theme-svg {
+  color: var(--foreground);
+}
 
+/* Theme-aware SVG for default images */
+img.theme-svg[src*="/activity/group.svg"] {
+  filter: brightness(0) saturate(100%);
+}
+
+.dark img.theme-svg[src*="/activity/group.svg"] {
+  filter: brightness(0) saturate(100%) invert(1);
+}
+
+/* Base styles for themed SVGs */
+svg.theme-svg path {
+  fill: currentColor;
+}
 
 .app-scrollbar, * {
   @apply scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent;
