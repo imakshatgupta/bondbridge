@@ -37,7 +37,7 @@ const SearchResults = ({ person }: Props) => {
       <div className="flex gap-2 ">
         <Button 
           variant="outline" 
-          className="text-primary border-primary cursor-pointer" 
+          className="text-foreground border-primary cursor-pointer" 
           onClick={() => handleProfileClick(person.id)}
         >
           View Profile
