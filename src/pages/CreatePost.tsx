@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
-import { Trash2, Image, Smile, Video, Mic } from "lucide-react";
+import { Trash2, Image, Smile, Video, Mic, ArrowLeft } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import {
   createPost,
@@ -784,6 +784,17 @@ const CreatePost = ({
 
   return (
     <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
+      <div className="flex items-center mb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[var(--foreground)] p-0 mr-2 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeft size={20} />
+        </Button>
+      </div>
+      
       <div className="flex items-start gap-3 pb-4">
         <Avatar className="h-10 w-10">
           <AvatarImage src={profilePic || avatar} alt={nickname || "Profile"} />
