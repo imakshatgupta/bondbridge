@@ -48,6 +48,15 @@ export default function CommentsPage() {
           hasReacted: false,
           reactionType: null,
         },
+        reactionDetails: {
+          total: 0,
+          types: {
+            like: 0,
+            love: 0,
+            haha: 0,
+            lulu: 0
+          }
+        },
         ago_time: "",
         feedId: postId || "",
         author: "",
@@ -80,6 +89,15 @@ export default function CommentsPage() {
         reaction: {
           hasReacted: profilePost.stats.hasReacted,
           reactionType: profilePost.stats.reactionType,
+        },
+        reactionDetails: {
+          total: profilePost.stats.reactionCount,
+          types: {
+            like: profilePost.reactionDetails.types.like,
+            love: profilePost.reactionDetails.types.love,
+            haha: profilePost.reactionDetails.types.haha,
+            lulu: profilePost.reactionDetails.types.lulu,
+          }
         },
         ago_time: new Date(profilePost.createdAt * 1000).toLocaleDateString(),
         feedId: postId || "",
@@ -145,6 +163,7 @@ export default function CommentsPage() {
             hasReacted: false,
             reactionType: null,
           },
+          reactionDetails: apiPostData.reactionDetails,
           ago_time: apiPostData.agoTime,
           feedId: apiPostData.feedId,
           author: apiPostData.author,
@@ -421,15 +440,7 @@ export default function CommentsPage() {
                   onCommentClick={() => {}}
                   onLikeClick={() => {}}
                   reactionType={post.reaction?.reactionType}
-                  reactionDetails={post.reactionDetails || { 
-                    total: post.reactionCount, 
-                    types: { 
-                      like: post.reactionCount, 
-                      love: 0, 
-                      haha: 0, 
-                      lulu: 0 
-                    } 
-                  }}
+                  reactionDetails={post.reactionDetails}
                   reaction={post.reaction}
                   onDelete={handlePostDelete}
                 />

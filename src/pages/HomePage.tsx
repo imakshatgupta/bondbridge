@@ -441,15 +441,7 @@ export default function HomePage() {
                 feedId={post.feedId}
                 isLiked={post.reaction?.hasReacted}
                 reactionType={post.reaction?.reactionType}
-                reactionDetails={post.reactionDetails || { 
-                  total: post.reactionCount, 
-                  types: { 
-                    like: post.reactionCount, 
-                    love: 0, 
-                    haha: 0, 
-                    lulu: 0 
-                  } 
-                }}
+                reactionDetails={post.reactionDetails}
                 reaction={post.reaction}
                 onDelete={handlePostDelete}
               />

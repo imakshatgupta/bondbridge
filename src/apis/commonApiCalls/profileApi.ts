@@ -61,6 +61,15 @@ export const fetchUserPosts = async (
       name: post.name,
       profilePic: post.profilePic,
     },
+    reactionDetails: {
+      total: post.reactionCount,
+      types: {
+        like: post.reactionDetails.types.like,
+        love: post.reactionDetails.types.love,
+        haha: post.reactionDetails.types.haha,
+        lulu: post.reactionDetails.types.lulu,
+      },
+    },
     stats: {
       commentCount: post.commentCount,
       reactionCount: post.reactionCount,
