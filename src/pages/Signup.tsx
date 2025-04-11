@@ -188,10 +188,10 @@ const Signup: React.FC = () => {
     });
 
     if (result.status === 409) {
-      setErrorMessage("User with this phone number already exists");
+      setErrorMessage("User with this Phone Number Already Exists");
       return;
     } else if (!result.success) {
-      setErrorMessage("Invalid phone number");
+      setErrorMessage("Invalid Phone Number");
       return;
     }
 
