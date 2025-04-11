@@ -57,7 +57,26 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts, userId }) => {
     return media.length > 0;
   });
 
-  if (postsWithMedia.length === 0) {
+  // Sort the posts by date (newest first)
+  const sortedPosts = [...postsWithMedia].sort((a, b) => {
+    // Get timestamps for both posts
+    const aTimestamp = "createdAt" in a 
+      ? (a as ProfilePostData).createdAt 
+      : ("creationDate" in a && a.creationDate) 
+        ? new Date(a.creationDate).getTime() / 1000 
+        : 0;
+    
+    const bTimestamp = "createdAt" in b 
+      ? (b as ProfilePostData).createdAt 
+      : ("creationDate" in b && b.creationDate) 
+        ? new Date(b.creationDate).getTime() / 1000 
+        : 0;
+    
+    // Sort in descending order (newest first)
+    return bTimestamp - aTimestamp;
+  });
+
+  if (sortedPosts.length === 0) {
     return (
       <div className="flex justify-center items-center p-8 text-muted-foreground">
         No Posts
@@ -67,7 +86,7 @@ const AllPosts: React.FC<AllPostsProps> = ({ posts, userId }) => {
 
   return (
     <div className="grid grid-cols-3 gap-1">
-      {postsWithMedia.map((post) => {
+      {sortedPosts.map((post) => {
         // Determine if it's a ProfilePostData or a regular Post
         const isProfilePost = "createdAt" in post;
 

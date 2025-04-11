@@ -281,20 +281,20 @@ export function Post({
                                 {media.map((item, index) => (
                                     <CarouselItem key={`${userId}-media-${index}`}>
                                         {item.type === "image" && (
-                                            <div className="aspect-square w-full relative bg-muted">
+                                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
                                                 <img
                                                     src={item.url}
                                                     alt={`Post media ${index + 1}`}
-                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                    className="max-h-[100vh] w-full object-contain"
                                                 />
                                             </div>
                                         )}
                                         {item.type === "video" && (
-                                            <div className="aspect-square w-full relative bg-muted">
+                                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
                                                 <video
                                                     src={item.url}
                                                     controls
-                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                    className="max-h-[100vh] w-full object-contain"
                                                 />
                                             </div>
                                         )}
@@ -310,20 +310,20 @@ export function Post({
                 {!hasMultipleMedia && hasSingleMedia && (
                     <div className="mt-4 rounded-lg overflow-hidden">
                         {media && media.length > 0 && media[0].type === "image" && (
-                            <div className="aspect-square w-full relative bg-muted">
+                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
                                 <img
                                     src={media[0].url}
                                     alt="Post"
-                                    className="absolute inset-0 w-full h-full object-cover"
+                                    className="max-h-[100vh] w-full object-contain"
                                 />
                             </div>
                         )}
                         {media && media.length > 0 && media[0].type === "video" && (
-                            <div className="aspect-square w-full relative bg-muted">
+                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
                                 <video
                                     src={media[0].url}
                                     controls
-                                    className="absolute inset-0 w-full h-full object-cover"
+                                    className="max-h-[100vh] w-full object-contain"
                                 />
                             </div>
                         )}

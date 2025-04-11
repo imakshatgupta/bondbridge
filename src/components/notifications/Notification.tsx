@@ -36,6 +36,7 @@ const Notification = ({
   senderId,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
+  const [isDeleted, setIsDeleted] = useState(false);
   const navigate = useNavigate();
   const [executeDelete, isDeleting] = useApiCall(deleteNotification);
   // console.log("notifi data: ",_id,
@@ -67,12 +68,31 @@ const Notification = ({
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent the notification click event from firing
-    const { success } = await executeDelete(_id);
     
-    if (success && onDelete) {
+    // Optimistically remove from UI
+    setIsDeleted(true);
+    
+    // Call parent component's onDelete handler for optimistic UI update
+    if (onDelete) {
       onDelete(_id);
     }
+    
+    // Make the API call
+    const { success } = await executeDelete(_id);
+    
+    // If the API call fails, revert the UI change
+    if (!success) {
+      setIsDeleted(false);
+      // Notify parent component that deletion failed
+      if (onDelete) {
+        // Pass the notification ID with a success=false flag to revert
+        onDelete(_id);
+      }
+    }
   };
+
+  // Don't render if optimistically deleted
+  if (isDeleted) return null;
 
   return (
     <div
