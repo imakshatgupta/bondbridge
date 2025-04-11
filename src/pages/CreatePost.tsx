@@ -1,4 +1,3 @@
-import { useState, useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
@@ -13,6 +12,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 import { useAppSelector } from "../store";
+import { useState, useEffect, useRef } from "react";
 import {
   SpeechRecognition,
   SpeechRecognitionEvent,
@@ -103,20 +103,111 @@ const CreatePost = ({
   // Media cropping state
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [currentMediaFile, setCurrentMediaFile] = useState<File | null>(null);
-
-  // Add a state to track pending image files
   const [pendingImageFiles, setPendingImageFiles] = useState<File[]>([]);
-
-  // Add loading state for uploads
   const [isUploading, setIsUploading] = useState(false);
-
-  // Add state to track which preview is active
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
 
-  // Update content when initialContent changes (for edit mode)
+  // Track if there are unsaved changes
+  const hasUnsavedChanges =
+    content !== initialContent ||
+    mediaFiles.length > 0 ||
+    documentFiles.length > 0;
+
+  // Add beforeunload event listener for browser/tab close
   useEffect(() => {
-    setContent(initialContent);
-  }, [initialContent]);
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        // Standard way to show confirmation dialog
+        e.preventDefault();
+        // This message will be shown in some browsers
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+        return "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    // Register the listener
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      // Clean up
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Override window history navigation methods
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    // Save original history methods
+    const originalPushState = window.history.pushState.bind(window.history);
+    const originalReplaceState = window.history.replaceState.bind(
+      window.history
+    );
+
+    // Override pushState with proper types
+    window.history.pushState = function (
+      state: unknown,
+      unused: string,
+      url?: string | URL | null
+    ) {
+      if (
+        hasUnsavedChanges &&
+        !window.confirm(
+          "You have unsaved changes. Are you sure you want to leave?"
+        )
+      ) {
+        // User cancelled navigation
+        return;
+      }
+      // User confirmed navigation
+      return originalPushState(state, unused, url);
+    };
+
+    // Override replaceState with proper types
+    window.history.replaceState = function (
+      state: unknown,
+      unused: string,
+      url?: string | URL | null
+    ) {
+      if (
+        hasUnsavedChanges &&
+        !window.confirm(
+          "You have unsaved changes. Are you sure you want to leave?"
+        )
+      ) {
+        // User cancelled navigation
+        return;
+      }
+      // User confirmed navigation
+      return originalReplaceState(state, unused, url);
+    };
+
+    // Handle popstate (back/forward browser buttons)
+    const handlePopState = (e: PopStateEvent) => {
+      if (hasUnsavedChanges) {
+        if (
+          !window.confirm(
+            "You have unsaved changes. Are you sure you want to leave?"
+          )
+        ) {
+          // Prevent the navigation by pushing the current state back
+          window.history.pushState(null, "", window.location.href);
+          // Stop further handling
+          e.stopImmediatePropagation();
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    // Cleanup function to restore original methods
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [hasUnsavedChanges]);
 
   // Get the current user's avatar from Redux store
   const { avatar, nickname, profilePic } = useAppSelector(
@@ -128,6 +219,11 @@ const CreatePost = ({
   // Use the API call hook for the rewriteWithBondChat function
   const [executeRewriteWithBondChat, isRewritingWithBondChat] =
     useApiCall(rewriteWithBondChat);
+
+  // Update content when initialContent changes (for edit mode)
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!uploadMedia) return;
@@ -620,10 +716,24 @@ const CreatePost = ({
   }, [showPicker]);
 
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
+    if (hasUnsavedChanges) {
+      if (
+        window.confirm(
+          "You have unsaved changes. Are you sure you want to discard them?"
+        )
+      ) {
+        if (onCancel) {
+          onCancel();
+        } else {
+          navigate("/");
+        }
+      }
     } else {
-      navigate("/");
+      if (onCancel) {
+        onCancel();
+      } else {
+        navigate("/");
+      }
     }
   };
 
@@ -755,7 +865,9 @@ const CreatePost = ({
             {isRewritingWithBondChat ? (
               <div className="flex items-center gap-1">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent"></div>
-                <span className="text-[var(--foreground)] border-primary">Rewriting...</span>
+                <span className="text-[var(--foreground)] border-primary">
+                  Rewriting...
+                </span>
               </div>
             ) : (
               <>
