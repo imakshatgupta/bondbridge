@@ -210,14 +210,6 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
           />
           Share Post
         </h3>
-        
-        {/* Show socket connection status */}
-        <div className="text-xs">
-          <span 
-            className={`inline-block w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} 
-          />
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </div>
       </div>
 
       {errorMessage && (

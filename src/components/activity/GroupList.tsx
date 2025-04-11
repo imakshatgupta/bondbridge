@@ -79,16 +79,16 @@ const GroupList = ({ groups, isLoading, onSelectGroup }: GroupListProps) => {
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
                 <img
-                  src={group.avatar || "/profile/user.png"}
+                  src={group.avatar || "/activity/group.svg"}
                   alt={group.name}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full object-cover ${!group.avatar ? 'theme-svg' : ''}`}
                 />
               </div>
               <div>
                 <h3 className="font-medium">{group.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {hasLeftGroup ? (
-                    <span className="text-rose-500 font-medium">Left</span>
+                    <span className="text-destructive-foreground font-medium">Left</span>
                   ) : (
                     group.lastMessage
                   )}
