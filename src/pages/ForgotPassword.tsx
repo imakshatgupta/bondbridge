@@ -231,7 +231,7 @@ const ForgotPassword: React.FC = () => {
         }
 
         if (newPassword.length < 6) {
-            setPasswordError("Password should be at least 6 characters");
+            setPasswordError("Password Should be at least 6 Characters");
             return;
         }
 
