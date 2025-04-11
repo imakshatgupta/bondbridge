@@ -748,21 +748,21 @@ const CreatePost = ({
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs flex items-center gap-1 bg-[var(--secondary)] cursor-pointer"
+            className="text-xs flex items-center gap-1 cursor-pointer border-2 border-primary"
             onClick={handleRewriteWithBondChat}
             disabled={isRewritingWithBondChat}
           >
             {isRewritingWithBondChat ? (
               <div className="flex items-center gap-1">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent"></div>
-                <span className="text-[var(--foreground)]">Rewriting...</span>
+                <span className="text-[var(--foreground)] border-primary">Rewriting...</span>
               </div>
             ) : (
               <>
                 <img src="/bondchat.svg" alt="BondChat" className="w-4 h-4" />
                 <div className="text-[var(--foreground)]">
                   Re-write with{" "}
-                  <span className="text-[var(--primary)]">BondChat </span>
+                  <span className="grad font-bold">BondChat </span>
                 </div>
               </>
             )}
