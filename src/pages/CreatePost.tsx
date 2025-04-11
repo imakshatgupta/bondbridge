@@ -113,10 +113,14 @@ const CreatePost = ({
     mediaFiles.length > 0 ||
     documentFiles.length > 0;
 
+  // Ref to track if navigation is due to successful submission
+  const isNavigatingAfterSubmitRef = useRef(false);
+
   // Add beforeunload event listener for browser/tab close
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
+      // Check both unsaved changes and the navigation flag
+      if (hasUnsavedChanges && !isNavigatingAfterSubmitRef.current) {
         // Standard way to show confirmation dialog
         e.preventDefault();
         // This message will be shown in some browsers
@@ -133,6 +137,7 @@ const CreatePost = ({
       // Clean up
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
+    // Only depends on hasUnsavedChanges, ref changes don't need to re-run this
   }, [hasUnsavedChanges]);
 
   // Override window history navigation methods
@@ -151,8 +156,10 @@ const CreatePost = ({
       unused: string,
       url?: string | URL | null
     ) {
+      // Check both unsaved changes and the navigation flag before prompting
       if (
         hasUnsavedChanges &&
+        !isNavigatingAfterSubmitRef.current &&
         !window.confirm(
           "You have unsaved changes. Are you sure you want to leave?"
         )
@@ -160,7 +167,7 @@ const CreatePost = ({
         // User cancelled navigation
         return;
       }
-      // User confirmed navigation
+      // User confirmed navigation or navigation is due to submit
       return originalPushState(state, unused, url);
     };
 
@@ -170,8 +177,10 @@ const CreatePost = ({
       unused: string,
       url?: string | URL | null
     ) {
+      // Check both unsaved changes and the navigation flag before prompting
       if (
         hasUnsavedChanges &&
+        !isNavigatingAfterSubmitRef.current &&
         !window.confirm(
           "You have unsaved changes. Are you sure you want to leave?"
         )
@@ -179,13 +188,14 @@ const CreatePost = ({
         // User cancelled navigation
         return;
       }
-      // User confirmed navigation
+      // User confirmed navigation or navigation is due to submit
       return originalReplaceState(state, unused, url);
     };
 
     // Handle popstate (back/forward browser buttons)
     const handlePopState = (e: PopStateEvent) => {
-      if (hasUnsavedChanges) {
+      // Check both unsaved changes and the navigation flag
+      if (hasUnsavedChanges && !isNavigatingAfterSubmitRef.current) {
         if (
           !window.confirm(
             "You have unsaved changes. Are you sure you want to leave?"
@@ -207,6 +217,7 @@ const CreatePost = ({
       window.history.replaceState = originalReplaceState;
       window.removeEventListener("popstate", handlePopState);
     };
+    // Only depends on hasUnsavedChanges, ref changes don't need to re-run this
   }, [hasUnsavedChanges]);
 
   // Get the current user's avatar from Redux store
@@ -654,40 +665,65 @@ const CreatePost = ({
         postData.postId = postId;
       }
 
-      if (submitHandler) {
-        // Use custom submit handler if provided
-        await submitHandler(postData);
-      } else {
-        // Execute the default API call with error handling
-        const apiPostData: CreatePostRequest = {
-          content: postData.content,
-          whoCanComment: postData.whoCanComment ?? 1,
-          privacy: postData.privacy ?? 1,
-          image: postData.image,
-          document: postData.document,
-        };
+      let success = false;
+      try {
+        if (submitHandler) {
+          // Use custom submit handler if provided
+          await submitHandler(postData);
+          success = true; // Assume success if handler doesn't throw
+        } else {
+          // Execute the default API call with error handling
+          const apiPostData: CreatePostRequest = {
+            content: postData.content,
+            whoCanComment: postData.whoCanComment ?? 1,
+            privacy: postData.privacy ?? 1,
+            image: postData.image,
+            document: postData.document,
+          };
 
-        const { data, success } = await executeCreatePost(apiPostData);
+          const result = await executeCreatePost(apiPostData);
+          success = result.success;
 
-        if (success && data) {
-          // Show success message
-          toast.success(
-            postId ? "Post updated successfully!" : "Post created successfully!"
-          );
+          if (success && result.data) {
+            // Show success message
+            toast.success(
+              postId
+                ? "Post updated successfully!"
+                : "Post created successfully!"
+            );
 
-          // Clear form after successful submission
-          setContent("");
-          setMediaFiles([]);
-          setMediaPreviews([]);
-          setDocumentFiles([]);
+            // Clear form after successful submission
+            setContent("");
+            setMediaFiles([]);
+            setMediaPreviews([]);
+            setDocumentFiles([]);
 
-          // Call the onSubmit prop if provided
-          onSubmit?.(content, [...mediaFiles, ...documentFiles]);
+            // Call the onSubmit prop if provided
+            onSubmit?.(content, [...mediaFiles, ...documentFiles]);
+          }
+        }
+
+        if (success) {
+          // Set the flag *before* navigating
+          isNavigatingAfterSubmitRef.current = true;
           navigate("/");
         }
+      } catch (error) {
+        // Error handled by useApiCall or custom handler
+        console.error("Submission failed:", error);
+        success = false;
+      } finally {
+        // Only reset submitting state if navigation didn't happen
+        // If navigation happened, the component will unmount anyway
+        if (!success) {
+          setIsSubmitting(false);
+        }
+        // Important: Reset the ref if submission failed, otherwise
+        // a subsequent navigation attempt might be incorrectly allowed.
+        if (!success) {
+          isNavigatingAfterSubmitRef.current = false;
+        }
       }
-
-      setIsSubmitting(false);
     } else {
       toast.error("Please add some content to your post");
     }
@@ -725,6 +761,8 @@ const CreatePost = ({
         if (onCancel) {
           onCancel();
         } else {
+          // Set the flag before navigating away on cancel confirmation
+          isNavigatingAfterSubmitRef.current = true; // Treat cancel confirm like submit
           navigate("/");
         }
       }
@@ -732,6 +770,8 @@ const CreatePost = ({
       if (onCancel) {
         onCancel();
       } else {
+        // No changes, safe to navigate
+        isNavigatingAfterSubmitRef.current = true; // Prevent potential race condition? (Maybe overkill)
         navigate("/");
       }
     }
@@ -951,7 +991,7 @@ const CreatePost = ({
 
             {/* Main Preview */}
             <div className="relative w-full rounded-lg overflow-hidden bg-muted">
-              <div className="aspect-square relative">
+              <div className="relative">
                 {mediaFiles[activePreviewIndex]?.type.startsWith("video/") ? (
                   <div className="relative w-full h-full">
                     <VideoPreview videoFile={mediaFiles[activePreviewIndex]} />
@@ -960,7 +1000,7 @@ const CreatePost = ({
                   <img
                     src={mediaPreviews[activePreviewIndex]}
                     alt="Active Preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 )}
                 <button
