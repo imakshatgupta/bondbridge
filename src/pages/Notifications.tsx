@@ -83,6 +83,13 @@ const Notifications = () => {
     }
   };
 
+  // Handle optimistic notification deletion
+  const handleDeleteNotification = (notificationId: string) => {
+    // Optimistically remove the notification from both unseen and seen lists
+    setUnseenNotifications(prev => prev.filter(n => n._id !== notificationId));
+    setSeenNotifications(prev => prev.filter(n => n._id !== notificationId));
+  };
+
   const loadData = async () => {
     // Fetch notifications
     const notificationsResult = await executeNotificationsFetch();
@@ -92,8 +99,17 @@ const Notifications = () => {
       const response = notificationsResult.data as unknown as UpdatedNotificationsResponse;
       
       if (response.data) {
-        setUnseenNotifications(Array.isArray(response.data.unseen) ? response.data.unseen : []);
-        setSeenNotifications(Array.isArray(response.data.seen) ? response.data.seen : []);
+        // Filter out notifications of type "call"
+        const filteredUnseen = Array.isArray(response.data.unseen) 
+          ? response.data.unseen.filter(notification => notification.type !== "call")
+          : [];
+          
+        const filteredSeen = Array.isArray(response.data.seen)
+          ? response.data.seen.filter(notification => notification.type !== "call") 
+          : [];
+          
+        setUnseenNotifications(filteredUnseen);
+        setSeenNotifications(filteredSeen);
       } else {
         setUnseenNotifications([]);
         setSeenNotifications([]);
@@ -150,7 +166,6 @@ const Notifications = () => {
         <Link to="/" className="absolute left-0 flex items-center text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-4xl font-semibold w-full text-center">Notifications</h1>
       </div>
 
       {isLoading ? (
@@ -191,6 +206,7 @@ const Notifications = () => {
                     timestamp={notification.timestamp}
                     seen={notification.seen}
                     onMarkAsSeen={handleMarkAsSeen}
+                    onDelete={handleDeleteNotification}
                     senderId={notification.sender.id}
                     entityDetails={{
                       entityType: notification.details.entityType,
