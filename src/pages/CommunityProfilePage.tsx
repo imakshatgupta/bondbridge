@@ -71,6 +71,15 @@ const CommunityProfilePage = () => {
                       },
                     ]
                   : [],
+                reactionDetails: {
+                  total: 0,
+                  types: {
+                    like: 0,
+                    love: 0,
+                    haha: 0,
+                    lulu: 0,
+                  },
+                },
                 stats: {
                   commentCount: Math.floor(Math.random() * 10),
                   hasReacted: false,

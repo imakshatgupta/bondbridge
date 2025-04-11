@@ -167,6 +167,15 @@ export interface ProfilePostData {
     url: string;
     type: string;
   }>;
+  reactionDetails: {
+    total: number;
+    types: {
+      like: number;
+      love: number;
+      haha: number;
+      lulu: number;
+    };
+  };
   stats: {
     commentCount: number;
     hasReacted: boolean;
@@ -213,10 +222,13 @@ export interface HomePostData {
   ago_time: string;
   commentCount: number;
   reactionCount: number;
-  reactionDetails?: {
+  reactionDetails: {
     total: number;
     types: {
-      [key: string]: number;
+      like: number;
+      love: number;
+      haha: number;
+      lulu: number;
     };
   };
   reaction: {
@@ -606,6 +618,15 @@ export interface PostDetailsData {
   };
   commentCount: number;
   reactionCount: number;
+  reactionDetails: {
+    total: number;
+    types: {
+      like: number;
+      love: number;
+      haha: number;
+      lulu: number;
+    };
+  };
   agoTime: string;
   reaction?: {
     hasReacted: boolean;

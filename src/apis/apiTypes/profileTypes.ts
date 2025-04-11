@@ -32,6 +32,15 @@ export interface PostData {
     hasReacted: boolean;
     reactionType: string;
   };
+  reactionDetails: {
+    total: number;
+    types: {
+      like: number;
+      love: number;
+      haha: number;
+      lulu: number;
+    };
+  };
 }
 
 export interface UserPostsResponse {
@@ -46,6 +55,15 @@ export interface UserPostsResponse {
     author: {
       name: string;
       profilePic: string;
+    };
+    reactionDetails: {
+      total: number;
+      types: {
+        like: number;
+        love: number;
+        haha: number;
+        lulu: number;
+      };
     };
     stats: {
       commentCount: number;
