@@ -236,6 +236,8 @@ const CreatePost = ({
     setContent(initialContent);
   }, [initialContent]);
 
+  const [rewriteError, setRewriteError] = useState<string>("");
+
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!uploadMedia) return;
 
@@ -505,9 +507,12 @@ const CreatePost = ({
   };
 
   const handleRewriteWithBondChat = async () => {
+    // Clear any previous error
+    setRewriteError("");
+    
     // Only proceed if there's content to rewrite
     if (!content.trim()) {
-      toast.error("Please add some text to rewrite");
+      setRewriteError("Please add some text to rewrite");
       return;
     }
 
@@ -894,7 +899,7 @@ const CreatePost = ({
           </div>
         </div>
 
-        <div className=" flex justify-end">
+        <div className="flex flex-col items-end">
           <Button
             variant="ghost"
             size="sm"
@@ -919,6 +924,9 @@ const CreatePost = ({
               </>
             )}
           </Button>
+          {rewriteError && (
+            <p className="text-destructive-foreground text-xs mt-1">{rewriteError}</p>
+          )}
         </div>
       </div>
 
