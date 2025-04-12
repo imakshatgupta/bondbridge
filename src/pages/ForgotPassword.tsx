@@ -297,7 +297,13 @@ const ForgotPassword: React.FC = () => {
                                 We've sent a verification code to your phone
                             </p>
                         </div>
-                        <OTPForm onVerify={handleVerifyOTP} receivedOTP={receivedOTP} />
+                        <OTPForm 
+                            onVerify={handleVerifyOTP} 
+                            receivedOTP={receivedOTP} 
+                            onResendOTP={() => handleSendOTP({
+                                preventDefault: () => {},
+                            } as React.FormEvent)}
+                        />
                         {otpError && (
                             <p className="text-destructive-foreground text-sm text-center">{otpError}</p>
                         )}

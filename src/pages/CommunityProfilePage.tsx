@@ -14,7 +14,7 @@ import { CommunityResponse, CommunityPostDetail } from "@/apis/apiTypes/communit
 import { Loader2 } from "lucide-react";
 import AllPosts from "@/components/AllPosts";
 import { toast } from "sonner";
-import CommunityMemberList from "@/components/community/CommunityMemberList";
+import CommunityMemberList from "@/components/CommunityMemberList";
 
 const CommunityProfilePage = () => {
   const { communityId } = useParams<{ communityId: string }>();

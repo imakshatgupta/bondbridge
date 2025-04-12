@@ -337,10 +337,16 @@ const Signup: React.FC = () => {
                 We've sent a verification code to your phone
               </p>
             </div>
-            <OTPForm onVerify={handleVerifyOTP} receivedOTP={receivedOTP} />
+            <OTPForm 
+              onVerify={handleVerifyOTP} 
+              receivedOTP={receivedOTP} 
+              onResendOTP={() => handleSubmit({
+                preventDefault: () => {},
+              } as React.FormEvent)}
+            />
             <button
               onClick={() => setShowOTP(false)}
-              className="mt-4 text-primary hover:underline w-full text-center"
+              className="mt-4 text-foreground hover:underline w-full text-center cursor-pointer"
             >
               Back
             </button>
