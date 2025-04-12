@@ -33,6 +33,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import SharePostPage from "./SharePostPage";
+import { ReportModal } from './ReportModal';
 
 // Reaction types and their emojis
 const REACTIONS = {
@@ -83,6 +84,13 @@ export function Post({
         haha: reactionDetails.types.haha || 0,
         lulu: reactionDetails.types.lulu || 0
     });
+
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const currentUserId = localStorage.getItem('userId') || '';
+
+    const handleReportClick = () => {
+        setIsReportModalOpen(true);
+    };
 
     const [executeAddReaction] = useApiCall(addReaction);
     const [executeDeleteReaction] = useApiCall(deleteReaction);
@@ -250,177 +258,185 @@ export function Post({
     } else {
         menuItems.push({
             ...ReportMenuItem,
-            onClick: () => console.log('Report clicked')
+            onClick: handleReportClick
         });
     }
 
     return (
-        <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
-            <div className="flex items-center justify-between p-4">
-                <div
-                    className="flex items-center gap-3 cursor-pointer"
-                    onClick={() => navigate(`/profile/${userId}`)}
-                >
-                    <Avatar>
-                        <AvatarImage src={avatar} alt={user} />
-                        <AvatarFallback>{user?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                        <p className="font-semibold">{user}</p>
+        <>
+            <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
+                <div className="flex items-center justify-between p-4">
+                    <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => navigate(`/profile/${userId}`)}
+                    >
+                        <Avatar>
+                            <AvatarImage src={avatar} alt={user} />
+                            <AvatarFallback>{user?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <p className="font-semibold">{user}</p>
+                        </div>
                     </div>
+                    <ThreeDotsMenu items={menuItems} />
                 </div>
-                <ThreeDotsMenu items={menuItems} />
-            </div>
-            <CardContent className="p-4 pt-0">
-                <p className="text-card-foreground">{caption}</p>
+                <CardContent className="p-4 pt-0">
+                    <p className="text-card-foreground">{caption}</p>
 
-                {hasMultipleMedia && media && (
-                    <div className="mt-4 rounded-lg overflow-hidden">
-                        <Carousel className="w-full">
-                            <CarouselContent>
-                                {media.map((item, index) => (
-                                    <CarouselItem key={`${userId}-media-${index}`}>
-                                        {item.type === "image" && (
-                                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
-                                                <img
-                                                    src={item.url}
-                                                    alt={`Post media ${index + 1}`}
-                                                    className="max-h-[100vh] w-full object-contain"
-                                                />
-                                            </div>
-                                        )}
-                                        {item.type === "video" && (
-                                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
-                                                <video
-                                                    src={item.url}
-                                                    controls
-                                                    className="max-h-[100vh] w-full object-contain"
-                                                />
-                                            </div>
-                                        )}
-                                    </CarouselItem>
-                                ))}
-                            </CarouselContent>
-                            <CarouselPrevious className="left-2 bg-background/80" />
-                            <CarouselNext className="right-2 bg-background/80" />
-                        </Carousel>
-                    </div>
-                )}
-                
-                {!hasMultipleMedia && hasSingleMedia && (
-                    <div className="mt-4 rounded-lg overflow-hidden">
-                        {media && media.length > 0 && media[0].type === "image" && (
-                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
-                                <img
-                                    src={media[0].url}
-                                    alt="Post"
-                                    className="max-h-[100vh] w-full object-contain"
-                                />
-                            </div>
-                        )}
-                        {media && media.length > 0 && media[0].type === "video" && (
-                            <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
-                                <video
-                                    src={media[0].url}
-                                    controls
-                                    className="max-h-[100vh] w-full object-contain"
-                                />
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                <div className="flex items-center justify-between mt-4 text-muted-foreground">
-                    <div className="flex items-center gap-3">
-                        <Popover open={showReactionPopover} onOpenChange={setShowReactionPopover}>
-                            <PopoverTrigger asChild>
-                                <button
-                                    className={`flex cursor-pointer items-center gap-1 ${isLiked ? '' : 'hover:text-destructive'}`}
-                                    onClick={handleLikeButtonClick}
-                                    disabled={isLikeLoading}
-                                >
-                                    {displayedReaction ? (
-                                        <span className="text-lg">{displayedReaction}</span>
-                                    ) : (
-                                        <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-                                    )}
-                                    {likes}
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent
-                                className="p-2 bg-card rounded-full w-fit border shadow-md"
-                                side="top"
-                                align="start"
-                                sideOffset={5}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="flex items-center">
-                                    {Object.entries(REACTIONS).map(([key, { emoji, label }]) => {
-                                        const reactionType = key as ReactionType;
-                                        const count = reactionCounts[reactionType];
-                                        return (
-                                            <button
-                                                key={key}
-                                                className={`flex items-center cursor-pointer rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''
-                                                    }`}
-                                                onClick={() => {
-                                                    if (currentReaction === key) {
-                                                        // Remove reaction only if clicking the same one
-                                                        handleReactionSelect(reactionType);
-                                                    } else {
-                                                        // Add new reaction
-                                                        handleReactionSelect(reactionType);
-                                                    }
-                                                }}
-                                                aria-label={label}
-                                                title={label}
-                                            >
-                                                <span className="text-xl rounded-full w-8 h-8 flex items-center justify-center">{emoji}</span>
-                                                <span className="text-sm font-medium">{count}</span>
-                                            </button>
-                                        );
-                                    })}
+                    {hasMultipleMedia && media && (
+                        <div className="mt-4 rounded-lg overflow-hidden">
+                            <Carousel className="w-full">
+                                <CarouselContent>
+                                    {media.map((item, index) => (
+                                        <CarouselItem key={`${userId}-media-${index}`}>
+                                            {item.type === "image" && (
+                                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                                    <img
+                                                        src={item.url}
+                                                        alt={`Post media ${index + 1}`}
+                                                        className="max-h-[100vh] w-full object-contain"
+                                                    />
+                                                </div>
+                                            )}
+                                            {item.type === "video" && (
+                                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                                    <video
+                                                        src={item.url}
+                                                        controls
+                                                        className="max-h-[100vh] w-full object-contain"
+                                                    />
+                                                </div>
+                                            )}
+                                        </CarouselItem>
+                                    ))}
+                                </CarouselContent>
+                                <CarouselPrevious className="left-2 bg-background/80" />
+                                <CarouselNext className="right-2 bg-background/80" />
+                            </Carousel>
+                        </div>
+                    )}
+                    
+                    {!hasMultipleMedia && hasSingleMedia && (
+                        <div className="mt-4 rounded-lg overflow-hidden">
+                            {media && media.length > 0 && media[0].type === "image" && (
+                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                    <img
+                                        src={media[0].url}
+                                        alt="Post"
+                                        className="max-h-[100vh] w-full object-contain"
+                                    />
                                 </div>
-                            </PopoverContent>
-                        </Popover>
-                        <button
-                            className="flex items-center gap-1 hover:text-primary cursor-pointer"
-                            onClick={onCommentClick}
-                        >
-                            <MessageCircle className="w-5 h-5" /> {comments}
-                        </button>
-                        <button
-                            className="flex items-center gap-1 hover:text-primary cursor-pointer"
-                            onClick={() => setIsShareDialogOpen(true)}
-                        >
-                            <Share2 className="w-5 h-5" />
-                        </button>
-                    </div>
-                    <div className="text-sm text-muted-foreground">{datePosted}</div>
-                </div>
-            </CardContent>
+                            )}
+                            {media && media.length > 0 && media[0].type === "video" && (
+                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                    <video
+                                        src={media[0].url}
+                                        controls
+                                        className="max-h-[100vh] w-full object-contain"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-            {feedId && (
-                <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-                    <DialogContent className="sm:max-w-md h-[80vh]">
-                        <SharePostPage
-                            postData={{
-                                _id: feedId,
-                                author: userId,
-                                data: {
-                                    content: caption,
-                                    media: media && media.length > 0
-                                        ? media
-                                        : []
-                                },
-                                feedId: feedId,
-                                name: user
-                            }}
-                            onClose={() => setIsShareDialogOpen(false)}
-                        />
-                    </DialogContent>
-                </Dialog>
-            )}
-        </Card>
+                    <div className="flex items-center justify-between mt-4 text-muted-foreground">
+                        <div className="flex items-center gap-3">
+                            <Popover open={showReactionPopover} onOpenChange={setShowReactionPopover}>
+                                <PopoverTrigger asChild>
+                                    <button
+                                        className={`flex cursor-pointer items-center gap-1 ${isLiked ? '' : 'hover:text-destructive'}`}
+                                        onClick={handleLikeButtonClick}
+                                        disabled={isLikeLoading}
+                                    >
+                                        {displayedReaction ? (
+                                            <span className="text-lg">{displayedReaction}</span>
+                                        ) : (
+                                            <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+                                        )}
+                                        {likes}
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className="p-2 bg-card rounded-full w-fit border shadow-md"
+                                    side="top"
+                                    align="start"
+                                    sideOffset={5}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="flex items-center">
+                                        {Object.entries(REACTIONS).map(([key, { emoji, label }]) => {
+                                            const reactionType = key as ReactionType;
+                                            const count = reactionCounts[reactionType];
+                                            return (
+                                                <button
+                                                    key={key}
+                                                    className={`flex items-center cursor-pointer rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''
+                                                        }`}
+                                                    onClick={() => {
+                                                        if (currentReaction === key) {
+                                                            // Remove reaction only if clicking the same one
+                                                            handleReactionSelect(reactionType);
+                                                        } else {
+                                                            // Add new reaction
+                                                            handleReactionSelect(reactionType);
+                                                        }
+                                                    }}
+                                                    aria-label={label}
+                                                    title={label}
+                                                >
+                                                    <span className="text-xl rounded-full w-8 h-8 flex items-center justify-center">{emoji}</span>
+                                                    <span className="text-sm font-medium">{count}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                            <button
+                                className="flex items-center gap-1 hover:text-primary cursor-pointer"
+                                onClick={onCommentClick}
+                            >
+                                <MessageCircle className="w-5 h-5" /> {comments}
+                            </button>
+                            <button
+                                className="flex items-center gap-1 hover:text-primary cursor-pointer"
+                                onClick={() => setIsShareDialogOpen(true)}
+                            >
+                                <Share2 className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="text-sm text-muted-foreground">{datePosted}</div>
+                    </div>
+                </CardContent>
+
+                {feedId && (
+                    <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+                        <DialogContent className="sm:max-w-md h-[80vh]">
+                            <SharePostPage
+                                postData={{
+                                    _id: feedId,
+                                    author: userId,
+                                    data: {
+                                        content: caption,
+                                        media: media && media.length > 0
+                                            ? media
+                                            : []
+                                    },
+                                    feedId: feedId,
+                                    name: user
+                                }}
+                                onClose={() => setIsShareDialogOpen(false)}
+                            />
+                        </DialogContent>
+                    </Dialog>
+                )}
+            </Card>
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                postId={feedId}
+                reporterId={currentUserId}
+            />
+        </>
     );
 }
