@@ -180,10 +180,11 @@ export interface UpdateProfileRequest {
   name?: string;
   email?: string;
   interests?: string[];
-  privacyLevel: number;
+  privacyLevel?: number;
   avatar?: string | File;
   image?: File;
   bio?: string;
+  public?: number;
 }
 
 // Post creation request type
