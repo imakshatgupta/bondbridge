@@ -99,7 +99,12 @@ export const updateUserProfile = async (
   if (profileData.interests) {
     formDataObj.append("interests", JSON.stringify(profileData.interests));
   }
-  formDataObj.append("privacyLevel", profileData.privacyLevel.toString());
+  if (profileData.public !== undefined) {
+    formDataObj.append("public", profileData.public.toString());
+  }
+  if (profileData.privacyLevel !== undefined) {
+    formDataObj.append("privacyLevel", profileData.privacyLevel.toString());
+  }
 
   // Append bio if it exists
   if (profileData.bio !== undefined) {

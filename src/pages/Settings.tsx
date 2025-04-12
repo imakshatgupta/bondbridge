@@ -42,7 +42,7 @@ const Settings = () => {
 
     // Prepare the request data
     const profileData = {
-      privacyLevel: newPrivacyLevel
+      privacyLevel: newPrivacyLevel,
     };
 
     // Execute the API call
@@ -68,6 +68,7 @@ const Settings = () => {
               privacyLevel: result.data.privacyLevel,
               bio: result.data.bio,
               interests: result.data.interests,
+              public: result.data.public,
             })
           );
         }
@@ -108,10 +109,19 @@ const Settings = () => {
     loadCurrentUser();
 
     // Get tab from URL query parameter
-    const tabParam = searchParams.get('tab');
+    const tabParam = searchParams.get("tab");
     if (tabParam) {
       // Validate that the tab parameter is a valid SettingPage
-      const validTabs = ['profile', 'privacy', 'notifications', 'blocked', 'voice', 'help', 'account'];
+      const validTabs = [
+        "profile",
+        "privacy",
+        "notifications",
+        "blocked",
+        "voice",
+        "privacy",
+        "help",
+        "account",
+      ];
       if (validTabs.includes(tabParam)) {
         dispatch(setSettingsActive(true));
         dispatch(setActivePage(tabParam as SettingPage));
@@ -149,7 +159,10 @@ const Settings = () => {
       ) : (
         <div className="p-4 flex items-center gap-4 ">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={profilePic || avatar || "/profile/user.png"} alt="Profile" />
+            <AvatarImage
+              src={profilePic || avatar || "/profile/user.png"}
+              alt="Profile"
+            />
             <AvatarFallback>{username?.substring(0, 2) || "U"}</AvatarFallback>
           </Avatar>
           <div>
@@ -232,6 +245,28 @@ const Settings = () => {
           </div>
           <span>Voice Settings</span>
         </button> */}
+
+        <button
+          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
+          onClick={() => handleSettingsClick("privacy")}
+        >
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <span>Privacy</span>
+        </button>
 
         <button
           className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
