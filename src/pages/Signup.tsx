@@ -281,7 +281,7 @@ const Signup: React.FC = () => {
                 >
                   I agree to{" "}
                   <Link to="/terms" className="text-foreground font-bold underline">
-                    Terms of Conditions
+                    Terms & Conditions
                   </Link>{" "}
                   and{" "}
                   <Link to="/privacy" className="text-foreground font-bold underline">

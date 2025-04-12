@@ -1,26 +1,43 @@
 import { useState, useEffect } from "react";
 import { fetchProfileById } from "@/apis/commonApiCalls/profileApi";
-import { FollowingFollowerUser } from "@/apis/apiTypes/profileTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "react-router-dom";
 import { useApiCall } from "@/apis/globalCatchError";
-// import { Loader2 } from "lucide-react";
+import { MemberDetail, ExtendedMember } from "@/apis/apiTypes/communitiesTypes";
 
 interface CommunityMemberListProps {
-  memberIds: string[];
+  memberIds?: string[];
+  memberDetails?: MemberDetail[];
 }
 
-const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
-  const [members, setMembers] = useState<FollowingFollowerUser[]>([]);
+const CommunityMemberList = ({ memberIds, memberDetails }: CommunityMemberListProps) => {
+  const [members, setMembers] = useState<ExtendedMember[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
   const [fetchProfile] = useApiCall(fetchProfileById);
 
   useEffect(() => {
+    // If memberDetails are provided, use them directly
+    if (memberDetails && memberDetails.length > 0) {
+      // Format members, ensuring they all have at least default values
+      const formattedMembers = memberDetails.map(member => ({
+        _id: member._id,
+        name: member.name || "Anonymous User",
+        profilePic: member.profilePic || "",
+        avatar: member.avatar || "",
+        nickName: "Member",
+      }));
+      
+      setMembers(formattedMembers);
+      setLoading(false);
+      return;
+    }
+    
+    // Otherwise fetch using memberIds
     const fetchMembers = async () => {
-      if (!memberIds.length) {
+      if (!memberIds || !memberIds.length) {
         setMembers([]);
         setLoading(false);
         return;
@@ -32,13 +49,21 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
         const memberChunks = memberIds.slice(0, 30); // Limit to 30 for performance
         const memberPromises = memberChunks.map(async (memberId) => {
           const response = await fetchProfile(memberId);
-          return response.data;
+          if (response.success && response.data) {
+            return {
+              _id: memberId,
+              name: response.data.name || "Anonymous User",
+              profilePic: response.data.profilePic || "",
+              avatar: response.data.avatar || "",
+              nickName: response.data.nickName || "Member",
+              email: response.data.email || "",
+              interests: response.data.interests || []
+            };
+          }
+          return null;
         });
         
-        const memberProfiles = (await Promise.all(memberPromises)).filter(
-          (profile): profile is FollowingFollowerUser => profile !== null
-        );
-        
+        const memberProfiles = (await Promise.all(memberPromises)).filter(Boolean) as ExtendedMember[];
         setMembers(memberProfiles);
       } catch (err) {
         console.error("Error fetching community members:", err);
@@ -49,7 +74,7 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
     };
 
     fetchMembers();
-  }, []);
+  }, [memberIds, memberDetails]);
 
   if (loading) {
     return (
@@ -90,23 +115,23 @@ const CommunityMemberList = ({ memberIds }: CommunityMemberListProps) => {
           <Avatar className="h-10 w-10 bg-purple-900/40 border-2 border-purple-500/30">
             <AvatarImage src={member.profilePic || member.avatar} alt={member.name} />
             <AvatarFallback className="bg-purple-900/50 text-white">
-              {member.name.charAt(0).toUpperCase()}
+              {member.name ? member.name.charAt(0).toUpperCase() : "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-medium text-foreground">{member.name}</span>
+            <span className="font-medium text-foreground">{member.name || "Anonymous User"}</span>
             <span className="text-xs text-muted-foreground">
-              {member.nickName || "member"}
+              {member.nickName || "Member"}
             </span>
           </div>
         </Link>
       ))}
       
-      {memberIds.length > members.length && (
+      {/* {memberIds && memberIds.length > members.length && (
         <div className="text-center py-2 text-sm text-muted-foreground">
           + {memberIds.length - members.length} More members
         </div>
-      )}
+      )} */}
     </div>
   );
 };
