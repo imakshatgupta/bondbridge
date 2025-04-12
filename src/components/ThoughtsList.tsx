@@ -2,13 +2,14 @@ import { useNavigate } from "react-router-dom";
 import { ProfilePostData } from "../apis/apiTypes/response";
 import ThreeDotsMenu, { ReportMenuItem } from "./global/ThreeDotsMenu";
 import { MessageCircle, Heart, Share2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SharePostPage from "./SharePostPage";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useApiCall } from "@/apis/globalCatchError";
-import { addReaction, deleteReaction } from "@/apis/commonApiCalls/reactionApi";
-import { useRef } from "react";
+import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
+import { ReportModal } from './ReportModal';
+import { GetAllReactionsResponse, Reaction, ReactionUser } from "@/apis/apiTypes/response";
 
 // Reaction types and their emojis
 const REACTIONS = {
@@ -74,6 +75,30 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
   const reactionTimeoutRefs = useRef<Record<string, number | null>>({});
   const [executeAddReaction] = useApiCall(addReaction);
   const [executeDeleteReaction] = useApiCall(deleteReaction);
+  const [executeGetAllReactions] = useApiCall(getAllReactions);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const currentUserId = localStorage.getItem('userId') || '';
+  const [reactionUsersData, setReactionUsersData] = useState<Record<string, Reaction[]>>({});
+  const [showTooltip, setShowTooltip] = useState<{postId: string, reactionType: ReactionType} | null>(null);
+  
+  // Add global click handler to close tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTooltip) {
+        const target = event.target as HTMLElement;
+        // Check if the click is outside any tooltip or count span
+        if (!target.closest('.reaction-tooltip') && !target.closest('.reaction-count')) {
+          setShowTooltip(null);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showTooltip]);
   
   // Filter posts with no media
   const thoughtPosts = posts.filter(post => {
@@ -144,6 +169,40 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
       }
     }
   });
+
+  // Function to fetch reaction users data
+  const fetchReactionUsers = async (feedId: string) => {
+    if (reactionUsersData[feedId]) return; // Already fetched
+
+    try {
+      const result = await executeGetAllReactions(feedId, 'feed');
+      if (result.success && result.data) {
+        const responseData = result.data as GetAllReactionsResponse;
+        setReactionUsersData(prev => ({
+          ...prev,
+          [feedId]: responseData.reactions
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching reactions users:", error);
+    }
+  };
+
+  // Toggle tooltip visibility on count click
+  const handleCountClick = (e: React.MouseEvent, postId: string, feedId: string, reactionType: ReactionType) => {
+    e.stopPropagation(); // Prevent bubbling to parent elements
+    
+    if (!reactionUsersData[feedId]) {
+      fetchReactionUsers(feedId);
+    }
+    
+    // Toggle tooltip visibility
+    setShowTooltip(prev => 
+      prev?.postId === postId && prev?.reactionType === reactionType 
+        ? null 
+        : { postId, reactionType }
+    );
+  };
 
   // Reaction handling function
   const handleReactionSelect = async (postId: string, feedId: string, reactionType: ReactionType) => {
@@ -246,6 +305,13 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
           };
         });
       }
+
+      // Clear reaction users data cache to fetch updated data
+      setReactionUsersData(prev => {
+        const newData = { ...prev };
+        delete newData[feedId];
+        return newData;
+      });
     } catch (error) {
       console.error("Error handling reaction:", error);
     } finally {
@@ -258,10 +324,18 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
   };
 
   // Handle like button click (show reaction popover)
-  const handleLikeButtonClick = (postId: string) => {
+  const handleLikeButtonClick = (postId: string, feedId: string) => {
+    // Toggle popover state
     setShowReactionPopover(prev => {
       const newState = { ...prev };
-      newState[postId] = !newState[postId];
+      const isOpening = !newState[postId];
+      newState[postId] = isOpening;
+      
+      // If we're opening the popover, fetch the reaction data
+      if (isOpening && !reactionUsersData[feedId]) {
+        fetchReactionUsers(feedId);
+      }
+      
       return newState;
     });
 
@@ -285,6 +359,23 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
       ...prev,
       [postId]: true
     }));
+  };
+
+  const handleReportClick = (feedId: string) => {
+    setSelectedPostId(feedId);
+    setIsReportModalOpen(true);
+  };
+
+  // Check if the current user is viewing their own profile
+  const isOwnProfile = userId === currentUserId;
+
+  // Function to get users who reacted with a specific reaction
+  const getUsersWithReaction = (feedId: string, reactionType: ReactionType): ReactionUser[] => {
+    const reactions = reactionUsersData[feedId];
+    if (!reactions) return [];
+    
+    const reactionData = reactions.find(r => r.reactionType === reactionType);
+    return reactionData?.users || [];
   };
 
   return (
@@ -342,7 +433,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
         const menuItems = [
           {
             ...ReportMenuItem,
-            onClick: () => console.log('Report post', postId)
+            onClick: () => handleReportClick(feedId)
           }
         ];
 
@@ -368,7 +459,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
                   <div className="text-sm text-muted-foreground">{timeAgo}</div>
                 </div>
               </div>
-              <ThreeDotsMenu items={menuItems} />
+              {!isOwnProfile && <ThreeDotsMenu items={menuItems} />}
             </div>
             
             <div 
@@ -391,12 +482,15 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
               </button>
 
               <Popover open={showReactionPopover[postIdStr]} onOpenChange={(open) => {
-                setShowReactionPopover(prev => ({ ...prev, [postIdStr]: open }))
+                setShowReactionPopover(prev => ({ ...prev, [postIdStr]: open }));
+                if (open && !reactionUsersData[feedId]) {
+                  fetchReactionUsers(feedId);
+                }
               }}>
                 <PopoverTrigger asChild>
                   <button
                     className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    onClick={() => handleLikeButtonClick(postIdStr)}
+                    onClick={() => handleLikeButtonClick(postIdStr, feedId)}
                     disabled={isLikeLoading[postIdStr]}
                   >
                     {displayedReaction ? (
@@ -418,17 +512,53 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
                     {Object.entries(REACTIONS).map(([key, { emoji, label }]) => {
                       const reactionType = key as ReactionType;
                       const count = postReactionCounts[reactionType];
+                      
                       return (
-                        <button
-                          key={key}
-                          className={`flex items-center cursor-pointer rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''}`}
-                          onClick={() => handleReactionSelect(postIdStr, feedId, reactionType)}
-                          aria-label={label}
-                          title={label}
-                        >
-                          <span className="text-xl rounded-full w-8 h-8 flex items-center justify-center">{emoji}</span>
-                          <span className="text-sm font-medium">{count}</span>
-                        </button>
+                        <div key={key} className="relative">
+                          <button
+                            className={`flex items-center cursor-pointer rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''}`}
+                            onClick={() => handleReactionSelect(postIdStr, feedId, reactionType)}
+                            aria-label={label}
+                            title={label}
+                          >
+                            <span className="text-xl rounded-full w-8 h-8 flex items-center justify-center">{emoji}</span>
+                            <span 
+                              className="text-sm font-medium cursor-pointer reaction-count" 
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent triggering the parent button click
+                                handleCountClick(e, postIdStr, feedId, reactionType);
+                              }}
+                            >
+                              {count}
+                            </span>
+                          </button>
+                          
+                          {showTooltip?.postId === postIdStr && showTooltip?.reactionType === reactionType && (
+                            <div 
+                              className="absolute z-50 top-full mt-2 bg-card border p-2 shadow-md rounded-md reaction-tooltip"
+                              style={{ width: "max-content" }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* Show users who reacted with this reaction */}
+                              {getUsersWithReaction(feedId, reactionType).length > 0 ? (
+                                <div className="flex flex-col gap-2">
+                                  {getUsersWithReaction(feedId, reactionType).map((user) => (
+                                    <div key={user.userId} className="flex items-center gap-2">
+                                      <img 
+                                        src={user.profilePic || "/avatar.png"} 
+                                        alt={user.name}
+                                        className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                                      />
+                                      <span className="text-sm whitespace-normal">{user.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-sm">No users</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -472,6 +602,15 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
           </div>
         );
       })}
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setSelectedPostId(null);
+        }}
+        postId={selectedPostId || ''}
+        reporterId={currentUserId}
+      />
     </div>
   );
 };
