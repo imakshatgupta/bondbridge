@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
 import { useApiCall } from "@/apis/globalCatchError";
-import { CommunityResponse } from "@/apis/apiTypes/response";
+import { CommunityResponse } from "@/apis/apiTypes/communitiesTypes";
 import { ProfilePostData } from "@/apis/apiTypes/response";
 import { ChatItem } from "@/store/chatSlice";
 import { Loader2, ArrowLeft, ExternalLink } from "lucide-react";

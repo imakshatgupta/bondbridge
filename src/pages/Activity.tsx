@@ -24,8 +24,19 @@ import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Person } from "@/apis/apiTypes/response";
 import { fetchUserCommunities } from "@/apis/commonApiCalls/communitiesApi";
-import { CommunityResponse } from "@/apis/apiTypes/response";
+import { CommunityResponse } from "@/apis/apiTypes/communitiesTypes";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
+
+// Define a new interface for the basic community structure
+interface BasicCommunity {
+  _id: string;
+  name: string;
+  profilePicture?: string;
+  description?: string;
+  backgroundImage?: string;
+  memberCount: number;
+  members?: string[];
+}
 
 interface Participant {
   userId: string;
@@ -40,7 +51,7 @@ export default function Activity() {
   const [userCommunities, setUserCommunities] = useState<ChatItem[]>([]);
   const [loadingCommunities, setLoadingCommunities] = useState(false);
   const [activeTab, setActiveTab] = useState("chats");
-  const [suggestedCommunities, setSuggestedCommunities] = useState<CommunityResponse[]>([]);
+  const [suggestedCommunities, setSuggestedCommunities] = useState<BasicCommunity[]>([]);
   const [suggestedCommunitiesLoaded, setSuggestedCommunitiesLoaded] = useState(false);
   const [userCommunitiesLoaded, setUserCommunitiesLoaded] = useState(false);
   
@@ -92,15 +103,15 @@ export default function Activity() {
           name: community.name,
           avatar: community.profilePicture || "",
           lastMessage: community.description || "No description",
-          description: community.description,
-          timestamp: new Date(community.updatedAt).toLocaleTimeString([], {
+          description: community.description || "",
+          timestamp: new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
           }),
           unread: false,
           type: "community" as const,
-          memberCount: community.memberCount || community.members.length,
-          backgroundImage: community.backgroundImage,
+          memberCount: community.memberCount || (community.members?.length || 0),
+          backgroundImage: community.backgroundImage || "",
           participants: [] // Add empty participants array to satisfy ChatItem type
         }));
         
@@ -118,7 +129,7 @@ export default function Activity() {
     const loadSuggestedCommunities = async () => {
       const result = await executeFetchCommunities();
       if (result.success && result.data) {
-        setSuggestedCommunities(result.data);
+        setSuggestedCommunities(result.data as BasicCommunity[]);
       }
       setSuggestedCommunitiesLoaded(true);
     };

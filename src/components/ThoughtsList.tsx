@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ProfilePostData } from "../apis/apiTypes/response";
 import ThreeDotsMenu, { ReportMenuItem } from "./global/ThreeDotsMenu";
 import { MessageCircle, Heart, Share2 } from "lucide-react";
@@ -544,12 +544,18 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
                                 <div className="flex flex-col gap-2">
                                   {getUsersWithReaction(feedId, reactionType).map((user) => (
                                     <div key={user.userId} className="flex items-center gap-2">
-                                      <img 
-                                        src={user.profilePic || "/avatar.png"} 
-                                        alt={user.name}
-                                        className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                                      />
-                                      <span className="text-sm whitespace-normal">{user.name}</span>
+                                      <Link
+                                        to={`/profile/${user.userId}`}
+                                        className="flex items-center gap-2 hover:opacity-80"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <img 
+                                          src={user.profilePic || "/avatar.png"} 
+                                          alt={user.name}
+                                          className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                                        />
+                                        <span className="text-sm whitespace-normal">{user.name}</span>
+                                      </Link>
                                     </div>
                                   ))}
                                 </div>
