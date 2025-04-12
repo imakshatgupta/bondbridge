@@ -11,6 +11,7 @@ interface CurrentUserState {
   privacyLevel: number;
   token: string;
   userId: string;
+  public: number;
 }
 
 const initialState: CurrentUserState = {
@@ -24,6 +25,7 @@ const initialState: CurrentUserState = {
   privacyLevel: 0,
   token: "",
   userId: "",
+  public: 0,
 };
 
 const currentUserSlice = createSlice({

@@ -15,6 +15,7 @@ export interface UserProfileData {
   requestSent?: boolean;
   compatibility?: number;
   communities?: string[];
+  public?: number;
 }
 
 export interface PostData {
