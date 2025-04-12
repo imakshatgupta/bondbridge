@@ -91,6 +91,8 @@ const ForgotPassword: React.FC = () => {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordError, setPasswordError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [otpError, setOtpError] = useState('');
     const [receivedOTP, setReceivedOTP] = useState<string>('');
     const phoneInputRef = useRef(null);
     const navigate = useNavigate();
@@ -171,9 +173,11 @@ const ForgotPassword: React.FC = () => {
             setPhoneNumber(value.replace(/\D/g, ''));
         }
     };
-
     const handleSendOTP = async (e: React.FormEvent) => {
         e.preventDefault();
+        // Clear any previous error
+        setPhoneError('');
+        
         const validCountryCode = "+" + countryCode;
 
         const result = await executeSendOTP({
@@ -189,10 +193,16 @@ const ForgotPassword: React.FC = () => {
             const otpValue = result.data.otp || "Check your phone for OTP";
             setReceivedOTP(otpValue.toString());
             setStep('otp');
+        } else {
+            // Show error message for invalid phone number
+            setPhoneError('Invalid Phone Number');
         }
     };
 
     const handleVerifyOTP = async (otp: string) => {
+        // Clear any previous error
+        setOtpError('');
+        
         const validCountryCode = "+" + countryCode;
 
         const result = await executeVerifyOTP({
@@ -204,23 +214,26 @@ const ForgotPassword: React.FC = () => {
 
         if (result.success && result.data) {
             setStep('newPassword');
+        } else {
+            // Show error message for incorrect OTP
+            setOtpError('Please Check your OTP and Try Again');
         }
     };
 
     const handleSetNewPassword = async (e: React.FormEvent) => {
         e.preventDefault();
+        // Clear any previous error
+        setPasswordError('');
 
         if (newPassword !== confirmPassword) {
-            setPasswordError("Passwords don't match");
+            setPasswordError("Passwords Don't Match");
             return;
         }
 
         if (newPassword.length < 6) {
-            setPasswordError("Password should be at least 6 characters");
+            setPasswordError("Password Should be at least 6 Characters");
             return;
         }
-
-        setPasswordError('');
 
         // Call the forgotPassword function to reset the password
         const validCountryCode = "+" + countryCode;
@@ -233,6 +246,9 @@ const ForgotPassword: React.FC = () => {
         if (result.success) {
             // Password reset successful, redirect to login
             navigate('/login');
+        } else {
+            // Show error message for password reset failure
+            setPasswordError("Failed to reset password. Please try again.");
         }
     };
 
@@ -259,6 +275,9 @@ const ForgotPassword: React.FC = () => {
                                     separateDialCode={true}
                                 />
                             </div>
+                            {phoneError && (
+                                <p className="text-destructive-foreground text-sm mt-1">{phoneError}</p>
+                            )}
                         </div>
 
                         <Button
@@ -279,6 +298,9 @@ const ForgotPassword: React.FC = () => {
                             </p>
                         </div>
                         <OTPForm onVerify={handleVerifyOTP} receivedOTP={receivedOTP} />
+                        {otpError && (
+                            <p className="text-destructive-foreground text-sm text-center">{otpError}</p>
+                        )}
                         <Button
                             onClick={() => setStep('phone')}
                             variant="link"
@@ -362,7 +384,7 @@ const ForgotPassword: React.FC = () => {
                         </div>
 
                         {passwordError && (
-                            <p className="text-destructive text-sm">{passwordError}</p>
+                            <p className="text-destructive-foreground text-sm">{passwordError}</p>
                         )}
 
                         <Button

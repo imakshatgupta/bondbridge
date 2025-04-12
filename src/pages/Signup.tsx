@@ -78,6 +78,7 @@ const Signup: React.FC = () => {
   const [countryCode, setCountryCode] = useState("1"); // Default to USA (+1)
   const [, setIsValidPhone] = useState(false);
   const [receivedOTP, setReceivedOTP] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const navigate = useNavigate();
   const phoneInputRef = useRef(null);
 
@@ -176,6 +177,8 @@ const Signup: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Clear any previous error messages
+    setErrorMessage("");
 
     const validCountryCode = "+" + countryCode;
 
@@ -183,6 +186,14 @@ const Signup: React.FC = () => {
       phoneNumber: phone,
       countryCode: validCountryCode,
     });
+
+    if (result.status === 409) {
+      setErrorMessage("User with this Phone Number Already Exists");
+      return;
+    } else if (!result.success) {
+      setErrorMessage("Invalid Phone Number");
+      return;
+    }
 
     if (result.success && result.data) {
       // For testing purposes - extract OTP from response
@@ -255,6 +266,9 @@ const Signup: React.FC = () => {
                     placeholder: "Enter phone number",
                   }}
                 />
+                {errorMessage && (
+                  <p className="text-destructive-foreground text-sm mt-1">{errorMessage}</p>
+                )}
               </div>
             </div>
 

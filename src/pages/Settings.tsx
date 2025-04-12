@@ -209,7 +209,7 @@ const Settings = () => {
           <span>Blocked</span>
         </button>
 
-        <button
+        {/* <button
           className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
           onClick={() => handleSettingsClick("voice")}
         >
@@ -231,7 +231,7 @@ const Settings = () => {
             </svg>
           </div>
           <span>Voice Settings</span>
-        </button>
+        </button> */}
 
         <button
           className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
