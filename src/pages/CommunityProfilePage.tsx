@@ -7,13 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Users, MessageSquare } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import {
-  fetchCommunities,
   joinCommunity,
+  fetchCommunityById,
 } from "@/apis/commonApiCalls/communitiesApi";
-import { CommunityResponse } from "@/apis/apiTypes/response";
+import { CommunityResponse, CommunityPostDetail } from "@/apis/apiTypes/communitiesTypes";
 import { Loader2 } from "lucide-react";
 import AllPosts from "@/components/AllPosts";
-import { ProfilePostData } from "@/apis/apiTypes/response";
 import { toast } from "sonner";
 import CommunityMemberList from "@/components/CommunityMemberList";
 
@@ -23,50 +22,51 @@ const CommunityProfilePage = () => {
   const [community, setCommunity] = useState<CommunityResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [posts, setPosts] = useState<ProfilePostData[]>([]);
+  const [posts, setPosts] = useState<CommunityPostDetail[]>([]);
   const [isLoadingPosts] = useState(false);
   const [isUserMember, setIsUserMember] = useState(false);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
-  const [executeFetchCommunities] = useApiCall(fetchCommunities);
   const [executeJoinCommunity] = useApiCall(joinCommunity);
+  const [executeFetchCommunityById] = useApiCall(fetchCommunityById);
 
   useEffect(() => {
     const loadCommunity = async () => {
+      if (!communityId) return;
+      
       setLoading(true);
-      const result = await executeFetchCommunities();
-      if (result.success && result.data) {
-        const foundCommunity = result.data.find((c) => c._id === communityId);
-        if (foundCommunity) {
-          setCommunity(foundCommunity);
+      try {
+        const result = await executeFetchCommunityById(communityId);
+        console.log("API Response:", result); // Debug log
+        
+        if (result.success && result.data) {
+          const communityData = result.data;
+          console.log("Community Data:", communityData); // Debug log
+          setCommunity(communityData);
 
           // Check if current user is a member
           const userId = localStorage.getItem("userId");
-          if (userId && foundCommunity.members) {
-            setIsUserMember(foundCommunity.members.includes(userId));
+          if (userId && communityData.members) {
+            setIsUserMember(communityData.members.includes(userId));
           }
 
-          // For actual implementation, you would fetch the real posts using the post IDs
-          // from foundCommunity.posts array
-          if (foundCommunity.posts && foundCommunity.posts.length > 0) {
-            // This should be replaced with an actual API call to fetch posts by ID
-            // For now, we create representative posts with the correct count
-            const realPostCount =
-              foundCommunity.postCount || foundCommunity.posts.length;
-            const communityPosts: ProfilePostData[] = Array(realPostCount)
+          // Process posts data
+          if (communityData.posts && communityData.posts.length > 0) {
+            const realPostCount = communityData.postCount || communityData.posts.length;
+            const communityPosts: CommunityPostDetail[] = Array(realPostCount)
               .fill(null)
               .map((_, index) => ({
-                id: foundCommunity.posts?.[index] || `post-${index}`,
-                userId: foundCommunity._id,
+                id: communityData.posts?.[index] || `post-${index}`,
+                userId: communityData._id,
                 author: {
-                  name: foundCommunity.name,
-                  profilePic: foundCommunity.profilePicture || "",
+                  name: communityData.name,
+                  profilePic: communityData.profilePicture || "",
                 },
                 content: `Community post ${index + 1}`,
                 createdAt: Date.now() - index * 3600000, // Decreasing timestamps
-                media: foundCommunity.backgroundImage
+                media: communityData.backgroundImage
                   ? [
                       {
-                        url: foundCommunity.backgroundImage,
+                        url: communityData.backgroundImage,
                         type: "image",
                       },
                     ]
@@ -87,13 +87,13 @@ const CommunityProfilePage = () => {
                   reactionType: null,
                 },
                 community: {
-                  id: foundCommunity._id,
-                  name: foundCommunity.name,
-                  members: foundCommunity.memberCount,
-                  pfp: foundCommunity.profilePicture || "",
-                  description: foundCommunity.description,
-                  backgroundImage: foundCommunity.backgroundImage,
-                  bio: foundCommunity.bio,
+                  id: communityData._id,
+                  name: communityData.name,
+                  members: communityData.memberCount,
+                  pfp: communityData.profilePicture || "",
+                  description: communityData.description,
+                  backgroundImage: communityData.backgroundImage,
+                  bio: communityData.bio,
                 },
               }));
             setPosts(communityPosts);
@@ -101,17 +101,18 @@ const CommunityProfilePage = () => {
             setPosts([]);
           }
         } else {
-          setError("Community not found");
+          console.error("API Error:", result); // Debug error
+          setError("Failed to load Community Data");
         }
-      } else {
-        setError("Failed to load Community Data");
+      } catch (err) {
+        console.error("Exception in loadCommunity:", err);
+        setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    if (communityId) {
-      loadCommunity();
-    }
+    loadCommunity();
   }, [communityId]);
 
   const handleJoinCommunity = async () => {
@@ -127,7 +128,7 @@ const CommunityProfilePage = () => {
 
     setIsMembershipLoading(true);
     const result = await executeJoinCommunity({
-      communityId,
+      communityIds: [communityId],
       userId,
       action: "join",
     });
@@ -153,7 +154,7 @@ const CommunityProfilePage = () => {
 
     setIsMembershipLoading(true);
     const result = await executeJoinCommunity({
-      communityId,
+      communityIds: [communityId],
       userId,
       action: "remove",
     });
@@ -324,13 +325,7 @@ const CommunityProfilePage = () => {
               </div>
             ) : (community.postCount && community.postCount > 0) ||
               (community.posts && community.posts.length > 0) ? (
-              <>
-                <p className="text-muted-foreground mb-4">
-                  Showing {posts.length} of{" "}
-                  {community.postCount || community.posts?.length || 0} Posts
-                </p>
                 <AllPosts posts={posts} userId={community._id} />
-              </>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 No posts in this community yet
@@ -339,8 +334,8 @@ const CommunityProfilePage = () => {
           </TabsContent>
 
           <TabsContent value="members" className="p-4">
-            {community.members && community.members.length > 0 ? (
-              <CommunityMemberList memberIds={community.members} />
+            {community?.memberDetails && community.memberDetails.length > 0 ? (
+              <CommunityMemberList memberDetails={community.memberDetails} />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 No members in this community yet

@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../store';
 import { fetchCommunities } from '../../apis/commonApiCalls/communitiesApi';
 import { useApiCall } from '../../apis/globalCatchError';
 import { Community } from '@/lib/constants';
-import { CommunityResponse } from '@/apis/apiTypes/response';
+import { CommunityResponse } from '@/apis/apiTypes/communitiesTypes';
 import { Loader2 } from "lucide-react";
 
 const SelectCommunitiesTab: React.FC = () => {
@@ -20,10 +20,10 @@ const SelectCommunitiesTab: React.FC = () => {
     id: communityResponse._id,
     name: communityResponse.name,
     members: communityResponse.memberCount,
-    pfp: communityResponse.profilePicture,
-    description: communityResponse.description,
-    backgroundImage: communityResponse.backgroundImage,
-    bio: communityResponse.bio
+    pfp: communityResponse.profilePicture || '',
+    description: communityResponse.description || '',
+    backgroundImage: communityResponse.backgroundImage || '',
+    bio: communityResponse.bio || ''
   });
 
   useEffect(() => {
@@ -83,7 +83,7 @@ const SelectCommunitiesTab: React.FC = () => {
       <h1 className="text-3xl font-medium mb-1 text-foreground">Let's Join Exciting Communities</h1>
       <p className="text-muted-foreground mb-8">Select Communities</p>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 h-[45vh] overflow-y-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[45vh] overflow-y-auto">
         {communities.map((community) => (
           <div 
             key={community._id}

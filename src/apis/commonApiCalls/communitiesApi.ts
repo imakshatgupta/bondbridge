@@ -1,16 +1,10 @@
-import axios from 'axios';
-import { CommunitiesResponse, CommunityResponse } from '../apiTypes/response';
+import { adminApiClient } from '../apiClient';
+import { CommunitiesResponse, CommunityResponse, CommunityJoinRequest } from '../apiTypes/communitiesTypes';
 
 // Function to fetch all communities
 export const fetchCommunities = async (): Promise<CommunityResponse[]> => {
-  const response = await axios.get<CommunitiesResponse>(
-    'https://bond-bridge-admin-dashboard.vercel.app/api/communities',
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    }
+  const response = await adminApiClient.get<CommunitiesResponse>(
+    '/communities'
   );
   return response.data.communities;
 };
@@ -26,37 +20,24 @@ export const fetchUserCommunities = async (): Promise<CommunityResponse[]> => {
   
   // Filter communities where the user is a member
   return communities.filter(community => 
-    community.members.includes(userId)
+    community.members && community.members.includes(userId)
   );
 };
 
-// Function to join or leave a community
-export const joinCommunity = async (params: {
-  communityId: string;
-  userId: string;
-  action: 'join' | 'remove';
-}): Promise<{ success: boolean; message?: string }> => {
-  const token = localStorage.getItem('token');
+// Function to join or leave a community or multiple communities
+export const joinCommunity = async (params: CommunityJoinRequest): Promise<{ success: boolean; message?: string }> => {
   const userId = localStorage.getItem('userId');
 
-  if (!token || !userId) {
-    throw new Error('Authentication required');
+  if (!userId) {
+    throw new Error('User not authenticated');
   }
 
-  const response = await axios.post(
-    'https://bond-bridge-admin-dashboard.vercel.app/api/users/joincommunity',
+  const response = await adminApiClient.post(
+    '/users/joincommunity',
     {
-      communityId: params.communityId,
-      userId: params.userId,
+      communityIds: params.communityIds,
+      userId: userId,
       action: params.action
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'userId': userId,
-        'token': token
-      }
     }
   );
   
@@ -68,26 +49,22 @@ export const joinCommunity = async (params: {
 
 // Function to join multiple communities at once
 export const joinMultipleCommunities = async (communityIds: string[]): Promise<{ success: boolean; message?: string }> => {
-  const token = localStorage.getItem('token');
   const userId = localStorage.getItem('userId');
-
-  if (!token || !userId) {
-    throw new Error('Authentication required');
+  if(!userId) {
+    throw new Error('User not authenticated');
   }
+  return joinCommunity({
+    communityIds: communityIds,
+    userId,
+    action: 'join'
+  });
+};
 
-  // Join each community one by one
-  const joinPromises = communityIds.map(communityId => 
-    joinCommunity({
-      communityId,
-      userId,
-      action: 'join'
-    })
+// Function to fetch a specific community by ID
+export const fetchCommunityById = async (communityId: string): Promise<CommunityResponse> => {
+  const response = await adminApiClient.get<CommunityResponse>(
+    `/communities/${communityId}`
   );
   
-  await Promise.all(joinPromises);
-  
-  return {
-    success: true,
-    message: 'Successfully joined all communities'
-  };
+  return response.data;
 };

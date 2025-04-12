@@ -1,17 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 
 interface OTPFormProps {
   onVerify: (otp: string) => void;
   receivedOTP: string;
+  onResendOTP: () => void;
 }
 
-const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP }) => {
+const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP, onResendOTP }) => {
   const [otp, setOtp] = useState('');
+  const [showOTP, setShowOTP] = useState(true);
+  const [canResend, setCanResend] = useState(false);
+  const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    // Timer for showing OTP - 20 seconds
+    const otpTimer = setTimeout(() => {
+      setShowOTP(false);
+    }, 20000);
+
+    // Timer for enabling resend - 60 seconds (1 minute)
+    const resendTimer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          clearInterval(resendTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearTimeout(otpTimer);
+      clearInterval(resendTimer);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onVerify(otp);
+  };
+
+  const handleResendOTP = () => {
+    onResendOTP();
+    setCanResend(false);
+    setCountdown(60);
+    setShowOTP(true);
+    
+    // Reset the resend timer
+    const resendTimer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          clearInterval(resendTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    // Reset the OTP display timer
+    setTimeout(() => {
+      setShowOTP(false);
+    }, 20000);
   };
 
   return (
@@ -37,10 +89,24 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP }) => {
         </Button>
       </form>
       
+      <div className="mt-4 text-center">
+        <Button
+          type="button"
+          onClick={handleResendOTP}
+          variant="link"
+          disabled={!canResend}
+          className="text-sm text-foreground hover:underline cursor-pointer"
+        >
+          {canResend ? "Resend OTP" : `Resend OTP in ${countdown}s`}
+        </Button>
+      </div>
+      
       <div className="flex justify-center absolute left-0 right-0 text-center mt-4" style={{ top: "calc(100% + 20vh)" }}>
-        <p className="text-foreground font-bold border-1 border-primary rounded-full text-xl w-fit p-2">
-          {`OTP : ${receivedOTP}`}
-        </p>
+        {showOTP && (
+          <p className="text-foreground font-bold border-1 border-primary rounded-full text-xl w-fit p-2">
+            {`OTP : ${receivedOTP}`}
+          </p>
+        )}
       </div>
     </div>
   );
