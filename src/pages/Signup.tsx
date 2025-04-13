@@ -228,9 +228,9 @@ const Signup: React.FC = () => {
     <>
       <AuthLayout
         title={
-          <>
+          <div className="text-nowrap">
             Making Connections,<br />Growing Friendships
-          </>
+          </div>
         }
         subtitle={<>Sign up for your <span className="grad font-bold">BondBridge</span> journey today!</>}
         videoLight="/auth/signup_lightmode.mp4"
@@ -239,7 +239,7 @@ const Signup: React.FC = () => {
         otpMessage="Welcome, We are glad to see you!"
       >
         {!showOTP ? (
-          <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center">
+          <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center relative">
             <div className="w-full flex flex-col justify-start">
               <label
                 htmlFor="phone"
@@ -310,17 +310,17 @@ const Signup: React.FC = () => {
               {isSendingOTP ? "Sending OTP..." : "Sign Up"}
             </button>
 
-            <div className="absolute bottom-8 pt-4">
+            <div className="bottom-8 pt-4">
               {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
               <div className="flex justify-center gap-4">
-                <Link to="#" className="h-44">
+                <Link to="#" className="h-38">
                   <img 
                     src="/assets/stores/appstore.svg" 
                     alt="Download on App Store" 
                     className="h-full"
                   />
                 </Link>
-                <Link to="#" className="h-44">
+                <Link to="#" className="h-38">
                   <img 
                     src="/assets/stores/googleplay.svg" 
                     alt="Get it on Google Play" 

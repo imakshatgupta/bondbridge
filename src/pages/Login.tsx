@@ -225,15 +225,15 @@ const Login: React.FC = () => {
     <>
       <AuthLayout
         title={
-          <>
+          <div className="text-nowrap">
             Welcome Back, Your <br /> Friends Are Waiting
-          </>
+          </div>
         }
         subtitle="Log in to unlock a world of endless possibilities"
         image="/auth/login.png"
         isLogin
       >
-        <form onSubmit={handleSubmit} className="space-y-4 flex flex-col items-center">
+        <form onSubmit={handleSubmit} className="relative space-y-4 flex flex-col items-center">
           <div className="flex flex-col justify-start w-full">
             <Label
               htmlFor="phoneNumber"
@@ -333,7 +333,7 @@ const Login: React.FC = () => {
           >
             {isLoggingIn ? "Logging In..." : "Log In"}
           </Button>
-          <div className="flex justify-center absolute bottom-8 pt-4">
+          <div className="flex justify-center bottom-8 pt-4">
             {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
             <div className="flex justify-center gap-4">
               <Link to="#" className="h-36 md:h-44 lg:h-48">
