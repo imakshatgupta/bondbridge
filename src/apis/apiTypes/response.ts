@@ -658,6 +658,12 @@ export interface CommunityResponse {
   communityId?: string;
   posts?: string[];
   postCount?: number;
+  memberDetails?: {
+    _id: string;
+    name: string;
+    profilePic: string;
+    avatar: string;
+  }[];
 }
 
 export interface CommunitiesResponse {

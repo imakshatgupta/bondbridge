@@ -676,6 +676,11 @@ export default function BondChat() {
                         voiceType === "male" ? "opacity-100" : "opacity-0"
                       }`}
                     />
+                    <img 
+                      src="/bondChat/man.svg" 
+                      alt="Male voice" 
+                      className="w-5 h-5" 
+                    />
                     Michael
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => selectVoice("female")} className="cursor-pointer">
@@ -683,6 +688,11 @@ export default function BondChat() {
                       className={`mr-2 h-4 w-4 ${
                         voiceType === "female" ? "opacity-100" : "opacity-0"
                       }`}
+                    />
+                    <img 
+                      src="/bondChat/woman.svg" 
+                      alt="Female voice" 
+                      className="w-5 h-5" 
                     />
                     Vanessa
                   </DropdownMenuItem>
@@ -707,9 +717,21 @@ export default function BondChat() {
             <h3 className="">
               To <span className="grad">BondChat</span>
             </h3>
-            <p className="text-muted-foreground font-normal text-xl">
-              Choose your persona
-            </p>
+            <div className="flex flex-row items-center">
+              <p className="text-muted-foreground font-normal text-xl">
+                Choose your persona
+              </p>
+              <img 
+                src="/bondChat/man.svg" 
+                alt="Male voice" 
+                className="w-5 h-5 ml-1 -mr-1" 
+              />
+              <img 
+                src="/bondChat/woman.svg" 
+                alt="Male voice" 
+                className="w-5 h-5" 
+              />
+            </div>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-4 mb-20">

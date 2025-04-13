@@ -1,10 +1,20 @@
 import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { CommunityResponse } from '@/apis/apiTypes/response';
 import { useNavigate } from 'react-router-dom';
 
+// Define community interface matching BasicCommunity from Activity.tsx
+interface BasicCommunity {
+  _id: string;
+  name: string;
+  profilePicture?: string;
+  description?: string;
+  backgroundImage?: string;
+  memberCount: number;
+  members?: string[];
+}
+
 interface SuggestedCommunitiesProps {
-  communities: CommunityResponse[];
+  communities: BasicCommunity[];
 }
 
 const SuggestedCommunities: React.FC<SuggestedCommunitiesProps> = ({ communities }) => {
