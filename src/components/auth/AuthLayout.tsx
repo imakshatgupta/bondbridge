@@ -105,7 +105,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({
             <h1 className="text-4xl lg:text-5xl 2xl:text-6xl 3xl:text-8xl font-semibold mb-2">
               {title}
             </h1>
-            <p className="text-foreground text-xl 2xl:text-2xl z-50">
+            <p className="text-foreground text-xl 2xl:text-2xl z-50 text-nowrap">
               {subtitle}
             </p>
           </div>
