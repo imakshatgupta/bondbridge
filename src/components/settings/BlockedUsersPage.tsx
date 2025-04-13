@@ -113,7 +113,7 @@ const BlockedUsersPage: React.FC = () => {
           onOpenChange={setDialogOpen}
           onSelectUser={handleUserSelection}
           triggerButton={
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="cursor-pointer">
               <UserPlus className="h-4 w-4 mr-2" />
               Block User
             </Button>
@@ -153,6 +153,7 @@ const BlockedUsersPage: React.FC = () => {
                 size="sm"
                 onClick={() => handleUnblock(user.userId)}
                 disabled={unblockingUser === user.userId}
+                className="cursor-pointer"
               >
                 {unblockingUser === user.userId ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />

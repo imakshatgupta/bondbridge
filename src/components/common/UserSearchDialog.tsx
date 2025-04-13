@@ -133,12 +133,12 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
             displayUsers.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center justify-between p-2 hover:bg-accent rounded-md cursor-pointer"
+                className="flex items-center justify-between p-2 hover:bg-accent rounded-md"
                 onClick={() => handleUserAction(user)}
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.profilePic || user.avatar} alt={user.name} className="h-12 w-12 rounded-full"/>
+                    <AvatarImage src={user.profilePic || user.avatar} alt={user.name}/>
                     <AvatarFallback>
                       {user.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -147,7 +147,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
                     <span className="font-medium">{user.name}</span>
                     {user.bio && (
                       <p className="text-xs text-muted-foreground">
-                        {user.bio}
+                        {user.bio.length > 40 ? `${user.bio.substring(0, 40)}...` : user.bio}
                       </p>
                     )}
                   </div>
@@ -157,6 +157,7 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
                   size="sm"
                   onClick={(e) => handleUserAction(user, e)}
                   disabled={processingUsers[user.id]}
+                  className="cursor-pointer"
                 >
                   {processingUsers[user.id] ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
