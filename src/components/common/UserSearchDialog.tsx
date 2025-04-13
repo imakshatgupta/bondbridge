@@ -146,8 +146,8 @@ const UserSearchDialog: React.FC<UserSearchDialogProps> = ({
                   <div>
                     <span className="font-medium">{user.name}</span>
                     {user.bio && (
-                      <p className="text-xs text-muted-foreground">
-                        {user.bio.length > 40 ? `${user.bio.substring(0, 40)}...` : user.bio}
+                      <p className="text-xs text-muted-foreground max-w-[15vw] truncate">
+                        {user.bio}
                       </p>
                     )}
                   </div>

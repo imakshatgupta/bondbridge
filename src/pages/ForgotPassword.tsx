@@ -276,7 +276,7 @@ const ForgotPassword: React.FC = () => {
                                 />
                             </div>
                             {phoneError && (
-                                <p className="text-destructive-foreground text-sm mt-1">{phoneError}</p>
+                                <p className="text-foreground text-sm mt-1">{phoneError}</p>
                             )}
                         </div>
 

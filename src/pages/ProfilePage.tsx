@@ -87,6 +87,7 @@ const ProfilePage: React.FC = () => {
         compatibility={userData.compatibility}
         communities={userData.communities}
         interests={userData.interests}
+        public={userData.public}
       />
     </>
   );

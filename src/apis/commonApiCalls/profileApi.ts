@@ -41,6 +41,7 @@ export const fetchUserProfile = async (
       requestSent: userData.requestSent || false,
       compatibility: userData.compatibility || 0,
       communities: userData.communities || [],
+      public: userData.public !== undefined ? userData.public : 1,
     },
   };
 };
