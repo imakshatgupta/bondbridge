@@ -2,7 +2,6 @@ import React from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, PlusIcon } from "lucide-react";
-// import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Participant {
@@ -51,7 +50,7 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
           variant="ghost"
           size="icon"
           onClick={onBack}
-          className="mr-2"
+          className="mr-2 cursor-pointer"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -86,7 +85,7 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
             {!hasLeftGroup && (
               <Button
                 variant="outline"
-                className="border-border px-6 cursor-pointer border-2 border-destructive hover"
+                className="px-6 cursor-pointer border-2 border-destructive hover"
                 onClick={onLeaveGroup}
               >
                 Leave
@@ -102,12 +101,6 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
             )}
           </div>
         </div>
-
-        {/* Shared media section */}
-        {/* <div className="flex justify-between items-center p-4 border-b border-border">
-          <h3 className="text-muted-foreground">shared media (23)</h3>
-          <ChevronRight className="h-5 w-5 text-muted-foreground" />
-        </div> */}
 
         {/* Participants list */}
         <div className="pt-4 px-4 overflow-y-auto max-h-[45vh]">

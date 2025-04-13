@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Comment } from "@/components/Comment";
 import { Post } from "@/components/Post";
 import { Input } from "@/components/ui/input";
-import avatarImage from "/profile/user.png";
 import { fetchComments, postComment } from "@/apis/commonApiCalls/commentsApi";
 import { getPostDetails } from "@/apis/commonApiCalls/homepageApi";
 import { useApiCall } from "@/apis/globalCatchError";
@@ -289,7 +288,7 @@ export default function CommentsPage() {
       user: {
         userId: userId,
         name: currentUser.username || currentUser.nickname,
-        profilePic: currentUser.avatar || avatarImage,
+        profilePic: currentUser.profilePic || currentUser.avatar,
       },
       likes: 0,
       hasReplies: false,
