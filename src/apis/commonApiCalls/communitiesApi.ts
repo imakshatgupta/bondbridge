@@ -1,15 +1,38 @@
 import { adminApiClient } from '../apiClient';
-import { CommunitiesResponse, CommunityResponse, CommunityJoinRequest } from '../apiTypes/communitiesTypes';
+import { 
+  CommunitiesResponse, 
+  CommunityResponse, 
+  CommunityJoinRequest,
+  CommunityPostResponse,
+  CommunityPostsResponse,
+  FetchCommunitiesRequest,
+  FetchCommunityPostsRequest
+} from '../apiTypes/communitiesTypes';
+import { PostDetailsData } from '../apiTypes/response';
 
-// Function to fetch all communities
-export const fetchCommunities = async (): Promise<CommunityResponse[]> => {
-  const response = await adminApiClient.get<CommunitiesResponse>(
-    '/communities'
-  );
+/**
+ * Function to fetch all communities
+ * @returns Promise with community response array
+ */
+export const fetchCommunities = async (params?: FetchCommunitiesRequest): Promise<CommunityResponse[]> => {
+  const queryParams = new URLSearchParams();
+  
+  if (params?.page) {
+    queryParams.append('page', params.page.toString());
+  }
+  if (params?.limit) {
+    queryParams.append('limit', params.limit.toString());
+  }
+  
+  const url = `/communities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await adminApiClient.get<CommunitiesResponse>(url);
   return response.data.communities;
 };
 
-// Function to fetch communities where the current user is a member
+/**
+ * Function to fetch communities where the current user is a member
+ * @returns Promise with community response array
+ */
 export const fetchUserCommunities = async (): Promise<CommunityResponse[]> => {
   const userId = localStorage.getItem('userId');
   if (!userId) {
@@ -24,7 +47,11 @@ export const fetchUserCommunities = async (): Promise<CommunityResponse[]> => {
   );
 };
 
-// Function to join or leave a community or multiple communities
+/**
+ * Function to join or leave a community or multiple communities
+ * @param params Join community request params
+ * @returns Promise with success and message
+ */
 export const joinCommunity = async (params: CommunityJoinRequest): Promise<{ success: boolean; message?: string }> => {
   const userId = localStorage.getItem('userId');
 
@@ -47,7 +74,11 @@ export const joinCommunity = async (params: CommunityJoinRequest): Promise<{ suc
   };
 };
 
-// Function to join multiple communities at once
+/**
+ * Function to join multiple communities at once
+ * @param communityIds Array of community IDs to join
+ * @returns Promise with success and message
+ */
 export const joinMultipleCommunities = async (communityIds: string[]): Promise<{ success: boolean; message?: string }> => {
   const userId = localStorage.getItem('userId');
   if(!userId) {
@@ -60,11 +91,61 @@ export const joinMultipleCommunities = async (communityIds: string[]): Promise<{
   });
 };
 
-// Function to fetch a specific community by ID
+/**
+ * Function to fetch a specific community by ID
+ * @param communityId Community ID
+ * @returns Promise with community response
+ */
 export const fetchCommunityById = async (communityId: string): Promise<CommunityResponse> => {
   const response = await adminApiClient.get<CommunityResponse>(
     `/communities/${communityId}`
   );
   
   return response.data;
+};
+
+/**
+ * Function to fetch all posts of a community by community ID
+ * @param communityId Community ID
+ * @param params Optional parameters (page, limit)
+ * @returns Promise with community post response array
+ */
+export const fetchCommunityPosts = async (
+  communityId: string, 
+  params?: Omit<FetchCommunityPostsRequest, 'communityId'>
+): Promise<CommunityPostResponse[]> => {
+  const queryParams = new URLSearchParams();
+  
+  if (params?.page) {
+    queryParams.append('page', params.page.toString());
+  }
+  if (params?.limit) {
+    queryParams.append('limit', params.limit.toString());
+  }
+  
+  const url = `/communities/${communityId}/post${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await adminApiClient.get<CommunityPostsResponse>(url);
+  
+  if (!response.data.success) {
+    throw new Error('Failed to fetch community posts');
+  }
+  
+  return response.data.posts;
+};
+
+/**
+ * Function to fetch details of a specific post by post ID
+ * @param postId Post ID
+ * @returns Promise with post details data
+ */
+export const fetchPostDetails = async (postId: string): Promise<PostDetailsData> => {
+  const response = await adminApiClient.get<{ success: boolean; post: PostDetailsData }>(
+    `/posts/${postId}`
+  );
+  
+  if (!response.data.success) {
+    throw new Error('Failed to fetch post details');
+  }
+  
+  return response.data.post;
 };

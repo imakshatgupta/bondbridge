@@ -9,12 +9,47 @@ import { useApiCall } from "@/apis/globalCatchError";
 import {
   joinCommunity,
   fetchCommunityById,
+  fetchCommunityPosts,
+  // CommunityPostResponse
 } from "@/apis/commonApiCalls/communitiesApi";
-import { CommunityResponse, CommunityPostDetail } from "@/apis/apiTypes/communitiesTypes";
+import { CommunityPostResponse, CommunityResponse } from "@/apis/apiTypes/communitiesTypes";
 import { Loader2 } from "lucide-react";
-import AllPosts from "@/components/AllPosts";
 import { toast } from "sonner";
 import CommunityMemberList from "@/components/CommunityMemberList";
+import CommunityPosts from "@/components/CommunityPosts";
+import CommunityQuotes from "@/components/CommunityQuotes";
+
+// Define the structure for transformed post matching the components' expectations
+interface TransformedPost {
+  id: string;
+  author: {
+    name: string;
+    profilePic: string;
+  };
+  content: string;
+  createdAt: number;
+  media: Array<{
+    url: string;
+    type: string;
+  }>;
+  stats: {
+    commentCount: number;
+    hasReacted: boolean;
+    reactionCount: number;
+    reactionType: string | null;
+  };
+  reactionDetails: {
+    total: number;
+    types: {
+      like: number;
+      love: number;
+      haha: number;
+      lulu: number;
+    };
+  };
+  isCommunity: boolean;
+  communityId: string;
+}
 
 const CommunityProfilePage = () => {
   const { communityId } = useParams<{ communityId: string }>();
@@ -22,97 +57,86 @@ const CommunityProfilePage = () => {
   const [community, setCommunity] = useState<CommunityResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [posts, setPosts] = useState<CommunityPostDetail[]>([]);
-  const [isLoadingPosts] = useState(false);
+  const [communityPosts, setCommunityPosts] = useState<TransformedPost[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [isUserMember, setIsUserMember] = useState(false);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
   const [executeJoinCommunity] = useApiCall(joinCommunity);
   const [executeFetchCommunityById] = useApiCall(fetchCommunityById);
+  const [executeFetchCommunityPosts] = useApiCall(fetchCommunityPosts);
 
+  // Fetch community details
   useEffect(() => {
     const loadCommunity = async () => {
       if (!communityId) return;
       
       setLoading(true);
-      try {
-        const result = await executeFetchCommunityById(communityId);
-        console.log("API Response:", result); // Debug log
-        
-        if (result.success && result.data) {
-          const communityData = result.data;
-          console.log("Community Data:", communityData); // Debug log
-          setCommunity(communityData);
+      const result = await executeFetchCommunityById(communityId);
+      
+      if (result.success && result.data) {
+        const communityData = result.data;
+        setCommunity(communityData);
 
-          // Check if current user is a member
-          const userId = localStorage.getItem("userId");
-          if (userId && communityData.members) {
-            setIsUserMember(communityData.members.includes(userId));
-          }
-
-          // Process posts data
-          if (communityData.posts && communityData.posts.length > 0) {
-            const realPostCount = communityData.postCount || communityData.posts.length;
-            const communityPosts: CommunityPostDetail[] = Array(realPostCount)
-              .fill(null)
-              .map((_, index) => ({
-                id: communityData.posts?.[index] || `post-${index}`,
-                userId: communityData._id,
-                author: {
-                  name: communityData.name,
-                  profilePic: communityData.profilePicture || "",
-                },
-                content: `Community post ${index + 1}`,
-                createdAt: Date.now() - index * 3600000, // Decreasing timestamps
-                media: communityData.backgroundImage
-                  ? [
-                      {
-                        url: communityData.backgroundImage,
-                        type: "image",
-                      },
-                    ]
-                  : [],
-                reactionDetails: {
-                  total: 0,
-                  types: {
-                    like: 0,
-                    love: 0,
-                    haha: 0,
-                    lulu: 0,
-                  },
-                },
-                stats: {
-                  commentCount: Math.floor(Math.random() * 10),
-                  hasReacted: false,
-                  reactionCount: Math.floor(Math.random() * 20),
-                  reactionType: null,
-                },
-                community: {
-                  id: communityData._id,
-                  name: communityData.name,
-                  members: communityData.memberCount,
-                  pfp: communityData.profilePicture || "",
-                  description: communityData.description,
-                  backgroundImage: communityData.backgroundImage,
-                  bio: communityData.bio,
-                },
-              }));
-            setPosts(communityPosts);
-          } else {
-            setPosts([]);
-          }
-        } else {
-          console.error("API Error:", result); // Debug error
-          setError("Failed to load Community Data");
+        // Check if current user is a member
+        const userId = localStorage.getItem("userId");
+        if (userId && communityData.members) {
+          setIsUserMember(communityData.members.includes(userId));
         }
-      } catch (err) {
-        console.error("Exception in loadCommunity:", err);
-        setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      } finally {
-        setLoading(false);
+      } else {
+        setError("Failed to load Community Data");
       }
+      setLoading(false);
     };
 
     loadCommunity();
+  }, [communityId]);
+
+  // Fetch community posts
+  useEffect(() => {
+    const loadCommunityPosts = async () => {
+      if (!communityId) return;
+      
+      setIsLoadingPosts(true);
+      const result = await executeFetchCommunityPosts(communityId);
+      
+      if (result.success && result.data) {
+        // Transform the posts to match expected format
+        const transformedPosts = result.data.map((post: CommunityPostResponse) => ({
+          id: post._id,
+          author: {
+            name: post.name,
+            profilePic: post.profilePic,
+          },
+          content: post.data.content,
+          createdAt: post.createdAt,
+          media: post.data.media || [],
+          stats: {
+            commentCount: post.commentCount || 0,
+            hasReacted: post.reaction?.hasReacted || false,
+            reactionCount: post.reactionCount || 0,
+            reactionType: post.reaction?.reactionType || null,
+          },
+          reactionDetails: {
+            total: post.reactionDetails.total || 0,
+            types: post.reactionDetails.types || {
+              like: 0,
+              love: 0,
+              haha: 0,
+              lulu: 0
+            }
+          },
+          isCommunity: post.isCommunity,
+          communityId: communityId
+        }));
+        
+        setCommunityPosts(transformedPosts);
+      } else {
+        console.error("Failed to load community posts");
+      }
+      setIsLoadingPosts(false);
+    };
+
+    loadCommunityPosts();
   }, [communityId]);
 
   const handleJoinCommunity = async () => {
@@ -171,6 +195,16 @@ const CommunityProfilePage = () => {
     }
     setIsMembershipLoading(false);
   };
+
+  // Filter posts for the Quotes tab (text-only posts)
+  const quotePosts = communityPosts.filter(post => 
+    (!post.media || post.media.length === 0)
+  );
+  
+  // Filter posts for the Posts tab (posts with media)
+  const mediaPosts = communityPosts.filter(post => 
+    post.media && post.media.length > 0
+  );
 
   if (loading) {
     return (
@@ -295,9 +329,10 @@ const CommunityProfilePage = () => {
 
       <div className="flex-1 mt-8">
         <Tabs defaultValue="about" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-background/30 rounded-lg backdrop-blur-sm mb-4 *:rounded-md *:m-1 *:data-[state=active]:bg-accent *:data-[state=active]:text-foreground *:text-muted-foreground">
+          <TabsList className="grid w-full grid-cols-4 bg-background/30 rounded-lg backdrop-blur-sm mb-4 *:rounded-md *:m-1 *:data-[state=active]:bg-accent *:data-[state=active]:text-foreground *:text-muted-foreground">
             <TabsTrigger value="about" className="cursor-pointer">About</TabsTrigger>
             <TabsTrigger value="posts" className="cursor-pointer">Posts</TabsTrigger>
+            <TabsTrigger value="quotes" className="cursor-pointer">Quotes</TabsTrigger>
             <TabsTrigger value="members" className="cursor-pointer">Members</TabsTrigger>
           </TabsList>
 
@@ -323,12 +358,25 @@ const CommunityProfilePage = () => {
               <div className="flex justify-center items-center min-h-[200px]">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : (community.postCount && community.postCount > 0) ||
-              (community.posts && community.posts.length > 0) ? (
-                <AllPosts posts={posts} userId={community._id} />
+            ) : mediaPosts.length > 0 ? (
+              <CommunityPosts posts={mediaPosts} communityId={communityId || ''} />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                No posts in this community yet
+                No Posts
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="quotes" className="p-4">
+            {isLoadingPosts ? (
+              <div className="flex justify-center items-center min-h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : quotePosts.length > 0 ? (
+              <CommunityQuotes posts={quotePosts} communityId={communityId || ''} />
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                No Quotes
               </div>
             )}
           </TabsContent>
@@ -338,7 +386,7 @@ const CommunityProfilePage = () => {
               <CommunityMemberList memberDetails={community.memberDetails} />
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                No members in this community yet
+                No Members in the Community
               </div>
             )}
           </TabsContent>

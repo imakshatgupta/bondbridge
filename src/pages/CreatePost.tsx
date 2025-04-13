@@ -247,13 +247,24 @@ const CreatePost = ({
     setIsUploading(true); // Show loading state
 
     try {
-      // Check for video files exceeding 1MB limit
+      // Check for video files exceeding 10MB limit
       const invalidFiles = files.filter(
-        (file) => file.type.startsWith("video/") && file.size > 1024 * 1024
+        (file) => file.type.startsWith("video/") && file.size > 10 * 1024 * 1024
       );
 
       if (invalidFiles.length > 0) {
-        toast.error("Videos must be less than 1MB in size");
+        toast.error("Videos must be less than 10MB in size");
+        setIsUploading(false);
+        return;
+      }
+
+      // Check for image files exceeding 10MB limit
+      const invalidImageFiles = files.filter(
+        (file) => file.type.startsWith("image/") && file.size > 10 * 1024 * 1024
+      );
+
+      if (invalidImageFiles.length > 0) {
+        toast.error("Images must be less than 10MB in size");
         setIsUploading(false);
         return;
       }
