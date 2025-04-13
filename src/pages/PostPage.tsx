@@ -431,16 +431,12 @@ export default function CommentsPage() {
                   avatar={post.profilePic}
                   caption={post.data.content}
                   media={post.data.media || []}
-                  likes={post.reactionCount}
                   comments={post.commentCount}
                   datePosted={post.ago_time}
                   feedId={post.feedId}
                   isOwner={currentUserId === post.userId}
                   onCommentClick={() => {}}
                   onLikeClick={() => {}}
-                  reactionType={post.reaction?.reactionType}
-                  reactionDetails={post.reactionDetails}
-                  reaction={post.reaction}
                   onDelete={handlePostDelete}
                 />
               )}

@@ -405,7 +405,6 @@ export default function HomePage() {
                     ? processedPost.data.media[0].url
                     : undefined
                 }
-                likes={post.reactionCount}
                 comments={post.commentCount}
                 datePosted={post.ago_time}
                 isOwner={currentUserId === post.userId}
@@ -414,10 +413,6 @@ export default function HomePage() {
                 }
                 onLikeClick={() => handleLikeClick(post._id)}
                 feedId={post.feedId}
-                isLiked={post.reaction?.hasReacted}
-                reactionType={post.reaction?.reactionType}
-                reactionDetails={post.reactionDetails}
-                reaction={post.reaction}
                 onDelete={handlePostDelete}
               />
             </div>
