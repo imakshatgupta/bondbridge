@@ -89,7 +89,7 @@ const Signup: React.FC = () => {
   // Add effect to apply styles to the phone input after it's rendered
   useEffect(() => {
     // Apply custom theme styles
-    const styleElement = document.createElement('style');
+    const styleElement = document.createElement("style");
     styleElement.textContent = customPhoneInputStyles;
     document.head.appendChild(styleElement);
 
@@ -116,18 +116,32 @@ const Signup: React.FC = () => {
             "height: 100% !important; display: flex !important; align-items: center !important;"
           );
         }
-        
+
         // Fix selected dial code (country code) spacing
         const selectedDialCode = container.querySelector(".selected-dial-code");
         if (selectedDialCode) {
-          selectedDialCode.setAttribute("style", "margin-left: 6px !important; padding-left: 0 !important;");
+          selectedDialCode.setAttribute(
+            "style",
+            "margin-left: 6px !important; padding-left: 0 !important;"
+          );
         }
 
         // Fix input height
         const input = container.querySelector("input");
         if (input) {
-          input.setAttribute("style", "height: 40px !important; background-color: var(--background) !important; color: var(--foreground) !important; border-color: var(--border) !important;");
-          input.classList.add('border', 'border-input', 'rounded-md', 'shadow-sm', 'focus:outline-none', 'focus:ring-ring', 'focus:border-ring');
+          input.setAttribute(
+            "style",
+            "height: 40px !important; background-color: var(--background) !important; color: var(--foreground) !important; border-color: var(--border) !important;"
+          );
+          input.classList.add(
+            "border",
+            "border-input",
+            "rounded-md",
+            "shadow-sm",
+            "focus:outline-none",
+            "focus:ring-ring",
+            "focus:border-ring"
+          );
         }
       }
     };
@@ -229,17 +243,27 @@ const Signup: React.FC = () => {
       <AuthLayout
         title={
           <div className="text-nowrap">
-            Making Connections,<br />Growing Friendships
+            Making Connections,
+            <br />
+            Growing Friendships
           </div>
         }
-        subtitle={<>Sign up for your <span className="grad font-bold">BondBridge</span> journey today!</>}
+        subtitle={
+          <>
+            Sign up for your <span className="grad font-bold">BondBridge</span>{" "}
+            journey today!
+          </>
+        }
         videoLight="/auth/signup_lightmode.mp4"
         videoDark="/auth/signup_darkmode.mp4"
         showOTP={showOTP}
         otpMessage="Welcome, We are glad to see you!"
       >
         {!showOTP ? (
-          <form onSubmit={handleSubmit} className="space-y-4 w-full flex flex-col items-center relative">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4 w-full flex flex-col items-center relative"
+          >
             <div className="w-full flex flex-col justify-start">
               <label
                 htmlFor="phone"
@@ -267,35 +291,44 @@ const Signup: React.FC = () => {
                   }}
                 />
                 {errorMessage && (
-                  <p className="text-foreground text-sm mt-1 font-semibold">{errorMessage}</p>
+                  <p className="text-foreground text-sm mt-1 font-semibold">
+                    {errorMessage}
+                  </p>
                 )}
               </div>
             </div>
 
             <div className="space-y-2 flex flex-col justify-start w-full">
               <div className="flex items-center space-x-2">
-                <Checkbox id="terms" required className="cursor-pointer text-foreground"/>
-                <label
-                  htmlFor="terms"
-                  className="text-xs text-foreground"
-                >
+                <Checkbox
+                  id="terms"
+                  required
+                  className="cursor-pointer text-foreground"
+                />
+                <label htmlFor="terms" className="text-xs text-foreground">
                   I agree to{" "}
-                  <Link to="/terms" className="text-foreground font-bold underline">
+                  <Link
+                    to="/terms"
+                    className="text-foreground font-bold underline"
+                  >
                     Terms & Conditions
                   </Link>{" "}
                   and{" "}
-                  <Link to="/privacy" className="text-foreground font-bold underline">
+                  <Link
+                    to="/privacy"
+                    className="text-foreground font-bold underline"
+                  >
                     Privacy Policy
                   </Link>
                 </label>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox id="newsletter" className="cursor-pointer text-foreground"/>
-                <label
-                  htmlFor="newsletter"
-                  className="text-xs text-foreground"
-                >
+                <Checkbox
+                  id="newsletter"
+                  className="cursor-pointer text-foreground"
+                />
+                <label htmlFor="newsletter" className="text-xs text-foreground">
                   I would like to receive updates about products, services, and
                   promotions
                 </label>
@@ -310,23 +343,28 @@ const Signup: React.FC = () => {
               {isSendingOTP ? "Sending OTP..." : "Sign Up"}
             </button>
 
-            <div className="bottom-8 pt-4">
-              {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
-              <div className="flex justify-center gap-4">
-                <Link to="#" className="h-38">
-                  <img 
-                    src="/assets/stores/appstore.svg" 
-                    alt="Download on App Store" 
-                    className="h-full"
-                  />
-                </Link>
-                <Link to="#" className="h-38">
-                  <img 
-                    src="/assets/stores/googleplay.svg" 
-                    alt="Get it on Google Play" 
-                    className="h-full"
-                  />
-                </Link>
+            <div className="flex flex-col items-center justify-center gap-1">
+              <div className="flex justify-center pt-4">
+                {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
+                <div className="flex justify-center gap-4">
+                  <Link to="#" className="">
+                    <img
+                      src="/assets/stores/appstore.svg"
+                      alt="Download on App Store"
+                      className="w-40"
+                    />
+                  </Link>
+                  <Link to="#" className="">
+                    <img
+                      src="/assets/stores/googleplay.svg"
+                      alt="Get it on Google Play"
+                      className="w-40"
+                    />
+                  </Link>
+                </div>
+              </div>
+              <div className="text-base font-bold relative text-foreground -top-10 animate-pulse">
+                Coming Soon
               </div>
             </div>
           </form>
@@ -337,12 +375,14 @@ const Signup: React.FC = () => {
                 We've sent a verification code to your phone
               </p>
             </div>
-            <OTPForm 
-              onVerify={handleVerifyOTP} 
-              receivedOTP={receivedOTP} 
-              onResendOTP={() => handleSubmit({
-                preventDefault: () => {},
-              } as React.FormEvent)}
+            <OTPForm
+              onVerify={handleVerifyOTP}
+              receivedOTP={receivedOTP}
+              onResendOTP={() =>
+                handleSubmit({
+                  preventDefault: () => {},
+                } as React.FormEvent)
+              }
             />
             <button
               onClick={() => setShowOTP(false)}

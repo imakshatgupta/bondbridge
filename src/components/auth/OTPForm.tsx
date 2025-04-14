@@ -17,7 +17,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP, onResendOTP })
     // Timer for showing OTP - 20 seconds
     const otpTimer = setTimeout(() => {
       setShowOTP(false);
-    }, 20000);
+    }, 10000);
 
     // Timer for enabling resend - 60 seconds (1 minute)
     const resendTimer = setInterval(() => {
@@ -103,7 +103,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP, onResendOTP })
       
       <div className="flex justify-center absolute left-0 right-0 text-center mt-4" style={{ top: "calc(100% + 20vh)" }}>
         {showOTP && (
-          <p className="text-foreground font-bold border-1 border-primary rounded-full text-xl w-fit p-2">
+          <p className="text-foreground font-bold border-1 px-4 border-primary rounded-full text-xl w-fit p-2">
             {`OTP : ${receivedOTP}`}
           </p>
         )}

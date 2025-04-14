@@ -681,7 +681,7 @@ export default function BondChat() {
                   <div className="w-[60%] h-[1.5px] bg-current rotate-45 transform origin-center"></div>
                 </div>
               )}
-            </Button>
+          </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
