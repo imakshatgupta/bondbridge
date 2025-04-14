@@ -388,6 +388,7 @@ const Profile: React.FC<ProfileProps> = ({
             <Switch
               checked={privacyLevel == 1}
               onCheckedChange={handleAnonymousToggle}
+              className="data-[state=unchecked]:bg-primary"
             />
           </div>
         ) : (

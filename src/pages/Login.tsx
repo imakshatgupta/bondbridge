@@ -312,7 +312,7 @@ const Login: React.FC = () => {
               </Button>
             </div>
             {authError && (
-              <div className="mt-2 text-sm font-medium text-foreground">
+              <div className="mt-2 text-sm text-foreground font-semibold">
                 {authError}
               </div>
             )}

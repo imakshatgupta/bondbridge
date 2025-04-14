@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/carousel";
 import { useApiCall } from "@/apis/globalCatchError";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
-import { getPostDetails } from "@/apis/commonApiCalls/homepageApi";
 import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 import {
@@ -40,65 +39,33 @@ export function Post({
     onCommentClick,
     onLikeClick,
     feedId,
-    onDelete
+    onDelete,
+    initialReaction = { hasReacted: false, reactionType: null },
+    initialReactionCount = 0,
+    initialReactionDetails = { total: 0, types: { like: 0, love: 0, haha: 0, lulu: 0 } }
 }: PostProps) {
     const navigate = useNavigate();
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const currentUserId = localStorage.getItem('userId') || '';
     
-    // Add state for reaction data
-    const [reactionCount, setReactionCount] = useState(0);
-    const [reactionDetails, setReactionDetails] = useState({
-        total: 0,
-        types: { like: 0, love: 0, haha: 0, lulu: 0 }
-    });
-    const [reaction, setReaction] = useState({
-        hasReacted: false,
-        reactionType: null as string | null
-    });
-    const [, setIsLoadingReactions] = useState(true);
-    const [reactionRefreshTrigger, setReactionRefreshTrigger] = useState(0);
+    // Use state to track reactions but initialize from props
+    const [reactionCount, setReactionCount] = useState(initialReactionCount);
+    const [reactionDetails, setReactionDetails] = useState(initialReactionDetails);
+    const [reaction, setReaction] = useState(initialReaction);
+
+    // Update state if props change
+    useEffect(() => {
+        setReactionCount(initialReactionCount);
+        setReactionDetails(initialReactionDetails);
+        setReaction(initialReaction);
+    }, [initialReactionCount, initialReactionDetails, initialReaction]);
 
     const handleReportClick = () => {
         setIsReportModalOpen(true);
     };
 
     const [executeDeletePost] = useApiCall(deletePost);
-    const [executeGetPostDetails] = useApiCall(getPostDetails);
-
-    // Fetch post details including reaction data
-    useEffect(() => {
-        const fetchPostReactions = async () => {
-            if (!feedId) return;
-            
-            try {
-                setIsLoadingReactions(true);
-                const result = await executeGetPostDetails({ feedId });
-                
-                if (result.success && result.data) {
-                    const postData = result.data.post;
-                    
-                    // Update reaction states
-                    setReactionCount(postData.reactionCount || 0);
-                    setReactionDetails(postData.reactionDetails || {
-                        total: 0,
-                        types: { like: 0, love: 0, haha: 0, lulu: 0 }
-                    });
-                    setReaction(postData.reaction || {
-                        hasReacted: false,
-                        reactionType: null
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching post reactions:", error);
-            } finally {
-                setIsLoadingReactions(false);
-            }
-        };
-        
-        fetchPostReactions();
-    }, [feedId, reactionRefreshTrigger]);
 
     // Determine if we should show a carousel or a single image
     const hasMultipleMedia = media && media.length > 1;
@@ -131,14 +98,22 @@ export function Post({
 
     // Handle reaction changes
     const handleReactionChange = (hasReacted: boolean, reactionType: string | null) => {
-        // Optimistically update local state for better UI experience
+        // Update local state optimistically for better UI experience
         setReaction({
             hasReacted,
             reactionType
         });
         
-        // Trigger a refresh of reaction data from API
-        setReactionRefreshTrigger(prev => prev + 1);
+        // Update reaction count optimistically
+        // If adding a reaction and previously had none
+        if (hasReacted && !reaction.hasReacted) {
+            setReactionCount((prev: number) => prev + 1);
+        } 
+        // If removing a reaction
+        else if (!hasReacted && reaction.hasReacted) {
+            setReactionCount((prev: number) => Math.max(0, prev - 1));
+        }
+        // If changing reaction type, count stays the same
         
         // Notify parent component about the change (if needed)
         if (onLikeClick) {

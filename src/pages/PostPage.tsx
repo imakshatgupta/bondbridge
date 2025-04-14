@@ -140,10 +140,10 @@ export default function CommentsPage() {
     setCurrentUserId(userId);
   }, []);
 
-  // Fetch post details if not provided in state
+  // Fetch post details if not provided in state or to ensure latest reaction data
   useEffect(() => {
     const fetchPostDetails = async () => {
-      if (!postId || locationPost) return; // Skip if postId is missing or post is already available
+      if (!postId) return; // Skip if postId is missing
 
       const result = await executeGetPostDetails({ feedId: postId });
 
@@ -176,14 +176,13 @@ export default function CommentsPage() {
           weekIndex: apiPostData.weekIndex,
         };
         setPost(mappedPost);
-        console.log("mappedPost", mappedPost);
       } else {
         setError("Failed to load post details. Please try again.");
       }
     };
 
     fetchPostDetails();
-  }, [postId, locationPost]);
+  }, [postId]);
 
   // Helper function to sort comments by creation time (newest first)
   const sortCommentsByTime = (comments: CommentData[]): CommentData[] => {
@@ -438,6 +437,12 @@ export default function CommentsPage() {
                   onCommentClick={() => {}}
                   onLikeClick={() => {}}
                   onDelete={handlePostDelete}
+                  initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
+                  initialReactionCount={post.reactionCount || 0}
+                  initialReactionDetails={post.reactionDetails || { 
+                    total: post.reactionCount || 0,
+                    types: { like: 0, love: 0, haha: 0, lulu: 0 }
+                  }}
                 />
               )}
 

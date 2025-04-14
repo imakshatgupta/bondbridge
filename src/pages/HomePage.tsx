@@ -330,22 +330,44 @@ export default function HomePage() {
               {formattedSelfStory &&
               formattedSelfStory.stories &&
               formattedSelfStory.stories.length > 0 ? (
-                <Story
-                  key="self-story"
-                  user={formattedSelfStory.user}
-                  userId={formattedSelfStory.userId}
-                  avatar={formattedSelfStory.avatar}
-                  profilePic={formattedSelfStory.profilePic}
-                  isLive={formattedSelfStory.isLive}
-                  hasStory={formattedSelfStory.hasStory}
-                  stories={formattedSelfStory.stories}
-                  latestStoryTime={formattedSelfStory.latestStoryTime}
-                  allStories={allFormattedStories}
-                  storyIndex={0}
-                />
+                <div className="flex flex-col items-center space-y-1 mx-2 my-1">
+                  <div className="relative w-16 h-16 rounded-full ring-2 ring-blue-500">
+                    <img
+                      src={formattedSelfStory.profilePic || currentUser.profilePic || "/profile/avatars/1.png"}
+                      alt="Your Story"
+                      className="w-full h-full rounded-full object-cover p-[2px] bg-background cursor-pointer"
+                      onClick={() => navigate(`/story/${formattedSelfStory.userId}`, { 
+                        state: { 
+                          currentStory: {
+                            user: formattedSelfStory.user,
+                            userId: formattedSelfStory.userId,
+                            avatar: formattedSelfStory.avatar,
+                            profilePic: formattedSelfStory.profilePic,
+                            isLive: formattedSelfStory.isLive,
+                            hasStory: formattedSelfStory.hasStory,
+                            stories: formattedSelfStory.stories,
+                            latestStoryTime: formattedSelfStory.latestStoryTime
+                          },
+                          allStories: allFormattedStories,
+                          initialUserIndex: 0,
+                          preloaded: true
+                        }
+                      })}
+                    />
+                    <button
+                      onClick={() => navigate("/create-story")}
+                      className="absolute cursor-pointer -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors duration-200 border-2 border-background"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    Your Story
+                  </span>
+                </div>
               ) : (
                 <div className="flex flex-col items-center space-y-1 mx-2 my-1">
-                  <div className="relative w-16 h-16 rounded-full ring-2 ring-muted">
+                  <div className="relative w-16 h-16 rounded-full ring-2 ring-blue-500">
                     <img
                       src={currentUser.profilePic || "/profile/avatars/1.png"}
                       alt="Your Story"
@@ -414,6 +436,12 @@ export default function HomePage() {
                 onLikeClick={() => handleLikeClick(post._id)}
                 feedId={post.feedId}
                 onDelete={handlePostDelete}
+                initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
+                initialReactionCount={post.reactionCount || 0}
+                initialReactionDetails={post.reactionDetails || { 
+                  total: post.reactionCount || 0,
+                  types: { like: 0, love: 0, haha: 0, lulu: 0 }
+                }}
               />
             </div>
           );

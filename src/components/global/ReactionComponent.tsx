@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useApiCall } from "@/apis/globalCatchError";
 import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { GetAllReactionsResponse, ReactionUser } from "@/apis/apiTypes/response";
+import { toast } from "sonner";
 
 // Reaction types and their emojis
 export const REACTIONS = {
@@ -72,11 +73,12 @@ const ReactionComponent = ({
     lulu: []
   });
   const [showTooltip, setShowTooltip] = useState<ReactionType | null>(null);
+  const [, setIsLoadingUsers] = useState(false);
   const reactionTimeoutRef = useRef<number | null>(null);
   const [executeAddReaction] = useApiCall(addReaction);
   const [executeDeleteReaction] = useApiCall(deleteReaction);
   const [executeGetAllReactions] = useApiCall(getAllReactions);
-  const [isReactionsLoaded, setIsReactionsLoaded] = useState(!!initialReactionCounts);
+  const [isReactionsLoaded, setIsReactionsLoaded] = useState(false);
 
   // Calculate icon size class
   const getIconSizeClass = () => {
@@ -87,11 +89,12 @@ const ReactionComponent = ({
     }
   };
 
-  // Fetch reactions data when popover opens
+  // Fetch all reaction data in a single call
   const fetchReactionData = async () => {
-    if (isReactionsLoaded || !entityId) return;
+    if (!entityId) return;
 
     try {
+      setIsLoadingUsers(true);
       const result = await executeGetAllReactions(entityId, entityType);
       if (result.success && result.data) {
         const responseData = result.data as GetAllReactionsResponse;
@@ -129,6 +132,9 @@ const ReactionComponent = ({
       }
     } catch (error) {
       console.error("Error fetching reactions:", error);
+      toast.error("Failed to load reaction data");
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -151,8 +157,7 @@ const ReactionComponent = ({
         haha: initialReactionCounts.haha || 0,
         lulu: initialReactionCounts.lulu || 0
       });
-      // Set isReactionsLoaded to true since we already have the counts
-      setIsReactionsLoaded(true);
+      // Don't set isReactionsLoaded here as we still want to fetch user data
     }
   }, [initialReactionCounts]);
 
@@ -285,14 +290,15 @@ const ReactionComponent = ({
         
         // Revert total count
         setTotalCount(oldTotal);
+        toast.error("Failed to update reaction");
       } else {
         // Notify parent component about the change
         if (onReactionChange) {
           onReactionChange(!isSameReaction, isSameReaction ? null : reactionType);
         }
         
-        // Reaction data is now stale, clear the flag to refetch on next popover open
-        setIsReactionsLoaded(false);
+        // Always fetch fresh reaction data after a successful reaction update
+        fetchReactionData();
       }
     } catch (error) {
       console.error("Error handling reaction:", error);
@@ -313,6 +319,7 @@ const ReactionComponent = ({
         }
         return currentCounts;
       });
+      toast.error("Error updating reaction");
     } finally {
       // Clear loading state
       setIsLikeLoading(false);
@@ -325,6 +332,12 @@ const ReactionComponent = ({
     
     // Toggle tooltip for this reaction type
     setShowTooltip(prev => prev === reactionType ? null : reactionType);
+    
+    // If we're opening the tooltip and don't have reaction data yet, fetch it once for all types
+    if (showTooltip !== reactionType && !isReactionsLoaded) {
+      setIsLoadingUsers(true);
+      fetchReactionData();
+    }
   };
 
   // Get the appropriate reaction emoji to display

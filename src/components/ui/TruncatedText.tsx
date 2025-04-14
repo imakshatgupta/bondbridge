@@ -25,7 +25,7 @@ export function TruncatedText({
   limit,
   placeholderText = "",
   className = "",
-  buttonClassName = "text-foreground text-xs mt-1 cursor-pointer hover:underline",
+  buttonClassName = "text-foreground text-xs mt-1 cursor-pointer hover:underline font-bold",
   showToggle = true
 }: TruncatedTextProps) {
   const [showFull, setShowFull] = useState(false);
@@ -49,7 +49,7 @@ export function TruncatedText({
           onClick={() => setShowFull(!showFull)}
           className={buttonClassName}
         >
-          {showFull ? 'Show less' : 'Show more'}
+          {showFull ? 'Show Less' : 'Show More+'}
         </button>
       )}
     </div>

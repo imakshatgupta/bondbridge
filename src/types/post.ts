@@ -28,4 +28,19 @@ export interface PostProps {
     onLikeClick?: () => void;
     feedId: string;
     onDelete?: (postId: string) => void; // Callback when post is deleted
+    initialReaction?: {
+        hasReacted: boolean;
+        reactionType: string | null;
+    };
+    initialReactionCount?: number;
+    initialReactionDetails?: {
+        total: number;
+        types: {
+            like?: number;
+            love?: number;
+            haha?: number;
+            lulu?: number;
+            [key: string]: number | undefined;
+        };
+    };
 }

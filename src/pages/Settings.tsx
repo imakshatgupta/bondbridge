@@ -147,6 +147,7 @@ const Settings = () => {
           <Switch
             checked={privacyLevel == 1}
             onCheckedChange={handleAnonymousToggle}
+            className="data-[state=unchecked]:bg-primary"
           />
         </div>
       </div>

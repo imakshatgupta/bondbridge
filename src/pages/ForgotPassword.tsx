@@ -276,7 +276,7 @@ const ForgotPassword: React.FC = () => {
                                 />
                             </div>
                             {phoneError && (
-                                <p className="text-foreground text-sm mt-1">{phoneError}</p>
+                                <p className="text-foreground text-sm mt-1 font-semibold">{phoneError}</p>
                             )}
                         </div>
 
@@ -305,7 +305,7 @@ const ForgotPassword: React.FC = () => {
                             } as React.FormEvent)}
                         />
                         {otpError && (
-                            <p className="text-destructive-foreground text-sm text-center">{otpError}</p>
+                            <p className="text-foreground text-sm text-center font-semibold">{otpError}</p>
                         )}
                         <Button
                             onClick={() => setStep('phone')}
@@ -390,7 +390,7 @@ const ForgotPassword: React.FC = () => {
                         </div>
 
                         {passwordError && (
-                            <p className="text-destructive-foreground text-sm">{passwordError}</p>
+                            <p className="text-foreground text-sm font-semibold">{passwordError}</p>
                         )}
 
                         <Button
