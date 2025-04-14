@@ -32,7 +32,7 @@ import {
 import { setPrivacyLevel, updateCurrentUser } from "@/store/currentUserSlice";
 import AllCommunities from "@/components/AllCommunities";
 import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
-import { Community } from "@/lib/constants";
+import { CommunityResponse } from "@/apis/apiTypes/communitiesTypes";
 import { TruncatedText } from "@/components/ui/TruncatedText";
 import { TruncatedList } from "@/components/ui/TruncatedList";
 import { getStoryForUser } from "@/apis/commonApiCalls/storyApi";
@@ -89,7 +89,7 @@ const Profile: React.FC<ProfileProps> = ({
   const [executeFetchChats] = useApiCall(fetchChatRooms);
   const [executeUpdateProfile] = useApiCall(updateUserProfile);
   const [executeBlockUser] = useApiCall(blockUserApi);
-  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [userCommunities, setUserCommunities] = useState<CommunityResponse[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   const [executeGetStoryForUser] = useApiCall(getStoryForUser);
   // const [postDisplayType, setPostDisplayType] = useState<'images' | 'text'>('images');
@@ -127,18 +127,9 @@ const Profile: React.FC<ProfileProps> = ({
         const filteredCommunities = result.data.filter(community => 
           userCommunityIds.includes(community._id)
         ); 
-        // Map to the format expected by the component
-        const formattedCommunities = filteredCommunities.map(community => ({
-          id: community._id,
-          name: community.name,
-          members: community.members?.length || 0,
-          pfp: community.profilePicture || '/profile/default-avatar.png',
-          description: community.description,
-          backgroundImage: community.backgroundImage || '/profile/community/commbg.png',
-          bio: community.bio
-        }));
         
-        setUserCommunities(formattedCommunities);
+        // Use the original community response objects directly
+        setUserCommunities(filteredCommunities);
       }
     };
     

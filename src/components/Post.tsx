@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Volume2, VolumeX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import SharePostPage from "./SharePostPage";
 import { ReportModal } from './ReportModal';
+import VideoObserver from "./common/VideoObserver";
 
 // Reaction types and their emojis
 const REACTIONS = {
@@ -84,7 +85,9 @@ export function Post({
         haha: reactionDetails.types.haha || 0,
         lulu: reactionDetails.types.lulu || 0
     });
-
+    const [isMuted, setIsMuted] = useState(true);
+    const [showControls, setShowControls] = useState(false);
+    const videoRefs = useRef<Record<number, HTMLVideoElement>>({});
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const currentUserId = localStorage.getItem('userId') || '';
 
@@ -262,9 +265,24 @@ export function Post({
         });
     }
 
+    const toggleMute = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsMuted(prev => !prev);
+        
+        // Update all video elements for this post
+        Object.values(videoRefs.current).forEach(videoEl => {
+            if (videoEl) {
+                videoEl.muted = !isMuted;
+            }
+        });
+    };
+
     return (
         <>
-            <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4">
+            <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4" data-post-id={feedId}>
+                {/* Video observer component to handle autoplay/pause based on visibility */}
+                {feedId && <VideoObserver feedId={feedId} media={media} />}
+                
                 <div className="flex items-center justify-between p-4">
                     <div
                         className="flex items-center gap-3 cursor-pointer"
@@ -299,12 +317,28 @@ export function Post({
                                                 </div>
                                             )}
                                             {item.type === "video" && (
-                                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                                <div 
+                                                    className="max-h-[100vh] relative bg-background flex items-center justify-center"
+                                                    onMouseEnter={() => setShowControls(true)}
+                                                    onMouseLeave={() => setShowControls(false)}
+                                                >
                                                     <video
+                                                        ref={el => {
+                                                            if (el) videoRefs.current[index] = el;
+                                                        }}
                                                         src={item.url}
-                                                        controls
                                                         className="max-h-[100vh] w-full object-contain"
+                                                        autoPlay
+                                                        loop
+                                                        muted={isMuted}
+                                                        playsInline
                                                     />
+                                                    <button 
+                                                        className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
+                                                        onClick={toggleMute}
+                                                    >
+                                                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                                                    </button>
                                                 </div>
                                             )}
                                         </CarouselItem>
@@ -328,12 +362,28 @@ export function Post({
                                 </div>
                             )}
                             {media && media.length > 0 && media[0].type === "video" && (
-                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                <div 
+                                    className="max-h-[100vh] relative bg-background flex items-center justify-center"
+                                    onMouseEnter={() => setShowControls(true)}
+                                    onMouseLeave={() => setShowControls(false)}
+                                >
                                     <video
+                                        ref={el => {
+                                            if (el) videoRefs.current[0] = el;
+                                        }}
                                         src={media[0].url}
-                                        controls
                                         className="max-h-[100vh] w-full object-contain"
+                                        autoPlay
+                                        loop
+                                        muted={isMuted}
+                                        playsInline
                                     />
+                                    <button 
+                                        className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
+                                        onClick={toggleMute}
+                                    >
+                                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                                    </button>
                                 </div>
                             )}
                         </div>
