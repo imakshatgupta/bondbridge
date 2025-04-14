@@ -95,6 +95,7 @@ const Settings = () => {
                 privacyLevel: result.data.privacyLevel,
                 bio: result.data.bio,
                 interests: result.data.interests,
+                public: result.data.public,
               })
             );
           }

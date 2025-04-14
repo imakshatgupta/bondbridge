@@ -19,6 +19,8 @@ export const fetchUserProfile = async (
     },
   });
 
+  console.log("fetchUserProfile raw response:", response.data);
+  
   const userData = response.data.result[0];
   const isCurrentUser = currentUserId === userId;
 
@@ -41,6 +43,7 @@ export const fetchUserProfile = async (
       requestSent: userData.requestSent || false,
       compatibility: userData.compatibility || 0,
       communities: userData.communities || [],
+      public: userData.public || 0,
     },
   };
 };
