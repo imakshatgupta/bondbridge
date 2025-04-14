@@ -7,6 +7,7 @@ import { saveStoryInteraction, getStoryForUser, archiveStory, getStoryViewers, S
 import { useApiCall } from '@/apis/globalCatchError';
 import { StoryItem, StoryUser } from '@/types/story';
 import ThreeDotsMenu, { DeleteMenuItem } from '@/components/global/ThreeDotsMenu';
+import StoryViewersList from '@/components/StoryViewersList';
 import { toast } from "sonner";
 
 export default function StoryPage() {
@@ -795,51 +796,11 @@ export default function StoryPage() {
 
                 {/* Story Viewers Panel */}
                 {showViewers && (
-                    <div 
-                        className="absolute inset-0 bg-background z-20 flex flex-col"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="p-4 border-b border-border flex items-center">
-                            <button 
-                                className="p-1 rounded-full hover:bg-muted transition-colors cursor-pointer mr-1"
-                                onClick={toggleViewers}
-                            >
-                                <ArrowLeft className="h-5 w-5" />
-                            </button>
-                            <h3 className="font-medium">Viewers</h3>
-                        </div>
-                        
-                        <div className="flex-1 overflow-auto p-4">
-                            {viewersLoading ? (
-                                <div className="flex items-center justify-center h-full">
-                                    <p className="text-sm text-muted-foreground">Loading viewers...</p>
-                                </div>
-                            ) : !Array.isArray(storyViewers) || storyViewers.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center h-full gap-3">
-                                    <Eye className="h-12 w-12 text-muted-foreground opacity-20" />
-                                    <p className="text-sm text-muted-foreground">No one has viewed this story yet</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {storyViewers.map((viewer) => (
-                                        <div 
-                                            key={viewer.userId || Math.random().toString(36).substring(7)}
-                                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
-                                            onClick={() => navigate(`/profile/${viewer.userId}`)}
-                                        >
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarImage src={viewer.profilePic || ''} />
-                                                <AvatarFallback>{viewer.name ? viewer.name.charAt(0) : 'U'}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium text-sm">{viewer.name || 'Unknown User'}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <StoryViewersList 
+                        viewers={storyViewers}
+                        isLoading={viewersLoading}
+                        onClose={toggleViewers}
+                    />
                 )}
 
                 {/* Reply Input */}
