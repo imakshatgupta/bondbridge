@@ -173,7 +173,9 @@ const Login: React.FC = () => {
     });
 
     if (!result.success) {
-      setAuthError("Invalid Credentials. Please check your Phone Number and Password.");
+      setAuthError(
+        "Invalid Credentials. Please check your Phone Number and Password."
+      );
       return;
     }
 
@@ -233,7 +235,10 @@ const Login: React.FC = () => {
         image="/auth/login.png"
         isLogin
       >
-        <form onSubmit={handleSubmit} className="relative space-y-4 flex flex-col items-center">
+        <form
+          onSubmit={handleSubmit}
+          className="relative space-y-4 flex flex-col items-center"
+        >
           <div className="flex flex-col justify-start w-full">
             <Label
               htmlFor="phoneNumber"
@@ -333,24 +338,27 @@ const Login: React.FC = () => {
           >
             {isLoggingIn ? "Logging In..." : "Log In"}
           </Button>
-          <div className="flex justify-center bottom-8 pt-4">
-            {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
-            <div className="flex justify-center gap-4">
-              <Link to="#" className="h-36 md:h-44 lg:h-48">
-                <img
-                  src="/assets/stores/appstore.svg"
-                  alt="Download on App Store"
-                  className="h-full"
-                />
-              </Link>
-              <Link to="#" className="h-36 md:h-44 lg:h-48">
-                <img
-                  src="/assets/stores/googleplay.svg"
-                  alt="Get it on Google Play"
-                  className="h-full"
-                />
-              </Link>
+          <div className="flex flex-col items-center justify-center gap-1">
+            <div className="flex justify-center pt-4">
+              {/* <p className="text-md text-center text-muted-foreground">Get the app:</p> */}
+              <div className="flex justify-center gap-4">
+                <Link to="#" className="">
+                  <img
+                    src="/assets/stores/appstore.svg"
+                    alt="Download on App Store"
+                    className="w-40"
+                  />
+                </Link>
+                <Link to="#" className="">
+                  <img
+                    src="/assets/stores/googleplay.svg"
+                    alt="Get it on Google Play"
+                    className="w-40"
+                  />
+                </Link>
+              </div>
             </div>
+            <div className="text-base font-bold relative text-foreground -top-10 animate-pulse">Coming Soon</div>
           </div>
         </form>
       </AuthLayout>

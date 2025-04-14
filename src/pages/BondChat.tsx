@@ -89,13 +89,19 @@ interface SendMessageResponse {
 }
 
 // Custom component for user recommendation cards
-const UserCard = ({ user, onNavigate }: { user: UserRecommendation, onNavigate: (path: string) => void }) => {
+const UserCard = ({
+  user,
+  onNavigate,
+}: {
+  user: UserRecommendation;
+  onNavigate: (path: string) => void;
+}) => {
   // Display up to 3 interests with a "+n more" indicator if needed
   const displayedInterests = user.interests.slice(0, 3);
   const remainingCount = Math.max(0, user.interests.length - 3);
 
   return (
-    <div 
+    <div
       className="flex items-start border-2 border-primary/25 gap-3 p-4 bg-muted/50 rounded-lg mb-2 hover:bg-muted transition-colors cursor-pointer"
       onClick={() => onNavigate(`/profile/${user._id}`)}
     >
@@ -130,7 +136,7 @@ const UserCard = ({ user, onNavigate }: { user: UserRecommendation, onNavigate: 
 const BotMessage = ({
   message,
   messageIndex,
-  onNavigate
+  onNavigate,
 }: {
   message: ExtendedMessage;
   messageIndex: number;
@@ -200,19 +206,19 @@ export default function BondChat() {
   const [messages, setMessages] = useState<ExtendedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
-  const [voiceType, setVoiceType] = useState<string>("Michael"); // Changed from male/female to specific voice names
+  const [voiceType, setVoiceType] = useState<string>("male");
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const isSpeakerOnRef = useRef(false); // Add a ref to track current speaker state
-  const voiceTypeRef = useRef<string>("Michael"); // Updated ref for voice type
-  
+  const voiceTypeRef = useRef<string>("male"); // Updated ref for voice type to use "male"
+
   // Add new state for speech recognition active
   const [isSpeechActive, setIsSpeechActive] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
-  
+
   // Add ref for ChatInput component
   const chatInputRef = useRef<ChatInputRef>(null);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { socket, isConnected } = useSocket();
   const [executeGetMessages] = useApiCall(getMessages);
@@ -225,15 +231,15 @@ export default function BondChat() {
 
   // Define voice options with lock status
   const maleVoices = [
-    { name: "Michael", locked: false },
-    { name: "Robert", locked: true },
-    { name: "Lonnie", locked: true },
+    { name: "Michael", value: "male", locked: false },
+    { name: "Robert", value: "Robert", locked: true },
+    { name: "Lonnie", value: "Lonnie", locked: true },
   ];
-  
+
   const femaleVoices = [
-    { name: "Vanessa", locked: false },
-    { name: "Sonia", locked: true },
-    { name: "Mabel", locked: true },
+    { name: "Vanessa", value: "female", locked: false },
+    { name: "Sonia", value: "Sonia", locked: true },
+    { name: "Mabel", value: "Mabel", locked: true },
   ];
 
   // Update refs when states change
@@ -293,12 +299,12 @@ export default function BondChat() {
       // Create audio source from base64
       const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
       setAudioRef(audio);
-      
+
       // Set up event handlers
       audio.onplaying = () => {
         setIsAudioPlaying(true);
       };
-      
+
       audio.onended = audio.onpause = () => {
         setIsAudioPlaying(false);
       };
@@ -330,7 +336,7 @@ export default function BondChat() {
     // Initialize the chat with the bot
     const initializeChat = async () => {
       setIsLoading(true);
-      
+
       // First call start-message API to get or create the chat room
       const startMessageResult = await executeStartMessage({
         userId2: BOT_ID, // Use the bot ID from environment variables
@@ -340,10 +346,10 @@ export default function BondChat() {
         const roomId = startMessageResult.data.chatRoom.chatRoomId;
         setChatRoomId(roomId);
         console.log("Chat initialized with room ID:", roomId);
-        
+
         // Join the room
         socket.emit("join", roomId);
-        
+
         // Now fetch messages for this room
         const result = await executeGetMessages({
           roomId,
@@ -390,7 +396,7 @@ export default function BondChat() {
         toast.error("Failed to initialize chat");
         console.error("Start message failed:", startMessageResult);
       }
-      
+
       setIsLoading(false);
     };
 
@@ -489,7 +495,7 @@ export default function BondChat() {
       senderName: "You",
       senderAvatar: "/profile/user.png",
       isSpeakerOn: isSpeakerOnRef.current, // Use ref value to ensure latest state
-      voice: voiceTypeRef.current, // Send specific voice name
+      voice: voiceTypeRef.current, // Always send voice type regardless of speaker status
     };
 
     // Add message to local state immediately for better UX
@@ -535,7 +541,7 @@ export default function BondChat() {
       audioRef.currentTime = 0;
       setIsAudioPlaying(false);
     }
-    
+
     // Only turn off speech recognition if it's active
     if (isSpeechActive) {
       // Force stop speech recognition
@@ -545,7 +551,7 @@ export default function BondChat() {
       stopAllRecognitionInstances();
       setIsSpeechActive(false);
     }
-    
+
     // Navigate to the specified path or back
     if (path) {
       navigate(path);
@@ -557,23 +563,23 @@ export default function BondChat() {
   // Add confirmation dialog exit handler
   const handleConfirmExit = () => {
     setShowExitDialog(false);
-    
+
     // First explicitly turn off speech recognition in the ChatInput component
     if (chatInputRef.current) {
       chatInputRef.current.forceStopListening();
     }
-    
+
     // Clean up audio
     if (audioRef) {
       audioRef.pause();
       audioRef.currentTime = 0;
       setIsAudioPlaying(false);
     }
-    
+
     // Make sure speech recognition is turned off and mic button is toggled off
     stopAllRecognitionInstances();
     setIsSpeechActive(false);
-    
+
     // Use the navigate function from react-router instead of window.history.back()
     navigate(-1);
   };
@@ -585,8 +591,8 @@ export default function BondChat() {
       if (isSpeechActive) {
         // Standard way to show a confirmation dialog when leaving page
         e.preventDefault();
-        e.returnValue = '';
-        return '';
+        e.returnValue = "";
+        return "";
       }
     };
 
@@ -598,18 +604,18 @@ export default function BondChat() {
         stopAllRecognitionInstances();
         setIsSpeechActive(false);
       }
-      
+
       // Note: No need to call navigate here as the browser will handle the navigation
     };
 
     // Add event listeners
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
 
     // Clean up
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, [isSpeechActive]);
 
@@ -627,7 +633,7 @@ export default function BondChat() {
               audioRef.currentTime = 0;
               setIsAudioPlaying(false);
             }
-            
+
             // Only turn off speech recognition if it's active
             if (isSpeechActive) {
               // Force stop any speech recognition
@@ -637,7 +643,7 @@ export default function BondChat() {
               stopAllRecognitionInstances();
               setIsSpeechActive(false);
             }
-            
+
             // Always navigate back using react-router
             navigate("/");
           }}
@@ -648,9 +654,7 @@ export default function BondChat() {
           <img src="/bondchat.svg" alt="Bond Chat" className="w-8 h-8" />
           <span className="font-medium grad">BondChat</span>
           <div className="bg-muted rounded-full border-1 pb-1 border-primary">
-            <span className="text-xs px-2 text-foreground">
-              Basic
-            </span>
+            <span className="text-xs px-2 text-foreground">Basic</span>
           </div>
         </div>
         <div className="ml-auto gap-2 flex items-center">
@@ -666,81 +670,144 @@ export default function BondChat() {
               size="icon"
               variant="ghost"
               className={`rounded-full text-muted-foreground cursor-pointer ${
-                isSpeakerOn ? "text-primary" : ""
-              }`}
+                isSpeakerOn ? "text-foreground" : ""
+              } relative`}
               onClick={toggleSpeaker}
               // disabled={messages.length === 0}
             >
-              <Volume2 className="h-5 w-5" />
-            </Button>
+              <Volume2 className="h-8 w-8" />
+              {!isSpeakerOn && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-[60%] h-[1.5px] bg-current rotate-45 transform origin-center"></div>
+                </div>
+              )}
+          </Button>
 
-            {isSpeakerOn && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="ml-1 h-8 px-2 cursor-pointer">
-                    {voiceType}
-                    <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <div className="p-2 text-xs text-muted-foreground font-medium">Male Voices</div>
-                  
-                  {maleVoices.map((voice) => (
-                    <DropdownMenuItem 
-                      key={voice.name}
-                      onClick={() => !voice.locked && selectVoice(voice.name)} 
-                      disabled={voice.locked}
-                      className={voice.locked ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
-                    >
-                      <Check
-                        className={`h-4 w-4 ${
-                          voiceType === voice.name ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                      <img 
-                        src="/bondChat/man.svg" 
-                        alt="Male voice" 
-                        className="w-5 h-5" 
-                      />
-                      {voice.name}
-                      {voice.locked && (
-                        <span className="ml-auto">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock text-muted-foreground"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                  
-                  <div className="p-2 text-xs text-muted-foreground font-medium">Female Voices</div>
-                  
-                  {femaleVoices.map((voice) => (
-                    <DropdownMenuItem 
-                      key={voice.name}
-                      onClick={() => !voice.locked && selectVoice(voice.name)} 
-                      disabled={voice.locked}
-                      className={voice.locked ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
-                    >
-                      <Check
-                        className={`h-4 w-4 ${
-                          voiceType === voice.name ? "opacity-100" : "opacity-0"
-                        }`}
-                      />
-                      <img 
-                        src="/bondChat/woman.svg" 
-                        alt="Female voice" 
-                        className="w-5 h-5" 
-                      />
-                      {voice.name}
-                      {voice.locked && (
-                        <span className="ml-auto">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-lock text-muted-foreground"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        </span>
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-1 h-8 px-2 cursor-pointer"
+                >
+                  {maleVoices.find((v) => v.value === voiceType)?.name ||
+                    femaleVoices.find((v) => v.value === voiceType)?.name ||
+                    voiceType}
+                  <ChevronsUpDown className="ml-1 h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <div className="p-2 text-xs text-muted-foreground font-medium">
+                  Male Voices
+                </div>
+
+                {maleVoices.map((voice) => (
+                  <DropdownMenuItem
+                    key={voice.name}
+                    onClick={() => !voice.locked && selectVoice(voice.value)}
+                    disabled={voice.locked}
+                    className={
+                      voice.locked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer"
+                    }
+                  >
+                    <Check
+                      className={`h-4 w-4 ${
+                        voiceType === voice.value ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    <img
+                      src="/bondChat/man.svg"
+                      alt="Male voice"
+                      className="w-5 h-5"
+                    />
+                    {voice.name}
+                    {voice.locked && (
+                      <span className="ml-auto">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-lock text-muted-foreground"
+                        >
+                          <rect
+                            width="18"
+                            height="11"
+                            x="3"
+                            y="11"
+                            rx="2"
+                            ry="2"
+                          />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+
+                <div className="p-2 text-xs text-muted-foreground font-medium">
+                  Female Voices
+                </div>
+
+                {femaleVoices.map((voice) => (
+                  <DropdownMenuItem
+                    key={voice.name}
+                    onClick={() => !voice.locked && selectVoice(voice.value)}
+                    disabled={voice.locked}
+                    className={
+                      voice.locked
+                        ? "cursor-not-allowed opacity-60"
+                        : "cursor-pointer"
+                    }
+                  >
+                    <Check
+                      className={`h-4 w-4 ${
+                        voiceType === voice.value ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    <img
+                      src="/bondChat/woman.svg"
+                      alt="Female voice"
+                      className="w-5 h-5"
+                    />
+                    {voice.name}
+                    {voice.locked && (
+                      <span className="ml-auto">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="lucide lucide-lock text-muted-foreground"
+                        >
+                          <rect
+                            width="18"
+                            height="11"
+                            x="3"
+                            y="11"
+                            rx="2"
+                            ry="2"
+                          />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {/* <Button
             size="icon"
@@ -763,15 +830,15 @@ export default function BondChat() {
               <p className="text-muted-foreground font-normal text-xl">
                 Choose your persona
               </p>
-              <img 
-                src="/bondChat/man.svg" 
-                alt="Male voice" 
-                className="w-5 h-5 ml-1 -mr-1" 
+              <img
+                src="/bondChat/man.svg"
+                alt="Male voice"
+                className="w-5 h-5 ml-1 -mr-1"
               />
-              <img 
-                src="/bondChat/woman.svg" 
-                alt="Male voice" 
-                className="w-5 h-5" 
+              <img
+                src="/bondChat/woman.svg"
+                alt="Male voice"
+                className="w-5 h-5"
               />
             </div>
           </div>
@@ -804,7 +871,11 @@ export default function BondChat() {
         <div className="absolute bottom-0 left-0 right-0">
           <ChatInput
             onSendMessage={handleSendMessage}
-            placeholder={isLoading ? "Loading conversation..." : "Type Your Message Here..."}
+            placeholder={
+              isLoading
+                ? "Loading conversation..."
+                : "Type Your Message Here..."
+            }
             disabled={isLoading}
             isAudioPlaying={isAudioPlaying}
             expectAudioAfterSend={isSpeakerOn}
@@ -820,7 +891,9 @@ export default function BondChat() {
           <DialogHeader>
             <DialogTitle>Speech Recognition Active</DialogTitle>
             <DialogDescription>
-              You currently have speech recognition (microphone) active. If you leave now, your recording will be stopped. Would you like to continue?
+              You currently have speech recognition (microphone) active. If you
+              leave now, your recording will be stopped. Would you like to
+              continue?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex justify-between sm:justify-between">
@@ -832,7 +905,7 @@ export default function BondChat() {
               Stay on Page
             </Button>
             <Button
-              type="button" 
+              type="button"
               variant="destructive"
               onClick={handleConfirmExit}
             >
