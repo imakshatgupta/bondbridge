@@ -1,16 +1,37 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { StoryViewer } from '@/apis/commonApiCalls/storyApi';
+import { StoryViewer, getStoryViewers } from '@/apis/commonApiCalls/storyApi';
+import { useEffect, useState } from 'react';
 
 interface StoryViewersListProps {
-  viewers: StoryViewer[];
-  isLoading: boolean;
+  storyId: string;
   onClose: () => void;
 }
 
-export default function StoryViewersList({ viewers, isLoading, onClose }: StoryViewersListProps) {
+export default function StoryViewersList({ storyId, onClose }: StoryViewersListProps) {
   const navigate = useNavigate();
+  const [viewers, setViewers] = useState<StoryViewer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchViewers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getStoryViewers(storyId);
+        setViewers(response.viewers);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch story viewers:', err);
+        setError('Failed to load viewers');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchViewers();
+  }, [storyId]); // Only re-fetch if storyId changes
   
   return (
     <div 
@@ -31,6 +52,10 @@ export default function StoryViewersList({ viewers, isLoading, onClose }: StoryV
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-sm text-muted-foreground">Loading viewers...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3">
+            <p className="text-sm text-muted-foreground">{error}</p>
           </div>
         ) : !Array.isArray(viewers) || viewers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3">

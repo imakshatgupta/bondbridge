@@ -3,7 +3,7 @@ import { ArrowLeft, Send, Play, Heart, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { saveStoryInteraction, getStoryForUser, archiveStory, getStoryViewers, StoryViewer } from '@/apis/commonApiCalls/storyApi';
+import { saveStoryInteraction, getStoryForUser, archiveStory } from '@/apis/commonApiCalls/storyApi';
 import { useApiCall } from '@/apis/globalCatchError';
 import { StoryItem, StoryUser } from '@/types/story';
 import ThreeDotsMenu, { DeleteMenuItem } from '@/components/global/ThreeDotsMenu';
@@ -27,8 +27,6 @@ export default function StoryPage() {
     const [hasShownControlsTooltip, setHasShownControlsTooltip] = useState(false);
     const [likedStories, setLikedStories] = useState<{[key: string]: boolean}>({});
     const [showViewers, setShowViewers] = useState(false);
-    const [storyViewers, setStoryViewers] = useState<StoryViewer[]>([]);
-    const [viewersLoading, setViewersLoading] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [animationEndDetector, setAnimationEndDetector] = useState(0);
@@ -39,7 +37,6 @@ export default function StoryPage() {
     const [executeSaveInteraction] = useApiCall(saveStoryInteraction);
     const [executeGetStoryForUser] = useApiCall(getStoryForUser);
     const [executeArchiveStory] = useApiCall(archiveStory);
-    const [executeGetStoryViewers] = useApiCall(getStoryViewers);
 
     // Initialize with the story data passed from the HomePage or fetch from API
     useEffect(() => {
@@ -482,41 +479,18 @@ export default function StoryPage() {
         }
     };
 
-    // Function to fetch story viewers
-    const fetchStoryViewers = useCallback(async () => {
-        if (!allStories.length) return;
-        
-        const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
-        if (!currentStoryItem) return;
-        
-        setViewersLoading(true);
-        setIsPaused(true); // Pause the story when viewing the viewers list
-        
-        const response = await executeGetStoryViewers(currentStoryItem._id);
-        
-        if (response.success && response.data) {
-            // Ensure we always set an array, even if the API returns null/undefined
-            setStoryViewers(Array.isArray(response.data.viewers) ? response.data.viewers : []);
-        } else {
-            toast.error("Failed to load story viewers");
-            setStoryViewers([]);
-        }
-        
-        setViewersLoading(false);
-    }, [allStories, currentUserIndex, currentStoryIndex, executeGetStoryViewers]);
-
     // Toggle viewers panel
     const toggleViewers = useCallback(() => {
-        if (!showViewers) {
-            fetchStoryViewers();
-        }
         setShowViewers(!showViewers);
         
         if (showViewers) {
             // Resume playback when closing the viewers panel
             setIsPaused(false);
+        } else {
+            // Pause the story when viewing the viewers list
+            setIsPaused(true);
         }
-    }, [showViewers, fetchStoryViewers]);
+    }, [showViewers]);
 
     // Close viewers panel when changing story
     useEffect(() => {
@@ -797,8 +771,7 @@ export default function StoryPage() {
                 {/* Story Viewers Panel */}
                 {showViewers && (
                     <StoryViewersList 
-                        viewers={storyViewers}
-                        isLoading={viewersLoading}
+                        storyId={currentStoryItem._id}
                         onClose={toggleViewers}
                     />
                 )}
