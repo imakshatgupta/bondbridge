@@ -24,7 +24,7 @@ export const fetchFollowings = async (): Promise<SearchResponse> => {
         name: user.name,
         avatar: user.avatar,
         profilePic: user.profilePic || user.avatar,
-        bio: user.interests.join(", "), // Using interests as bio since it's required in Person type
+        bio: user.bio || "",
       })),
     };
   } else {
@@ -82,8 +82,10 @@ export const editGroup = async (
   }
 };
 
-export const blockUser = async (userId: string): Promise<ApiResponse> => {
-  const response = await apiClient.post<ApiResponse>(`/block-user/${userId}`);
+export const blockUser = async (blockedUserId: string): Promise<ApiResponse> => {
+  const response = await apiClient.post<ApiResponse>('/block-user',{
+    blocked: blockedUserId
+  });
   return response.data;
 };
 

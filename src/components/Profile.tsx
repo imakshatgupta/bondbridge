@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings, Loader2, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Settings, Loader2, Pencil, Plus, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThreeDotsMenu, { 
   BlockMenuItem, 
@@ -54,6 +54,7 @@ interface ProfileProps {
   compatibility?: number;
   communities?: string[];
   interests?: string[];
+  public?: number;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -71,6 +72,7 @@ const Profile: React.FC<ProfileProps> = ({
   compatibility = 0,
   communities: userCommunityIds = [],
   interests = [],
+  public: isPublic = 1,
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -104,13 +106,15 @@ const Profile: React.FC<ProfileProps> = ({
 
   useEffect(() => {
     const loadPosts = async () => {
-      const result = await executePostsFetch(userId, isCurrentUser);
-      if (result.success && result.data) {
-        setPosts(result.data.posts);
+      if (isPublic === 1 || isFollowing || isCurrentUser) {
+        const result = await executePostsFetch(userId, isCurrentUser);
+        if (result.success && result.data) {
+          setPosts(result.data.posts);
+        }
       }
     };
     loadPosts();
-  }, [userId]);
+  }, [userId, isPublic, isFollowing, isCurrentUser]);
 
   // Add new useEffect for loading communities
   useEffect(() => {
@@ -346,6 +350,22 @@ const Profile: React.FC<ProfileProps> = ({
     navigate('/create-story');
   };
 
+  // Function to render account privacy message
+  const renderPrivacyMessage = () => {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] text-center p-4">
+        <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">This Account is Private</h3>
+        <p className="text-muted-foreground max-w-md">
+          Follow this account to see their posts and activities.
+        </p>
+      </div>
+    );
+  };
+
+  // Check if content should be visible based on privacy settings
+  const isContentVisible = isPublic === 1 || isFollowing || isCurrentUser;
+
   return (
     <div className="mx-auto bg-background">
       {/* Header */}
@@ -359,6 +379,7 @@ const Profile: React.FC<ProfileProps> = ({
             <Switch
               checked={privacyLevel == 1}
               onCheckedChange={handleAnonymousToggle}
+              className="data-[state=unchecked]:bg-primary"
             />
           </div>
         ) : (
@@ -442,7 +463,7 @@ const Profile: React.FC<ProfileProps> = ({
           text={bio} 
           limit={100}
           placeholderText={isCurrentUser ? "Add a bio in your profile settings" : "No bio available"}
-          className="text-foreground text-sm max-w-[80%] text-center mx-auto"
+          className="text-foreground text-sm text-center mx-auto"
         />
 
         {/* Interests section */}
@@ -538,67 +559,63 @@ const Profile: React.FC<ProfileProps> = ({
         )}
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="posts" className="w-full">
-        <TabsList
-          className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
-        *:data-[state=active]:text-foreground"
-        >
-          <TabsTrigger value="posts" className="group cursor-pointer">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Posts
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="thoughts" className="group cursor-pointer">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Quotes
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="community" className="group cursor-pointer">
-            <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-              Community
-            </span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Conditionally render tabs or privacy message */}
+      {isContentVisible ? (
+        <Tabs defaultValue="posts" className="w-full">
+          <TabsList
+            className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
+          *:data-[state=active]:text-foreground"
+          >
+            <TabsTrigger value="posts" className="group cursor-pointer">
+              <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+                Posts
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="thoughts" className="group cursor-pointer">
+              <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+                Quotes
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="community" className="group cursor-pointer">
+              <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
+                Community
+              </span>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="posts" className="p-4">
-          {/* <Tabs value={postDisplayType} onValueChange={(value) => setPostDisplayType(value as 'images' | 'text')} className="w-full mb-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="images" className="cursor-pointer">Media</TabsTrigger>
-              <TabsTrigger value="text" className="cursor-pointer">Text</TabsTrigger>
-            </TabsList>
-          </Tabs> */}
-          
-          {isLoadingPosts ? (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <AllPosts 
-              posts={posts} 
-              userId={userId} 
-              // displayType={postDisplayType}
-            />
-          )}
-        </TabsContent>
+          <TabsContent value="posts" className="p-4">
+            {isLoadingPosts ? (
+              <div className="flex justify-center items-center min-h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <AllPosts 
+                posts={posts} 
+                userId={userId} 
+              />
+            )}
+          </TabsContent>
 
-        <TabsContent value="thoughts" className="p-4">
-          {isLoadingPosts ? (
-            <div className="flex justify-center items-center min-h-[200px]">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <ThoughtsList 
-              posts={posts} 
-              userId={userId}
-            />
-          )}
-        </TabsContent>
+          <TabsContent value="thoughts" className="p-4">
+            {isLoadingPosts ? (
+              <div className="flex justify-center items-center min-h-[200px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <ThoughtsList 
+                posts={posts} 
+                userId={userId}
+              />
+            )}
+          </TabsContent>
 
-        <TabsContent value="community" className="p-4">
-          <AllCommunities communities={userCommunities} isLoadingCommunities={isLoadingCommunities} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="community" className="p-4">
+            <AllCommunities communities={userCommunities} isLoadingCommunities={isLoadingCommunities} />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        renderPrivacyMessage()
+      )}
     </div>
   );
 };

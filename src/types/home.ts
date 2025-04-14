@@ -9,6 +9,11 @@ export interface CommentsProps {
   postDate: string;
   comments: CommentData[];
   postAuthorId?: string; // Add post author ID
+  postId?: string; // For reaction component
+  initialReaction?: {
+    hasReacted: boolean;
+    reactionType: string | null;
+  }; // Initial reaction state
 }
 
 export interface CommentProps {

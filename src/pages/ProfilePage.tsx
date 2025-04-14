@@ -121,6 +121,7 @@ const ProfilePage: React.FC = () => {
         compatibility={userData.compatibility}
         communities={communityIds} // Pass just the IDs to keep the existing interface
         interests={userData.interests}
+        public={userData.public}
       />
     </>
   );

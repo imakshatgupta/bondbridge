@@ -28,7 +28,7 @@ export function TruncatedList<T>({
   emptyMessage = "No items to display",
   className = "",
   itemsContainerClassName = "",
-  buttonClassName = "text-foreground text-xs mt-2 cursor-pointer hover:underline"
+  buttonClassName = "text-foreground text-xs mt-2 cursor-pointer hover:underline font-bold"
 }: TruncatedListProps<T>) {
   const [showAll, setShowAll] = useState(false);
   
@@ -55,7 +55,7 @@ export function TruncatedList<T>({
           onClick={() => setShowAll(!showAll)}
           className={buttonClassName}
         >
-          {showAll ? 'Show less' : `Show ${items.length - limit} more`}
+          {showAll ? 'Show Less' : `Show ${items.length - limit} More+`}
         </button>
       )}
     </div>

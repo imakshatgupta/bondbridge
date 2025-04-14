@@ -267,7 +267,7 @@ const Signup: React.FC = () => {
                   }}
                 />
                 {errorMessage && (
-                  <p className="text-destructive-foreground text-sm mt-1">{errorMessage}</p>
+                  <p className="text-foreground text-sm mt-1 font-semibold">{errorMessage}</p>
                 )}
               </div>
             </div>

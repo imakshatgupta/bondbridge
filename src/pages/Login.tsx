@@ -79,7 +79,7 @@ const customPhoneInputStyles = `
 
 const Login: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode, setCountryCode] = useState("+1"); // Default to India (+1)
+  const [countryCode, setCountryCode] = useState("+1"); // Default to USA (+1)
   const [, setIsValidPhone] = useState(false);
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
@@ -312,7 +312,7 @@ const Login: React.FC = () => {
               </Button>
             </div>
             {authError && (
-              <div className="mt-2 text-sm font-medium text-destructive-foreground">
+              <div className="mt-2 text-sm text-foreground font-semibold">
                 {authError}
               </div>
             )}

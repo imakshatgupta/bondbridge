@@ -1,20 +1,20 @@
 import { useState, useCallback, memo, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageSquare, Reply, ArrowRight } from "lucide-react";
+import { MessageSquare, Reply, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ThreeDotsMenu, { 
   DeleteMenuItem, 
   ReportMenuItem 
 } from "@/components/global/ThreeDotsMenu";
-import toast from 'react-hot-toast';
 import { useApiCall } from "@/apis/globalCatchError";
 import { CommentData } from "../apis/apiTypes/response";
 import { CommentProps } from "../types/home";
 import { deleteComment } from "@/apis/commonApiCalls/commentsApi";
 import { Link } from "react-router-dom";
-import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
+import { getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { ReportModal } from './ReportModal';
+import ReactionComponent from "./global/ReactionComponent";
 
 // Memoized reply component to prevent unnecessary re-renders
 const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCommentDeleted, isPending }: 
@@ -36,7 +36,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   const isCommentPending = isPending || comment.commentId.startsWith('temp-');
   
   const [showReplies, setShowReplies] = useState(false);
-  const [liked, setLiked] = useState(comment.reaction?.hasReacted || false);
+  const [, setLiked] = useState(comment.reaction?.hasReacted || false);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState<CommentData[]>([]);
@@ -52,15 +52,13 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   
   // Use the useApiCall hook for API calls
   const [executeDeleteComment] = useApiCall(deleteComment);
-  const [executeAddReaction, isAddingReaction] = useApiCall(addReaction);
-  const [executeDeleteReaction, isDeletingReaction] = useApiCall(deleteReaction);
-  const [executeGetAllReactions, isLoadingReactions] = useApiCall(getAllReactions);
+  const [executeGetAllReactions,] = useApiCall(getAllReactions);
 
   // Default likes to 0 if not provided
   const likes = comment.likes || 0;
   
   // Initialize like count from props
-  const [likeCount, setLikeCount] = useState(likes);
+  const [, setLikeCount] = useState(likes);
   
   // Check if the current user has already reacted to this comment
   useEffect(() => {
@@ -107,47 +105,6 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
 
   // Memoize handlers to prevent recreation on each render
   const toggleReplies = useCallback(() => setShowReplies(prev => !prev), []);
-  
-  // Handle like/unlike functionality
-  const toggleLiked = useCallback(async () => {
-    if (isCommentPending || !currentUserId || isAddingReaction || isDeletingReaction) return;
-    
-    // Optimistic update
-    const newLikedState = !liked;
-    setLiked(newLikedState);
-    setLikeCount(prev => newLikedState ? prev + 1 : prev - 1);
-    
-    try {
-      // Prepare request data
-      const reactionData = {
-        entityId: comment.commentId,
-        entityType: 'comment',
-        reactionType: 'like'
-      };
-      
-      // Call the appropriate API based on the new liked state
-      const result = newLikedState 
-        ? await executeAddReaction(reactionData)
-        : await executeDeleteReaction(reactionData);
-      
-      if (!result.success) {
-        // Revert optimistic update if API call fails
-        setLiked(!newLikedState);
-        setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
-        toast.error(`Failed to ${newLikedState ? 'like' : 'unlike'} comment`);
-      }
-    } catch {
-      // Revert optimistic update if there's an error
-      setLiked(!newLikedState);
-      setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
-      toast.error(`Error: ${newLikedState ? 'Liking' : 'Unliking'} comment failed`);
-    }
-  }, [liked, comment.commentId, currentUserId, executeAddReaction, executeDeleteReaction, isAddingReaction, isDeletingReaction, isCommentPending]);
-  
-  // Format like count for display
-  const formattedLikeCount = likeCount >= 1000
-    ? `${(likeCount / 1000).toFixed(1)}k`
-    : likeCount.toString();
 
   const toggleReplyInput = useCallback(() => setShowReplyInput(prev => !prev), []);
 
@@ -298,16 +255,15 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
           </div>
 
           <div className="flex items-center gap-4 mt-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-muted-foreground cursor-pointer"
-              onClick={toggleLiked}
-              disabled={isAddingReaction || isDeletingReaction || isCommentPending || !currentUserId || isLoadingReactions}
-            >
-              <Heart className={`h-4 w-4 mr-1 ${liked ? "text-destructive fill-destructive" : ""}`} />
-              {formattedLikeCount}
-            </Button>
+            <ReactionComponent 
+              entityId={comment.commentId}
+              entityType="comment"
+              initialReaction={comment.reaction || { hasReacted: false, reactionType: null }}
+              initialTotalCount={likes}
+              initialReactionCounts={{ like: likes, love: 0, haha: 0, lulu: 0 }}
+              onReactionChange={() => {}}
+              iconSize="sm"
+            />
 
             {!isReply && (
               <Button

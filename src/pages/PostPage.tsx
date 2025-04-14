@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Comment } from "@/components/Comment";
 import { Post } from "@/components/Post";
 import { Input } from "@/components/ui/input";
-import avatarImage from "/profile/user.png";
 import { fetchComments, postComment } from "@/apis/commonApiCalls/commentsApi";
 import { getPostDetails } from "@/apis/commonApiCalls/homepageApi";
 import { useApiCall } from "@/apis/globalCatchError";
@@ -141,10 +140,10 @@ export default function CommentsPage() {
     setCurrentUserId(userId);
   }, []);
 
-  // Fetch post details if not provided in state
+  // Fetch post details if not provided in state or to ensure latest reaction data
   useEffect(() => {
     const fetchPostDetails = async () => {
-      if (!postId || locationPost) return; // Skip if postId is missing or post is already available
+      if (!postId) return; // Skip if postId is missing
 
       const result = await executeGetPostDetails({ feedId: postId });
 
@@ -177,14 +176,13 @@ export default function CommentsPage() {
           weekIndex: apiPostData.weekIndex,
         };
         setPost(mappedPost);
-        console.log("mappedPost", mappedPost);
       } else {
         setError("Failed to load post details. Please try again.");
       }
     };
 
     fetchPostDetails();
-  }, [postId, locationPost]);
+  }, [postId]);
 
   // Helper function to sort comments by creation time (newest first)
   const sortCommentsByTime = (comments: CommentData[]): CommentData[] => {
@@ -289,7 +287,7 @@ export default function CommentsPage() {
       user: {
         userId: userId,
         name: currentUser.username || currentUser.nickname,
-        profilePic: currentUser.avatar || avatarImage,
+        profilePic: currentUser.profilePic || currentUser.avatar,
       },
       likes: 0,
       hasReplies: false,
@@ -432,17 +430,19 @@ export default function CommentsPage() {
                   avatar={post.profilePic}
                   caption={post.data.content}
                   media={post.data.media || []}
-                  likes={post.reactionCount}
                   comments={post.commentCount}
                   datePosted={post.ago_time}
                   feedId={post.feedId}
                   isOwner={currentUserId === post.userId}
                   onCommentClick={() => {}}
                   onLikeClick={() => {}}
-                  reactionType={post.reaction?.reactionType}
-                  reactionDetails={post.reactionDetails}
-                  reaction={post.reaction}
                   onDelete={handlePostDelete}
+                  initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
+                  initialReactionCount={post.reactionCount || 0}
+                  initialReactionDetails={post.reactionDetails || { 
+                    total: post.reactionCount || 0,
+                    types: { like: 0, love: 0, haha: 0, lulu: 0 }
+                  }}
                 />
               )}
 

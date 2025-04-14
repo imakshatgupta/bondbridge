@@ -28,6 +28,7 @@ import TnC from "./pages/TnC";
 import FollowingFollowers from "@/components/FollowingFollowers";
 import AuthGuard from "@/components/AuthGuard";
 import CommunityProfilePage from "@/pages/CommunityProfilePage";
+import NotFound from "./pages/NotFound";
 import CommunityPostPage from "@/pages/CommunityPostPage";
 
 // Component for routes that require authentication and socket connection
@@ -162,6 +163,15 @@ const AuthenticatedRoutes: React.FC = () => {
               <Layout showSidebars={true}>
                 <CommunityProfilePage />
               </Layout>
+            }
+          />
+          {/* 404 page for authenticated routes */}
+          <Route
+            path="*"
+            element={
+              // <Layout showSidebars={false}>
+                <NotFound />
+              // </Layout>
             }
           />
           <Route

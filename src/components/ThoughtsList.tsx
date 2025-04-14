@@ -1,25 +1,12 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ProfilePostData } from "../apis/apiTypes/response";
 import ThreeDotsMenu, { ReportMenuItem } from "./global/ThreeDotsMenu";
-import { MessageCircle, Heart, Share2 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { MessageCircle, Share2 } from "lucide-react";
+import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SharePostPage from "./SharePostPage";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useApiCall } from "@/apis/globalCatchError";
-import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { ReportModal } from './ReportModal';
-import { GetAllReactionsResponse, Reaction, ReactionUser } from "@/apis/apiTypes/response";
-
-// Reaction types and their emojis
-const REACTIONS = {
-  like: { emoji: "👍🏻", label: "Like" },
-  love: { emoji: "❤️", label: "Love" },
-  haha: { emoji: "😂", label: "Haha" },
-  lulu: { emoji: "😢", label: "Lulu" }
-};
-
-type ReactionType = keyof typeof REACTIONS;
+import ReactionComponent from "./global/ReactionComponent";
 
 // Helper function to format time ago
 const formatTimeAgo = (timestamp: number): string => {
@@ -68,37 +55,9 @@ interface ThoughtsListProps {
 const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
   const navigate = useNavigate();
   const [shareDialogOpen, setShareDialogOpen] = useState<Record<string, boolean>>({});
-  const [showReactionPopover, setShowReactionPopover] = useState<Record<string, boolean>>({});
-  const [isLikeLoading, setIsLikeLoading] = useState<Record<string, boolean>>({});
-  const [currentReactions, setCurrentReactions] = useState<Record<string, ReactionType | null>>({});
-  const [reactionCounts, setReactionCounts] = useState<Record<string, Record<ReactionType, number>>>({});
-  const reactionTimeoutRefs = useRef<Record<string, number | null>>({});
-  const [executeAddReaction] = useApiCall(addReaction);
-  const [executeDeleteReaction] = useApiCall(deleteReaction);
-  const [executeGetAllReactions] = useApiCall(getAllReactions);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const currentUserId = localStorage.getItem('userId') || '';
-  const [reactionUsersData, setReactionUsersData] = useState<Record<string, Reaction[]>>({});
-  const [showTooltip, setShowTooltip] = useState<{postId: string, reactionType: ReactionType} | null>(null);
-  
-  // Add global click handler to close tooltip when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showTooltip) {
-        const target = event.target as HTMLElement;
-        // Check if the click is outside any tooltip or count span
-        if (!target.closest('.reaction-tooltip') && !target.closest('.reaction-count')) {
-          setShowTooltip(null);
-        }
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [showTooltip]);
   
   // Filter posts with no media
   const thoughtPosts = posts.filter(post => {
@@ -126,233 +85,6 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
     );
   }
 
-  // Helper function to initialize reaction counts for a post
-  const getInitialReactionCounts = (post: Post | ProfilePostData): Record<ReactionType, number> => {
-    const isProfilePost = "createdAt" in post;
-    const total = isProfilePost 
-      ? (post as ProfilePostData).stats?.reactionCount || 0
-      : (post as Post).stats?.reactionCount || 0;
-    
-    // Try to get detailed reaction counts if available
-    if ("reactionDetails" in post && post.reactionDetails) {
-      return {
-        like: post.reactionDetails.types.like || 0,
-        love: post.reactionDetails.types.love || 0,
-        haha: post.reactionDetails.types.haha || 0,
-        lulu: post.reactionDetails.types.lulu || 0
-      };
-    }
-    
-    // Default: assign all reactions to 'like' if no details available
-    return {
-      like: total,
-      love: 0,
-      haha: 0,
-      lulu: 0
-    };
-  };
-
-  // Initialize reaction counts if not already set
-  sortedThoughtPosts.forEach(post => {
-    const postId = (post as Post | ProfilePostData).id?.toString() || "";
-    if (postId && !reactionCounts[postId]) {
-      reactionCounts[postId] = getInitialReactionCounts(post);
-      
-      // Also set current reaction if the post has one
-      const isProfilePost = "createdAt" in post;
-      const reactionType = isProfilePost
-        ? (post as ProfilePostData).stats?.reactionType
-        : (post as Post).stats?.reactionType;
-        
-      if (reactionType && reactionType in REACTIONS) {
-        currentReactions[postId] = reactionType as ReactionType;
-      }
-    }
-  });
-
-  // Function to fetch reaction users data
-  const fetchReactionUsers = async (feedId: string) => {
-    if (reactionUsersData[feedId]) return; // Already fetched
-
-    try {
-      const result = await executeGetAllReactions(feedId, 'feed');
-      if (result.success && result.data) {
-        const responseData = result.data as GetAllReactionsResponse;
-        setReactionUsersData(prev => ({
-          ...prev,
-          [feedId]: responseData.reactions
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching reactions users:", error);
-    }
-  };
-
-  // Toggle tooltip visibility on count click
-  const handleCountClick = (e: React.MouseEvent, postId: string, feedId: string, reactionType: ReactionType) => {
-    e.stopPropagation(); // Prevent bubbling to parent elements
-    
-    if (!reactionUsersData[feedId]) {
-      fetchReactionUsers(feedId);
-    }
-    
-    // Toggle tooltip visibility
-    setShowTooltip(prev => 
-      prev?.postId === postId && prev?.reactionType === reactionType 
-        ? null 
-        : { postId, reactionType }
-    );
-  };
-
-  // Reaction handling function
-  const handleReactionSelect = async (postId: string, feedId: string, reactionType: ReactionType) => {
-    if (isLikeLoading[postId]) return;
-
-    const currentReaction = currentReactions[postId] || null;
-    const isSameReaction = currentReaction === reactionType;
-    const wasLiked = !!currentReaction;
-
-    // Update UI optimistically
-    setCurrentReactions(prev => ({
-      ...prev,
-      [postId]: isSameReaction ? null : reactionType
-    }));
-
-    // Update reaction counts optimistically
-    setReactionCounts(prev => {
-      const prevCounts = prev[postId] || { like: 0, love: 0, haha: 0, lulu: 0 };
-      const newCounts = { ...prevCounts };
-
-      if (isSameReaction) {
-        // Removing reaction
-        newCounts[reactionType] = Math.max(0, newCounts[reactionType] - 1);
-      } else {
-        // Adding new reaction
-        newCounts[reactionType] += 1;
-
-        // If switching from another reaction, decrease the previous one
-        if (wasLiked && currentReaction) {
-          newCounts[currentReaction] = Math.max(0, newCounts[currentReaction] - 1);
-        }
-      }
-
-      return {
-        ...prev,
-        [postId]: newCounts
-      };
-    });
-
-    // Close reaction popover
-    setShowReactionPopover(prev => ({
-      ...prev,
-      [postId]: false
-    }));
-
-    // Set loading state
-    setIsLikeLoading(prev => ({
-      ...prev,
-      [postId]: true
-    }));
-
-    const reactionData = {
-      entityId: feedId,
-      entityType: 'feed',
-      reactionType
-    };
-
-    let result;
-    try {
-      if (isSameReaction) {
-        // If clicking the same reaction, remove it
-        result = await executeDeleteReaction(reactionData);
-      } else {
-        if (wasLiked && currentReaction) {
-          // First remove the previous reaction
-          await executeDeleteReaction({
-            entityId: feedId,
-            entityType: 'feed',
-            reactionType: currentReaction
-          });
-        }
-        // Then add the new reaction
-        result = await executeAddReaction(reactionData);
-      }
-
-      if (!result.success) {
-        // Revert UI changes if API call fails
-        setCurrentReactions(prev => ({
-          ...prev,
-          [postId]: wasLiked ? currentReaction : null
-        }));
-        
-        // Also revert reaction counts
-        setReactionCounts(prev => {
-          const currentCounts = { ...prev[postId] };
-          if (isSameReaction) {
-            // We tried to remove, but failed, so add back
-            currentCounts[reactionType as ReactionType] += 1;
-          } else if (wasLiked && currentReaction) {
-            // We tried to switch, but failed, so revert
-            currentCounts[reactionType as ReactionType] -= 1;
-            currentCounts[currentReaction] += 1;
-          } else {
-            // We tried to add, but failed, so remove
-            currentCounts[reactionType as ReactionType] -= 1;
-          }
-          return {
-            ...prev,
-            [postId]: currentCounts
-          };
-        });
-      }
-
-      // Clear reaction users data cache to fetch updated data
-      setReactionUsersData(prev => {
-        const newData = { ...prev };
-        delete newData[feedId];
-        return newData;
-      });
-    } catch (error) {
-      console.error("Error handling reaction:", error);
-    } finally {
-      // Clear loading state
-      setIsLikeLoading(prev => ({
-        ...prev,
-        [postId]: false
-      }));
-    }
-  };
-
-  // Handle like button click (show reaction popover)
-  const handleLikeButtonClick = (postId: string, feedId: string) => {
-    // Toggle popover state
-    setShowReactionPopover(prev => {
-      const newState = { ...prev };
-      const isOpening = !newState[postId];
-      newState[postId] = isOpening;
-      
-      // If we're opening the popover, fetch the reaction data
-      if (isOpening && !reactionUsersData[feedId]) {
-        fetchReactionUsers(feedId);
-      }
-      
-      return newState;
-    });
-
-    // Clear existing timeout if any
-    if (reactionTimeoutRefs.current[postId]) {
-      window.clearTimeout(reactionTimeoutRefs.current[postId]);
-    }
-
-    // Set auto-hide timeout
-    reactionTimeoutRefs.current[postId] = window.setTimeout(() => {
-      setShowReactionPopover(prev => ({
-        ...prev,
-        [postId]: false
-      }));
-    }, 5000);
-  };
-
   // Handle share button click
   const handleShareClick = (postId: string) => {
     setShareDialogOpen(prev => ({
@@ -369,13 +101,36 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
   // Check if the current user is viewing their own profile
   const isOwnProfile = userId === currentUserId;
 
-  // Function to get users who reacted with a specific reaction
-  const getUsersWithReaction = (feedId: string, reactionType: ReactionType): ReactionUser[] => {
-    const reactions = reactionUsersData[feedId];
-    if (!reactions) return [];
+  // Initialize reaction counts for posts
+  const getReactionCounts = (post: Post | ProfilePostData) => {
+    const isProfilePost = "createdAt" in post;
+    let reactionTypes = { like: 0, love: 0, haha: 0, lulu: 0 };
     
-    const reactionData = reactions.find(r => r.reactionType === reactionType);
-    return reactionData?.users || [];
+    if (isProfilePost) {
+      const profilePost = post as ProfilePostData;
+      if (profilePost.reactionDetails && typeof profilePost.reactionDetails === 'object') {
+        const types = profilePost.reactionDetails.types || {};
+        reactionTypes = {
+          like: types.like || 0,
+          love: types.love || 0,
+          haha: types.haha || 0,
+          lulu: types.lulu || 0
+        };
+      }
+    } else {
+      const regularPost = post as Post;
+      if (regularPost.reactionDetails && typeof regularPost.reactionDetails === 'object') {
+        const types = regularPost.reactionDetails.types || {};
+        reactionTypes = {
+          like: types.like || 0,
+          love: types.love || 0,
+          haha: types.haha || 0,
+          lulu: types.lulu || 0
+        };
+      }
+    }
+    
+    return reactionTypes;
   };
 
   return (
@@ -415,6 +170,15 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
           
         const timeAgo = isProfilePost ? formatTimeAgo(timestamp) : "";
         
+        // Get reaction information
+        const hasReacted = isProfilePost
+          ? (post as ProfilePostData).stats?.hasReacted || false
+          : (post as Post).stats?.hasReacted || false;
+          
+        const reactionType = isProfilePost
+          ? (post as ProfilePostData).stats?.reactionType || null
+          : (post as Post).stats?.reactionType || null;
+        
         // Create feedId for navigation
         let creationDate = "2025-03-16";
 
@@ -437,13 +201,7 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
           }
         ];
 
-        // Get the appropriate reaction emoji to display
-        const currentReaction = currentReactions[postId];
-        const displayedReaction = currentReaction ? REACTIONS[currentReaction].emoji : null;
         const postIdStr = postId.toString();
-        
-        // Get reaction counts for this post
-        const postReactionCounts = reactionCounts[postIdStr] || { like: 0, love: 0, haha: 0, lulu: 0 };
 
         return (
           <div key={postIdStr} className="border-b border-border pb-4">
@@ -481,95 +239,14 @@ const ThoughtsList: React.FC<ThoughtsListProps> = ({ posts, userId }) => {
                 <span className="text-sm">{commentCount}</span>
               </button>
 
-              <Popover open={showReactionPopover[postIdStr]} onOpenChange={(open) => {
-                setShowReactionPopover(prev => ({ ...prev, [postIdStr]: open }));
-                if (open && !reactionUsersData[feedId]) {
-                  fetchReactionUsers(feedId);
-                }
-              }}>
-                <PopoverTrigger asChild>
-                  <button
-                    className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    onClick={() => handleLikeButtonClick(postIdStr, feedId)}
-                    disabled={isLikeLoading[postIdStr]}
-                  >
-                    {displayedReaction ? (
-                      <span className="text-lg">{displayedReaction}</span>
-                    ) : (
-                      <Heart className={`w-5 h-5 ${currentReaction ? 'fill-current' : ''}`} />
-                    )}
-                    <span className="text-sm">{reactionCount}</span>
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="p-2 bg-card rounded-full w-fit border shadow-md"
-                  side="top"
-                  align="start"
-                  sideOffset={5}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center">
-                    {Object.entries(REACTIONS).map(([key, { emoji, label }]) => {
-                      const reactionType = key as ReactionType;
-                      const count = postReactionCounts[reactionType];
-                      
-                      return (
-                        <div key={key} className="relative">
-                          <button
-                            className={`flex items-center cursor-pointer rounded-full py-1 px-2 transition-all hover:bg-accent ${currentReaction === key ? 'bg-accent' : ''}`}
-                            onClick={() => handleReactionSelect(postIdStr, feedId, reactionType)}
-                            aria-label={label}
-                            title={label}
-                          >
-                            <span className="text-xl rounded-full w-8 h-8 flex items-center justify-center">{emoji}</span>
-                            <span 
-                              className="text-sm font-medium cursor-pointer reaction-count" 
-                              onClick={(e) => {
-                                e.stopPropagation(); // Prevent triggering the parent button click
-                                handleCountClick(e, postIdStr, feedId, reactionType);
-                              }}
-                            >
-                              {count}
-                            </span>
-                          </button>
-                          
-                          {showTooltip?.postId === postIdStr && showTooltip?.reactionType === reactionType && (
-                            <div 
-                              className="absolute z-50 top-full mt-2 bg-card border p-2 shadow-md rounded-md reaction-tooltip"
-                              style={{ width: "max-content" }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {/* Show users who reacted with this reaction */}
-                              {getUsersWithReaction(feedId, reactionType).length > 0 ? (
-                                <div className="flex flex-col gap-2">
-                                  {getUsersWithReaction(feedId, reactionType).map((user) => (
-                                    <div key={user.userId} className="flex items-center gap-2">
-                                      <Link
-                                        to={`/profile/${user.userId}`}
-                                        className="flex items-center gap-2 hover:opacity-80"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <img 
-                                          src={user.profilePic || "/avatar.png"} 
-                                          alt={user.name}
-                                          className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                                        />
-                                        <span className="text-sm whitespace-normal">{user.name}</span>
-                                      </Link>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-sm">No users</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <ReactionComponent 
+                entityId={feedId}
+                entityType="feed"
+                initialReaction={{ hasReacted, reactionType }}
+                initialTotalCount={reactionCount}
+                initialReactionCounts={getReactionCounts(post)}
+                onReactionChange={() => {}}
+              />
 
               <button 
                 className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
