@@ -108,7 +108,7 @@ const ResetPasswordDialog: React.FC<ResetPasswordDialogProps> = ({
                 name="phoneNumber"
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
-                placeholder="Enter your phone number"
+                placeholder="Enter Your Phone Number"
                 required
               />
             </div>

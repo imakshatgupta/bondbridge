@@ -204,3 +204,20 @@ export const forgotPassword = async (forgotData: {
     throw new Error(response.data.message || 'Failed to reset password');
   }
 };
+
+// Function to delete user account
+export const deleteAccount = async (password: string): Promise<{ message: string; success: boolean }> => {
+  // Validate required field
+  if (!password) {
+    throw new Error('Password is required');
+  }
+  
+  const response = await apiClient.post('/deleteAccount', { password });
+  
+  if (response.status === 200) {
+    console.log("Account deleted successfully:", response.data);
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to delete account');
+  }
+};

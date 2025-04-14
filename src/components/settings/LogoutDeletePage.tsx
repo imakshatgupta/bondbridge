@@ -11,26 +11,65 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { AlertTriangle, ArrowLeft, KeyRound } from "lucide-react";
+import { AlertTriangle, ArrowLeft, KeyRound, EyeOff, Eye, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import ResetPasswordDialog from "./ResetPasswordDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { deleteAccount } from "@/apis/commonApiCalls/authenticationApi";
+import { useApiCall } from "@/apis/globalCatchError";
 
 const LogoutDeletePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const handleDeleteAccount = () => {
-    dispatch(resetUser());
-    localStorage.removeItem("userId");
-    setDeleteDialogOpen(false);
-    toast.success("Account deleted successfully");
-    // Redirect to login page
-    window.location.href = "/login";
+  // Use the useApiCall hook to handle the deleteAccount API call
+  const [executeDeleteAccount, isDeleting] = useApiCall(deleteAccount);
+
+  const handleDeleteAccount = async () => {
+    // Validate password
+    if (!password) {
+      setPasswordError("Please enter your password to confirm deletion");
+      return;
+    }
+
+    // Call the API to delete the account
+    const result = await executeDeleteAccount(password);
+    
+    if (result.success) {
+      // Clear user data from localStorage and reset store
+      dispatch(resetUser());
+      localStorage.clear(); // Clear all localStorage items
+      
+      setDeleteDialogOpen(false);
+      toast.success("Account deleted successfully");
+      
+      // Redirect to login page
+      window.location.href = "/login";
+    } else {
+      // Handle error, likely incorrect password
+      setPasswordError("Incorrect Password. Please Try Again.");
+    }
   };
 
   const handleCloseSettings = () => {
     dispatch(setSettingsActive(false));
+  };
+
+  const resetDeleteDialog = () => {
+    setPassword("");
+    setPasswordError("");
+  };
+
+  const handleDialogChange = (open: boolean) => {
+    if (!open) {
+      resetDeleteDialog();
+    }
+    setDeleteDialogOpen(open);
   };
 
   return (
@@ -90,7 +129,7 @@ const LogoutDeletePage: React.FC = () => {
         />
 
         {/* Delete Account Confirmation Dialog */}
-        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <Dialog open={deleteDialogOpen} onOpenChange={handleDialogChange}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -117,15 +156,66 @@ const LogoutDeletePage: React.FC = () => {
               </ul>
             </div>
 
-            <DialogFooter className="gap-2">
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="confirm-password">
+                Enter Your Password to Confirm
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirm-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter Your Password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (passwordError) setPasswordError("");
+                  }}
+                  className={passwordError ? "border-destructive" : ""}
+                  disabled={isDeleting}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-9 w-9 px-2 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isDeleting}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {passwordError && (
+                <p className="text-sm text-foreground font-semibold">{passwordError}</p>
+              )}
+            </div>
+
+            <DialogFooter className="gap-2 mt-4">
               <Button
                 variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
+                className="cursor-pointer"
+                onClick={() => handleDialogChange(false)}
+                disabled={isDeleting}
               >
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={handleDeleteAccount}>
-                Yes, Delete My Account
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+                className="cursor-pointer"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete My Account"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
