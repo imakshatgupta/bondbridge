@@ -3,6 +3,7 @@ import { ArrowLeft, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { StoryViewer, getStoryViewers } from '@/apis/commonApiCalls/storyApi';
 import { useEffect, useState } from 'react';
+import { useApiCall } from '@/apis/globalCatchError';
 
 interface StoryViewersListProps {
   storyId: string;
@@ -12,21 +13,21 @@ interface StoryViewersListProps {
 export default function StoryViewersList({ storyId, onClose }: StoryViewersListProps) {
   const navigate = useNavigate();
   const [viewers, setViewers] = useState<StoryViewer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use the useApiCall hook
+  const [executeGetStoryViewers, isLoading] = useApiCall(getStoryViewers);
   
   useEffect(() => {
     const fetchViewers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await getStoryViewers(storyId);
-        setViewers(response.viewers);
+      const { data, success } = await executeGetStoryViewers(storyId);
+      
+      if (success && data) {
+        setViewers(data.viewers || []);
         setError(null);
-      } catch (err) {
-        console.error('Failed to fetch story viewers:', err);
+      } else {
         setError('Failed to load viewers');
-      } finally {
-        setIsLoading(false);
+        setViewers([]);
       }
     };
 
