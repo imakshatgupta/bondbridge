@@ -148,3 +148,57 @@ export const getStoryForUser = async (userId: string) => {
     throw new Error(response.data.message || 'Failed to fetch user stories');
   }
 };
+
+/**
+ * Function to archive/delete a story
+ * @param storyId - The ID of the story to archive/delete
+ * @returns Promise with the API response
+ */
+export const archiveStory = async (storyId: string): Promise<{ success: boolean; message: string }> => {
+  if (!storyId) {
+    throw new Error('Story ID is required');
+  }
+  
+  const response = await formDataApiClient.post('/archieve-story', {
+    storyId: storyId
+  });
+  
+  if (response.status === 200) {
+    return {
+      success: true,
+      message: response.data.message || 'Story archived successfully'
+    };
+  } else {
+    throw new Error(response.data.message || 'Failed to archive story');
+  }
+};
+
+/**
+ * Interface for story viewer
+ */
+export interface StoryViewer {
+  userId: string;
+  name: string;
+  profilePic: string;
+}
+
+/**
+ * Function to get viewers of a specific story
+ * @param storyId - The ID of the story to get viewers for
+ * @returns Promise with the list of viewers
+ */
+export const getStoryViewers = async (storyId: string): Promise<{ viewers: StoryViewer[] }> => {
+  if (!storyId) {
+    throw new Error('Story ID is required');
+  }
+  
+  const response = await formDataApiClient.get('/get-story-viewers', {
+    params: { storyId }
+  });
+  
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || 'Failed to fetch story viewers');
+  }
+};

@@ -1,11 +1,13 @@
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Play, Heart } from 'lucide-react';
+import { ArrowLeft, Send, Play, Heart, Eye } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { saveStoryInteraction, getStoryForUser } from '@/apis/commonApiCalls/storyApi';
+import { saveStoryInteraction, getStoryForUser, archiveStory, getStoryViewers, StoryViewer } from '@/apis/commonApiCalls/storyApi';
 import { useApiCall } from '@/apis/globalCatchError';
 import { StoryItem, StoryUser } from '@/types/story';
+import ThreeDotsMenu, { DeleteMenuItem } from '@/components/global/ThreeDotsMenu';
+import { toast } from "sonner";
 
 export default function StoryPage() {
     const navigate = useNavigate();
@@ -23,14 +25,20 @@ export default function StoryPage() {
     const [showControls, setShowControls] = useState(true);
     const [hasShownControlsTooltip, setHasShownControlsTooltip] = useState(false);
     const [likedStories, setLikedStories] = useState<{[key: string]: boolean}>({});
+    const [showViewers, setShowViewers] = useState(false);
+    const [storyViewers, setStoryViewers] = useState<StoryViewer[]>([]);
+    const [viewersLoading, setViewersLoading] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [animationEndDetector, setAnimationEndDetector] = useState(0);
+    const [menuOpen, setMenuOpen] = useState(false);
     const currentLoggedInUserId = localStorage.getItem('userId') || "";
     
     // Use our custom hook for API calls
     const [executeSaveInteraction] = useApiCall(saveStoryInteraction);
     const [executeGetStoryForUser] = useApiCall(getStoryForUser);
+    const [executeArchiveStory] = useApiCall(archiveStory);
+    const [executeGetStoryViewers] = useApiCall(getStoryViewers);
 
     // Initialize with the story data passed from the HomePage or fetch from API
     useEffect(() => {
@@ -391,15 +399,204 @@ export default function StoryPage() {
         }
     }, [isLoading, hasShownControlsTooltip]);
 
+    // Function to handle story deletion
+    const handleDeleteStory = async () => {
+        if (!allStories.length) return;
+        
+        const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+        if (!currentStoryItem) return;
+        
+        const response = await executeArchiveStory(currentStoryItem._id);
+        
+        if (response.success) {
+            toast.success("Story deleted successfully");
+            
+            // Remove the story from the local state
+            const updatedStories = [...allStories];
+            updatedStories[currentUserIndex].stories.splice(currentStoryIndex, 1);
+            
+            // If this was the last story for this user, remove the user
+            if (updatedStories[currentUserIndex].stories.length === 0) {
+                updatedStories.splice(currentUserIndex, 1);
+                
+                // If no more stories left at all, go back to home
+                if (updatedStories.length === 0) {
+                    navigate('/');
+                    return;
+                }
+                
+                // Otherwise set to the first story of the next user (or previous if at the end)
+                const newUserIndex = currentUserIndex >= updatedStories.length 
+                    ? updatedStories.length - 1 
+                    : currentUserIndex;
+                
+                setCurrentUserIndex(newUserIndex);
+                setCurrentStoryIndex(0);
+            } else {
+                // If there are more stories for this user, go to the next one or stay at the last
+                const newStoryIndex = currentStoryIndex >= updatedStories[currentUserIndex].stories.length 
+                    ? updatedStories[currentUserIndex].stories.length - 1 
+                    : currentStoryIndex;
+                
+                setCurrentStoryIndex(newStoryIndex);
+            }
+            
+            // Update state
+            setAllStories(updatedStories);
+            
+            // Reset video state for the next story
+            setVideoProgress(0);
+            setVideoEnded(false);
+            setIsPaused(false);
+            
+            // Reset video player if it's a video
+            if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+                
+                // Attempt to play the video
+                try {
+                    const playPromise = videoRef.current.play();
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                setIsVideoPlaying(true);
+                            })
+                            .catch((error) => {
+                                console.error("Video play error after deletion:", error);
+                                setIsVideoPlaying(false);
+                                setIsPaused(true);
+                            });
+                    }
+                } catch (error) {
+                    console.error("Error playing video after deletion:", error);
+                }
+            }
+            
+            // Reset animation for image stories
+            if (currentUserIndex !== undefined && currentStoryIndex !== undefined) {
+                setAnimationEndDetector(Math.random() * 1000); // Generate a new random value to trigger animation restart
+            }
+        } else {
+            toast.error("Failed to delete story");
+        }
+    };
+
+    // Function to fetch story viewers
+    const fetchStoryViewers = useCallback(async () => {
+        if (!allStories.length) return;
+        
+        const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+        if (!currentStoryItem) return;
+        
+        setViewersLoading(true);
+        setIsPaused(true); // Pause the story when viewing the viewers list
+        
+        const response = await executeGetStoryViewers(currentStoryItem._id);
+        
+        if (response.success && response.data) {
+            // Ensure we always set an array, even if the API returns null/undefined
+            setStoryViewers(Array.isArray(response.data.viewers) ? response.data.viewers : []);
+        } else {
+            toast.error("Failed to load story viewers");
+            setStoryViewers([]);
+        }
+        
+        setViewersLoading(false);
+    }, [allStories, currentUserIndex, currentStoryIndex, executeGetStoryViewers]);
+
+    // Toggle viewers panel
+    const toggleViewers = useCallback(() => {
+        if (!showViewers) {
+            fetchStoryViewers();
+        }
+        setShowViewers(!showViewers);
+        
+        if (showViewers) {
+            // Resume playback when closing the viewers panel
+            setIsPaused(false);
+        }
+    }, [showViewers, fetchStoryViewers]);
+
+    // Close viewers panel when changing story
+    useEffect(() => {
+        setShowViewers(false);
+    }, [currentUserIndex, currentStoryIndex]);
+
+    // Add an effect to detect when the dropdown menu is closed
+    useEffect(() => {
+        // We'll use a mutation observer to detect when the dropdown menu is added/removed from the DOM
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                    // Check if a menu was added
+                    const menuContent = document.querySelector('[role="menu"]');
+                    if (menuContent && !menuOpen) {
+                        setMenuOpen(true);
+                        // Pause the story/video
+                        const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+                        if (currentStoryItem?.contentType === 'video' && videoRef.current) {
+                            videoRef.current.pause();
+                            setIsVideoPlaying(false);
+                        }
+                        setIsPaused(true);
+                    } 
+                    // Check if menu was removed
+                    else if (!menuContent && menuOpen) {
+                        setMenuOpen(false);
+                        // Only resume if viewers panel is also closed
+                        if (!showViewers) {
+                            // Resume playback
+                            const currentStoryItem = allStories[currentUserIndex]?.stories[currentStoryIndex];
+                            if (currentStoryItem?.contentType === 'video' && videoRef.current) {
+                                videoRef.current.play()
+                                    .then(() => {
+                                        setIsVideoPlaying(true);
+                                        setIsPaused(false);
+                                    })
+                                    .catch(error => {
+                                        console.error("Video playback failed:", error);
+                                    });
+                            } else {
+                                setIsPaused(false);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Observe the document body for changes
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        return () => {
+            observer.disconnect();
+        };
+    }, [menuOpen, allStories, currentUserIndex, currentStoryIndex, showViewers]);
+
     // If still loading or no stories, show a loading state
     if (isLoading || allStories.length === 0) {
         return <div className="flex items-center justify-center h-screen">Loading stories...</div>;
     }
 
     const currentUser = allStories[currentUserIndex];
+    // Check if currentUser exists before accessing properties
+    if (!currentUser || !currentUser.stories || currentUser.stories.length === 0) {
+        // Navigate back to home if no stories are available
+        navigate('/');
+        return <div className="flex items-center justify-center h-screen">No stories available</div>;
+    }
+    
     const totalStories = currentUser.stories.length;
     const currentStoryItem = currentUser.stories[currentStoryIndex];
+    
+    // If somehow currentStoryItem is undefined, safely navigate back
+    if (!currentStoryItem) {
+        navigate('/');
+        return <div className="flex items-center justify-center h-screen">Story not found</div>;
+    }
+    
     const isVideo = currentStoryItem.contentType === 'video';
+    const isCurrentUserStory = currentUser.userId === currentLoggedInUserId;
 
     return (
         <div className="max-w-sm mx-auto py-5 h-[calc(100vh-64px)] relative">
@@ -482,6 +679,35 @@ export default function StoryPage() {
                             </div>
                         </div>
                     </div>
+                    
+                    <div className="flex items-center gap-2">
+                        {/* View counter - only show for current user's stories */}
+                        {isCurrentUserStory && (
+                            <button 
+                                className="p-2 rounded-full bg-background/20 hover:bg-background/30 transition-colors text-white flex items-center gap-1 cursor-pointer"
+                                onClick={(e) => {
+                                    e.stopPropagation(); // Prevent triggering the parent's onClick
+                                    toggleViewers();
+                                }}
+                            >
+                                <Eye className="h-4 w-4" />
+                            </button>
+                        )}
+                    
+                        {/* Three Dots Menu - only show for current user's stories */}
+                        {isCurrentUserStory && (
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <ThreeDotsMenu 
+                                    items={[
+                                        {
+                                            ...DeleteMenuItem,
+                                            onClick: handleDeleteStory
+                                        }
+                                    ]} 
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Top Gradient Overlay for better visibility */}
@@ -490,7 +716,12 @@ export default function StoryPage() {
                 {/* Story Content */}
                 <div
                     className="h-[calc(100vh-104px)] w-full flex items-center justify-center bg-background relative rounded-2xl"
-                    onClick={toggleStoryPlayback}
+                    onClick={() => {
+                        // Only toggle playback if the menu is not open and viewers panel is not open
+                        if (!menuOpen && !showViewers) {
+                            toggleStoryPlayback();
+                        }
+                    }}
                 >
                     {isVideo ? (
                         <>
@@ -562,6 +793,55 @@ export default function StoryPage() {
                     )}
                 </div>
 
+                {/* Story Viewers Panel */}
+                {showViewers && (
+                    <div 
+                        className="absolute inset-0 bg-background z-20 flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-4 border-b border-border flex items-center">
+                            <button 
+                                className="p-1 rounded-full hover:bg-muted transition-colors cursor-pointer mr-1"
+                                onClick={toggleViewers}
+                            >
+                                <ArrowLeft className="h-5 w-5" />
+                            </button>
+                            <h3 className="font-medium">Viewers</h3>
+                        </div>
+                        
+                        <div className="flex-1 overflow-auto p-4">
+                            {viewersLoading ? (
+                                <div className="flex items-center justify-center h-full">
+                                    <p className="text-sm text-muted-foreground">Loading viewers...</p>
+                                </div>
+                            ) : !Array.isArray(storyViewers) || storyViewers.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full gap-3">
+                                    <Eye className="h-12 w-12 text-muted-foreground opacity-20" />
+                                    <p className="text-sm text-muted-foreground">No one has viewed this story yet</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {storyViewers.map((viewer) => (
+                                        <div 
+                                            key={viewer.userId || Math.random().toString(36).substring(7)}
+                                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                                            onClick={() => navigate(`/profile/${viewer.userId}`)}
+                                        >
+                                            <Avatar className="h-9 w-9">
+                                                <AvatarImage src={viewer.profilePic || ''} />
+                                                <AvatarFallback>{viewer.name ? viewer.name.charAt(0) : 'U'}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                                <p className="font-medium text-sm">{viewer.name || 'Unknown User'}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Reply Input */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm">
                     <div className="flex gap-1 items-center">
@@ -581,7 +861,7 @@ export default function StoryPage() {
                             <Send className="h-5 w-5" />
                         </button>
                         {/* like story button - only show if not the current user's story */}
-                        {currentUser.userId !== currentLoggedInUserId && (
+                        {!isCurrentUserStory && (
                             <button 
                                 className="p-2 rounded-full text-primary-foreground flex-shrink-0"
                                 onClick={(e) => {
