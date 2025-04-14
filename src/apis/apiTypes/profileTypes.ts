@@ -82,11 +82,17 @@ export interface FetchUserProfileResponse {
 }
 
 export interface UpdateProfileRequest {
-  userId: string;
+  userId?: string;
   username?: string;
   email?: string;
   bio?: string;
   avatarSrc?: string;
+  interests?: string[];
+  privacyLevel?: number;
+  name?: string;
+  public?: number;
+  avatar?: string | File;
+  image?: File;
 }
 
 export interface FollowingFollowerUser {

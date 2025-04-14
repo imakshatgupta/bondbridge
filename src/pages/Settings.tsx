@@ -84,19 +84,27 @@ const Settings = () => {
         const currentUserId = localStorage.getItem("userId") || "";
         if (currentUserId) {
           const result = await fetchUserProfile(currentUserId, currentUserId);
+          console.log("Settings - fetchUserProfile raw result:", result);
+
           if (result.success && result.data) {
             // Update Redux store with actual user data
-            dispatch(
-              updateCurrentUser({
-                username: result.data.username,
-                nickname: result.data.nickName,
-                email: result.data.email,
-                avatar: result.data.avatarSrc,
-                privacyLevel: result.data.privacyLevel,
-                bio: result.data.bio,
-                interests: result.data.interests,
-              })
-            );
+            const userData = {
+              username: result.data.username,
+              nickname: result.data.nickName,
+              email: result.data.email,
+              avatar: result.data.avatarSrc,
+              privacyLevel: result.data.privacyLevel,
+              bio: result.data.bio,
+              interests: result.data.interests,
+              public: result.data.public,
+            };
+            
+            console.log("Settings - about to update Redux with userData:", userData);
+            
+            dispatch(updateCurrentUser(userData));
+            
+            // Log the public field value
+            console.log("Public field value on load:", result.data.public);
           }
         }
       } catch (error) {
