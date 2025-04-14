@@ -367,7 +367,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="flex flex-col items-center space-y-1 mx-2 my-1">
-                  <div className="relative w-16 h-16 rounded-full ring-2 ring-blue-500">
+                  <div className="relative w-16 h-16 rounded-full border-1 border-border">
                     <img
                       src={currentUser.profilePic || "/profile/avatars/1.png"}
                       alt="Your Story"

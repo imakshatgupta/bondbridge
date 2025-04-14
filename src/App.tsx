@@ -29,6 +29,7 @@ import FollowingFollowers from "@/components/FollowingFollowers";
 import AuthGuard from "@/components/AuthGuard";
 import CommunityProfilePage from "@/pages/CommunityProfilePage";
 import NotFound from "./pages/NotFound";
+import CommunityPostPage from "@/pages/CommunityPostPage";
 
 // Component for routes that require authentication and socket connection
 const AuthenticatedRoutes: React.FC = () => {
@@ -168,8 +169,16 @@ const AuthenticatedRoutes: React.FC = () => {
           <Route
             path="*"
             element={
-              <Layout showSidebars={false}>
+              // <Layout showSidebars={false}>
                 <NotFound />
+              // </Layout>
+            }
+          />
+          <Route
+            path="/community/:communityId/:postId"
+            element={
+              <Layout showSidebars={true}>
+                <CommunityPostPage />
               </Layout>
             }
           />
