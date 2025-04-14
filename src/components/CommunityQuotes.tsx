@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ProfilePostData } from "../apis/apiTypes/response";
+// import { ProfilePostData } from "../apis/apiTypes/response";
 import ThreeDotsMenu, { ReportMenuItem } from "./global/ThreeDotsMenu";
 import { MessageCircle, Share2 } from "lucide-react";
 import { useState } from "react";
@@ -40,7 +40,7 @@ const formatTimeAgo = (timestamp: number): string => {
 };
 
 interface CommunityQuotesProps {
-  posts: (CommunityPostData | ProfilePostData)[];
+  posts: CommunityPostData[];
   communityId: string;
 }
 
@@ -81,19 +81,14 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
   
   // Filter posts with no media
   const thoughtPosts = posts.filter(post => {
-    const isProfilePost = "createdAt" in post;
-    
-    const media = isProfilePost
-      ? (post as ProfilePostData)?.media || []
-      : (post as CommunityPostData)?.media || [];
-      
+    const media = post?.media || [];
     return media.length === 0;
   });
   
   // Sort posts from recent to oldest
   const sortedThoughtPosts = [...thoughtPosts].sort((a, b) => {
-    const timestampA = "createdAt" in a ? (a as ProfilePostData).createdAt : (a as CommunityPostData).createdAt || 0;
-    const timestampB = "createdAt" in b ? (b as ProfilePostData).createdAt : (b as CommunityPostData).createdAt || 0;
+    const timestampA = a.createdAt || 0;
+    const timestampB = b.createdAt || 0;
     return timestampB - timestampA; // Descending order (newest first)
   });
   
@@ -106,11 +101,8 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
   }
 
   // Helper function to initialize reaction counts for a post
-//   const getInitialReactionCounts = (post: CommunityPostData | ProfilePostData): Record<ReactionType, number> => {
-//     const isProfilePost = "createdAt" in post;
-//     const total = isProfilePost 
-//       ? (post as ProfilePostData).stats?.reactionCount || 0
-//       : (post as CommunityPostData).stats?.reactionCount || 0;
+//   const getInitialReactionCounts = (post: CommunityPostData): Record<ReactionType, number> => {
+//     const total = post.stats?.reactionCount || 0;
     
 //     // Try to get detailed reaction counts if available
 //     if ("reactionDetails" in post && post.reactionDetails) {
@@ -133,15 +125,12 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
 
   // Initialize reaction counts if not already set
 //   sortedThoughtPosts.forEach(post => {
-//     const postId = (post as CommunityPostData | ProfilePostData).id?.toString() || "";
+//     const postId = post.id?.toString() || "";
 //     if (postId && !reactionCounts[postId]) {
 //       reactionCounts[postId] = getInitialReactionCounts(post);
       
 //       // Also set current reaction if the post has one
-//       const isProfilePost = "createdAt" in post;
-//       const reactionType = isProfilePost
-//         ? (post as ProfilePostData).stats?.reactionType
-//         : (post as CommunityPostData).stats?.reactionType;
+//       const reactionType = post.stats?.reactionType;
         
 //       if (reactionType && reactionType in REACTIONS) {
 //         currentReactions[postId] = reactionType as ReactionType;
@@ -360,38 +349,14 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
   return (
     <div className="flex flex-col space-y-4">
       {sortedThoughtPosts.map((post) => {
-        // Determine if it's a ProfilePostData or a regular Post
-        const isProfilePost = "createdAt" in post;
-        
-        // Extract post properties based on type
-        const postId = isProfilePost
-          ? (post as ProfilePostData).id
-          : (post as CommunityPostData).id;
-          
-        const content = isProfilePost
-          ? (post as ProfilePostData).content
-          : (post as CommunityPostData).content || "";
-          
-        const authorName = isProfilePost
-          ? (post as ProfilePostData).author?.name
-          : (post as CommunityPostData).author?.name || "";
-          
-        const authorProfilePic = isProfilePost
-          ? (post as ProfilePostData).author?.profilePic
-          : (post as CommunityPostData).author?.profilePic || "";
-          
-        const commentCount = isProfilePost
-          ? (post as ProfilePostData).stats?.commentCount || 0
-          : (post as CommunityPostData).stats?.commentCount || 0;
-          
-        // const reactionCount = isProfilePost
-        //   ? (post as ProfilePostData).stats?.reactionCount || 0
-        //   : (post as CommunityPostData).stats?.reactionCount || 0;
-          
-        const timestamp = isProfilePost
-          ? (post as ProfilePostData).createdAt
-          : (post as CommunityPostData).createdAt || 0;
-          
+        // Extract post properties
+        const postId = post.id;
+        const content = post.content || "";
+        const authorName = post.author?.name || "";
+        const authorProfilePic = post.author?.profilePic || "";
+        const commentCount = post.stats?.commentCount || 0;
+        // const reactionCount = post.stats?.reactionCount || 0;
+        const timestamp = post.createdAt || 0;
         const timeAgo = formatTimeAgo(timestamp);
         
         const postIdStr = postId.toString();
@@ -434,7 +399,7 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
             
             <div 
               className="mt-1 py-4 cursor-pointer"
-              onClick={() => navigate(`/community-post/${postIdStr}`, { 
+              onClick={() => navigate(`/community/${communityId}/${postIdStr}`, { 
                 state: { 
                   post: {
                     ...post,
@@ -452,7 +417,7 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
             <div className="flex items-center gap-6 mt-2">
               <button 
                 className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                onClick={() => navigate(`/community-post/${postIdStr}`, { 
+                onClick={() => navigate(`/community/${communityId}/${postIdStr}`, { 
                   state: { 
                     post: {
                       ...post,

@@ -51,12 +51,6 @@ export const uploadStory = async (storiesData: StoryData[]): Promise<UploadStory
     if (story.type === 'text' && typeof story.content === 'string') {
       formData.append('text', story.content);
     } else if (story.content instanceof File) {
-      // Check file size (10MB = 10 * 1024 * 1024 bytes)
-      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-      if (story.content.size > maxSize) {
-        throw new Error(`File ${story.content.name} exceeds maximum size of 10MB`);
-      }
-
       if (story.type === 'photo') {
         mediaFiles.images.push(story.content);
       } else if (story.type === 'video') {

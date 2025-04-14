@@ -10,46 +10,13 @@ import {
   joinCommunity,
   fetchCommunityById,
   fetchCommunityPosts,
-  // CommunityPostResponse
 } from "@/apis/commonApiCalls/communitiesApi";
-import { CommunityPostResponse, CommunityResponse } from "@/apis/apiTypes/communitiesTypes";
+import { CommunityResponse, TransformedCommunityPost } from "@/apis/apiTypes/communitiesTypes";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import CommunityMemberList from "@/components/CommunityMemberList";
 import CommunityPosts from "@/components/CommunityPosts";
 import CommunityQuotes from "@/components/CommunityQuotes";
-
-// Define the structure for transformed post matching the components' expectations
-interface TransformedPost {
-  id: string;
-  author: {
-    name: string;
-    profilePic: string;
-  };
-  content: string;
-  createdAt: number;
-  media: Array<{
-    url: string;
-    type: string;
-  }>;
-  stats: {
-    commentCount: number;
-    hasReacted: boolean;
-    reactionCount: number;
-    reactionType: string | null;
-  };
-  reactionDetails: {
-    total: number;
-    types: {
-      like: number;
-      love: number;
-      haha: number;
-      lulu: number;
-    };
-  };
-  isCommunity: boolean;
-  communityId: string;
-}
 
 const CommunityProfilePage = () => {
   const { communityId } = useParams<{ communityId: string }>();
@@ -57,7 +24,7 @@ const CommunityProfilePage = () => {
   const [community, setCommunity] = useState<CommunityResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [communityPosts, setCommunityPosts] = useState<TransformedPost[]>([]);
+  const [communityPosts, setCommunityPosts] = useState<TransformedCommunityPost[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [isUserMember, setIsUserMember] = useState(false);
   const [isMembershipLoading, setIsMembershipLoading] = useState(false);
@@ -100,36 +67,7 @@ const CommunityProfilePage = () => {
       const result = await executeFetchCommunityPosts(communityId);
       
       if (result.success && result.data) {
-        // Transform the posts to match expected format
-        const transformedPosts = result.data.map((post: CommunityPostResponse) => ({
-          id: post._id,
-          author: {
-            name: post.name,
-            profilePic: post.profilePic,
-          },
-          content: post.data.content,
-          createdAt: post.createdAt,
-          media: post.data.media || [],
-          stats: {
-            commentCount: post.commentCount || 0,
-            hasReacted: post.reaction?.hasReacted || false,
-            reactionCount: post.reactionCount || 0,
-            reactionType: post.reaction?.reactionType || null,
-          },
-          reactionDetails: {
-            total: post.reactionDetails.total || 0,
-            types: post.reactionDetails.types || {
-              like: 0,
-              love: 0,
-              haha: 0,
-              lulu: 0
-            }
-          },
-          isCommunity: post.isCommunity,
-          communityId: communityId
-        }));
-        
-        setCommunityPosts(transformedPosts);
+        setCommunityPosts(result.data);
       } else {
         console.error("Failed to load community posts");
       }
@@ -160,7 +98,7 @@ const CommunityProfilePage = () => {
     if (result.success) {
       setIsUserMember(true);
       toast.success("Success", {
-        description: "You have joined the community!",
+        description: "You have Joined the Community!",
       });
     } else {
       toast.error("Error", {
@@ -186,7 +124,7 @@ const CommunityProfilePage = () => {
     if (result.success) {
       setIsUserMember(false);
       toast.success("Success", {
-        description: "You have left the community",
+        description: "You have Left the Community",
       });
     } else {
       toast.error("Error", {
@@ -276,7 +214,7 @@ const CommunityProfilePage = () => {
         <div className="flex items-center gap-2 my-2">
           <Badge variant="secondary" className="px-2 py-0.5">
             <Users className="h-3 w-3 mr-1" />
-            {community.memberCount.toLocaleString()} Members
+            {community?.memberDetails?.length} Members
           </Badge>
           <Badge variant="secondary" className="px-2 py-0.5">
             <MessageSquare className="h-3 w-3 mr-1" />

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/popover";
 import SharePostPage from "./SharePostPage";
 import { ReportModal } from './ReportModal';
+import VideoObserver from "./common/VideoObserver";
 
 // Reaction types and their emojis
 const REACTIONS = {
@@ -125,32 +126,6 @@ export function Post({
             }
         };
     }, []);
-
-    useEffect(() => {
-        // Setup intersection observer for videos
-        const videoElements = document.querySelectorAll<HTMLVideoElement>(`[data-post-id="${feedId}"] video`);
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const video = entry.target as HTMLVideoElement;
-                if (entry.isIntersecting) {
-                    video.play().catch(err => console.log("Autoplay prevented:", err));
-                } else {
-                    video.pause();
-                }
-            });
-        }, { threshold: 0.5 });
-        
-        videoElements.forEach(video => {
-            observer.observe(video);
-        });
-        
-        return () => {
-            videoElements.forEach(video => {
-                observer.unobserve(video);
-            });
-        };
-    }, [feedId, media]);
 
     const handleReactionSelect = async (reactionType: ReactionType) => {
         if (isLikeLoading || !feedId) return;
@@ -305,6 +280,9 @@ export function Post({
     return (
         <>
             <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4" data-post-id={feedId}>
+                {/* Video observer component to handle autoplay/pause based on visibility */}
+                {feedId && <VideoObserver feedId={feedId} media={media} />}
+                
                 <div className="flex items-center justify-between p-4">
                     <div
                         className="flex items-center gap-3 cursor-pointer"

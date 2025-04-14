@@ -24,6 +24,7 @@ import {
 const CHARACTER_LIMIT = 150;
 import { CreatePostRequest } from "@/apis/apiTypes/request";
 import { MediaCropModal, CroppedFile } from "@/components/MediaCropModal";
+import VideoObserver from "@/components/common/VideoObserver";
 
 interface PostData extends Partial<CreatePostRequest> {
   content: string;
@@ -43,35 +44,99 @@ interface CreatePostProps {
 const VideoPreview: React.FC<{ videoFile: File }> = ({ videoFile }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoUrlRef = useRef<string | null>(null);
+  const [videoId, setVideoId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [showControls, setShowControls] = useState(false);
 
   useEffect(() => {
     // Create an object URL from the file
     const objectUrl = URL.createObjectURL(videoFile);
     videoUrlRef.current = objectUrl;
 
+    // Generate a unique ID for this video
+    setVideoId(`preview-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+
     const video = videoRef.current;
     if (!video) return;
 
     // Set the video source to the object URL
     video.src = objectUrl;
+    video.muted = isMuted;
+
+    // Track loading state
+    const handleLoadedData = () => {
+      setIsLoading(false);
+    };
+
+    video.addEventListener("loadeddata", handleLoadedData);
 
     return () => {
       // Revoke the object URL when component unmounts
       if (videoUrlRef.current) {
         URL.revokeObjectURL(videoUrlRef.current);
       }
+      video.removeEventListener("loadeddata", handleLoadedData);
     };
-  }, [videoFile]);
+  }, [videoFile, isMuted]);
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(prev => !prev);
+    
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+  };
 
   return (
-    <div className="w-full h-full relative flex items-center justify-center">
+    <div 
+      className="w-full h-full relative flex items-center justify-center" 
+      data-post-id={videoId}
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => setShowControls(false)}
+    >
+      {/* Add VideoObserver to handle auto-play/pause functionality */}
+      {videoId && videoUrlRef.current && !isLoading && (
+        <VideoObserver 
+          feedId={videoId} 
+          media={[{ type: "video", url: videoUrlRef.current }]}
+        />
+      )}
+      
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      )}
+      
       <video
         ref={videoRef}
-        className="w-full h-full object-contain"
+        className="w-full h-full object-contain bg-black"
         playsInline
-        muted
-        controls
+        muted={isMuted}
+        autoPlay
+        loop
       />
+      
+      <button 
+        className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
+        onClick={toggleMute}
+      >
+        {isMuted ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <line x1="23" y1="9" x2="17" y2="15" />
+            <line x1="17" y1="9" x2="23" y2="15" />
+          </svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </svg>
+        )}
+      </button>
     </div>
   );
 };
@@ -489,6 +554,8 @@ const CreatePost = ({
     onDragOver: (e: React.DragEvent) => void;
     onDrop: (e: React.DragEvent, index: number) => void;
   }) => {
+    const thumbnailId = `thumbnail-${index}`;
+    
     return (
       <div
         className={`h-16 w-16 rounded-md overflow-hidden cursor-pointer relative transition-all ${
@@ -499,9 +566,11 @@ const CreatePost = ({
         onDragStart={(e) => onDragStart(e, index)}
         onDragOver={onDragOver}
         onDrop={(e) => onDrop(e, index)}
+        data-post-id={thumbnailId}
       >
         {file.type.startsWith("video/") ? (
           <div className="w-full h-full relative bg-black">
+            {/* Just show the video icon for thumbnails - no need for VideoObserver here */}
             <div className="absolute inset-0 flex items-center justify-center">
               <Video className="h-5 w-5 text-white/70" />
             </div>
@@ -947,7 +1016,7 @@ const CreatePost = ({
             )}
           </Button>
           {rewriteError && (
-            <p className="text-destructive-foreground text-xs mt-1">{rewriteError}</p>
+            <p className="text-foreground font-bold text-xs mt-1">{rewriteError}</p>
           )}
         </div>
       </div>
@@ -1035,7 +1104,7 @@ const CreatePost = ({
                 )}
                 <button
                   onClick={() => handleRemoveMedia(activePreviewIndex)}
-                  className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full hover:bg-black/90 transition-colors"
+                  className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full hover:bg-black/90 transition-colors cursor-pointer"
                 >
                   <Trash2 size={18} className="text-white" />
                 </button>

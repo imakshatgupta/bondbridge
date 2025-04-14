@@ -161,5 +161,26 @@ export interface ReactionUser {
   profilePic: string;
 }
 
+// TransformedCommunityPost type for consistent post data structure across components
+export interface TransformedCommunityPost {
+  id: string;
+  author: {
+    name: string;
+    profilePic: string;
+  };
+  content: string;
+  createdAt: number;
+  media: Media[];
+  stats: {
+    commentCount: number;
+    hasReacted: boolean;
+    reactionCount: number;
+    reactionType: string | null;
+  };
+  reactionDetails: ReactionDetails;
+  isCommunity: boolean;
+  communityId: string;
+}
+
 // Re-export ProfilePostData as CommunityPostDetail for semantic clarity
 export type CommunityPostDetail = ProfilePostData;

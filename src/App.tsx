@@ -165,7 +165,7 @@ const AuthenticatedRoutes: React.FC = () => {
             }
           />
           <Route
-            path="/community-post/:postId"
+            path="/community/:communityId/:postId"
             element={
               <Layout showSidebars={true}>
                 <CommunityPostPage />

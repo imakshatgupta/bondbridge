@@ -6,9 +6,49 @@ import {
   CommunityPostResponse,
   CommunityPostsResponse,
   FetchCommunitiesRequest,
-  FetchCommunityPostsRequest
+  FetchCommunityPostsRequest,
+  TransformedCommunityPost
 } from '../apiTypes/communitiesTypes';
 import { PostDetailsData } from '../apiTypes/response';
+
+/**
+ * Helper function to transform a community post to a standardized format
+ * @param post The raw community post from the API
+ * @param communityId The community ID this post belongs to
+ * @returns Transformed post with consistent structure for UI components
+ */
+export const transformCommunityPost = (
+  post: CommunityPostResponse,
+  communityId: string
+): TransformedCommunityPost => {
+  return {
+    id: post._id,
+    author: {
+      name: post.name,
+      profilePic: post.profilePic,
+    },
+    content: post.data.content,
+    createdAt: post.createdAt,
+    media: post.data.media || [],
+    stats: {
+      commentCount: post.commentCount || 0,
+      hasReacted: post.reaction?.hasReacted || false,
+      reactionCount: post.reactionCount || 0,
+      reactionType: post.reaction?.reactionType || null,
+    },
+    reactionDetails: {
+      total: post.reactionDetails.total || 0,
+      types: post.reactionDetails.types || {
+        like: 0,
+        love: 0,
+        haha: 0,
+        lulu: 0
+      }
+    },
+    isCommunity: post.isCommunity,
+    communityId: communityId
+  };
+};
 
 /**
  * Function to fetch all communities
@@ -108,29 +148,36 @@ export const fetchCommunityById = async (communityId: string): Promise<Community
  * Function to fetch all posts of a community by community ID
  * @param communityId Community ID
  * @param params Optional parameters (page, limit)
- * @returns Promise with community post response array
+ * @returns Promise with transformed community posts array
  */
 export const fetchCommunityPosts = async (
   communityId: string, 
   params?: Omit<FetchCommunityPostsRequest, 'communityId'>
-): Promise<CommunityPostResponse[]> => {
-  const queryParams = new URLSearchParams();
-  
-  if (params?.page) {
-    queryParams.append('page', params.page.toString());
+): Promise<TransformedCommunityPost[]> => {
+  try {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    
+    const url = `/communities/${communityId}/post${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await adminApiClient.get<CommunityPostsResponse>(url);
+    
+    if (!response.data.success) {
+      console.warn('API reported failure to fetch community posts');
+      return [];
+    }
+    
+    // Transform posts to consistent format
+    return (response.data.posts || []).map(post => transformCommunityPost(post, communityId));
+  } catch (error) {
+    console.error('Error fetching community posts:', error);
+    return [];
   }
-  if (params?.limit) {
-    queryParams.append('limit', params.limit.toString());
-  }
-  
-  const url = `/communities/${communityId}/post${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  const response = await adminApiClient.get<CommunityPostsResponse>(url);
-  
-  if (!response.data.success) {
-    throw new Error('Failed to fetch community posts');
-  }
-  
-  return response.data.posts;
 };
 
 /**
