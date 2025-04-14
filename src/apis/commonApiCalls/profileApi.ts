@@ -154,7 +154,7 @@ export const fetchFollowingList =
       data: response.data.result.map((user: FollowingFollowerUser) => ({
         _id: user._id,
         name: user.name,
-        nickName: user.nickName,
+        bio: user.bio,
         email: user.email,
         avatar: user.avatar || user.profilePic,
         profilePic: user.profilePic || user.avatar,
@@ -172,7 +172,7 @@ export const fetchFollowersList =
       data: response.data.result.map((user: FollowingFollowerUser) => ({
         _id: user._id,
         name: user.name,
-        nickName: user.nickName,
+        bio: user.bio,
         email: user.email,
         avatar: user.avatar || user.profilePic,
         profilePic: user.profilePic || user.avatar,
@@ -195,7 +195,7 @@ export const fetchProfileById = async (
   return {
     _id: userData._id,
     name: userData.name,
-    nickName: userData.nickName || "",
+    bio: userData.bio || "",
     email: "", // We don't need to expose email
     avatar: userData.avatar || userData.profilePic || "/profile/user.png",
     profilePic: userData.profilePic || userData.avatar || "/profile/user.png",

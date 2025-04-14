@@ -207,7 +207,7 @@ export function Post({
                                     {media.map((item, index) => (
                                         <CarouselItem key={`${userId}-media-${index}`}>
                                             {item.type === "image" && (
-                                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                                <div className="max-h-[100vh] relative bg-background flex items-end justify-center">
                                                     <img
                                                         src={item.url}
                                                         alt={`Post media ${index + 1}`}

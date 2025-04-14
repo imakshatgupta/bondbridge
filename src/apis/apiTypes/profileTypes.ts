@@ -98,7 +98,7 @@ export interface UpdateProfileRequest {
 export interface FollowingFollowerUser {
   _id: string;
   name: string;
-  nickName: string;
+  bio: string;
   email: string;
   avatar: string;
   profilePic: string;

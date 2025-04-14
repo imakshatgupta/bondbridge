@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { TruncatedText } from "@/components/ui/TruncatedText";
 
 const FollowingFollowers = () => {
   const navigate = useNavigate();
@@ -111,7 +112,13 @@ const FollowingFollowers = () => {
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <span className="font-medium text-foreground truncate">{user.name}</span>
-                  <span className="text-sm text-muted-foreground truncate">{user.nickName}</span>
+                  <TruncatedText 
+                    text={user.bio} 
+                    limit={50}
+                    className="text-sm text-muted-foreground" 
+                    buttonClassName="text-primary text-xs ml-1 cursor-pointer hover:underline"
+                    showToggle={false}
+                  />
                 </div>
               </div>
               <Button 
@@ -177,7 +184,13 @@ const FollowingFollowers = () => {
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <span className="font-medium text-foreground truncate">{user.name}</span>
-                  <span className="text-sm text-muted-foreground truncate">{user.nickName}</span>
+                  <TruncatedText 
+                    text={user.bio} 
+                    limit={50}
+                    className="text-sm text-muted-foreground" 
+                    buttonClassName="text-primary text-xs ml-1 cursor-pointer hover:underline"
+                    showToggle={false}
+                  />
                 </div>
               </div>
               <Button 
@@ -208,7 +221,7 @@ const FollowingFollowers = () => {
       <Button
         variant="ghost"
         size="sm"
-        className="mb-4 -ml-2"
+        className="mb-4 -ml-2 cursor-pointer"
         onClick={() => navigate(-1)}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -216,8 +229,8 @@ const FollowingFollowers = () => {
       </Button>
       <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="following">Following</TabsTrigger>
-          <TabsTrigger value="followers">Followers</TabsTrigger>
+          <TabsTrigger value="following" className="cursor-pointer">Following</TabsTrigger>
+          <TabsTrigger value="followers" className="cursor-pointer">Followers</TabsTrigger>
         </TabsList>
 
         <AnimatePresence mode="wait">

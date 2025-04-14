@@ -55,7 +55,7 @@ const CommunityMemberList = ({ memberIds, memberDetails }: CommunityMemberListPr
               name: response.data.name || "Anonymous User",
               profilePic: response.data.profilePic || "",
               avatar: response.data.avatar || "",
-              nickName: response.data.nickName || "Member",
+              bio: response.data.bio || "",
               email: response.data.email || "",
               interests: response.data.interests || []
             };
