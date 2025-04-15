@@ -223,7 +223,7 @@ const CommunityProfilePage = () => {
         </div>
 
         <p className="text-foreground text-center mt-2 max-w-md">
-          {community.description || community.bio}
+          {community.bio || ""}
         </p>
 
         <div className="flex gap-3 mt-6">

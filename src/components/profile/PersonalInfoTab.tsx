@@ -21,6 +21,19 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
     (state: RootState) => state.createProfile
   );
   const [showPassword, setShowPassword] = useState(false);
+  const [ageError, setAgeError] = useState<string | null>(null);
+
+  const isAtLeast18YearsOld = (dateString: string): boolean => {
+    const birthDate = new Date(dateString);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1 >= 18;
+    }
+    return age >= 18;
+  };
 
   // Validate all required fields
   useEffect(() => {
@@ -29,13 +42,22 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
     const isDateOfBirthValid = dateOfBirth.trim().length > 0;
     const isPasswordValid = password.trim().length >= 6;
     
-    const allValid = isNameValid && isEmailValid && isDateOfBirthValid && isPasswordValid;
+    // Check age validation
+    if (dateOfBirth) {
+      if (!isAtLeast18YearsOld(dateOfBirth)) {
+        setAgeError("You must be at least 18 years old");
+      } else {
+        setAgeError(null);
+      }
+    }
+    
+    const allValid = isNameValid && isEmailValid && isDateOfBirthValid && isPasswordValid && !ageError;
     
     // Notify parent component of validation status
     if (onValidationChange) {
       onValidationChange(allValid);
     }
-  }, [name, email, dateOfBirth, password, onValidationChange]);
+  }, [name, email, dateOfBirth, password, onValidationChange, ageError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -100,6 +122,9 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
           value={dateOfBirth}
           onChange={handleChange}
         />
+        {ageError && (
+          <div className="mt-2 text-foreground text-sm">{ageError}</div>
+        )}
       </div>
       
       <div>
