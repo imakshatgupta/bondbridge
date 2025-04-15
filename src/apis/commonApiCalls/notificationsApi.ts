@@ -108,3 +108,15 @@ export const deleteNotification = async (
     throw new Error(response.data.message || "Failed to delete notification");
   }
 };
+
+export const clearAllNotifications = async (): Promise<ApiResponse> => {
+  const response = await apiClient.delete<ApiResponse>(
+    `/delete-notification?clearAll=1`
+  );
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to clear all notifications");
+  }
+};
