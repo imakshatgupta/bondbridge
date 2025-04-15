@@ -394,6 +394,8 @@ export default function CommunityPostPage() {
                 onLikeClick={() => {}}
                 initialReaction={post.reaction}
                 initialReactionDetails={post.reactionDetails}
+                isCommunity={true}
+                communityId={post.communityId}
                 // onDelete={handlePostDelete}
               />
             )}

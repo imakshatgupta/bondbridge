@@ -20,6 +20,8 @@ export interface SharedPostData {
   };
   feedId: string;
   name: string;
+  isCommunity?: boolean;
+  communityId?: string;
 }
 
 export const getMessages = async (

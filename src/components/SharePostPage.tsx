@@ -102,6 +102,7 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
     
     setIsSharing(true);
     setErrorMessage(null);
+    console.log("postData", postData);
     
     try {
       const userId = localStorage.getItem("userId") || "";

@@ -6,7 +6,7 @@ import { Person, searchPeople } from "@/apis/commonApiCalls/searchApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { fetchFollowings } from "@/apis/commonApiCalls/activityApi";
 import { Avatar } from "@/components/ui/avatar";
-
+import { TruncatedText } from "../ui/TruncatedText";
 interface SelectedUser {
   id: string;
   name: string;
@@ -174,12 +174,16 @@ const UserCard: React.FC<UserCardProps> = ({ user, isSelected, onToggle }) => (
     }`}
   >
     <div className="flex items-center space-x-3">
-        <Avatar className="h-12 w-12">
-          <img src={user.profilePic || user.avatar} alt={user.name} className="h-12 w-12 rounded-full"/>
-        </Avatar>
+      <Avatar className="h-12 w-12">
+        <img
+          src={user.profilePic || user.avatar}
+          alt={user.name}
+          className="h-12 w-12 rounded-full"
+        />
+      </Avatar>
       <div>
         <h3 className="font-medium">{user.name}</h3>
-        <p className="text-sm text-muted-foreground">{user.bio}</p>
+        <TruncatedText text={user.bio} limit={50} showToggle={false} className="text-sm text-muted-foreground"/>
       </div>
     </div>
     <Button

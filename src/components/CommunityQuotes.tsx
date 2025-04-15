@@ -545,6 +545,8 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
                       media: []
                     },
                     feedId: postIdStr,
+                    isCommunity: true,
+                    communityId: communityId,
                     name: authorName
                   }}
                   onClose={() => setShareDialogOpen(prev => ({
