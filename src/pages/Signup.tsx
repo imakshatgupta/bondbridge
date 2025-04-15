@@ -363,9 +363,9 @@ const Signup: React.FC = () => {
                   </Link>
                 </div>
               </div>
-              <div className="text-base font-bold relative text-foreground -top-10 animate-pulse">
+              {/* <div className="text-base font-bold relative text-foreground -top-10 animate-pulse">
                 Coming Soon
-              </div>
+              </div> */}
             </div>
           </form>
         ) : (

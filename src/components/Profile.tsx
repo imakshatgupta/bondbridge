@@ -379,7 +379,6 @@ const Profile: React.FC<ProfileProps> = ({
             <Switch
               checked={privacyLevel == 1}
               onCheckedChange={handleAnonymousToggle}
-              className="data-[state=unchecked]:bg-primary"
             />
           </div>
         ) : (
@@ -425,7 +424,7 @@ const Profile: React.FC<ProfileProps> = ({
           <img
             src={profilePic || avatarSrc || "avatar.png"}
             alt={username}
-            className="w-full h-full object-cover rounded-full absolute z-10"
+            className="w-full h-full object-cover rounded-full absolute z-10 border-1 border-primary/20"
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
           

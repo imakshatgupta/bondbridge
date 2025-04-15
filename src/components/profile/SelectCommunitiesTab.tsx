@@ -19,7 +19,7 @@ const SelectCommunitiesTab: React.FC = () => {
   const mapToCommunity = (communityResponse: CommunityResponse): Community => ({
     id: communityResponse._id,
     name: communityResponse.name,
-    members: communityResponse.memberCount,
+    members: communityResponse?.members?.length || 0,
     pfp: communityResponse.profilePicture || '',
     description: communityResponse.description || '',
     backgroundImage: communityResponse.backgroundImage || '',
@@ -125,13 +125,11 @@ const SelectCommunitiesTab: React.FC = () => {
 
             {/* Content */}
             <div className="pt-8 pb-2 px-4 text-center">
-              <h3 className={`text-base font-medium ${
-                isCommunitySelected(community._id) ? 'text-primary' : 'text-foreground'
-              }`}>
+              <h3 className="text-base font-medium text-foreground">
                 {community.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Members: {community.memberCount.toLocaleString()}
+                Members: {community.members?.length || 0}
               </p>
             </div>
           </div>
