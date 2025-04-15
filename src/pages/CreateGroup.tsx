@@ -9,6 +9,8 @@ import { createGroup, editGroup } from "@/apis/commonApiCalls/activityApi";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setActiveChat } from "@/store/chatSlice";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface GroupInfo {
   name: string;
@@ -221,50 +223,57 @@ const CreateGroup: React.FC = () => {
     (currentTab === "skills" && !skillsInterestsValid);
 
   return (
-    <TabPageLayout
-      title="Create Group"
-      tabs={tabs}
-      currentTab={currentTab}
-      onNext={handleNext}
-      onBack={handleBack}
-      nextButtonText={isLastTab ? "Create" : "Next"}
-      isNextLoading={isCreatingGroup}
-      isNextDisabled={isNextDisabled}
-      validatedTabs={validatedTabs}
-      onTabChange={handleTabChange}
-      decorativeImages={{
-        clipboard: "/profile/clipboard.png",
-        deco1: "/profile/deco1.png",
-        deco2: "/profile/deco2.png",
-      }}
-    >
-      {currentTab === "info" && (
-        <GroupInfoTab 
-          groupInfo={groupInfo} 
-          onChange={setGroupInfo} 
-          onValidationChange={setGroupInfoValid}
-        />
-      )}
-      {currentTab === "skills" && (
-        <SkillsInterestsTab
-          onValidationChange={setSkillsInterestsValid}
-        // skills={groupSkills.skills}
-        // interests={groupSkills.interests}
-        // onSkillsChange={(skills: string[]) =>
-        //   setGroupSkills((prev) => ({ ...prev, skills }))
-        // }
-        // onInterestsChange={(interests: string[]) =>
-        //   setGroupSkills((prev) => ({ ...prev, interests }))
-        // }
-        />
-      )}
-      {currentTab === "friends" && (
-        <SelectFriendsTab
-          selectedParticipants={selectedParticipants}
-          onParticipantsChange={setSelectedParticipants}
-        />
-      )}
-    </TabPageLayout>
+    <div className="w-full">
+      <div className="flex items-center mb-5 relative">
+        <Link to="/activity" className="absolute top-5 left-4 flex items-center text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-full w-full" />
+        </Link>
+      </div>
+      <TabPageLayout
+        title="Create Group"
+        tabs={tabs}
+        currentTab={currentTab}
+        onNext={handleNext}
+        onBack={handleBack}
+        nextButtonText={isLastTab ? "Create" : "Next"}
+        isNextLoading={isCreatingGroup}
+        isNextDisabled={isNextDisabled}
+        validatedTabs={validatedTabs}
+        onTabChange={handleTabChange}
+        decorativeImages={{
+          clipboard: "/profile/clipboard.png",
+          deco1: "/profile/deco1.png",
+          deco2: "/profile/deco2.png",
+        }}
+      >
+        {currentTab === "info" && (
+          <GroupInfoTab 
+            groupInfo={groupInfo} 
+            onChange={setGroupInfo} 
+            onValidationChange={setGroupInfoValid}
+          />
+        )}
+        {currentTab === "skills" && (
+          <SkillsInterestsTab
+            onValidationChange={setSkillsInterestsValid}
+          // skills={groupSkills.skills}
+          // interests={groupSkills.interests}
+          // onSkillsChange={(skills: string[]) =>
+          //   setGroupSkills((prev) => ({ ...prev, skills }))
+          // }
+          // onInterestsChange={(interests: string[]) =>
+          //   setGroupSkills((prev) => ({ ...prev, interests }))
+          // }
+          />
+        )}
+        {currentTab === "friends" && (
+          <SelectFriendsTab
+            selectedParticipants={selectedParticipants}
+            onParticipantsChange={setSelectedParticipants}
+          />
+        )}
+      </TabPageLayout>
+    </div>
   );
 };
 

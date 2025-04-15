@@ -8,11 +8,14 @@ import {
   fetchNotifications,
   fetchFollowRequests,
   markNotificationAsSeen,
+  clearAllNotifications,
 } from "@/apis/commonApiCalls/notificationsApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Bell, UserPlus, AlertCircle, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 // Define the actual notification structure from the API
 interface ApiNotification {
@@ -66,6 +69,7 @@ const Notifications = () => {
   const [executeFollowRequestsFetch, isLoadingFollowRequests] =
     useApiCall(fetchFollowRequests);
   const [executeMarkAsSeen] = useApiCall(markNotificationAsSeen);
+  const [executeClearAll] = useApiCall(clearAllNotifications);
 
   const isLoading = isLoadingNotifications || isLoadingFollowRequests;
 
@@ -88,6 +92,24 @@ const Notifications = () => {
     // Optimistically remove the notification from both unseen and seen lists
     setUnseenNotifications(prev => prev.filter(n => n._id !== notificationId));
     setSeenNotifications(prev => prev.filter(n => n._id !== notificationId));
+  };
+
+  const handleClearAll = async () => {
+    // Store current state for potential rollback
+    const originalUnseen = [...unseenNotifications];
+    const originalSeen = [...seenNotifications];
+
+    // Optimistically clear notifications
+    setUnseenNotifications([]);
+    setSeenNotifications([]);
+
+    const result = await executeClearAll();
+    if (result.status === 404 || !result.success) {
+      // Revert to original state on error
+      toast.error("Failed to Clear Notifications");
+      setUnseenNotifications(originalUnseen);
+      setSeenNotifications(originalSeen);
+    }
   };
 
   const loadData = async () => {
@@ -183,7 +205,7 @@ const Notifications = () => {
         />
       ) : (
         <Tabs defaultValue="notifications" className="">
-          <TabsList className="grid grid-cols-2  ">
+          <TabsList className="grid grid-cols-3  ">
             <TabsTrigger value="notifications" className="cursor-pointer ">
               Notifications{" "}
               {unseenNotifications.length > 0 && `(${unseenNotifications.length})`}
@@ -192,29 +214,44 @@ const Notifications = () => {
               Friend Requests{" "}
               {friendRequests.length > 0 && `(${friendRequests.length})`}
             </TabsTrigger>
+            <TabsTrigger value="requests-sent" className="cursor-pointer">
+              Requests Sent
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="notifications" className="mt-4 ">
-            <div className="space-y-4 ">
+            <div className="space-y-4">
               {totalNotificationsCount > 0 ? (
-                [...unseenNotifications, ...seenNotifications.slice(0, 5)].map((notification) => (
-                  <Notification
-                    key={notification._id}
-                    _id={notification._id}
-                    title={(notification.details.notificationText || notification.details.content || "")}
-                    profilePic={notification.sender.profilePic}
-                    timestamp={notification.timestamp}
-                    seen={notification.seen}
-                    onMarkAsSeen={handleMarkAsSeen}
-                    onDelete={handleDeleteNotification}
-                    senderId={notification.sender.id}
-                    entityDetails={{
-                      entityType: notification.details.entityType,
-                      entityId: notification.details.entityId,
-                      entity: notification.details.entity
-                    }}
-                  />
-                ))
+                <>
+                  <div className="flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearAll}
+                      className="text-foreground hover:text-muted-foreground cursor-pointer"
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  {[...unseenNotifications, ...seenNotifications.slice(0, 5)].map((notification) => (
+                    <Notification
+                      key={notification._id}
+                      _id={notification._id}
+                      title={(notification.details.notificationText || notification.details.content || "")}
+                      profilePic={notification.sender.profilePic}
+                      timestamp={notification.timestamp}
+                      seen={notification.seen}
+                      onMarkAsSeen={handleMarkAsSeen}
+                      onDelete={handleDeleteNotification}
+                      senderId={notification.sender.id}
+                      entityDetails={{
+                        entityType: notification.details.entityType,
+                        entityId: notification.details.entityId,
+                        entity: notification.details.entity
+                      }}
+                    />
+                  ))}
+                </>
               ) : (
                 <EmptyState
                   icon={Bell}
@@ -244,6 +281,17 @@ const Notifications = () => {
                   className="my-8"
                 />
               )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="requests-sent" className="mt-4">
+            <div className="space-y-4">
+              <EmptyState
+                icon={UserPlus}
+                title="No Requests Sent"
+                description="You haven't sent any Friend Requests yet."
+                className="my-8"
+              />
             </div>
           </TabsContent>
         </Tabs>

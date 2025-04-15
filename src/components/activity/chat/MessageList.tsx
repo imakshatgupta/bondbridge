@@ -40,7 +40,7 @@ const MessageList: React.FC<MessageListProps> = ({
   if (isLoadingMessages) {
     return (
       <div className="flex justify-center items-center h-full">
-        <p>Loading messages...</p>
+      <p>Loading Messages ...</p>
       </div>
     );
   }
