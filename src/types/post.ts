@@ -24,6 +24,8 @@ export interface PostProps {
     comments: number;
     datePosted: string;
     isOwner?: boolean;
+    isCommunity?: boolean;
+    communityId?: string;
     onCommentClick?: () => void;
     onLikeClick?: () => void;
     feedId: string;

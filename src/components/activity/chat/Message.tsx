@@ -24,6 +24,8 @@ interface SharedPostData {
   };
   feedId: string;
   name: string;
+  isCommunity?: boolean;
+  communityId?: string;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -90,7 +92,9 @@ const Message: React.FC<MessageProps> = ({
         {sharedPost ? (
           <div className="shared-post">
             <div className="border rounded-md overflow-hidden bg-background text-foreground mb-2 cursor-pointer">
-              <Link to={`/post/${sharedPost._id}`}>
+              <Link to={sharedPost.isCommunity && sharedPost.communityId 
+                      ? `/community/${sharedPost.communityId}/${sharedPost._id}` 
+                      : `/post/${sharedPost._id}`}>
                 {/* Post image if available */}
                 {sharedPost.data.media &&
                   sharedPost.data.media.length > 0 &&

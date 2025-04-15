@@ -52,6 +52,8 @@ export function Post({
     onLikeClick,
     feedId,
     onDelete,
+    isCommunity,
+    communityId,
     initialReaction = { hasReacted: false, reactionType: null },
     initialReactionCount = 0,
     initialReactionDetails = { total: 0, types: { like: 0, love: 0, haha: 0, lulu: 0 } }
@@ -331,6 +333,8 @@ export function Post({
                                             ? media
                                             : []
                                     },
+                                    isCommunity,
+                                    communityId,
                                     feedId: feedId,
                                     name: user
                                 }}

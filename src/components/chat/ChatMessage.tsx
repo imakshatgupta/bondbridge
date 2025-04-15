@@ -22,6 +22,8 @@ interface SharedPostData {
     }>;
   };
   feedId: string;
+  communityId?: string;
+  isCommunity?: boolean;
   name: string;
 }
 
@@ -86,7 +88,9 @@ export const ChatMessage = ({ message, showAvatar }: ChatMessageProps) => {
                     {sharedPost.data.content || 'No caption'}
                   </p>
                   <Link 
-                    to={`/post/${sharedPost._id}`} 
+                    to={sharedPost.isCommunity && sharedPost.communityId 
+                      ? `/community/${sharedPost.communityId}/${sharedPost._id}` 
+                      : `/post/${sharedPost._id}`} 
                     className="flex items-center gap-1 text-xs text-primary mt-1"
                   >
                     View Post <ExternalLink size={12} />
