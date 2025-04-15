@@ -95,13 +95,13 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, receivedOTP, onResendOTP })
           onClick={handleResendOTP}
           variant="link"
           disabled={!canResend}
-          className="text-sm text-foreground hover:underline cursor-pointer"
+          className="text-sm text-foreground hover:underline cursor-pointer pb-20"
         >
           {canResend ? "Resend OTP" : `Resend OTP in ${countdown}s`}
         </Button>
       </div>
       
-      <div className="flex justify-center absolute left-0 right-0 text-center mt-4" style={{ top: "calc(100% + 20vh)" }}>
+      <div className="flex justify-center absolute left-0 right-0 text-center mt-4" style={{ top: "calc(76%)" }}>
         {showOTP && (
           <p className="text-foreground font-bold border-1 px-4 border-primary rounded-full text-xl w-fit p-2">
             {`OTP : ${receivedOTP}`}
