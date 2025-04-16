@@ -5,6 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 // Extended ChatItem for communities with additional properties
 interface CommunityItem extends ChatItem {
+  members?: string[];
   memberCount?: number;
   backgroundImage?: string;
   description?: string;
@@ -31,7 +32,7 @@ const CommunityList = ({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center p-4">Loading communities...</div>
+      <div className="flex justify-center p-4">Loading Communities...</div>
     );
   }
 
