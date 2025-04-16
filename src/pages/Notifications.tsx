@@ -215,7 +215,7 @@ const Notifications = () => {
               {friendRequests.length > 0 && `(${friendRequests.length})`}
             </TabsTrigger>
             <TabsTrigger value="requests-sent" className="cursor-pointer">
-              Requests Sent
+              Sent Requests
             </TabsTrigger>
           </TabsList>
 

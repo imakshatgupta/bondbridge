@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, ArrowLeft, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApiCall } from '@/apis/globalCatchError';
-import { updateUserProfile } from '@/apis/commonApiCalls/profileApi';
+import { updateUserProfile, deleteProfilePicture } from '@/apis/commonApiCalls/profileApi';
 import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AVAILABLE_INTERESTS, WORD_LIMIT } from '@/lib/constants';
@@ -41,6 +41,7 @@ const EditProfilePage: React.FC = () => {
   const [customProfilePic, setCustomProfilePic] = useState<File | null>(null);
   const [customProfilePicPreview, setCustomProfilePicPreview] = useState<string | null>(profilePic || null);
   const [activeProfileTab, setActiveProfileTab] = useState<string>(profilePic ? "custom" : "avatar");
+  const [shouldDeleteProfilePic, setShouldDeleteProfilePic] = useState(false);
   
   const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);
   const [femaleAvatars, setFemaleAvatars] = useState<AvatarData[]>([]);
@@ -48,6 +49,7 @@ const EditProfilePage: React.FC = () => {
   // Use the useApiCall hook for both API calls
   const [executeUpdateProfile, isUpdatingProfile] = useApiCall(updateUserProfile);
   const [executeFetchAvatars, isLoadingAvatars] = useApiCall(fetchAvatars);
+  const [executeDeleteProfilePic] = useApiCall(deleteProfilePicture);
 
   const [activeTab, setActiveTab] = useState<string>("female");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -158,6 +160,21 @@ const EditProfilePage: React.FC = () => {
     }
   };
 
+  const handleDeleteProfilePic = () => {
+    if (activeProfileTab === "custom") {
+      // Clear custom profile pic
+      setCustomProfilePic(null);
+      setCustomProfilePicPreview(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+      // Set the flag to delete the profile picture when saving
+      setShouldDeleteProfilePic(true);
+      toast.success('Profile picture will be deleted when you save changes');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -178,6 +195,19 @@ const EditProfilePage: React.FC = () => {
     if (bioWordCount > WORD_LIMIT) {
       toast.error(`Bio cannot exceed ${WORD_LIMIT} words`);
       return;
+    }
+
+    // If shouldDeleteProfilePic is true, call the delete profile picture API
+    if (shouldDeleteProfilePic) {
+      const deleteResult = await executeDeleteProfilePic();
+      if (deleteResult.success) {
+        // Update Redux store immediately
+        dispatch(updateCurrentUser({ profilePic: "" }));
+        toast.success('Profile picture deleted successfully');
+      } else {
+        toast.error('Failed to delete profile picture');
+        return;
+      }
     }
     
     // Prepare the request data
@@ -223,7 +253,7 @@ const EditProfilePage: React.FC = () => {
       };
 
       // If we're using a custom profile pic, the backend will return the URL
-      if (activeProfileTab === "custom" && data.user?.profilePic) {
+      if (activeProfileTab === "custom" && data.user?.profilePic && !shouldDeleteProfilePic) {
         updatedUserData.profilePic = data.user.profilePic;
       } else if (activeProfileTab === "avatar") {
         updatedUserData.avatar = selectedAvatar;
@@ -232,6 +262,11 @@ const EditProfilePage: React.FC = () => {
       dispatch(updateCurrentUser(updatedUserData));
       dispatch(updateInterests(selectedInterests));
       toast.success('Profile updated successfully');
+      
+      // Reset the delete flag after successful update
+      if (shouldDeleteProfilePic) {
+        setShouldDeleteProfilePic(false);
+      }
     }
   };
 
@@ -277,19 +312,6 @@ const EditProfilePage: React.FC = () => {
         })}
       </div>
     );
-  };
-
-  // Add a new handler for deleting the profile picture
-  const handleDeleteProfilePic = () => {
-    if (activeProfileTab === "custom") {
-      // Clear custom profile pic
-      setCustomProfilePic(null);
-      setCustomProfilePicPreview(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-    // toast.success('Profile picture removed');
   };
 
   return (

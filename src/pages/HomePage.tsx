@@ -538,8 +538,8 @@ export default function HomePage() {
       {/* End of content message */}
       {!hasMore && posts.length > 0 && !isLoading && !isFetchingMore && (
         <div className="text-center py-6 mb-4 text-muted-foreground border-t border-border">
-          <p className="text-sm font-medium">You're all caught up</p>
-          <p className="text-xs">No more posts to load</p>
+          <p className="text-base font-medium">You're all Caught Up</p>
+          <p className="text-sm">No more Posts to Load</p>
         </div>
       )}
     </div>

@@ -237,3 +237,17 @@ export const removeFollower = async (otherId: string): Promise<{ success: boolea
     throw new Error(response.data.message || 'Failed to remove follower');
   }
 };
+
+// Delete user's profile picture
+export const deleteProfilePicture = async (): Promise<{ success: boolean; message: string }> => {
+  const response = await apiClient.delete('/profile-picture');
+  
+  if (response.status === 200) {
+    return {
+      success: true,
+      message: response.data.message || 'Successfully deleted profile picture',
+    };
+  } else {
+    throw new Error(response.data.message || 'Failed to delete profile picture');
+  }
+};
