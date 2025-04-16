@@ -67,12 +67,9 @@ const Notifications = () => {
   const [sentRequests, setSentRequests] = useState<FollowRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [executeNotificationsFetch, isLoadingNotifications] =
-    useApiCall(fetchNotifications);
-  const [executeFollowRequestsFetch, isLoadingFollowRequests] =
-    useApiCall(fetchFollowRequests);
-  const [executeSentRequestsFetch, isLoadingSentRequests] =
-    useApiCall(fetchSentRequests);
+  const [executeNotificationsFetch, isLoadingNotifications] = useApiCall(fetchNotifications);
+  const [executeFollowRequestsFetch, isLoadingFollowRequests] = useApiCall(fetchFollowRequests);
+  const [executeSentRequestsFetch, isLoadingSentRequests] = useApiCall(fetchSentRequests);
   const [executeMarkAsSeen] = useApiCall(markNotificationAsSeen);
   const [executeClearAll] = useApiCall(clearAllNotifications);
 

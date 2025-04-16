@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Clock, X } from "lucide-react";
+import { X } from "lucide-react";
 import { FollowRequest } from "@/apis/commonApiCalls/notificationsApi";
 import { useNavigate } from "react-router-dom";
 
