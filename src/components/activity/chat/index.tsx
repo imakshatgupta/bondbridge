@@ -591,6 +591,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onBack={() => setShowGroupProfile(false)}
         onLeaveGroup={handleLeaveGroup}
         onAddMembers={handleShowAddView}
+        groupId={chatId}
+        onClose={onClose}
       />
     );
   }

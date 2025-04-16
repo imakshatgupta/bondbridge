@@ -162,3 +162,18 @@ export const inviteToGroup = async (groupId: string, userIds: string[]): Promise
     throw new Error(response.data.message || "Failed to invite users to group");
   }
 };
+
+export const deleteGroup = async (groupId: string): Promise<ApiResponse> => {
+  const response = await apiClient.delete<ApiResponse>('/delete-group', {
+    data: { groupId }
+  });
+  
+  if (response.status === 200) {
+    return {
+      ...response.data,
+      success: true
+    };
+  } else {
+    throw new Error(response.data.message || "Failed to delete group");
+  }
+};
