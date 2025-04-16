@@ -567,17 +567,17 @@ const Profile: React.FC<ProfileProps> = ({
           >
             <TabsTrigger value="posts" className="group cursor-pointer">
               <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-                Posts
+                Posts ({posts.filter(post => post.media.length > 0).length})
               </span>
             </TabsTrigger>
             <TabsTrigger value="thoughts" className="group cursor-pointer">
               <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-                Quotes
+                Quotes ({posts.filter(post => post.media.length === 0).length})
               </span>
             </TabsTrigger>
             <TabsTrigger value="community" className="group cursor-pointer">
               <span className="group-data-[state=active]:border-b-2 px-4 group-data-[state=active]:border-primary pb-2">
-                Community
+                Community ({userCommunities.length})
               </span>
             </TabsTrigger>
           </TabsList>
