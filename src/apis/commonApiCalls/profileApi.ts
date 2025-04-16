@@ -126,9 +126,8 @@ export const updateUserProfile = async (
   }
 
   // Handle image if provided
-  if (profileData.image instanceof File) {
-    formDataObj.append("image", profileData.image);
-  }
+  formDataObj.append("profilePic", profileData.image || "");
+  
 
   // Make the API call
   const response = await formDataApiClient.put("/edit-profile", formDataObj);

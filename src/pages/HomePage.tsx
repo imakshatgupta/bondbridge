@@ -1,7 +1,7 @@
 import { Post } from "@/components/Post";
 import { Story } from "@/components/Story";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchHomepageData } from "@/apis/commonApiCalls/homepageApi";
 import {
   HomepageResponse,
@@ -12,7 +12,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { PostSkeleton } from "@/components/skeletons/PostSkeleton";
 import { StoryRowSkeleton } from "@/components/skeletons/StorySkeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { RefreshCw, ImageIcon, AlertCircle, Plus } from "lucide-react";
+import { RefreshCw, ImageIcon, AlertCircle, Plus, Loader2 } from "lucide-react";
 import { getSelfStories } from "@/apis/commonApiCalls/storyApi";
 import { useAppSelector } from "@/store";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
@@ -28,7 +28,11 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [preloadedMedia, setPreloadedMedia] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
   const preloadContainerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const currentUser = useAppSelector((state) => state.currentUser);
   const dispatch = useAppDispatch();
 
@@ -77,6 +81,68 @@ export default function HomePage() {
 
     fetchCompleteUserProfile();
   }, [currentUserId]);
+
+  // Load more posts when page changes
+  const loadMorePosts = useCallback(async () => {
+    if (!hasMore || isLoading || isFetchingMore) return;
+    
+    setIsFetchingMore(true);
+    
+    try {
+      const result = await executeFetchHomepageData(page);
+      
+      if (result.success && result.data) {
+        const { postsData } = result.data as HomepageResponse;
+        
+        // Append new posts to existing posts
+        setPosts(prevPosts => [...prevPosts, ...postsData.posts]);
+        setHasMore(postsData.hasMore || false);
+      }
+    } catch (error) {
+      console.error("Error loading more posts:", error);
+    } finally {
+      setIsFetchingMore(false);
+    }
+  }, [page, hasMore, isLoading, isFetchingMore]);
+
+  // Set up IntersectionObserver for infinite scrolling
+  useEffect(() => {
+    // Clean up previous observer if it exists
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    
+    // Only set up observer if we have more content to load and we're not already loading
+    if (!hasMore || isLoading || isFetchingMore || !loadMoreRef.current) return;
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isLoading && !isFetchingMore) {
+          setPage(prevPage => prevPage + 1);
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+    
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading, isFetchingMore]);
+
+  // Trigger loadMorePosts when page changes
+  useEffect(() => {
+    if (page > 1) {
+      loadMorePosts();
+    }
+  }, [page]);
 
   // Load initial data
   useEffect(() => {
@@ -406,46 +472,60 @@ export default function HomePage() {
       )}
 
       {/* Posts Section */}
-      {isLoading || isLoadingSelfStories ? (
+      {isLoading && page === 1 ? (
         <div className="py-4">
           <PostSkeleton />
         </div>
       ) : posts.length > 0 ? (
-        posts.map((post, index) => {
-          const processedPost = processPostData(post);
-          return (
-            <div key={`post-${post._id || index}`}>
-              <Post
-                user={post.name}
-                avatar={post.profilePic}
-                userId={post.isCommunity ? post.communityId || "" : post.userId}
-                caption={processedPost.data.content}
-                media={processedPost.data.media || []}
-                image={
-                  processedPost.data.media &&
-                  processedPost.data.media.length > 0
-                    ? processedPost.data.media[0].url
-                    : undefined
-                }
-                comments={post.commentCount}
-                datePosted={post.ago_time}
-                isOwner={currentUserId === post.userId}
-                onCommentClick={() =>
-                  handleCommentClick(post.feedId, processedPost)
-                }
-                onLikeClick={() => handleLikeClick(post._id)}
-                feedId={post.feedId}
-                onDelete={handlePostDelete}
-                initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
-                initialReactionCount={post.reactionCount || 0}
-                initialReactionDetails={post.reactionDetails || { 
-                  total: post.reactionCount || 0,
-                  types: { like: 0, love: 0, haha: 0, lulu: 0 }
-                }}
-              />
+        <>
+          {posts.map((post, index) => {
+            const processedPost = processPostData(post);
+            return (
+              <div key={`post-${post._id || index}`}>
+                <Post
+                  user={post.name}
+                  avatar={post.profilePic}
+                  userId={post.isCommunity ? post.communityId || "" : post.userId}
+                  caption={processedPost.data.content}
+                  media={processedPost.data.media || []}
+                  image={
+                    processedPost.data.media &&
+                    processedPost.data.media.length > 0
+                      ? processedPost.data.media[0].url
+                      : undefined
+                  }
+                  comments={post.commentCount}
+                  datePosted={post.ago_time}
+                  isOwner={currentUserId === post.userId}
+                  onCommentClick={() =>
+                    handleCommentClick(post.feedId, processedPost)
+                  }
+                  onLikeClick={() => handleLikeClick(post._id)}
+                  feedId={post.feedId}
+                  onDelete={handlePostDelete}
+                  initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
+                  initialReactionCount={post.reactionCount || 0}
+                  initialReactionDetails={post.reactionDetails || { 
+                    total: post.reactionCount || 0,
+                    types: { like: 0, love: 0, haha: 0, lulu: 0 }
+                  }}
+                />
+              </div>
+            );
+          })}
+          
+          {/* Load more indicator */}
+          {hasMore && (
+            <div ref={loadMoreRef} className="flex justify-center py-4">
+              {isFetchingMore && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Loading More Posts...</span>
+                </div>
+              )}
             </div>
-          );
-        })
+          )}
+        </>
       ) : (
         <EmptyState
           icon={ImageIcon}
@@ -456,7 +536,7 @@ export default function HomePage() {
       )}
 
       {/* End of content message */}
-      {!hasMore && posts.length > 0 && !isLoading && !isLoadingSelfStories && (
+      {!hasMore && posts.length > 0 && !isLoading && !isFetchingMore && (
         <div className="text-center py-6 mb-4 text-muted-foreground border-t border-border">
           <p className="text-sm font-medium">You're all caught up</p>
           <p className="text-xs">No more posts to load</p>
