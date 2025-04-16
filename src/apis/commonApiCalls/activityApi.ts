@@ -163,9 +163,9 @@ export const inviteToGroup = async (groupId: string, userIds: string[]): Promise
   }
 };
 
-export const deleteGroup = async (groupId: string): Promise<ApiResponse> => {
+export const deleteGroup = async (chatId: string): Promise<ApiResponse> => {
   const response = await apiClient.delete<ApiResponse>('/delete-group', {
-    data: { groupId }
+    data: { chatId }
   });
   
   if (response.status === 200) {

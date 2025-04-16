@@ -65,34 +65,47 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
   const activeParticipants = participants.filter(member => member.status === "active");
 
   const handleDeleteGroup = async () => {
-    setIsDeleting(true);
-    setIsDeleteDialogOpen(false);
-    
-    // Immediately close the profile and chat view
-    dispatch(setActiveChat(null));
-    
-    // Store a copy of the original group for restoration if needed
-    const groupToRestore = originalGroup;
-    
-    // Optimistically remove the group from the list
-    dispatch(deleteGroupAction(groupId));
-    
-    // Make the API call to delete the group
-    const response = await deleteGroup(groupId);
-    
-    if (response.success) {
-      toast.success("Group deleted successfully.");
-      onClose();
-    } else {
+    try {
+      setIsDeleting(true);
+      setIsDeleteDialogOpen(false);
+      
+      // Immediately close the profile and chat view
+      dispatch(setActiveChat(null));
+      
+      // Store a copy of the original group for restoration if needed
+      const groupToRestore = originalGroup;
+      
+      // Optimistically remove the group from the list
+      dispatch(deleteGroupAction(groupId));
+      
+      // Make the API call to delete the group
+      const response = await deleteGroup(groupId);
+      
+      if (response.success) {
+        // Successfully deleted, call onClose to refresh the chat list
+        onClose();
+      } else {
+        // If the API call fails, restore the group
+        toast.error("Failed to delete group. Please try again.");
+        
+        // If we have the original group data, restore it
+        if (groupToRestore) {
+          dispatch(restoreGroup(groupToRestore));
+        }
+      }
+    } catch (error) {
+      // Handle error and restore the group
+      console.error("Failed to delete group:", error);
       toast.error("Failed to delete group. Please try again.");
       
       // If we have the original group data, restore it
-      if (groupToRestore) {
-        dispatch(restoreGroup(groupToRestore));
+      if (originalGroup) {
+        dispatch(restoreGroup(originalGroup));
       }
+    } finally {
+      setIsDeleting(false);
     }
-    
-    setIsDeleting(false);
+
   };
 
   return (

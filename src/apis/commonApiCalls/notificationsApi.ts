@@ -44,6 +44,18 @@ export const fetchFollowRequests = async (
   }
 };
 
+export const fetchSentRequests = async (): Promise<FollowRequestsResponse> => {
+  const response = await apiClient.get<FollowRequestsResponse>(
+    "/sentRequests"
+  );
+
+  if (response.status === 200) {
+    return response.data;
+  } else {
+    throw new Error(response.data.message || "Failed to fetch sent requests");
+  }
+};
+
 export const acceptFriendRequest = async (
   data: FriendRequestActionRequest
 ): Promise<ApiResponse> => {

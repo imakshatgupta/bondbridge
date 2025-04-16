@@ -112,7 +112,8 @@ export default function Activity() {
           type: "community" as const,
           memberCount: community.memberCount || (community.members?.length || 0),
           backgroundImage: community.backgroundImage || "",
-          participants: [] // Add empty participants array to satisfy ChatItem type
+          participants: [], // Add empty participants array to satisfy ChatItem type
+          members: community.members || []
         }));
         
         setUserCommunities(communityItems);
