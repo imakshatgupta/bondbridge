@@ -225,6 +225,37 @@ const chatSlice = createSlice({
         ),
       };
     },
+    // Delete a group from the chat list
+    deleteGroup: (state, action: PayloadAction<string>) => {
+      const groupId = action.payload;
+      
+      // Remove from the main chats array
+      state.chats = state.chats.filter(chat => chat.id !== groupId);
+      
+      // Remove from the filtered groups
+      state.filteredChats.groups = state.filteredChats.groups.filter(
+        group => group.id !== groupId
+      );
+      
+      // Clear activeChat if it's the deleted group
+      if (state.activeChat?.id === groupId) {
+        state.activeChat = null;
+      }
+    },
+    // Restore a group when deletion fails
+    restoreGroup: (state, action: PayloadAction<ChatItem>) => {
+      const group = action.payload;
+      
+      // Add back to main chats array if not already there
+      if (!state.chats.some(chat => chat.id === group.id)) {
+        state.chats.push(group);
+      }
+      
+      // Add back to filtered groups if not already there
+      if (!state.filteredChats.groups.some(g => g.id === group.id)) {
+        state.filteredChats.groups.push(group);
+      }
+    },
   },
 });
 
@@ -237,6 +268,8 @@ export const {
   addMessage,
   setIsTyping,
   transformAndSetChats,
+  deleteGroup,
+  restoreGroup,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

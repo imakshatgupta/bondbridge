@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import FriendRequest from "@/components/notifications/FriendRequest";
+import SentRequest from "@/components/notifications/SentRequest";
 import Notification from "@/components/notifications/Notification";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FollowRequest,
   fetchNotifications,
   fetchFollowRequests,
+  fetchSentRequests,
   markNotificationAsSeen,
   clearAllNotifications,
 } from "@/apis/commonApiCalls/notificationsApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Bell, UserPlus, AlertCircle, ArrowLeft } from "lucide-react";
+import { Bell, UserPlus, AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -62,16 +64,16 @@ const Notifications = () => {
   const [unseenNotifications, setUnseenNotifications] = useState<ApiNotification[]>([]);
   const [seenNotifications, setSeenNotifications] = useState<ApiNotification[]>([]);
   const [friendRequests, setFriendRequests] = useState<FollowRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<FollowRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [executeNotificationsFetch, isLoadingNotifications] =
-    useApiCall(fetchNotifications);
-  const [executeFollowRequestsFetch, isLoadingFollowRequests] =
-    useApiCall(fetchFollowRequests);
+  const [executeNotificationsFetch, isLoadingNotifications] = useApiCall(fetchNotifications);
+  const [executeFollowRequestsFetch, isLoadingFollowRequests] = useApiCall(fetchFollowRequests);
+  const [executeSentRequestsFetch, isLoadingSentRequests] = useApiCall(fetchSentRequests);
   const [executeMarkAsSeen] = useApiCall(markNotificationAsSeen);
   const [executeClearAll] = useApiCall(clearAllNotifications);
 
-  const isLoading = isLoadingNotifications || isLoadingFollowRequests;
+  const isLoading = isLoadingNotifications || isLoadingFollowRequests || isLoadingSentRequests;
 
   const handleMarkAsSeen = async (notificationId: string) => {
     const result = await executeMarkAsSeen(notificationId);
@@ -153,6 +155,14 @@ const Notifications = () => {
     } else {
       setFriendRequests([]);
     }
+
+    // Fetch sent requests
+    const sentRequestsResult = await executeSentRequestsFetch();
+    if (sentRequestsResult.success && sentRequestsResult.data) {
+      setSentRequests(sentRequestsResult.data.result || []);
+    } else {
+      setSentRequests([]);
+    }
   };
 
   useEffect(() => {
@@ -173,6 +183,16 @@ const Notifications = () => {
         setFriendRequests((prev) => [...prev, failedRequest]);
       }
     }
+  };
+
+  const handleSentRequestAction = async (
+    requestId: string,
+    success: boolean
+  ) => {
+    if (success) {
+      // If the action was successful, remove the request from the list
+      setSentRequests((prev) => prev.filter((req) => req._id !== requestId));
+    } 
   };
 
   const handleRefresh = () => {
@@ -215,7 +235,8 @@ const Notifications = () => {
               {friendRequests.length > 0 && `(${friendRequests.length})`}
             </TabsTrigger>
             <TabsTrigger value="requests-sent" className="cursor-pointer">
-              Sent Requests
+              Sent Requests{" "}
+              {sentRequests.length > 0 && `(${sentRequests.length})`}
             </TabsTrigger>
           </TabsList>
 
@@ -239,6 +260,7 @@ const Notifications = () => {
                       _id={notification._id}
                       title={(notification.details.notificationText || notification.details.content || "")}
                       profilePic={notification.sender.profilePic}
+                      avatar={notification.sender.profilePic}
                       timestamp={notification.timestamp}
                       seen={notification.seen}
                       onMarkAsSeen={handleMarkAsSeen}
@@ -286,12 +308,22 @@ const Notifications = () => {
 
           <TabsContent value="requests-sent" className="mt-4">
             <div className="space-y-4">
-              <EmptyState
-                icon={UserPlus}
-                title="No Requests Sent"
-                description="You haven't sent any Friend Requests yet."
-                className="my-8"
-              />
+              {sentRequests.length > 0 ? (
+                sentRequests.map((request) => (
+                  <SentRequest
+                    key={request._id}
+                    {...request}
+                    onActionComplete={handleSentRequestAction}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  icon={ArrowRight}
+                  title="No Requests Sent"
+                  description="You haven't sent any Friend Requests yet."
+                  className="my-8"
+                />
+              )}
             </div>
           </TabsContent>
         </Tabs>

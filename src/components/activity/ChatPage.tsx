@@ -6,15 +6,30 @@ import ChatList from './ChatList';
 import ChatInterface from './ChatInterface';
 import SidebarAvatar from '../profile/SidebarAvatar';
 import { Button } from '../ui/button';
+import { useApiCall } from '@/apis/globalCatchError';
+import { fetchChatRooms } from '@/apis/commonApiCalls/activityApi';
+import { transformAndSetChats } from '@/store/chatSlice';
 
 const ChatPage: React.FC = () => {
   const dispatch = useDispatch();
   const activeChat = useSelector((state: RootState) => state.chat.activeChat);
   const chats = useSelector((state: RootState) => state.chat.chats);
   const isLoading = useSelector((state: RootState) => state.chat.isLoading);
+  const [executeFetchChats] = useApiCall(fetchChatRooms);
 
-  const handleCloseChat = () => {
+  const handleCloseChat = async () => {
     dispatch(setActiveChat(null));
+    
+    const result = await executeFetchChats();
+    if (result.success && result.data) {
+      const currentUserId = localStorage.getItem("userId") || "";
+      dispatch(
+        transformAndSetChats({
+          chatRooms: result.data.chatRooms || [],
+          currentUserId,
+        })
+      );
+    }
   };
 
   const handleSelectChat = (chat: ChatItem) => {

@@ -1,8 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, PlusIcon } from "lucide-react";
+import { ArrowLeft, PlusIcon, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { deleteGroup } from "@/apis/commonApiCalls/activityApi";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { deleteGroup as deleteGroupAction, setActiveChat, restoreGroup } from "@/store/chatSlice";
+import { toast } from "sonner";
 
 interface Participant {
   userId: string;
@@ -22,6 +34,8 @@ interface GroupProfileProps {
   onBack: () => void;
   onLeaveGroup: () => void;
   onAddMembers: () => void;
+  groupId: string;
+  onClose: () => void;
 }
 
 const GroupProfile: React.FC<GroupProfileProps> = ({
@@ -35,12 +49,64 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
   onBack,
   onLeaveGroup,
   onAddMembers,
+  groupId,
+  onClose,
 }) => {
   // Find if current user is admin
   const isAdmin = admin === currentUserId;
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const dispatch = useAppDispatch();
+  const originalGroup = useAppSelector(state => 
+    state.chat.filteredChats.groups.find(group => group.id === groupId)
+  );
 
   // Filter only active participants
   const activeParticipants = participants.filter(member => member.status === "active");
+
+  const handleDeleteGroup = async () => {
+    try {
+      setIsDeleting(true);
+      setIsDeleteDialogOpen(false);
+      
+      // Immediately close the profile and chat view
+      dispatch(setActiveChat(null));
+      
+      // Store a copy of the original group for restoration if needed
+      const groupToRestore = originalGroup;
+      
+      // Optimistically remove the group from the list
+      dispatch(deleteGroupAction(groupId));
+      
+      // Make the API call to delete the group
+      const response = await deleteGroup(groupId);
+      
+      if (response.success) {
+        // Successfully deleted, call onClose to refresh the chat list
+        onClose();
+      } else {
+        // If the API call fails, restore the group
+        toast.error("Failed to delete group. Please try again.");
+        
+        // If we have the original group data, restore it
+        if (groupToRestore) {
+          dispatch(restoreGroup(groupToRestore));
+        }
+      }
+    } catch (error) {
+      // Handle error and restore the group
+      console.error("Failed to delete group:", error);
+      toast.error("Failed to delete group. Please try again.");
+      
+      // If we have the original group data, restore it
+      if (originalGroup) {
+        dispatch(restoreGroup(originalGroup));
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+
+  };
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -91,13 +157,22 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
                 Leave
               </Button>
             )}
-            {isAdmin && (
-              <Button
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 cursor-pointer"
-                onClick={onAddMembers}
-              >
-                Add <PlusIcon className="h-4 w-4 ml-2" />
-              </Button>
+            {isAdmin && !hasLeftGroup && (
+              <>
+                <Button
+                  variant="destructive"
+                  className="px-6 cursor-pointer"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  Delete <Trash2 className="h-4 w-4 ml-2" />
+                </Button>
+                <Button
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 cursor-pointer"
+                  onClick={onAddMembers}
+                >
+                  Add <PlusIcon className="h-4 w-4 ml-2" />
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -148,6 +223,35 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Delete Group Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Group</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this group? This action cannot be undone and all messages will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-row justify-end gap-2 sm:justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteGroup}
+              disabled={isDeleting}
+              className="cursor-pointer"
+            >
+              {isDeleting ? "Deleting..." : "Delete Group"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
