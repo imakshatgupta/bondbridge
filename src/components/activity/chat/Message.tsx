@@ -144,7 +144,7 @@ const Message: React.FC<MessageProps> = ({
             </div>
           </div>
         ) : (
-          <p>
+          <p className="break-words whitespace-normal">
             {typeof message.text === "string"
               ? message.text
               : JSON.stringify(message.text)}
