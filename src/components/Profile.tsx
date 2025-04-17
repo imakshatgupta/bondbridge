@@ -97,7 +97,7 @@ const Profile: React.FC<ProfileProps> = ({
   // const [postDisplayType, setPostDisplayType] = useState<'images' | 'text'>('images');
 
   // Get user data from Redux store
-  const { privacyLevel, nickname } = useAppSelector(
+  const { privacyLevel, nickname, username: reduxUsername, profilePic: reduxProfilePic, avatar: reduxAvatar, bio: reduxBio } = useAppSelector(
     (state) => state.currentUser
   );
   // Check if current user by comparing with userId in localStorage
@@ -225,6 +225,7 @@ const Profile: React.FC<ProfileProps> = ({
               username: result.data.username,
               nickname: result.data.nickName,
               email: result.data.email,
+              profilePic: result.data.profilePic,
               avatar: result.data.avatarSrc,
               privacyLevel: result.data.privacyLevel,
               bio: result.data.bio,
@@ -422,8 +423,11 @@ const Profile: React.FC<ProfileProps> = ({
             </div>
           )}
           <img
-            src={profilePic || avatarSrc || "avatar.png"}
-            alt={username}
+            src={isCurrentUser 
+              ? (reduxProfilePic || reduxAvatar || "avatar.png")
+              : (profilePic || avatarSrc || "avatar.png")
+            }
+            alt={isCurrentUser ? (privacyLevel == 1 ? nickname : reduxUsername) : username}
             className="w-full h-full object-cover rounded-full absolute z-10 border-1 border-primary/20"
             style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
           />
@@ -455,11 +459,11 @@ const Profile: React.FC<ProfileProps> = ({
           {isCurrentUser
             ? privacyLevel == 1
               ? nickname
-              : username
+              : reduxUsername || username
             : username}
         </h1>
         <TruncatedText 
-          text={bio} 
+          text={isCurrentUser ? reduxBio || bio : bio} 
           limit={100}
           placeholderText={isCurrentUser ? "Add a bio in your profile settings" : "No bio available"}
           className="text-foreground text-sm text-center mx-auto"

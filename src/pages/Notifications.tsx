@@ -190,15 +190,9 @@ const Notifications = () => {
     success: boolean
   ) => {
     if (success) {
-      // If the action was successful, keep the request removed
+      // If the action was successful, remove the request from the list
       setSentRequests((prev) => prev.filter((req) => req._id !== requestId));
-    } else {
-      // If the action failed, add the request back
-      const failedRequest = sentRequests.find((req) => req._id === requestId);
-      if (failedRequest) {
-        setSentRequests((prev) => [...prev, failedRequest]);
-      }
-    }
+    } 
   };
 
   const handleRefresh = () => {

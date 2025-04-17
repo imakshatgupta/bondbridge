@@ -132,3 +132,8 @@ export const clearAllNotifications = async (): Promise<ApiResponse> => {
     throw new Error(response.data.message || "Failed to clear all notifications");
   }
 };
+
+export const deleteSentRequest = async (requestId: string): Promise<ApiResponse> => {
+  const response = await apiClient.delete<ApiResponse>(`/sentRequest/${requestId}`);
+  return response.data;
+};
