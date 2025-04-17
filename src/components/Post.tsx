@@ -29,16 +29,6 @@ import { ReportModal } from './ReportModal';
 import ReactionComponent from "./global/ReactionComponent";
 import VideoObserver from "./common/VideoObserver";
 
-// Reaction types and their emojis
-// const REACTIONS = {
-//     like: { emoji: "👍🏻", label: "Like" },
-//     love: { emoji: "❤️", label: "Love" },
-//     haha: { emoji: "😂", label: "Haha" },
-//     lulu: { emoji: "😢", label: "Lulu" }
-// };
-
-// type ReactionType = keyof typeof REACTIONS;
-
 export function Post({
     user,
     userId,
@@ -60,14 +50,6 @@ export function Post({
 }: PostProps) {
     const navigate = useNavigate();
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-    // const [showReactionPopover, setShowReactionPopover] = useState(false);
-    // const reactionTimeoutRef = useRef<number | null>(null);
-    // const [reactionCounts, setReactionCounts] = useState<Record<ReactionType, number>>({
-    //     like: reactionDetails.types.like || 0,
-    //     love: reactionDetails.types.love || 0,
-    //     haha: reactionDetails.types.haha || 0,
-    //     lulu: reactionDetails.types.lulu || 0
-    // });
     const [isMuted, setIsMuted] = useState(true);
     const [showControls, setShowControls] = useState(false);
     const videoRefs = useRef<Record<number, HTMLVideoElement>>({});
