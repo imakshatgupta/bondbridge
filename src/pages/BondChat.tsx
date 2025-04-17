@@ -34,6 +34,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { stopAllRecognitionInstances } from "@/types/speech-recognition";
+import { TypingIndicator } from "@/components/chat/TypingIndicator";
 
 // Extend the Message type to support complex content
 interface ExtendedMessage extends Omit<Message, "text"> {
@@ -211,6 +212,7 @@ export default function BondChat() {
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const isSpeakerOnRef = useRef(false); // Add a ref to track current speaker state
   const voiceTypeRef = useRef<string>("male"); // Updated ref for voice type to use "male"
+  const [isBotTyping, setIsBotTyping] = useState(false); // Add state for typing indicator
 
   // Add new state for speech recognition active
   const [isSpeechActive, setIsSpeechActive] = useState(false);
@@ -271,12 +273,9 @@ export default function BondChat() {
     const newSpeakerState = !isSpeakerOn;
     setIsSpeakerOn(newSpeakerState);
 
-    // Stop any current audio playback when turning off
-    if (!newSpeakerState && audioRef) {
-      audioRef.pause();
-      audioRef.currentTime = 0;
-      setAudioRef(null);
-      setIsAudioPlaying(false);
+    // Instead of stopping playback, just adjust the volume
+    if (audioRef) {
+      audioRef.volume = newSpeakerState ? 1 : 0;
     }
   };
 
@@ -287,7 +286,7 @@ export default function BondChat() {
 
   // Function to play audio from base64 string when received
   const playAudioFromBase64 = (base64Audio: string) => {
-    if (!isSpeakerOnRef.current || !base64Audio) return;
+    if (!base64Audio) return;
 
     try {
       // Stop any current audio
@@ -298,6 +297,10 @@ export default function BondChat() {
 
       // Create audio source from base64
       const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+      
+      // Set volume based on current speaker state
+      audio.volume = isSpeakerOnRef.current ? 1 : 0;
+      
       setAudioRef(audio);
 
       // Set up event handlers
@@ -315,7 +318,7 @@ export default function BondChat() {
         toast.error("Audio playback failed");
       };
 
-      // Play the audio
+      // Play the audio regardless of speaker state
       audio.play().catch((error) => {
         console.error("Audio playback error:", error);
         toast.error("Failed to play audio");
@@ -408,6 +411,9 @@ export default function BondChat() {
       // Skip if it's our own message (we'll add it optimistically)
       if (data.senderId === userId) return;
 
+      // Hide typing indicator when bot message is received
+      setIsBotTyping(false);
+
       // Handle different content types
       let messageContent: string | MessageContent =
         typeof data.content === "string" ? data.content : data.content;
@@ -441,12 +447,9 @@ export default function BondChat() {
 
       setMessages((prev) => [...prev, newMsg]);
 
-      console.log("isSpeakerOn state:", isSpeakerOn);
-      console.log("isSpeakerOnRef.current:", isSpeakerOnRef.current);
-      console.log("data.media:", data.media);
-
-      // Play audio if speaker is on and we have audio data - use the ref value
-      if (isSpeakerOnRef.current && data.media) {
+      // Play audio if we have audio data - regardless of speaker state
+      // Volume will be set based on isSpeakerOnRef.current
+      if (data.media) {
         playAudioFromBase64(data.media);
       }
     };
@@ -472,17 +475,17 @@ export default function BondChat() {
 
   // Effect to handle existing messages' audio when speaker toggle changes
   useEffect(() => {
-    // If speaker is turned off, stop any playing audio
-    if (!isSpeakerOn && audioRef) {
-      audioRef.pause();
-      audioRef.currentTime = 0;
-      setAudioRef(null);
-      setIsAudioPlaying(false);
+    // Update volume of existing audio when speaker state changes
+    if (audioRef) {
+      audioRef.volume = isSpeakerOn ? 1 : 0;
     }
   }, [isSpeakerOn]);
 
   const handleSendMessage = (text: string) => {
     if (!text.trim() || !socket || !isConnected || !chatRoomId) return;
+
+    // Show typing indicator when message is sent
+    setIsBotTyping(true);
 
     // Create message data
     const messageData = {
@@ -862,6 +865,7 @@ export default function BondChat() {
                     />
                   )
                 )}
+                {isBotTyping && <TypingIndicator className="mt-4" />}
               </div>
             )}
             <div ref={messagesEndRef} />
