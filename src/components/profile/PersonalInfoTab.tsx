@@ -22,6 +22,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
   );
   const [showPassword, setShowPassword] = useState(false);
   const [ageError, setAgeError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const isAtLeast18YearsOld = (dateString: string): boolean => {
     const birthDate = new Date(dateString);
@@ -49,6 +50,17 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
       } else {
         setAgeError(null);
       }
+    }
+    
+    // Check password validation
+    if (password.trim()) {
+      if (password.trim().length < 6) {
+        setPasswordError("Password must be at least 6 characters");
+      } else {
+        setPasswordError(null);
+      }
+    } else {
+      setPasswordError(null);
     }
     
     const allValid = isNameValid && isEmailValid && isDateOfBirthValid && isPasswordValid && !ageError;
@@ -121,6 +133,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
           id="dob"
           value={dateOfBirth}
           onChange={handleChange}
+          className="date-input"
         />
         {ageError && (
           <div className="mt-2 text-foreground text-sm">{ageError}</div>
@@ -167,6 +180,9 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
             </svg>
           </Button>
         </div>
+        {passwordError && (
+          <div className="mt-2 text-foreground text-sm">{passwordError}</div>
+        )}
       </div>
     </div>
   );
