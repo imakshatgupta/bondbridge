@@ -168,7 +168,7 @@ const BotMessage = ({
       </Avatar>
       <div className="flex-1 max-w-[80%]">
         <div className="bg-muted p-3 rounded-lg text-foreground rounded-tl-none">
-          <p className="break-all">{messageText}</p>
+          <p className="break-words">{messageText}</p>
           <span className="text-xs opacity-70 block text-right mt-1">
             {message.timestamp}
           </span>
@@ -192,7 +192,7 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
   return (
     <div className="flex items-start gap-2 mb-4 flex-row-reverse">
       <div className="bg-primary p-3 rounded-lg text-primary-foreground rounded-tr-none max-w-[70%]">
-        <p className="break-all">
+        <p className="break-words">
           {typeof message.text === "string" ? message.text : ""}
         </p>
         <span className="text-xs opacity-70 block text-right mt-1  ">
