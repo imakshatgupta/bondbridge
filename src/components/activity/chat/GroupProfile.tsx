@@ -109,7 +109,7 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-background">
+    <div className="flex flex-col bg-background overflow-y-auto max-h-[90vh]">
       {/* Back button header */}
       <div className="flex items-center p-4 border-b">
         <Button
@@ -178,7 +178,7 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
         </div>
 
         {/* Participants list */}
-        <div className="pt-4 px-4 overflow-y-auto max-h-[45vh]">
+        <div className="pt-4 px-4">
           <h4 className="font-medium mb-4">Participants</h4>
           <div>
             {activeParticipants
