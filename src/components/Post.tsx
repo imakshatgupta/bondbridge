@@ -23,21 +23,16 @@ import { PostProps } from "@/types/post";
 import {
     Dialog,
     DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import SharePostPage from "./SharePostPage";
 import { ReportModal } from './ReportModal';
 import ReactionComponent from "./global/ReactionComponent";
 import VideoObserver from "./common/VideoObserver";
-
-// Reaction types and their emojis
-// const REACTIONS = {
-//     like: { emoji: "👍🏻", label: "Like" },
-//     love: { emoji: "❤️", label: "Love" },
-//     haha: { emoji: "😂", label: "Haha" },
-//     lulu: { emoji: "😢", label: "Lulu" }
-// };
-
-// type ReactionType = keyof typeof REACTIONS;
 
 export function Post({
     user,
@@ -60,14 +55,7 @@ export function Post({
 }: PostProps) {
     const navigate = useNavigate();
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-    // const [showReactionPopover, setShowReactionPopover] = useState(false);
-    // const reactionTimeoutRef = useRef<number | null>(null);
-    // const [reactionCounts, setReactionCounts] = useState<Record<ReactionType, number>>({
-    //     like: reactionDetails.types.like || 0,
-    //     love: reactionDetails.types.love || 0,
-    //     haha: reactionDetails.types.haha || 0,
-    //     lulu: reactionDetails.types.lulu || 0
-    // });
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isMuted, setIsMuted] = useState(true);
     const [showControls, setShowControls] = useState(false);
     const videoRefs = useRef<Record<number, HTMLVideoElement>>({});
@@ -96,8 +84,14 @@ export function Post({
     const hasMultipleMedia = media && media.length > 1;
     const hasSingleMedia = (media && media.length === 1);
 
+    const confirmDeletePost = () => {
+        setIsDeleteDialogOpen(true);
+    };
+
     const handleDeletePost = async () => {
         if (!feedId) return;
+        setIsDeleteDialogOpen(false);
+        
         const result = await executeDeletePost(feedId);
 
         if (result.success) {
@@ -156,7 +150,7 @@ export function Post({
             },
             {
                 ...DeleteMenuItem,
-                onClick: handleDeletePost
+                onClick: confirmDeletePost
             }
         );
     } else {
@@ -344,12 +338,32 @@ export function Post({
                     </Dialog>
                 )}
             </Card>
+
             <ReportModal
                 isOpen={isReportModalOpen}
                 onClose={() => setIsReportModalOpen(false)}
                 postId={feedId}
                 reporterId={currentUserId}
             />
+
+            <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Delete Post</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete this post? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex justify-between sm:justify-between gap-2 mt-4">
+                        <Button variant="outline" className="cursor-pointer" onClick={() => setIsDeleteDialogOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" className="cursor-pointer" onClick={handleDeletePost}>
+                            Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

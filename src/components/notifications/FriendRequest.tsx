@@ -5,20 +5,25 @@ import {
   rejectFriendRequest,
   FollowRequest
 } from "@/apis/commonApiCalls/notificationsApi";
+import { TruncatedText } from "@/components/ui/TruncatedText";
+import { Link } from "react-router-dom";
 
-interface FriendRequestProps extends FollowRequest {
+interface FriendRequestProps extends Omit<FollowRequest, 'profilePic'> {
   onActionComplete: (
     requestId: string,
     success: boolean,
     action: "accept" | "reject"
   ) => void;
+  bio?: string;
+  profilePic?: string;
 }
 
 const FriendRequest = ({
   _id,
   name,
   avatar,
-  nickName,
+  bio,
+  profilePic,
   onActionComplete,
 }: FriendRequestProps) => {
   const [executeAccept, isAccepting] = useApiCall(acceptFriendRequest);
@@ -54,17 +59,19 @@ const FriendRequest = ({
 
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg">
+      <Link to={`/profile/${_id}`}>
       <div className="flex items-center gap-4">
         <img
-          src={avatar}
+          src={profilePic || avatar}
           alt={name}
           className="w-12 h-12 rounded-full object-cover"
         />
         <div>
           <h3 className="font-medium">{name}</h3>
-          <p className="text-sm text-muted-foreground">{nickName}</p>
+          <TruncatedText text={bio} limit={40} showToggle={false}/>
         </div>
       </div>
+      </Link>
       <div className="flex gap-2">
         <Button  className="cursor-pointer" onClick={handleAccept} disabled={isLoading}>
           Accept

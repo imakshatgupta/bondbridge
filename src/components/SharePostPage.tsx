@@ -24,6 +24,8 @@ interface ChatParticipant {
   status?: string;
 }
 
+const MAX_SHARE_USERS = 5; // Maximum number of users to share with
+
 const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
   const [users, setUsers] = useState<Person[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<Person[]>([]);
@@ -78,6 +80,11 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
       if (newSet.has(userId)) {
         newSet.delete(userId);
       } else {
+        // Check if we've reached the maximum limit
+        if (newSet.size >= MAX_SHARE_USERS) {
+          toast.warning(`You can only share with up to ${MAX_SHARE_USERS} users at once`);
+          return prev;
+        }
         newSet.add(userId);
       }
       return newSet;
@@ -239,7 +246,7 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
           <div className="flex items-center justify-between py-2 px-3">
             {isSomeSelected && (
               <span className="text-sm text-muted-foreground font-medium">
-                {selectedUsers.size} User{selectedUsers.size !== 1 ? 's' : ''} selected
+                {selectedUsers.size}/{MAX_SHARE_USERS} User{selectedUsers.size !== 1 ? 's' : ''} selected
               </span>
             )}
           </div>
@@ -256,6 +263,7 @@ const SharePostPage: React.FC<SharePostPageProps> = ({ postData, onClose }) => {
                     onCheckedChange={() => toggleUserSelection(user.id)}
                     className="cursor-pointer data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                     onClick={(e) => e.stopPropagation()}
+                    disabled={selectedUsers.size >= MAX_SHARE_USERS && !selectedUsers.has(user.id)}
                   />
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user.profilePic || user.avatar} alt={user.name} />

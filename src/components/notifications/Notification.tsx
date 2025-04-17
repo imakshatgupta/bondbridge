@@ -9,6 +9,7 @@ interface NotificationProps {
   _id: string;
   title: string;
   profilePic: string;
+  avatar: string;
   timestamp: string;
   seen: boolean;
   onMarkAsSeen: (id: string) => void;
@@ -34,6 +35,7 @@ const Notification = ({
   onDelete,
   entityDetails,
   senderId,
+  avatar,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
   const [isDeleted, setIsDeleted] = useState(false);
@@ -100,7 +102,7 @@ const Notification = ({
     >
       <div className="w-12 h-12">
         <img
-          src={profilePic}
+          src={profilePic || avatar}
           alt="User avatar"
           onClick={visitProfile}
           className="w-full h-full rounded-full object-cover cursor-pointer"
