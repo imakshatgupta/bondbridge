@@ -268,6 +268,13 @@ export default function BondChat() {
     scrollToBottom();
   }, [messages]);
 
+  // Add new useEffect to handle scrolling when typing indicator state changes
+  useEffect(() => {
+    if (isBotTyping) {
+      scrollToBottom();
+    }
+  }, [isBotTyping]);
+
   // Function to toggle the speaker state
   const toggleSpeaker = () => {
     const newSpeakerState = !isSpeakerOn;
@@ -485,7 +492,7 @@ export default function BondChat() {
     if (!text.trim() || !socket || !isConnected || !chatRoomId) return;
 
     // Show typing indicator when message is sent
-    setIsBotTyping(true);
+    setTimeout(() => setIsBotTyping(true), 700);
 
     // Create message data
     const messageData = {
@@ -865,7 +872,17 @@ export default function BondChat() {
                     />
                   )
                 )}
-                {isBotTyping && <TypingIndicator className="mt-4" />}
+                {isBotTyping && (
+                  <div className="flex items-start gap-2 mb-4">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/bondchat.svg" alt="Bond Chat" />
+                      <AvatarFallback>BC</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 max-w-[80%]">
+                      <TypingIndicator />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             <div ref={messagesEndRef} />
