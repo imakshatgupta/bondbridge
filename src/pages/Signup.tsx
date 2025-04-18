@@ -7,6 +7,8 @@ import IntlTelInput from "react-intl-tel-input";
 import "react-intl-tel-input/dist/main.css";
 import { sendOTP, verifyOTP } from "../apis/commonApiCalls/authenticationApi";
 import { useApiCall } from "../apis/globalCatchError";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 // Custom styles for the phone input component that change with theme
 const customPhoneInputStyles = `
@@ -240,6 +242,17 @@ const Signup: React.FC = () => {
 
   return (
     <>
+      {showOTP && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-20 left-24 z-50 cursor-pointer"
+          onClick={() => setShowOTP(false)}
+        >
+          <ArrowLeft className="h-6 w-6" />
+          <span className="sr-only">Back</span>
+        </Button>
+      )}
       <AuthLayout
         title={
           <div className="text-nowrap">

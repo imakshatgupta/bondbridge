@@ -44,6 +44,7 @@ export const fetchUserProfile = async (
       compatibility: userData.compatibility || 0,
       communities: userData.communities || [],
       public: userData.public || 0,
+      isBlocked: userData.isBlocked,
     },
   };
 };
@@ -93,7 +94,7 @@ export const updateUserProfile = async (
   const formDataObj = new FormData();
 
   // Append form data
-  if (profileData.name) {
+  if (profileData.name && profileData.privacyLevel == 0) {
     formDataObj.append("name", profileData.name);
   }
   if (profileData.email) {
@@ -201,6 +202,7 @@ export const fetchProfileById = async (
     avatar: userData.avatar || userData.profilePic || "/profile/user.png",
     profilePic: userData.profilePic || userData.avatar || "/profile/user.png",
     interests: userData.interests || [],
+    isBlocked: userData.isBlocked || false,
   };
 };
 
