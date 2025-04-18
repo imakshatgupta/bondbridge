@@ -252,12 +252,12 @@ svg.theme-svg path {
 
 /* Fix for date input calendar icon in light/dark themes */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(var(--foreground-invert, 0.8));
+  filter: invert(var(--foreground-invert, 0.9));
   cursor: pointer;
 }
 
 .dark input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(var(--foreground-invert, 0.2));
+  filter: invert(var(--foreground-invert, 0));
 }
 
 
