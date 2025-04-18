@@ -93,8 +93,25 @@ const ProfilePage: React.FC = () => {
 
   if (!userData || !userId) {
     return (
-      <div className="h-[80vh] w-full flex items-center justify-center text-muted-foreground">
-        User not found
+      <div className="h-[80vh] w-full flex flex-col items-center justify-center">
+        <div className="text-center max-w-md px-4">
+          <div className="mb-6 w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-semibold mb-2">User Not Found</h2>
+          <p className="text-muted-foreground mb-6">
+            The profile you're looking for doesn't exist or may have been removed.
+          </p>
+          <button 
+            onClick={() => window.history.back()} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
@@ -102,7 +119,7 @@ const ProfilePage: React.FC = () => {
   // Extract just the community IDs to pass to the Profile component
   // This maintains compatibility with the existing Profile component
   const communityIds = userCommunityDetails.map(community => community._id);
-
+  console.log("blockkk: ",userData.isBlocked);
   return (
     <>
       <Profile
@@ -122,6 +139,7 @@ const ProfilePage: React.FC = () => {
         communities={communityIds} // Pass just the IDs to keep the existing interface
         interests={userData.interests}
         public={userData.public}
+        isBlocked={userData.isBlocked}
       />
     </>
   );

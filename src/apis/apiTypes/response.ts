@@ -637,7 +637,8 @@ export interface PostDetailsData {
 export interface GetPostDetailsResponse {
   success: boolean;
   message: string;
-  post: PostDetailsData;
+  post?: PostDetailsData;
+  notFound?: boolean;
 }
 
 export interface CommunityResponse {

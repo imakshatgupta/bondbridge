@@ -16,6 +16,7 @@ export interface UserProfileData {
   compatibility?: number;
   communities?: string[];
   public?: number;
+  isBlocked: boolean;
 }
 
 export interface PostData {
@@ -103,6 +104,7 @@ export interface FollowingFollowerUser {
   avatar: string;
   profilePic: string;
   interests: string[];
+  isBlocked?: boolean;
 }
 
 export interface FollowingFollowersResponse {

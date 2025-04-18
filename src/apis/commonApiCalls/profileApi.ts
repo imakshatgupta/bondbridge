@@ -44,6 +44,7 @@ export const fetchUserProfile = async (
       compatibility: userData.compatibility || 0,
       communities: userData.communities || [],
       public: userData.public || 0,
+      isBlocked: userData.isBlocked,
     },
   };
 };
@@ -201,6 +202,7 @@ export const fetchProfileById = async (
     avatar: userData.avatar || userData.profilePic || "/profile/user.png",
     profilePic: userData.profilePic || userData.avatar || "/profile/user.png",
     interests: userData.interests || [],
+    isBlocked: userData.isBlocked || false,
   };
 };
 
