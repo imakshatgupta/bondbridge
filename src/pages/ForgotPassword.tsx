@@ -9,6 +9,7 @@ import { useApiCall } from '../apis/globalCatchError';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import OTPForm from "../components/auth/OTPForm";
+import { ArrowLeft } from "lucide-react";
 
 // Import the API function (you'll need to create this)
 import { sendOTP, verifyOTP, forgotPassword } from "../apis/commonApiCalls/authenticationApi";
@@ -252,6 +253,14 @@ const ForgotPassword: React.FC = () => {
         }
     };
 
+    const handleBackClick = () => {
+        if(step === 'phone') {
+            navigate('/login');
+        } else {
+            setStep('phone');
+        }
+    };
+
     const renderForm = () => {
         switch (step) {
             case 'phone':
@@ -409,6 +418,17 @@ const ForgotPassword: React.FC = () => {
 
     return (
         <>
+            {(step === 'otp' || step === 'newPassword' || step === 'phone') && (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-20 left-24 z-50 cursor-pointer"
+                    onClick={handleBackClick}
+                >
+                    <ArrowLeft className="h-6 w-6" />
+                    <span className="sr-only">Back</span>
+                </Button>
+            )}
             <AuthLayout
                 title="Reset Your Password"
                 subtitle="Follow the steps to securely reset your password"

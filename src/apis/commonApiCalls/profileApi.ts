@@ -94,7 +94,7 @@ export const updateUserProfile = async (
   const formDataObj = new FormData();
 
   // Append form data
-  if (profileData.name) {
+  if (profileData.name && profileData.privacyLevel == 0) {
     formDataObj.append("name", profileData.name);
   }
   if (profileData.email) {

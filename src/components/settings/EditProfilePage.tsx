@@ -253,7 +253,7 @@ const EditProfilePage: React.FC = () => {
       };
 
       // If we're using a custom profile pic, the backend will return the URL
-      if (activeProfileTab === "custom" && data.user?.profilePic && !shouldDeleteProfilePic) {
+      if (activeProfileTab === "custom" && data.user?.profilePic && !shouldDeleteProfilePic && data.user.privacyLevel == 0) {
         updatedUserData.profilePic = data.user.profilePic;
       } else if (activeProfileTab === "avatar") {
         updatedUserData.avatar = selectedAvatar;
