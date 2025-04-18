@@ -43,7 +43,7 @@ interface MessageResponse {
   content: string;
   senderId: string;
   timestamp?: number;
-  chatId?: string;
+  roomId?: string;
   senderName?: string;
   senderAvatar?: string;
 }
@@ -238,13 +238,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setSuggestions([]);
 
         console.log("Received message:", data);
+        console.log("Chat ID:", chatId===data.roomId);
 
         // Check if the message is from current user - bypass this check for post shares
         const isPost = isPostShare(data.content);
         
         // If it's not a post share and it's from the current user, ignore it (already added locally)
-        if (!isPost && data.senderId === userId) {
-          console.log("Ignoring own message (not a post share)");
+        if ((!isPost && data.senderId === userId) || data.roomId !== chatId) {
           return;
         }
         
