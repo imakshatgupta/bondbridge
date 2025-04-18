@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Settings, Loader2, Pencil, Plus, Lock } from "lucide-react";
+import { ArrowLeft, Settings, Loader2, Pencil, Plus, Lock, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ThreeDotsMenu, { 
   BlockMenuItem, 
@@ -21,7 +21,7 @@ import type { UserPostsResponse } from "@/apis/apiTypes/profileTypes";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
 import { startMessage } from "@/apis/commonApiCalls/chatApi";
-import { fetchChatRooms, blockUser as blockUserApi } from "@/apis/commonApiCalls/activityApi";
+import { fetchChatRooms, blockUser as blockUserApi, unblockUser } from "@/apis/commonApiCalls/activityApi";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { ChatRoom } from "@/apis/apiTypes/response";
 import {
@@ -55,6 +55,7 @@ interface ProfileProps {
   communities?: string[];
   interests?: string[];
   public?: number;
+  isBlocked?: boolean;
 }
 
 const Profile: React.FC<ProfileProps> = ({
@@ -73,6 +74,7 @@ const Profile: React.FC<ProfileProps> = ({
   communities: userCommunityIds = [],
   interests = [],
   public: isPublic = 1,
+  isBlocked = false,
 }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -94,6 +96,9 @@ const Profile: React.FC<ProfileProps> = ({
   const [userCommunities, setUserCommunities] = useState<CommunityResponse[]>([]);
   const [executeFetchCommunities, isLoadingCommunities] = useApiCall(fetchCommunities);
   const [executeGetStoryForUser] = useApiCall(getStoryForUser);
+  const [executeUnblockUser] = useApiCall(unblockUser);
+  const [isUnblockingUser, setIsUnblockingUser] = useState(false);
+  const [localIsBlocked, setLocalIsBlocked] = useState(isBlocked);
   // const [postDisplayType, setPostDisplayType] = useState<'images' | 'text'>('images');
 
   // Get user data from Redux store
@@ -163,6 +168,10 @@ const Profile: React.FC<ProfileProps> = ({
   useEffect(() => {
     setLocalIsFollowing(isFollowing);
   }, [isFollowing]);
+
+  useEffect(() => {
+    setLocalIsBlocked(isBlocked);
+  }, [isBlocked]);
 
   const handleSendFriendRequest = async () => {
     try {
@@ -299,6 +308,59 @@ const Profile: React.FC<ProfileProps> = ({
     dispatch(setActiveChat(null));
   };
 
+  const handleUnblockUser = async () => {
+    if (!userId) return;
+    
+    setIsUnblockingUser(true);
+    const result = await executeUnblockUser(userId);
+    if (result && result.success) {
+      // Refresh the profile after unblocking
+      const currentUserId = localStorage.getItem("userId") || "";
+      if (currentUserId) {
+        const profileResult = await fetchUserProfile(userId, currentUserId);
+        if (profileResult.success) {
+          // Update local state instead of reloading the page
+          setLocalIsBlocked(false);
+          
+          // After unblocking, load all user data in parallel
+          Promise.all([
+            // Load posts
+            executePostsFetch(userId, isCurrentUser),
+            // Load user stories
+            executeGetStoryForUser(userId),
+            // Load communities (if user has communities)
+            userCommunityIds && userCommunityIds.length > 0 ? executeFetchCommunities() : Promise.resolve({ success: true, data: [] })
+          ]).then(([postsResult, storiesResult, communitiesResult]) => {
+            // Update posts
+            if (postsResult.success && postsResult.data) {
+              setPosts(postsResult.data.posts);
+            }
+            
+            // Update stories
+            if (storiesResult.success && storiesResult.data && storiesResult.data.stories && storiesResult.data.stories.length > 0) {
+              setUserStories(storiesResult.data.stories[0]);
+            }
+            
+            // Update communities
+            if (communitiesResult.success && communitiesResult.data && userCommunityIds && userCommunityIds.length > 0) {
+              const filteredCommunities = communitiesResult.data.filter(community => 
+                userCommunityIds.includes(community._id)
+              );
+              setUserCommunities(filteredCommunities);
+            }
+          });
+          
+          toast.success("User unblocked successfully");
+        } else {
+          toast.error("Failed to refresh profile data");
+        }
+      }
+    } else {
+      toast.error(result?.data?.message || "Failed to unblock user");
+    }
+    setIsUnblockingUser(false);
+  };
+
   // Prepare menu items for other profile -> block, share, report
   const menuItems = [
     {
@@ -364,8 +426,21 @@ const Profile: React.FC<ProfileProps> = ({
     );
   };
 
+  // Function to render blocked message
+  const renderBlockedMessage = () => {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] text-center p-4">
+        <UserX className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">This Account is Blocked</h3>
+        <p className="text-muted-foreground max-w-md mb-4">
+          You've blocked this account. Unblock to see their content.
+        </p>
+      </div>
+    );
+  };
+
   // Check if content should be visible based on privacy settings
-  const isContentVisible = isPublic === 1 || isFollowing || isCurrentUser;
+  const isContentVisible = (isPublic === 1 || isFollowing || isCurrentUser) && !localIsBlocked;
 
   return (
     <div className="mx-auto bg-background">
@@ -390,11 +465,11 @@ const Profile: React.FC<ProfileProps> = ({
       {/* Profile Info */}
       <div className="flex flex-col items-center pb-4 space-y-1">
         <div 
-          className={`relative w-24 h-24 ${userStories?.hasStory ? 'cursor-pointer' : ''}`}
-          onClick={userStories?.hasStory ? handleStoryClick : undefined}
+          className={`relative w-24 h-24 ${userStories?.hasStory && !localIsBlocked ? 'cursor-pointer' : ''}`}
+          onClick={userStories?.hasStory && !localIsBlocked ? handleStoryClick : undefined}
         >
           {/* Story ring */}
-          {userStories?.hasStory && (
+          {userStories?.hasStory && !localIsBlocked && (
             <div className="absolute -inset-1 flex items-center justify-center z-10">
               <svg viewBox="0 0 110 110" className="absolute">
                 <circle 
@@ -410,7 +485,7 @@ const Profile: React.FC<ProfileProps> = ({
           )}
           
           {/* Compatibility ring - keep at z-20 to appear above story ring */}
-          {!isCurrentUser && compatibility >= 0 && (
+          {!isCurrentUser && compatibility >= 0 && !localIsBlocked && (
             <div className="absolute -inset-1 flex items-center justify-center z-20">
               {/* Compatibility percentage badge */}
               <div className="absolute -bottom-2 -right-2 bg-background rounded-full shadow-sm">
@@ -462,15 +537,18 @@ const Profile: React.FC<ProfileProps> = ({
               : reduxUsername || username
             : username}
         </h1>
-        <TruncatedText 
-          text={isCurrentUser ? reduxBio || bio : bio} 
-          limit={100}
-          placeholderText={isCurrentUser ? "Add a bio in your profile settings" : "No bio available"}
-          className="text-foreground text-sm text-center mx-auto"
-        />
+        {/* Only show bio if not blocked */}
+        {!localIsBlocked && (
+          <TruncatedText 
+            text={isCurrentUser ? reduxBio || bio : bio} 
+            limit={100}
+            placeholderText={isCurrentUser ? "Add a bio in your profile settings" : "No bio available"}
+            className="text-foreground text-sm text-center mx-auto"
+          />
+        )}
 
-        {/* Interests section */}
-        {interests && interests.length > 0 && (
+        {/* Interests section - only show if not blocked */}
+        {interests && interests.length > 0 && !localIsBlocked && (
           <TruncatedList
             items={interests}
             limit={5}
@@ -508,11 +586,11 @@ const Profile: React.FC<ProfileProps> = ({
           ) : (
             <>
               <div className="text-center">
-                <div className="font-semibold">{followers.toLocaleString()}</div>
+                <div className="font-semibold">{localIsBlocked ? "0" : followers.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Followers</div>
               </div>
               <div className="text-center">
-                <div className="font-semibold">{following.toLocaleString()}</div>
+                <div className="font-semibold">{localIsBlocked ? "0" : following.toLocaleString()}</div>
                 <div className="text-sm text-muted-foreground">Following</div>
               </div>
             </>
@@ -524,7 +602,7 @@ const Profile: React.FC<ProfileProps> = ({
           )}
         </div>
 
-        {!isCurrentUser && (
+        {!isCurrentUser && !localIsBlocked && (
           <div className="flex gap-2 w-full max-w-[200px]">
             <Button
               variant="outline"
@@ -560,10 +638,32 @@ const Profile: React.FC<ProfileProps> = ({
             </Button>
           </div>
         )}
+
+        {!isCurrentUser && localIsBlocked && (
+          <div className="flex gap-2 w-full max-w-[200px] mt-2">
+            <Button 
+              onClick={handleUnblockUser} 
+              disabled={isUnblockingUser}
+              variant="outline"
+              className="w-full cursor-pointer"
+            >
+              {isUnblockingUser ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Unblocking...</span>
+                </div>
+              ) : (
+                "Unblock User"
+              )}
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Conditionally render tabs or privacy message */}
-      {isContentVisible ? (
+      {/* Conditionally render tabs, privacy message, or blocked message */}
+      {localIsBlocked ? (
+        renderBlockedMessage()
+      ) : isContentVisible ? (
         <Tabs defaultValue="posts" className="w-full">
           <TabsList
             className="grid w-full grid-cols-3 bg-transparent *:rounded-none *:border-transparent 
