@@ -4,39 +4,88 @@ import CreatePost from './CreatePost';
 import { updatePost } from '@/apis/commonApiCalls/createPostApi';
 import { useApiCall } from '@/apis/globalCatchError';
 import { toast } from 'sonner';
+import { CroppedFile } from '@/components/MediaCropModal';
+import { MediaItem, PostData, UpdatePostParams } from '@/constants/posts';
 
 const EditPost = () => {
   const navigate = useNavigate();
   const { postId } = useParams<{ postId: string }>();
   const location = useLocation();
   const [initialContent, setInitialContent] = useState<string>('');
+  const [initialMedia, setInitialMedia] = useState<CroppedFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [executeUpdatePost] = useApiCall(updatePost);
 
   useEffect(() => {
-    // Get the post data from location state
-    if (location.state?.caption) {
-      setInitialContent(location.state.caption);
+    // Check if we have location state with post data
+    if (location.state) {
+      // Handle caption if present, otherwise use empty string
+      setInitialContent(location.state.caption || '');
+      
+      console.log('Location state media:', location.state.media);
+      
+      // Handle media if present
+      if (location.state.media && location.state.media.length > 0) {
+        try {
+          // Convert media objects to CroppedFile format
+          const mediaFiles = location.state.media.map((item: MediaItem) => {
+            // Create properties based on file type (image or video)
+            const isVideo = item.type === 'video';
+            
+            console.log(`Processing media item: ${item.url}, type: ${item.type}, isVideo: ${isVideo}`);
+            
+            // Create a file-like object that matches CroppedFile interface
+            const mediaFile = {
+              previewUrl: item.url, // Store the URL in previewUrl property
+              type: isVideo ? 'video/mp4' : 'image/jpeg', // Default MIME types
+              name: item.url.split('/').pop() || 'media-file',
+              size: 0, // Size won't be known from URL
+              lastModified: Date.now(),
+              // Add minimal File interface implementation
+              slice: () => new Blob(),
+              stream: () => new ReadableStream(),
+              text: () => Promise.resolve(''),
+              arrayBuffer: () => Promise.resolve(new ArrayBuffer(0))
+            } as unknown as CroppedFile;
+            
+            console.log('Created media file:', mediaFile);
+            
+            return mediaFile;
+          });
+
+          console.log('Processed media files:', mediaFiles);
+          setInitialMedia(mediaFiles);
+        } catch (error) {
+          console.error('Error processing media files:', error);
+          toast.error('Failed to load media files');
+        }
+      }
+      
       setIsLoading(false);
     } else if (postId) {
-      // If caption is not in state, we could fetch the post data here
-      // For now, we'll just handle the case where we have the caption in state
+      // If no state is available, we could fetch the post data here
       toast.error('Post data not found');
       navigate(-1);
+    } else {
+      // No postId and no state
+      toast.error('Invalid post');
+      // navigate(-1);
     }
   }, [location.state, postId, navigate]);
 
-  const handleSubmit = async (postData: any) => {
+  const handleSubmit = async (postData: PostData) => {
     try {
       if (!postId) {
         toast.error('Post ID is missing');
         return;
       }
 
-      const result = await executeUpdatePost({
+      const updateParams: UpdatePostParams = {
         postId,
         content: postData.content
-      });
+      };
+      
+      const result = await executeUpdatePost(updateParams);
       
       if (result.success) {
         toast.success('Post updated successfully!');
@@ -53,18 +102,20 @@ const EditPost = () => {
   };
 
   if (isLoading) {
-    return <div className="p-6 flex justify-center">Loading post...</div>;
+    return <div className="p-6 flex justify-center">Loading Post...</div>;
   }
 
   return (
     <div>
       <CreatePost
-        uploadMedia={false}
+        uploadMedia={false} // Don't allow new media uploads since API doesn't support it
         submitButtonText="Update"
         submitHandler={handleSubmit}
         initialContent={initialContent}
+        initialMediaFiles={initialMedia}
         postId={postId}
         onCancel={handleCancel}
+        readOnlyMedia={true} // This flag will indicate media should be displayed but not editable
       />
     </div>
   );

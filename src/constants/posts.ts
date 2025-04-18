@@ -10,6 +10,21 @@ interface Post {
   isLiked?: boolean;
 }
 
+export interface MediaItem {
+  url: string;
+  type: string;
+}
+
+export interface PostData {
+  content: string;
+  postId?: string;
+}
+
+export interface UpdatePostParams {
+  postId: string;
+  content: string;
+}
+
 const mockPosts: Record<string, Post> = {
   "1": {
     id: "1",
