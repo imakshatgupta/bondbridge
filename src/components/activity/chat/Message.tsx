@@ -328,7 +328,7 @@ const Message: React.FC<MessageProps> = ({
                       message.isUser
                         ? "border-l-gray-400 bg-gray-700"
                         : "border-l-primary bg-primary/40"
-                    } rounded-sm pl-2 py-1 pr-3 max-w-[200px] overflow-hidden`}
+                    } rounded-sm pl-2 py-1 pr-3  overflow-hidden`}
                   >
                     <div className="text-xs font-semibold">
                       {repliedToMessage.isUser
