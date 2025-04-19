@@ -291,7 +291,7 @@ const Message: React.FC<MessageProps> = ({
           )} */}
 
           <div
-            className={`p-[0.35rem] break-words min-w-[7rem] max-w-[80%] ${
+            className={`p-[0.35rem] break-words min-w-[7rem] max-w-[24rem] ${
               message.isUser
                 ? `bg-primary text-primary-foreground ${
                     isFirstInSequence
