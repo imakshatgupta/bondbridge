@@ -8,10 +8,12 @@ import {
   setMessages,
   addReaction,
   removeReaction,
+  updateMessageId,
 } from "@/store/chatSlice";
 import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages, getRandomText } from "@/apis/commonApiCalls/chatApi";
 import { useAppDispatch, useAppSelector } from "@/store";
+import { store } from "@/store"; // Import the store directly for advanced state access
 import {
   blockUser as blockUserApi,
   leaveGroup as leaveGroupApi,
@@ -49,6 +51,8 @@ interface MessageResponse {
   senderName?: string;
   senderAvatar?: string;
   replyTo?: string;
+  tempId?: string; // Original tempId field
+  clientTempId?: string; // Add clientTempId for message matching
 }
 
 interface TypingResponse {
@@ -119,7 +123,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [executeLeaveGroup] = useApiCall(leaveGroupApi);
   const [executeFetchFollowers] = useApiCall(fetchFollowersList);
   const [executeInviteToGroup] = useApiCall(inviteToGroupApi);
-  
 
   useEffect(() => {
     setReplyToMessage(null);
@@ -256,13 +259,71 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setSuggestions([]);
 
         console.log("Received message:", data);
-        console.log("Chat ID:", chatId === data.roomId);
 
-        // Check if the message is from current user - bypass this check for post shares
+        // If this is not for our chat room, ignore it
+        if (data.roomId !== chatId) {
+          return;
+        }
+
+        // Check if the message is from current user
+        const isFromCurrentUser = data.senderId === userId;
         const isPost = isPostShare(data.content);
 
-        // If it's not a post share and it's from the current user, ignore it (already added locally)
-        if ((!isPost && data.senderId === userId) || data.roomId !== chatId) {
+        // Check if this message has our clientTempId (special case for matching our own sent messages)
+        if (
+          isFromCurrentUser &&
+          data._id &&
+          (data.clientTempId || data.tempId)
+        ) {
+          const tempId = data.clientTempId || data.tempId;
+          if (tempId && tempId.startsWith("temp-")) {
+            // This is one of our messages that now has a server ID
+            console.log("Found matching temp message with ID:", tempId);
+
+            dispatch(
+              updateMessageId({
+                oldId: tempId,
+                newId: data._id,
+              })
+            );
+            return; // Don't add a duplicate message
+          }
+        }
+
+        // For normal messages from us (no tempId), try to match based on content
+        if (isFromCurrentUser && !isPost && data._id) {
+          // Use the current redux state directly instead of the messages variable
+          // which might be stale due to the async nature of hooks
+          const state = store.getState();
+          const currentMessages = state.chat.messages;
+
+          // Try to find our temporary message with the same content
+          const existingTempMsg = currentMessages.find((msg: Message) => {
+            console.log("Checking message:", msg);
+            return (
+              msg.senderId === userId &&
+              msg.text === data.content &&
+              msg.id.startsWith("temp-")
+            );
+          });
+
+          console.log("DATA", data);
+          console.log("Existing temp message:", existingTempMsg);
+
+          if (existingTempMsg) {
+            // Update the message ID with the server-generated one
+            dispatch(
+              updateMessageId({
+                oldId: existingTempMsg.id,
+                newId: data._id,
+              })
+            );
+            return; // Don't add a duplicate message
+          }
+        }
+
+        // If it's not a post share and it's from the current user, we've probably already added it
+        if (!isPost && isFromCurrentUser) {
           return;
         }
 
@@ -279,7 +340,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             hour: "2-digit",
             minute: "2-digit",
           }),
-          isUser: data.senderId === userId,
+          isUser: isFromCurrentUser,
           senderName:
             data.senderId === userId
               ? userName
@@ -288,6 +349,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             data.senderId === userId
               ? userAvatar
               : sender?.profilePic || data.senderAvatar || "",
+          senderId: data.senderId,
           replyTo: data.replyTo,
         };
 
@@ -295,7 +357,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         if (isPost) {
           console.log("Received a post share:", {
             from: data.senderId,
-            isOwnPost: data.senderId === userId,
+            isOwnPost: isFromCurrentUser,
           });
         }
 
@@ -367,7 +429,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Handlers
   const handleSendMessage = () => {
     if (newMessage.trim() && socket && chatId) {
-      // Create message data
+      // Create a timestamp for consistency
+      const now = new Date();
+      const timestamp = now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      // Generate a unique temp ID for this message
+      const tempId = `temp-${now.getTime()}`;
+
+      // Create message data for sending to server
       const messageData = {
         senderId: userId,
         content: newMessage,
@@ -378,29 +450,42 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         senderName: userName,
         senderAvatar: userAvatar,
         replyTo: replyToMessage?.id,
+        // Add the tempId as a custom property to help with matching on server response
+        clientTempId: tempId, // Use a different name to avoid conflicts with server fields
       };
 
       // Add message to local state immediately for better UX
       const tempMessage: Message = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         text: newMessage,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        timestamp: timestamp,
         isUser: true,
+        senderId: userId,
         senderName: userName,
         senderAvatar: userAvatar,
         replyTo: replyToMessage?.id,
       };
+
+      // First dispatch the message addition
       dispatch(addMessage(tempMessage));
 
-      // Send message through socket
+      // Then send message through socket
       socket.emit(
         "sendMessage",
         messageData,
         (response: SendMessageResponse) => {
           console.log("Message sent response:", response);
+
+          // If we get an immediate response with an ID, update the message ID right away
+          if (response.success && response.data && response.data._id) {
+            // Update via Redux - this is synchronous and will work immediately
+            dispatch(
+              updateMessageId({
+                oldId: tempId, // Use the tempId we saved earlier
+                newId: response.data._id,
+              })
+            );
+          }
         }
       );
 

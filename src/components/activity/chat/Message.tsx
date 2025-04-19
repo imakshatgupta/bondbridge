@@ -310,7 +310,7 @@ const Message: React.FC<MessageProps> = ({
                 {message.senderName || "Unknown"}
               </p>
             )}
-            
+
             {/* Display the message this is replying to, if any */}
             {repliedToMessage && (
               <div
@@ -344,8 +344,6 @@ const Message: React.FC<MessageProps> = ({
                 </div>
               </div>
             )}
-
-            
 
             {/* Render shared post if available */}
             {sharedPost ? (
