@@ -227,7 +227,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
               </span>
               <span className="text-xs text-foreground line-clamp-1">
                 {typeof replyToMessage.text === "string"
-                  ? replyToMessage.text
+                  ? replyToMessage.text.length > 70
+                    ? `${replyToMessage.text.substring(0, 70)}...`
+                    : replyToMessage.text
                   : "Shared content"}
               </span>
             </div>

@@ -119,6 +119,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [executeLeaveGroup] = useApiCall(leaveGroupApi);
   const [executeFetchFollowers] = useApiCall(fetchFollowersList);
   const [executeInviteToGroup] = useApiCall(inviteToGroupApi);
+  
+
+  useEffect(() => {
+    setReplyToMessage(null);
+    setNewMessage("");
+  }, [chatId]);
 
   // Find other user's ID in DM chat
   const otherUserId =

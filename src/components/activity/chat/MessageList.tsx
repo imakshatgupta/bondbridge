@@ -30,17 +30,18 @@ const MessageList: React.FC<MessageListProps> = ({
   onAddReaction,
   onRemoveReaction,
 }) => {
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
+    // Using setTimeout to ensure DOM is updated before scrolling
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: "auto" });
+    }, 100);
   };
 
   if (isLoadingMessages) {
@@ -60,8 +61,11 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <div className="absolute inset-0 overflow-y-auto px-4">
-      <div className="py-4 space-y-3">
+    <div
+      className="absolute inset-0 overflow-y-auto px-4 overflow-x-hidden"
+      ref={containerRef}
+    >
+      <div className="space-y-3 flex flex-col pt-4">
         {messages.map((message, index) => {
           const isPreviousDifferentSender =
             index === 0 ||
@@ -82,6 +86,7 @@ const MessageList: React.FC<MessageListProps> = ({
           );
         })}
 
+        {/* Typing indicator appears at the bottom after all messages */}
         {isTyping && (
           <div className="flex items-start gap-2">
             <Avatar className="h-6 w-6 mt-1">
@@ -96,7 +101,9 @@ const MessageList: React.FC<MessageListProps> = ({
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+
+        {/* This is our scroll target - an empty div at the very bottom */}
+        <div ref={bottomRef} className="h-0" />
       </div>
     </div>
   );
