@@ -258,7 +258,9 @@ const Notifications = () => {
                     <Notification
                       key={notification._id}
                       _id={notification._id}
-                      title={(notification.details.notificationText || notification.details.content || "")}
+                      type={notification.type}
+                      title={notification.sender.name}
+                      content={notification.details.notificationText || notification.details.content || ""}
                       profilePic={notification.sender.profilePic}
                       avatar={notification.sender.profilePic}
                       timestamp={notification.timestamp}

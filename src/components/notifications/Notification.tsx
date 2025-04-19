@@ -12,6 +12,8 @@ interface NotificationProps {
   avatar: string;
   timestamp: string;
   seen: boolean;
+  type: string;
+  content: string;
   onMarkAsSeen: (id: string) => void;
   onDelete?: (id: string) => void;
   entityDetails?: {
@@ -36,16 +38,32 @@ const Notification = ({
   entityDetails,
   senderId,
   avatar,
+  type,
+  content,
 }: NotificationProps) => {
   const [localseen, setLocalSeen] = useState(seen);
   const [isDeleted, setIsDeleted] = useState(false);
   const navigate = useNavigate();
   const [executeDelete, isDeleting] = useApiCall(deleteNotification);
-  // console.log("notifi data: ",_id,
-  //   title,
-  //   profilePic,
-  //   timestamp,
-  //   seen);
+
+  // Extract sender name from title or use a default
+  const senderName = title || "Someone";
+
+  // Generate custom message based on notification type
+  const getNotificationMessage = () => {
+    switch (type) {
+      case "followRequestSend":
+        return `${senderName} Sent you a Follow Request`;
+      case "followRequestAccept":
+        return `${senderName} Accepted your Follow Request`;
+      case "comment":
+        return `${senderName} Commented on your Post`;
+      case "like":
+        return `${senderName} Reacted on your Post`;
+      default:
+        return content; // Fallback to original title
+    }
+  };
 
   const handleClick = async () => {
     if (!seen) {
@@ -109,8 +127,8 @@ const Notification = ({
         />
       </div>
       <div className="flex-1 cursor-pointer">
-        <h3 className="font-medium text-xl text-foreground capitalize" onClick={handleClick}>
-          {title}
+        <h3 className="font-medium text-xl text-foreground" onClick={handleClick}>
+          {getNotificationMessage()}
         </h3>
       </div>
       <div className="text-sm capitalize text-muted-foreground">
