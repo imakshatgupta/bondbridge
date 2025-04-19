@@ -132,6 +132,16 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       state.messages.push(action.payload);
     },
+    updateMessageId: (
+      state,
+      action: PayloadAction<{ oldId: string; newId: string }>
+    ) => {
+      const { oldId, newId } = action.payload;
+      const message = state.messages.find((msg) => msg.id === oldId);
+      if (message) {
+        message.id = newId;
+      }
+    },
     setIsTyping: (state, action: PayloadAction<boolean>) => {
       state.isTyping = action.payload;
     },
@@ -310,6 +320,7 @@ export const {
   setLoadingMessages,
   setMessages,
   addMessage,
+  updateMessageId,
   setIsTyping,
   transformAndSetChats,
   deleteGroup,
