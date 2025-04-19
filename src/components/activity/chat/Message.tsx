@@ -67,7 +67,6 @@ const Message: React.FC<MessageProps> = ({
     return messages.find((msg) => msg.id === message.replyTo);
   }, [message.replyTo, messages]);
 
-
   // Group reactions by emoji for display
   const groupedReactions = React.useMemo(() => {
     if (!message.reactions || message.reactions.length === 0) return {};
@@ -224,7 +223,7 @@ const Message: React.FC<MessageProps> = ({
 
   return (
     <div
-      className={`flex items-start w-full gap-2 ${
+      className={`flex items-start w-full gap-2 max-w-xl ${
         message.isUser ? "flex-row-reverse" : "flex-row"
       }`}
     >
@@ -241,7 +240,7 @@ const Message: React.FC<MessageProps> = ({
         </Link>
       )}
       {/* Use userId in the profile link for the user's own messages */}
-      {isGroupChat && isFirstInSequence && message.isUser && (
+      {/* {isGroupChat && isFirstInSequence && message.isUser && (
         <Link to={`/profile/${userId}`}>
           <Avatar className="h-6 w-6 mt-1">
             <AvatarImage
@@ -251,7 +250,7 @@ const Message: React.FC<MessageProps> = ({
             <AvatarFallback>{(message.senderName || "?")[0]}</AvatarFallback>
           </Avatar>
         </Link>
-      )}
+      )} */}
       {/* Add a spacer when we don't show the avatar to keep alignment */}
       {isGroupChat && !isFirstInSequence && !message.isUser && (
         <div className="w-7" />
@@ -259,11 +258,11 @@ const Message: React.FC<MessageProps> = ({
       <div
         className={`flex flex-col ${
           message.isUser ? "items-end" : "items-start"
-        } group w-full message-container message-horizontal-area relative`}
+        } group w-full message-container message-horizontal-area relative max-w-xl`}
         onDoubleClick={handleDoubleClick}
       >
         <div
-          className={`flex w-fit items-center message-horizontal-area gap-1 group ${
+          className={`flex w-fit items-center message-horizontal-area max-w-xl group ${
             message.isUser ? "justify-end" : "justify-start"
           }`}
         >
@@ -291,7 +290,7 @@ const Message: React.FC<MessageProps> = ({
           )} */}
 
           <div
-            className={`p-[0.35rem] break-words min-w-[7rem] max-w-[24rem] ${
+            className={`p-[0.35rem] break-words min-w-[7rem] max-w-[75%] ${
               message.isUser
                 ? `bg-primary text-primary-foreground ${
                     isFirstInSequence
@@ -305,6 +304,13 @@ const Message: React.FC<MessageProps> = ({
                   }`
             }`}
           >
+            {/* Show sender name only for group chats and first message from each sender */}
+            {isGroupChat && !message.isUser && isFirstInSequence && (
+              <p className="text-xs font-medium mb-1 text-foreground">
+                {message.senderName || "Unknown"}
+              </p>
+            )}
+            
             {/* Display the message this is replying to, if any */}
             {repliedToMessage && (
               <div
@@ -339,12 +345,7 @@ const Message: React.FC<MessageProps> = ({
               </div>
             )}
 
-            {/* Show sender name only for group chats and first message from each sender */}
-            {isGroupChat && !message.isUser && isFirstInSequence && (
-              <p className="text-xs font-medium mb-1 text-primary">
-                {message.senderName || "Unknown"}
-              </p>
-            )}
+            
 
             {/* Render shared post if available */}
             {sharedPost ? (
@@ -383,7 +384,10 @@ const Message: React.FC<MessageProps> = ({
                           <video
                             src={sharedPost.data.media[0].url}
                             className="w-full h-full object-cover"
-                            controls
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
                             onError={(e) => {
                               console.error("Failed to load shared post video");
                               // We can't set a fallback for video, but we can handle the error
@@ -413,7 +417,7 @@ const Message: React.FC<MessageProps> = ({
                 <div className="flex flex-wrap items-end justify-between gap-1">
                   <p
                     ref={textRef}
-                    className={`break-words whitespace-normal ${
+                    className={`break-words whitespace-pre-wrap overflow-hidden ${
                       !isLongMessage ? "pr-2" : "w-full"
                     }`}
                   >
@@ -501,7 +505,9 @@ const Message: React.FC<MessageProps> = ({
                 key={emoji}
                 onClick={() => handleReactionClick(emoji)}
                 className={`text-lg hover:scale-125 cursor-pointer transition-transform p-1 rounded-full ${
-                  userReaction === emoji ? "bg-primary/20 border-2 border-foreground" : ""
+                  userReaction === emoji
+                    ? "bg-primary/20 border-2 border-foreground"
+                    : ""
                 }`}
               >
                 {emoji}
