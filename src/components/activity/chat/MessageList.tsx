@@ -14,6 +14,9 @@ interface MessageListProps {
   } | null;
   chatType: ChatType;
   userId: string;
+  onReplyToMessage?: (message: MessageType) => void;
+  onAddReaction?: (messageId: string, reaction: string) => void;
+  onRemoveReaction?: (messageId: string) => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -22,7 +25,10 @@ const MessageList: React.FC<MessageListProps> = ({
   isTyping,
   typingUser,
   chatType,
-  userId
+  userId,
+  onReplyToMessage,
+  onAddReaction,
+  onRemoveReaction,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +46,7 @@ const MessageList: React.FC<MessageListProps> = ({
   if (isLoadingMessages) {
     return (
       <div className="flex justify-center items-center h-full">
-      <p>Loading Messages ...</p>
+        <p>Loading Messages ...</p>
       </div>
     );
   }
@@ -68,6 +74,10 @@ const MessageList: React.FC<MessageListProps> = ({
               isFirstInSequence={isPreviousDifferentSender}
               isGroupChat={chatType === "group"}
               userId={userId}
+              onReply={onReplyToMessage}
+              messages={messages}
+              onAddReaction={onAddReaction}
+              onRemoveReaction={onRemoveReaction}
             />
           );
         })}
@@ -92,4 +102,4 @@ const MessageList: React.FC<MessageListProps> = ({
   );
 };
 
-export default MessageList; 
+export default MessageList;

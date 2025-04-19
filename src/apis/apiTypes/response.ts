@@ -398,6 +398,7 @@ export interface Message {
   timestamp: number;
   senderName?: string;
   senderAvatar?: string;
+  replyTo?: string;
 }
 
 export interface DMChatRoom {
@@ -473,6 +474,7 @@ export interface ChatMessage {
   senderName?: string;
   senderAvatar?: string;
   media?: string;
+  replyTo?: string;
 }
 
 export interface GetMessagesResponse {

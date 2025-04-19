@@ -6,6 +6,8 @@ import {
   setIsTyping,
   setLoadingMessages,
   setMessages,
+  addReaction,
+  removeReaction,
 } from "@/store/chatSlice";
 import { useApiCall } from "@/apis/globalCatchError";
 import { getMessages, getRandomText } from "@/apis/commonApiCalls/chatApi";
@@ -13,7 +15,7 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import {
   blockUser as blockUserApi,
   leaveGroup as leaveGroupApi,
-  inviteToGroup as inviteToGroupApi
+  inviteToGroup as inviteToGroupApi,
 } from "@/apis/commonApiCalls/activityApi";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +36,7 @@ import InviteFollowers from "./InviteFollowers";
 import {
   BlockMenuItem,
   ReportMenuItem,
-  EditGroupMenuItem
+  EditGroupMenuItem,
 } from "@/components/global/ThreeDotsMenu";
 
 // Define types for socket responses
@@ -46,6 +48,7 @@ interface MessageResponse {
   roomId?: string;
   senderName?: string;
   senderAvatar?: string;
+  replyTo?: string;
 }
 
 interface TypingResponse {
@@ -60,6 +63,7 @@ interface SendMessageResponse {
     _id: string;
     content: string;
     timestamp: number;
+    replyTo?: string;
   };
 }
 
@@ -84,15 +88,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [showGroupProfile, setShowGroupProfile] = useState(false);
   const [showInviteView, setShowInviteView] = useState(false);
   const [followers, setFollowers] = useState<SimpleFollower[]>([]);
-  const [filteredFollowers, setFilteredFollowers] = useState<SimpleFollower[]>([]);
+  const [filteredFollowers, setFilteredFollowers] = useState<SimpleFollower[]>(
+    []
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoadingFollowers, setIsLoadingFollowers] = useState(false);
   const [selectedFollowers, setSelectedFollowers] = useState<string[]>([]);
   const [isInviting, setIsInviting] = useState(false);
-  
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+
   // Refs
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Hooks
   const { socket } = useSocket();
   const userId = localStorage.getItem("userId") || "";
@@ -104,7 +111,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     isTyping,
     activeChat: chat,
   } = useAppSelector((state) => state.chat);
-  
+
   // API calls
   const [executeGetMessages] = useApiCall(getMessages);
   const [executeGetRandomText] = useApiCall(getRandomText);
@@ -125,19 +132,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const userAvatar = currentUserInfo?.profilePic || "";
 
   // Find if the current user has left the group
-  const currentUserParticipant = chat?.participants.find(p => p.userId === userId);
+  const currentUserParticipant = chat?.participants.find(
+    (p) => p.userId === userId
+  );
   const hasLeftGroup = currentUserParticipant?.status === "left";
 
-//   const scrollToBottom = () => {
-//     messagesEndRef.current?.scrollIntoView({
-//       behavior: "smooth",
-//       block: "end",
-//     });
-//   };
+  //   const scrollToBottom = () => {
+  //     messagesEndRef.current?.scrollIntoView({
+  //       behavior: "smooth",
+  //       block: "end",
+  //     });
+  //   };
 
-// useEffect(() => {
-//     scrollToBottom();
-//   }, [messages]);
+  // useEffect(() => {
+  //     scrollToBottom();
+  //   }, [messages]);
   // Combined useEffect for fetching messages and suggestions
   useEffect(() => {
     const fetchMessageHistory = async () => {
@@ -175,13 +184,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 msg.senderId === userId ? userName : sender?.name || "Unknown",
               senderAvatar:
                 msg.senderId === userId ? userAvatar : sender?.profilePic || "",
+              replyTo: msg.replyTo || undefined,
             };
           })
           .reverse(); // Reverse the order of messages
         dispatch(setMessages(messageHistory));
 
         // If no messages were found, fetch suggestions
-        if (messageHistory.length === 0 && chat ) {
+        if (messageHistory.length === 0 && chat) {
           await fetchSuggestions();
         } else {
           // Clear suggestions if there are messages
@@ -194,21 +204,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     const fetchSuggestions = async () => {
       setLoadingSuggestions(true);
-      
+
       // For groups where otherUserId might not exist, find the first participant who isn't the current user
       let targetUserId = otherUserId;
-      
+
       if (!targetUserId && chat?.participants && chat.participants.length > 0) {
         // Find the first non-current user participant
-        const firstOtherParticipant = chat.participants.find(p => p.userId !== userId);
+        const firstOtherParticipant = chat.participants.find(
+          (p) => p.userId !== userId
+        );
         if (firstOtherParticipant) {
           targetUserId = firstOtherParticipant.userId;
         }
       }
-      
+
       // If we still don't have a target user ID, use a fallback or empty string
       targetUserId = targetUserId || "";
-      
+
       const result = await executeGetRandomText(targetUserId);
       if (result.success && result.data?.topic) {
         // Parse the topic string into individual suggestions
@@ -238,16 +250,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setSuggestions([]);
 
         console.log("Received message:", data);
-        console.log("Chat ID:", chatId===data.roomId);
+        console.log("Chat ID:", chatId === data.roomId);
 
         // Check if the message is from current user - bypass this check for post shares
         const isPost = isPostShare(data.content);
-        
+
         // If it's not a post share and it's from the current user, ignore it (already added locally)
         if ((!isPost && data.senderId === userId) || data.roomId !== chatId) {
           return;
         }
-        
+
         const sender = chat?.participants.find(
           (p) => p.userId === data.senderId
         );
@@ -270,13 +282,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             data.senderId === userId
               ? userAvatar
               : sender?.profilePic || data.senderAvatar || "",
+          replyTo: data.replyTo,
         };
-        
+
         // Add additional logging for post shares
         if (isPost) {
-          console.log("Received a post share:", { from: data.senderId, isOwnPost: data.senderId === userId });
+          console.log("Received a post share:", {
+            from: data.senderId,
+            isOwnPost: data.senderId === userId,
+          });
         }
-        
+
         dispatch(addMessage(newMsg));
       };
 
@@ -292,14 +308,47 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
       };
 
+      // New handlers for reactions
+      const handleMessageReaction = (data: {
+        messageId: string;
+        reaction: string;
+        userId: string;
+        timestamp: number;
+      }) => {
+        console.log("Received reaction:", data);
+        const { messageId, reaction, userId: reactionUserId, timestamp } = data;
+
+        // Find the message to add the reaction to
+        dispatch(
+          addReaction({
+            messageId,
+            reaction: { userId: reactionUserId, reaction, timestamp },
+          })
+        );
+      };
+
+      const handleReactionRemoved = (data: {
+        messageId: string;
+        userId: string;
+      }) => {
+        const { messageId, userId: reactionUserId } = data;
+
+        // Remove the reaction from the message
+        dispatch(removeReaction({ messageId, userId: reactionUserId }));
+      };
+
       // Add event listeners
       socket.on("receiveMessage", handleReceiveMessage);
       socket.on("typing", handleTypingEvent);
+      socket.on("messageReaction", handleMessageReaction);
+      socket.on("reactionRemoved", handleReactionRemoved);
 
       // Clean up function
       return () => {
         socket.off("receiveMessage", handleReceiveMessage);
         socket.off("typing", handleTypingEvent);
+        socket.off("messageReaction", handleMessageReaction);
+        socket.off("reactionRemoved", handleReactionRemoved);
         if (typingTimeoutRef.current) {
           clearTimeout(typingTimeoutRef.current);
         }
@@ -322,6 +371,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         isBot: false,
         senderName: userName,
         senderAvatar: userAvatar,
+        replyTo: replyToMessage?.id,
       };
 
       // Add message to local state immediately for better UX
@@ -335,6 +385,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         isUser: true,
         senderName: userName,
         senderAvatar: userAvatar,
+        replyTo: replyToMessage?.id,
       };
       dispatch(addMessage(tempMessage));
 
@@ -347,8 +398,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
       );
 
-      // Clear input
+      // Clear input and reset reply
       setNewMessage("");
+      setReplyToMessage(null);
     }
   };
 
@@ -356,6 +408,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (socket && chatId) {
       socket.emit("typing", { chatId: chatId, senderId: userId });
     }
+  };
+
+  const handleReplyToMessage = (message: Message) => {
+    // Toggle reply - if already replying to this message, cancel it
+    if (replyToMessage && replyToMessage.id === message.id) {
+      setReplyToMessage(null);
+    } else {
+      setReplyToMessage(message);
+    }
+  };
+
+  const handleCancelReply = () => {
+    setReplyToMessage(null);
   };
 
   const handleProfileClick = () => {
@@ -375,7 +440,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const handleBlock = async () => {
     if (chat?.type === "dm") {
-      const otherParticipant = chat.participants.find(p => p.userId !== userId);
+      const otherParticipant = chat.participants.find(
+        (p) => p.userId !== userId
+      );
       if (otherParticipant) {
         await executeBlockUser(otherParticipant.userId);
         toast.success(`${otherParticipant.name} has been blocked`);
@@ -414,14 +481,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     if (response.success && response.data) {
       // Get participant IDs for filtering
-      const groupParticipantIds = chat.participants.map(p => p.userId);
+      const groupParticipantIds = chat.participants.map((p) => p.userId);
 
       // Extract and process followers
       const invitableFollowers: SimpleFollower[] = [];
 
       // Process followers array
       const followersList = response.data.data || [];
-      
+
       for (let i = 0; i < followersList.length; i++) {
         const follower = followersList[i];
 
@@ -433,7 +500,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           _id: follower._id,
           name: follower.name,
           avatar: follower.avatar || follower.profilePic || "",
-          selected: false
+          selected: false,
         });
       }
 
@@ -458,7 +525,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (term.trim() === "") {
       setFilteredFollowers(followers);
     } else {
-      const filtered = followers.filter(follower =>
+      const filtered = followers.filter((follower) =>
         follower.name.toLowerCase().includes(term.toLowerCase())
       );
       setFilteredFollowers(filtered);
@@ -466,25 +533,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const toggleFollowerSelection = (followerId: string) => {
-    setFollowers(prevFollowers =>
-      prevFollowers.map(follower =>
+    setFollowers((prevFollowers) =>
+      prevFollowers.map((follower) =>
         follower._id === followerId
           ? { ...follower, selected: !follower.selected }
           : follower
       )
     );
 
-    setFilteredFollowers(prevFiltered =>
-      prevFiltered.map(follower =>
+    setFilteredFollowers((prevFiltered) =>
+      prevFiltered.map((follower) =>
         follower._id === followerId
           ? { ...follower, selected: !follower.selected }
           : follower
       )
     );
 
-    setSelectedFollowers(prev =>
+    setSelectedFollowers((prev) =>
       prev.includes(followerId)
-        ? prev.filter(id => id !== followerId)
+        ? prev.filter((id) => id !== followerId)
         : [...prev, followerId]
     );
   };
@@ -515,6 +582,42 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     await fetchInvitableFollowers();
   };
 
+  // Add reaction to a message
+  const handleAddReaction = (messageId: string, reaction: string) => {
+    if (socket && chatId) {
+      socket.emit("reactToMessage", {
+        messageId,
+        reaction,
+        entityId: chatId,
+      });
+
+      // Optimistically update UI
+      dispatch(
+        addReaction({
+          messageId,
+          reaction: {
+            userId,
+            reaction,
+            timestamp: Math.floor(Date.now() / 1000),
+          },
+        })
+      );
+    }
+  };
+
+  // Remove reaction from a message
+  const handleRemoveReaction = (messageId: string) => {
+    if (socket && chatId) {
+      socket.emit("removeReaction", {
+        messageId,
+        entityId: chatId,
+      });
+
+      // Optimistically update UI
+      dispatch(removeReaction({ messageId, userId }));
+    }
+  };
+
   // Prepare menu items based on chat type
   const menuItems = [];
 
@@ -522,20 +625,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     // For DM chats -> block
     menuItems.push({
       ...BlockMenuItem,
-      onClick: handleBlock
+      onClick: handleBlock,
     });
   } else if (chat?.type === "group") {
     // For group chats -> report, edit group (only for admin)
     menuItems.push({
       ...ReportMenuItem,
-      onClick: () => console.log('Report clicked')
+      onClick: () => console.log("Report clicked"),
     });
-    
+
     // Only add edit group option for the admin
     if (chat.admin === userId) {
       menuItems.push({
         ...EditGroupMenuItem,
-        onClick: handleEditGroup
+        onClick: handleEditGroup,
       });
     }
   }
@@ -604,7 +707,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         name={name}
         avatar={avatar}
         chatType={chat.type}
-        participantsCount={chat.participants.filter(p => p.status === "active").length}
+        participantsCount={
+          chat.participants.filter((p) => p.status === "active").length
+        }
         onClose={onClose}
         onProfileClick={handleProfileClick}
         menuItems={menuItems}
@@ -619,6 +724,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           typingUser={typingUser || null}
           chatType={chat.type}
           userId={userId}
+          onReplyToMessage={handleReplyToMessage}
+          onAddReaction={handleAddReaction}
+          onRemoveReaction={handleRemoveReaction}
         />
       </div>
 
@@ -632,6 +740,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         loadingSuggestions={loadingSuggestions}
         disabled={hasLeftGroup}
         disabledMessage="You can't send messages to this group"
+        replyToMessage={replyToMessage}
+        onCancelReply={handleCancelReply}
       />
 
       <EditGroupModal
@@ -647,4 +757,4 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   );
 };
 
-export default ChatInterface; 
+export default ChatInterface;
