@@ -10,28 +10,18 @@ import { fetchPostDetails, commentOnPost } from "@/apis/commonApiCalls/communiti
 import { useApiCall } from "@/apis/globalCatchError";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import {
-  CommentData,
   HomePostData,
 } from "@/apis/apiTypes/response";
 import { toast } from "sonner";
 import { useAppSelector } from "@/store";
 import LogoLoader from "@/components/LogoLoader";
-import { CommunityPostResponse } from "@/apis/apiTypes/communitiesTypes";
+import { 
+  CommunityPostResponse, 
+  ExtendedCommentData,
+  CommentDetailsData,
+  PostDetailsData
+} from "@/apis/apiTypes/communitiesTypes";
 import { getRelativeTime } from "@/lib/utils";
-
-// Define an extended CommentData interface that includes _id
-interface ExtendedCommentData extends CommentData {
-  _id: string;
-  content?: string;
-  likeCount?: number;
-  isLiked?: boolean;
-  user: {
-    userId: string;
-    name: string;
-    profilePic: string;
-    _id?: string;
-  };
-}
 
 export default function CommunityPostPage() {
   const navigate = useNavigate();
@@ -185,7 +175,7 @@ export default function CommunityPostPage() {
               lulu: 0
             }
           },
-          ago_time: apiPostData.ago_time || "Recently",
+          ago_time: getRelativeTime(new Date(apiPostData.createdAt).toISOString()),
           feedId: apiPostData.feedId || postId,
           author: apiPostData.author,
           whoCanComment: apiPostData.whoCanComment,
@@ -222,12 +212,12 @@ export default function CommunityPostPage() {
   };
 
   // Format comments from post details
-  const extractCommentsFromPostDetails = (postDetails: any): ExtendedCommentData[] => {
+  const extractCommentsFromPostDetails = (postDetails: PostDetailsData): ExtendedCommentData[] => {
     if (!postDetails || !postDetails.comments || !Array.isArray(postDetails.comments)) {
       return [];
     }
     
-    return postDetails.comments.map((comment: any) => {
+    return postDetails.comments.map((comment: CommentDetailsData): ExtendedCommentData => {
       // Map the comment fields from PostDetailsData structure to ExtendedCommentData
       return {
         _id: comment._id,
@@ -243,11 +233,11 @@ export default function CommunityPostPage() {
           userId: comment.author,
           _id: comment.author,
           name: comment.userDetails?.name || "Unknown User",
-          profilePic: comment.userDetails?.profilePic || comment.userDetails?.avatar
+          profilePic: comment.userDetails?.profilePic || comment.userDetails?.avatar || ""
         },
         likes: comment.likes || 0,
         likeCount: comment.likes || 0,
-        hasReplies: comment.replies && comment.replies.length > 0,
+        hasReplies: Boolean(comment.replies && comment.replies.length > 0),
         isLiked: false, // We don't have this info from the API response
         reaction: {
           hasReacted: false, // We don't have this info
@@ -272,9 +262,6 @@ export default function CommunityPostPage() {
         if (!locationPost || forceRefresh) {
           const apiPostData = result.data as unknown as CommunityPostResponse;
           
-          // Preserve the original post time when refreshing after comment
-          const originalAgoTime = forceRefresh && post.ago_time ? post.ago_time : (apiPostData.ago_time || "Recently");
-          
           // Map the API response to our expected HomePostData format
           const mappedPost: HomePostData = {
             _id: apiPostData._id,
@@ -297,7 +284,7 @@ export default function CommunityPostPage() {
                 lulu: 0
               }
             },
-            ago_time: originalAgoTime,
+            ago_time: forceRefresh && post.ago_time ? post.ago_time : getRelativeTime(new Date(apiPostData.createdAt).toISOString()),
             feedId: apiPostData.feedId || postId,
             author: apiPostData.author,
             whoCanComment: apiPostData.whoCanComment,
@@ -326,7 +313,7 @@ export default function CommunityPostPage() {
         setCommentsData([]);
       }
     } catch (error) {
-      console.log("error: ", error);
+      console.log(error);
       setError("An error occurred while fetching post details.");
       setCommentsData([]);
     }
@@ -404,7 +391,7 @@ export default function CommunityPostPage() {
         fetchPostDetailsAndComments(true);
       }
     } catch (error) {
-      console.log("error: ", error);
+      console.log(error);
       toast.error("Failed to post comment. Please try again.");
       
       // Remove the optimistic comment

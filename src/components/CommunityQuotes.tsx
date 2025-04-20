@@ -8,6 +8,7 @@ import { ReportModal } from './ReportModal';
 import { CommunityPostData } from "@/apis/apiTypes/communitiesTypes";
 import ReactionComponent from "./global/ReactionComponent";
 import { getRelativeTime } from "@/lib/utils";
+import { TruncatedText } from "@/components/ui/TruncatedText";
 
 interface CommunityQuotesProps {
   posts: CommunityPostData[];
@@ -111,27 +112,10 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
                 } 
               })}
             >
-              <p className="text-foreground">{content}</p>
-              {content.length > 100 && (
-                <span className="text-primary cursor-pointer">Read more</span>
-              )}
+              <TruncatedText text={content} limit={100} showToggle={false} align="left"/>
             </div>
             
             <div className="flex items-center gap-6 mt-2">
-              <button 
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                onClick={() => navigate(`/community/${communityId}/${postIdStr}`, { 
-                  state: { 
-                    post: {
-                      ...post,
-                      communityId
-                    } 
-                  } 
-                })}
-              >
-                <MessageCircle className="w-5 h-5" />
-                <span className="text-sm">{commentCount}</span>
-              </button>
 
               {/* Add ReactionComponent for reactions */}
               <ReactionComponent 
@@ -151,6 +135,21 @@ const CommunityQuotes: React.FC<CommunityQuotesProps> = ({ posts, communityId })
                 isCommunity={true}
                 communityId={communityId}
               />
+              
+              <button 
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                onClick={() => navigate(`/community/${communityId}/${postIdStr}`, { 
+                  state: { 
+                    post: {
+                      ...post,
+                      communityId
+                    } 
+                  } 
+                })}
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span className="text-sm">{commentCount}</span>
+              </button>
 
               <button 
                 className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"

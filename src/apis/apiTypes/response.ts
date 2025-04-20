@@ -594,6 +594,23 @@ export interface GetAllReactionsResponse {
   reactions: Reaction[];
 }
 
+export interface CommentReply {
+  _id: string;
+  content: string;
+  author: string;
+  userDetails: {
+    _id: string;
+    name: string;
+    profilePic: string;
+    avatar: string;
+    status: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  likes: number;
+  replies: Array<CommentReply>;
+}
+
 export interface PostDetailsData {
   _id: string;
   author: string;
@@ -648,7 +665,7 @@ export interface PostDetailsData {
     createdAt: string;
     updatedAt: string;
     likes: number;
-    replies: Array<any>;
+    replies: Array<CommentReply>;
   }>;
 }
 

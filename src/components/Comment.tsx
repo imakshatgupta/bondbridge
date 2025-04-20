@@ -1,7 +1,7 @@
 import { useState, useCallback, memo, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Reply, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ThreeDotsMenu, { 
   DeleteMenuItem, 
@@ -15,7 +15,6 @@ import { deleteComment as deleteCommunityComment } from "@/apis/commonApiCalls/c
 import { Link } from "react-router-dom";
 import { getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { ReportModal } from './ReportModal';
-import ReactionComponent from "./global/ReactionComponent";
 
 // Memoized reply component to prevent unnecessary re-renders
 const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCommentDeleted, isPending }: 
@@ -109,8 +108,6 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
 
   // Memoize handlers to prevent recreation on each render
   const toggleReplies = useCallback(() => setShowReplies(prev => !prev), []);
-
-  const toggleReplyInput = useCallback(() => setShowReplyInput(prev => !prev), []);
 
   const handleReplyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setReplyText(e.target.value);
@@ -276,7 +273,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
             <ThreeDotsMenu items={menuItems} />
           </div>
 
-          <div className="flex items-center gap-4 mt-2">
+          {/* <div className="flex items-center gap-4 mt-2">
             <ReactionComponent 
               entityId={comment.commentId}
               entityType="comment"
@@ -310,7 +307,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
                 Reply
               </Button>
             )}
-          </div>
+          </div> */}
 
           {showReplyInput && (
             <div className="mt-2 relative">
