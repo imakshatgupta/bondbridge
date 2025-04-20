@@ -294,6 +294,8 @@ export function Post({
                                     initialTotalCount={reactionCount}
                                     initialReactionCounts={reactionDetails.types}
                                     onReactionChange={handleReactionChange}
+                                    isCommunity={isCommunity}
+                                    communityId={communityId}
                                 />
                             )}
 

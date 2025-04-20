@@ -7,16 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { X, ArrowLeft, Upload } from 'lucide-react';
+import { X, ArrowLeft, Upload, Smile } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApiCall } from '@/apis/globalCatchError';
 import { updateUserProfile, deleteProfilePicture } from '@/apis/commonApiCalls/profileApi';
 import { fetchAvatars } from '@/apis/commonApiCalls/createProfileApi';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AVAILABLE_INTERESTS, WORD_LIMIT } from '@/lib/constants';
+import { AVAILABLE_INTERESTS } from '@/lib/constants';
 import { Textarea } from "@/components/ui/textarea";
-import { countWords } from '@/lib/utils';
 import { TruncatedList } from '@/components/ui/TruncatedList';
+import EmojiPicker from 'emoji-picker-react';
+import { rewriteWithBondChat } from '@/apis/commonApiCalls/createPostApi';
+
+// Character limit for bio
+const CHARACTER_LIMIT = 150;
 
 interface AvatarData {
   url: string;
@@ -50,9 +54,14 @@ const EditProfilePage: React.FC = () => {
   const [executeUpdateProfile, isUpdatingProfile] = useApiCall(updateUserProfile);
   const [executeFetchAvatars, isLoadingAvatars] = useApiCall(fetchAvatars);
   const [executeDeleteProfilePic] = useApiCall(deleteProfilePicture);
+  const [executeRewriteWithBondChat, isRewritingWithBondChat] = useApiCall(rewriteWithBondChat);
 
   const [activeTab, setActiveTab] = useState<string>("female");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+  const [rewriteError, setRewriteError] = useState<string>("");
 
   // Add useEffect to fetch avatars
   useEffect(() => {
@@ -105,6 +114,26 @@ const EditProfilePage: React.FC = () => {
     }
   }, []);
   
+  // Add useEffect to handle clicks outside emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -175,6 +204,38 @@ const EditProfilePage: React.FC = () => {
     }
   };
 
+  // Function to handle emoji selection
+  const handleEmojiSelect = (emojiData: any) => {
+    setFormData({
+      ...formData,
+      bio: formData.bio + emojiData.emoji,
+    });
+    setShowEmojiPicker(false);
+  };
+
+  // Function to handle rewriting bio with BondChat
+  const handleRewriteWithBondChat = async () => {
+    // Clear any previous error
+    setRewriteError("");
+    
+    // Only proceed if there's content to rewrite
+    if (!formData.bio.trim()) {
+      setRewriteError("Please add some text to rewrite");
+      return;
+    }
+
+    // Execute the API call with error handling
+    const { data, success } = await executeRewriteWithBondChat(formData.bio);
+
+    if (success && data) {
+      // Update the content with the rewritten text
+      setFormData({
+        ...formData,
+        bio: data.rewritten
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -190,10 +251,10 @@ const EditProfilePage: React.FC = () => {
       return;
     }
     
-    // Check bio word count
-    const bioWordCount = countWords(formData.bio);
-    if (bioWordCount > WORD_LIMIT) {
-      toast.error(`Bio cannot exceed ${WORD_LIMIT} words`);
+    // Check bio character count
+    const bioCharacterCount = formData.bio.length;
+    if (bioCharacterCount > CHARACTER_LIMIT) {
+      toast.error(`Bio cannot exceed ${CHARACTER_LIMIT} characters`);
       return;
     }
 
@@ -475,17 +536,81 @@ const EditProfilePage: React.FC = () => {
 
           <div className="space-y-2">
             <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              name="bio"
-              value={formData.bio}
-              onChange={handleInputChange}
-              placeholder="Tell us about yourself..."
-              className="min-h-[100px]"
-            />
+            <div className="relative">
+              {isRewritingWithBondChat ? (
+                <div className="min-h-[100px] border rounded-md px-3 py-2 relative bg-background">
+                  <div className="w-full animate-pulse pb-2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className="h-4 bg-muted opacity-40 rounded mb-2 w-3/4 mx-auto"></div>
+                    <div className="h-4 bg-muted opacity-40 rounded mb-2 w-5/6 mx-auto"></div>
+                    <div className="h-4 bg-muted opacity-40 rounded w-2/3 mx-auto"></div>
+                  </div>
+                </div>
+              ) : (
+                <Textarea
+                  id="bio"
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  placeholder="Tell us about yourself..."
+                  className="min-h-[100px] pb-12"
+                />
+              )}
+              <div className="absolute right-2 bottom-2 flex gap-2 z-10 bg-background p-1 rounded-md">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs flex items-center gap-1 cursor-pointer border-2 border-primary bg-background"
+                  onClick={handleRewriteWithBondChat}
+                  disabled={isRewritingWithBondChat}
+                >
+                  {isRewritingWithBondChat ? (
+                    <div className="flex items-center gap-1">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent"></div>
+                      <span className="text-foreground border-primary">
+                        Rewriting...
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <img src="/bondchat.svg" alt="BondChat" className="w-4 h-4" />
+                      <div className="text-foreground">
+                        Re-write with{" "}
+                        <span className="grad font-bold">BondChat </span>
+                      </div>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  ref={emojiButtonRef}
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="cursor-pointer text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-5 w-5" />
+                </Button>
+              </div>
+              {rewriteError && (
+                <p className="text-destructive font-bold text-xs mt-1">{rewriteError}</p>
+              )}
+              {showEmojiPicker && (
+                <div 
+                  ref={emojiPickerRef}
+                  className="absolute right-0 bottom-14 z-50"
+                >
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiSelect}
+                    width={300}
+                    height={400}
+                  />
+                </div>
+              )}
+            </div>
             <div className="flex justify-end">
-              <span className={`text-xs ${countWords(formData.bio) > WORD_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {countWords(formData.bio)}/{WORD_LIMIT} words
+              <span className={`text-xs ${formData.bio.length > CHARACTER_LIMIT ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {formData.bio.length}/{CHARACTER_LIMIT} characters
               </span>
             </div>
           </div>

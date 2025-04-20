@@ -196,3 +196,64 @@ export const fetchPostDetails = async (postId: string): Promise<PostDetailsData>
   
   return response.data.post;
 };
+
+/**
+ * Interface for like post request parameters
+ */
+interface LikePostRequest {
+  postId: string;
+  reactionType: 'like' | 'love' | 'haha' | 'lulu';
+}
+
+/**
+ * Function to like/react to a community post
+ * @param communityId Community ID
+ * @param params Request parameters (postId and reactionType)
+ * @returns Promise with like post response
+ */
+export const reactOnPost = async (
+  communityId: string,
+  params: LikePostRequest
+): Promise<PostDetailsData> => {
+  const url = `/communities/${communityId}/post/like`;
+  const response = await adminApiClient.post<{ success: boolean; post: PostDetailsData }>(url, {
+    postId: params.postId,
+    reactionType: params.reactionType
+  });
+  
+  if (!response.data.success) {
+    throw new Error('Failed to react post');
+  }
+  return response.data.post;
+};
+
+/**
+ * Interface for comment on post request parameters
+ */
+interface CommentOnPostRequest {
+  postId: string;
+  content: string;
+}
+
+/**
+ * Function to comment on a community post
+ * @param communityId Community ID
+ * @param params Request parameters (postId and content)
+ * @returns Promise with comment on post response
+ */
+export const commentOnPost = async (
+  communityId: string,
+  params: CommentOnPostRequest
+): Promise<PostDetailsData> => {
+  
+  const url = `/communities/${communityId}/post/comment`;
+  const response = await adminApiClient.post<{ success: boolean; post: PostDetailsData }>(url, {
+    postId: params.postId,
+    content: params.content
+  });
+  
+  if (!response.data.success) {
+    throw new Error('Failed to comment on post');
+  }
+  return response.data.post;
+};
