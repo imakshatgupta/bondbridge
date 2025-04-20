@@ -18,7 +18,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/store";
 import LogoLoader from "@/components/LogoLoader";
-import EmojiPicker from "emoji-picker-react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 export default function CommentsPage() {
   const navigate = useNavigate();
@@ -404,7 +404,7 @@ export default function CommentsPage() {
   };
 
   // Handle emoji selection
-  const handleEmojiSelect = (emojiData: any) => {
+  const handleEmojiSelect = (emojiData: EmojiClickData) => {
     setNewComment(newComment + emojiData.emoji);
   };
 

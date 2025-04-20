@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchCommunities } from "@/apis/commonApiCalls/communitiesApi";
+import { fetchCommunities, fetchCommunityById, fetchCommunityPosts } from "@/apis/commonApiCalls/communitiesApi";
 import { useApiCall } from "@/apis/globalCatchError";
 import { CommunityResponse } from "@/apis/apiTypes/communitiesTypes";
-import { ProfilePostData } from "@/apis/apiTypes/response";
 import { ChatItem } from "@/store/chatSlice";
 import { Loader2, ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { TransformedCommunityPost } from "@/apis/apiTypes/communitiesTypes";
+import { getRelativeTime } from "@/lib/utils";
+import { TruncatedText } from "../ui/TruncatedText";
 
 interface CommunityPostFeedProps {
   activeCommunityChatItem: ChatItem | null;
@@ -20,85 +21,76 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
   onBack,
 }) => {
   const [community, setCommunity] = useState<CommunityResponse | null>(null);
-  const [posts, setPosts] = useState<ProfilePostData[]>([]);
+  const [posts, setPosts] = useState<TransformedCommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Use the useApiCall hook for all API calls
   const [executeFetchCommunities] = useApiCall(fetchCommunities);
+  const [executeFetchCommunityById] = useApiCall(fetchCommunityById);
+  const [executeFetchCommunityPosts] = useApiCall(fetchCommunityPosts);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadCommunity = async () => {
+    const loadCommunityAndPosts = async () => {
       if (!activeCommunityChatItem) return;
 
       setLoading(true);
       try {
-        const result = await executeFetchCommunities();
-        if (result.success && result.data) {
-          const foundCommunity = result.data.find(
-            (c) => c._id === activeCommunityChatItem.id
-          );
-
-          if (foundCommunity) {
-            setCommunity(foundCommunity);
-
-            // Generate posts from the community data
-            if (foundCommunity.posts && foundCommunity.posts.length > 0) {
-              const realPostCount =
-                foundCommunity.postCount || foundCommunity.posts.length;
-              const communityPosts: ProfilePostData[] = Array(realPostCount)
-                .fill(null)
-                .map((_, index) => ({
-                  id: foundCommunity.posts?.[index] || `post-${index}`,
-                  userId: foundCommunity._id,
-                  author: {
-                    name: foundCommunity.name,
-                    profilePic: foundCommunity.profilePicture || "",
-                  },
-                  content: `Community post ${index + 1}`,
-                  createdAt: Date.now() - index * 3600000, // Decreasing timestamps
-                  media:
-                    index % 2 === 0
-                      ? [
-                          {
-                            url: foundCommunity.backgroundImage || "",
-                            type: "image",
-                          },
-                        ]
-                      : [],
-                  reactionDetails: {
-                    total: 0,
-                    types: {
-                      like: 0,
-                      love: 0,
-                      haha: 0,
-                      lulu: 0,
-                    },
-                  },
-                  stats: {
-                    commentCount: Math.floor(Math.random() * 10),
-                    hasReacted: false,
-                    reactionCount: Math.floor(Math.random() * 20),
-                    reactionType: null,
-                  },
-                  community: {
-                    id: foundCommunity._id,
-                    name: foundCommunity.name,
-                    members: foundCommunity.memberCount,
-                    pfp: foundCommunity.profilePicture || "",
-                    description: foundCommunity.description,
-                    backgroundImage: foundCommunity.backgroundImage,
-                    bio: foundCommunity.bio,
-                  },
-                }));
-              setPosts(communityPosts);
-            } else {
-              setPosts([]);
-            }
+        // First, fetch the community details
+        const communityResult = await executeFetchCommunityById(activeCommunityChatItem.id);
+        
+        if (communityResult.success && communityResult.data) {
+          setCommunity(communityResult.data);
+          
+          // Then fetch the community posts
+          const postsResult = await executeFetchCommunityPosts(activeCommunityChatItem.id);
+          
+          if (postsResult.success && postsResult.data) {
+            // Sort posts by creation time (newest first)
+            const sortedPosts = postsResult.data.sort((a, b) => {
+              const dateA = new Date(a.createdAt).getTime();
+              const dateB = new Date(b.createdAt).getTime();
+              return dateB - dateA;
+            });
+            
+            setPosts(sortedPosts);
           } else {
-            setError("Community not found");
+            setPosts([]);
           }
         } else {
-          setError("Failed to load community data");
+          // Fallback to fetch communities and find the matching one
+          const communitiesResult = await executeFetchCommunities();
+          if (communitiesResult.success && communitiesResult.data) {
+            const foundCommunity = communitiesResult.data.find(
+              (c) => c._id === activeCommunityChatItem.id
+            );
+
+            if (foundCommunity) {
+              setCommunity(foundCommunity);
+              
+              // After finding the community, fetch its posts
+              const postsResult = await executeFetchCommunityPosts(foundCommunity._id);
+              
+              if (postsResult.success && postsResult.data) {
+                // Sort posts by creation time (newest first)
+                const sortedPosts = postsResult.data.sort((a, b) => {
+                  const dateA = new Date(a.createdAt).getTime();
+                  const dateB = new Date(b.createdAt).getTime();
+                  return dateB - dateA;
+                });
+                
+                setPosts(sortedPosts);
+              } else {
+                setPosts([]);
+              }
+            } else {
+              setError("Community not found");
+            }
+          } else {
+            setError("Failed to load community data");
+          }
         }
       } catch (err) {
         console.error("Error loading community:", err);
@@ -108,18 +100,12 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
       }
     };
 
-    loadCommunity();
+    loadCommunityAndPosts();
   }, [activeCommunityChatItem]);
 
-  // Format date display
+  // Format date display using getRelativeTime
   const formatPostDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return getRelativeTime(new Date(timestamp).toISOString());
   };
 
   const handleNavigateToCommunityProfile = () => {
@@ -140,7 +126,7 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-2 text-muted-foreground">Loading community posts...</p>
+        <p className="mt-2 text-muted-foreground">Loading Community Posts...</p>
       </div>
     );
   }
@@ -191,7 +177,7 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
               <ExternalLink className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-70" />
             </h3>
             <p className="text-xs text-muted-foreground">
-              {community.memberCount} Members
+              {(community.members?.length || 0)} Members
             </p>
           </div>
         </div>
@@ -202,7 +188,7 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
         <div className="p-4">
           {posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-              <p>No posts in this community yet</p>
+              <p>No Posts in this Community Yet</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -212,6 +198,7 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
                   className="rounded-lg overflow-hidden border bg-background"
                 >
                   {/* Post Header */}
+                  <Link to={`/community/${community._id}/${post.id}`}>
                   <div className="p-3 flex items-center gap-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage
@@ -229,12 +216,12 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
                       </p>
                     </div>
                   </div>
-
+                  </Link> 
                   {/* Post Content */}
                   <div className="px-3 pb-2">
-                    <p className="text-sm mb-3">{post.content}</p>
+                    <TruncatedText className="text-sm mb-3" text={post.content} limit={300} showToggle={true} align="left"/>
 
-                    {post.media.length > 0 && (
+                    {post.media && post.media.length > 0 && (
                       <div className="rounded-md overflow-hidden mb-3">
                         <img
                           src={post.media[0].url}
@@ -244,16 +231,11 @@ const CommunityPostFeed: React.FC<CommunityPostFeedProps> = ({
                       </div>
                     )}
 
-                    {/* Post Stats - simplified, no interaction */}
-                    {/* <div className="flex items-center text-xs text-muted-foreground">
-                      <Badge variant="secondary" className="text-xs">
-                        {post.stats.reactionCount} likes
-                      </Badge>
-                      <span className="mx-2">•</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {post.stats.commentCount} comments
-                      </Badge>
-                    </div> */}
+                    {/* Post Stats */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground mt-2">
+                      <span>{post.reactionDetails?.total} Reactions</span>
+                      <span>{post.stats.commentCount} Comments</span>
+                    </div>
                   </div>
                 </div>
               ))}

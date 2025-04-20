@@ -175,7 +175,7 @@ export default function CommunityPostPage() {
               lulu: 0
             }
           },
-          ago_time: apiPostData.ago_time || "Recently",
+          ago_time: getRelativeTime(new Date(apiPostData.createdAt).toISOString()),
           feedId: apiPostData.feedId || postId,
           author: apiPostData.author,
           whoCanComment: apiPostData.whoCanComment,
@@ -284,7 +284,7 @@ export default function CommunityPostPage() {
                 lulu: 0
               }
             },
-            ago_time: apiPostData.ago_time || "Recently",
+            ago_time: forceRefresh && post.ago_time ? post.ago_time : getRelativeTime(new Date(apiPostData.createdAt).toISOString()),
             feedId: apiPostData.feedId || postId,
             author: apiPostData.author,
             whoCanComment: apiPostData.whoCanComment,
