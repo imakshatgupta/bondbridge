@@ -172,6 +172,15 @@ export function Post({
         });
     };
 
+    // Handle profile navigation
+    const handleProfileClick = () => {
+        if (isCommunity && communityId) {
+            navigate(`/community/${communityId}`);
+        } else {
+            navigate(`/profile/${userId}`);
+        }
+    };
+
     return (
         <>
             <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4" data-post-id={feedId}>
@@ -181,7 +190,7 @@ export function Post({
                 <div className="flex items-center justify-between p-4">
                     <div
                         className="flex items-center gap-3 cursor-pointer"
-                        onClick={() => navigate(`/profile/${userId}`)}
+                        onClick={handleProfileClick}
                     >
                         <Avatar>
                             <AvatarImage src={avatar} alt={user} />
