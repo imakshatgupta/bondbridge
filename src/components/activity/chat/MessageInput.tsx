@@ -12,6 +12,7 @@ import {
 } from "@/types/speech-recognition";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { Message } from "@/store/chatSlice";
+import { isPostShare, parsePostShare } from "@/utils/messageUtils";
 
 interface MessageInputProps {
   newMessage: string;
@@ -203,6 +204,32 @@ const MessageInput: React.FC<MessageInputProps> = ({
     setShowEmojiPicker(false);
   };
 
+  // Parse post data if this is a post share
+  const sharedPostData = React.useMemo(() => {
+    if (replyToMessage && isPostShare(replyToMessage.text)) {
+      try {
+        return parsePostShare(replyToMessage.text as string);
+      } catch (error) {
+        console.error("Error parsing shared post:", error);
+        return null;
+      }
+    }
+    return null;
+  }, [replyToMessage]);
+
+  // Check if the shared post has media (image or video)
+  const postMedia = React.useMemo(() => {
+    if (!sharedPostData?.data?.media?.length) return null;
+    
+    const media = sharedPostData.data.media[0];
+    if (!media || !media.url || media.url.trim() === "") return null;
+    
+    return {
+      url: media.url,
+      type: media.type || "image" // Default to image if type is not specified
+    };
+  }, [sharedPostData]);
+
   return (
     <div className="p-3">
       {/* Quick suggestion section */}
@@ -217,21 +244,54 @@ const MessageInput: React.FC<MessageInputProps> = ({
       {/* Reply indicator */}
       {replyToMessage && onCancelReply && (
         <div className="flex items-center justify-between border-l-4 border-primary/70 bg-primary/10 p-2 px-3 rounded-r-md mb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-center w-full pr-2">
             <CornerUpLeft size={16} className="text-primary/80" />
-            <div className="flex flex-col">
+            <div className="flex flex-col flex-1 justify-center">
               <span className="text-xs font-medium text-muted-foreground">
                 {replyToMessage.isUser
                   ? "Replying to yourself"
                   : `Replying to ${replyToMessage.senderName || "Unknown"}`}
               </span>
-              <span className="text-xs text-foreground line-clamp-1">
-                {typeof replyToMessage.text === "string"
-                  ? replyToMessage.text.length > 70
-                    ? `${replyToMessage.text.substring(0, 70)}...`
-                    : replyToMessage.text
-                  : "Shared content"}
-              </span>
+              <div className="flex justify-items-center gap-2">
+                <span className="text-xs text-foreground line-clamp-1 flex-1">
+                  {isPostShare(replyToMessage.text) 
+                    ? "POST" 
+                    : typeof replyToMessage.text === "string"
+                      ? replyToMessage.text.length > 70
+                        ? `${replyToMessage.text.substring(0, 70)}...`
+                        : replyToMessage.text
+                      : "Shared content"}
+                </span>
+                {/* Show post media thumbnail only if available */}
+                {isPostShare(replyToMessage.text) && postMedia && (
+                  <div className="h-8 w-8 overflow-hidden rounded-sm border border-border flex items-center justify-center bg-muted/30">
+                    {postMedia.type === "video" ? (
+                      <video 
+                        src={postMedia.url}
+                        className="h-full w-full object-cover"
+                        muted
+                        onLoadStart={() => console.log("Video loading started")}
+                        onError={(e) => {
+                          console.error("Failed to load post video:", postMedia.url);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <img 
+                        src={postMedia.url}
+                        alt="Post"
+                        className="h-full w-full object-cover"
+                        onLoad={() => console.log("Image loaded successfully")}
+                        onError={(e) => {
+                          console.error("Failed to load post image:", postMedia.url);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    )
+                    }
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <Button

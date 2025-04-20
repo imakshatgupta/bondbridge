@@ -1,5 +1,5 @@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { cn, getRelativeTime } from "@/lib/utils";
 import { setActiveChat, ChatItem } from "@/store/chatSlice";
 import { useAppDispatch } from "../../store";
 
@@ -52,7 +52,7 @@ const ChatList = ({ chats, isLoading, onSelectChat }: ChatListProps) => {
             </div>
           </div>
           <span className="text-xs text-muted-foreground">
-            {chat.timestamp}
+            {getRelativeTime(chat.updatedAt)}
           </span>
         </div>
       ))}

@@ -108,6 +108,7 @@ export default function Activity() {
             hour: "2-digit",
             minute: "2-digit",
           }),
+          updatedAt: new Date().toISOString(),
           unread: false,
           type: "community" as const,
           memberCount: community.memberCount || (community.members?.length || 0),
@@ -183,6 +184,7 @@ export default function Activity() {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
+              updatedAt: new Date().toISOString(),
               unread: false,
               type: "dm",
               participants: newChat.participants.map((p: Participant) => ({

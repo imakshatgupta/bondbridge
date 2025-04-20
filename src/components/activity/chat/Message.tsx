@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { Message as MessageType, Reaction } from "@/store/chatSlice";
 import { isPostShare, parsePostShare } from "@/utils/messageUtils";
-import { CornerUpLeft } from "lucide-react";
+import { CornerUpLeft, Image, Video } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 
 // Default quick reactions
@@ -49,6 +49,10 @@ const Message: React.FC<MessageProps> = ({
 }) => {
   // Check if message is a shared post using useState
   const [sharedPost, setSharedPost] = useState<SharedPostData | null>(null);
+  // State to track media loading status
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   // State to track if the message is "long" and needs timestamp on new line
   const [isLongMessage, setIsLongMessage] = useState(false);
@@ -66,6 +70,31 @@ const Message: React.FC<MessageProps> = ({
     if (!message.replyTo) return null;
     return messages.find((msg) => msg.id === message.replyTo);
   }, [message.replyTo, messages]);
+
+  // Parse replied-to post data if it's a post share
+  const repliedPostData = React.useMemo(() => {
+    if (!repliedToMessage || !isPostShare(repliedToMessage.text)) return null;
+    
+    try {
+      return parsePostShare(repliedToMessage.text as string);
+    } catch (error) {
+      console.error("Error parsing replied post:", error);
+      return null;
+    }
+  }, [repliedToMessage]);
+
+  // Check if the replied post has media
+  const repliedPostMedia = React.useMemo(() => {
+    if (!repliedPostData?.data?.media?.length) return null;
+    
+    const media = repliedPostData.data.media[0];
+    if (!media || !media.url || media.url.trim() === "") return null;
+    
+    return {
+      url: media.url,
+      type: media.type || "image" // Default to image if type is not specified
+    };
+  }, [repliedPostData]);
 
   // Group reactions by emoji for display
   const groupedReactions = React.useMemo(() => {
@@ -95,13 +124,42 @@ const Message: React.FC<MessageProps> = ({
   useEffect(() => {
     // Check if the message is a post share using the utility function
     if (isPostShare(message.text)) {
-      // Parse the post content using the utility function
-      const parsedPost = parsePostShare(message.text as string);
-      setSharedPost(parsedPost);
+      try {
+        // Parse the post content using the utility function
+        const parsedPost = parsePostShare(message.text as string);
+        console.log("Parsed shared post:", parsedPost);
+        setSharedPost(parsedPost);
+        
+        // Reset media states when post changes
+        setMediaLoaded(false);
+        setMediaError(false);
+        setIsVideoLoading(false);
+      } catch (error) {
+        console.error("Error parsing shared post in Message component:", error);
+        setSharedPost(null);
+      }
     } else {
       setSharedPost(null);
     }
   }, [message.text]);
+
+  // Get post media details (image or video)
+  const postMedia = React.useMemo(() => {
+    if (!sharedPost?.data?.media?.length) return null;
+    
+    const media = sharedPost.data.media[0];
+    if (!media || !media.url || media.url.trim() === "") return null;
+    
+    return {
+      url: media.url,
+      type: media.type || "image" // Default to image if type is not specified
+    };
+  }, [sharedPost]);
+
+  // Check if post has valid media
+  const hasMedia = !!postMedia;
+  const isVideo = postMedia?.type === "video";
+  const isImage = postMedia?.type === "image";
 
   // Check if message is long enough to need timestamp on a new line
   useEffect(() => {
@@ -328,17 +386,40 @@ const Message: React.FC<MessageProps> = ({
                       message.isUser
                         ? "border-l-gray-400 bg-gray-700"
                         : "border-l-primary bg-primary/40"
-                    } rounded-sm pl-2 py-1 pr-3  overflow-hidden`}
+                    } rounded-sm pl-2 py-1 pr-3 overflow-hidden`}
                   >
                     <div className="text-xs font-semibold">
                       {repliedToMessage.isUser
                         ? "You"
                         : repliedToMessage.senderName || "Unknown"}
                     </div>
-                    <div className="text-xs truncate">
-                      {typeof repliedToMessage.text === "string"
-                        ? repliedToMessage.text
-                        : "Shared content"}
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs truncate flex-1">
+                        {isPostShare(repliedToMessage.text)
+                          ? "POST"
+                          : typeof repliedToMessage.text === "string"
+                            ? repliedToMessage.text
+                            : "Shared content"}
+                      </div>
+                      
+                      {/* Show media thumbnail for replied post if available */}
+                      {isPostShare(repliedToMessage.text) && repliedPostMedia && (
+                        <div className="h-5 w-5 overflow-hidden rounded-sm flex items-center justify-center bg-muted/30">
+                          {repliedPostMedia.type === "video" ? (
+                            <video 
+                              src={repliedPostMedia.url}
+                              className="h-full w-full object-cover"
+                              muted
+                            />
+                          ) : (
+                            <img 
+                              src={repliedPostMedia.url}
+                              alt="Post"
+                              className="h-full w-full object-cover"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -356,44 +437,72 @@ const Message: React.FC<MessageProps> = ({
                         : `/post/${sharedPost._id}`
                     }
                   >
-                    {/* Post image if available */}
-                    {sharedPost.data.media &&
-                      sharedPost.data.media.length > 0 &&
-                      sharedPost.data.media[0].type === "image" && (
-                        <div className="w-full h-[150px] overflow-hidden">
+                    {/* Post media container */}
+                    {hasMedia && !mediaError && (
+                      <div className="w-full h-[150px] overflow-hidden bg-muted/30 flex items-center justify-center relative">
+                        {/* Loading indicator */}
+                        {!mediaLoaded && !isVideo && (
+                          <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <Image size={24} className="text-muted-foreground animate-pulse" />
+                          </div>
+                        )}
+                        
+                        {isVideoLoading && (
+                          <div className="absolute inset-0 flex items-center justify-center z-10">
+                            <Video size={24} className="text-muted-foreground animate-pulse" />
+                          </div>
+                        )}
+
+                        {/* Render image or video based on type */}
+                        {isImage ? (
                           <img
-                            src={sharedPost.data.media[0].url}
+                            src={postMedia.url}
                             alt="Shared post"
-                            className="w-full h-full object-cover"
+                            className={`w-full h-full object-cover transition-opacity duration-200 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
+                            onLoad={() => {
+                              console.log("Shared post image loaded successfully");
+                              setMediaLoaded(true);
+                            }}
                             onError={(e) => {
-                              console.error("Failed to load shared post image");
-                              // Replace with default image on error
-                              e.currentTarget.src = "/placeholder-image.jpg";
+                              console.error("Failed to load shared post image:", postMedia.url);
+                              setMediaError(true);
+                              e.currentTarget.style.display = "none";
                             }}
                           />
-                        </div>
-                      )}
-
-                    {/* Post video if available */}
-                    {sharedPost.data.media &&
-                      sharedPost.data.media.length > 0 &&
-                      sharedPost.data.media[0].type === "video" && (
-                        <div className="w-full h-[150px] overflow-hidden">
+                        ) : isVideo ? (
                           <video
-                            src={sharedPost.data.media[0].url}
+                            src={postMedia.url}
                             className="w-full h-full object-cover"
                             autoPlay
                             muted
                             loop
                             playsInline
+                            onLoadStart={() => setIsVideoLoading(true)}
+                            onCanPlay={() => {
+                              setIsVideoLoading(false);
+                              setMediaLoaded(true);
+                            }}
                             onError={(e) => {
-                              console.error("Failed to load shared post video");
-                              // We can't set a fallback for video, but we can handle the error
+                              console.error("Failed to load shared post video:", postMedia.url);
+                              setMediaError(true);
+                              setIsVideoLoading(false);
                               e.currentTarget.style.display = "none";
                             }}
                           />
-                        </div>
-                      )}
+                        ) : null}
+                      </div>
+                    )}
+
+                    {/* Fallback for media error */}
+                    {(hasMedia && mediaError) && (
+                      <div className="w-full h-[80px] overflow-hidden bg-muted/30 flex items-center justify-center">
+                        {isVideo ? (
+                          <Video size={24} className="text-muted-foreground" />
+                        ) : (
+                          <Image size={24} className="text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
 
                     {/* Post content */}
                     <div className="p-2 cursor-pointer">
@@ -401,7 +510,7 @@ const Message: React.FC<MessageProps> = ({
                         Shared a post from {sharedPost.name || "Unknown"}
                       </p>
                       <p className="text-sm line-clamp-2">
-                        {sharedPost.data.content || "No caption"}
+                        {sharedPost.data?.content || "No caption"}
                       </p>
                     </div>
                   </Link>
