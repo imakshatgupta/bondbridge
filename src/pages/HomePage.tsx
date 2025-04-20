@@ -318,21 +318,21 @@ export default function HomePage() {
 
   // Process post data to handle both regular and community posts
   const processPostData = (post: HomePostData) => {
-    if (post.isCommunity) {
+    // if (post.isCommunity) {
       // For community posts, adapt the data structure to match what Post component expects
-      return {
-        ...post,
-        data: {
-          content: post.content || "",
-          media: post.mediaUrls
-            ? post.mediaUrls.map((url) => ({
-                url,
-                type: url.toLowerCase().endsWith(".mp4") ? "video" : "image",
-              }))
-            : null,
-        },
-      };
-    }
+    //   return {
+    //     ...post,
+    //     data: {
+    //       content: post.content || "",
+    //       media: post.mediaUrls
+    //         ? post.mediaUrls.map((url) => ({
+    //             url,
+    //             type: url.toLowerCase().endsWith(".mp4") ? "video" : "image",
+    //           }))
+    //         : null,
+    //     },
+    //   };
+    // }
     return post;
   };
   const handlePostDelete = (postId: string) => {
