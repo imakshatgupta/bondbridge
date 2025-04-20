@@ -272,6 +272,9 @@ export default function CommunityPostPage() {
         if (!locationPost || forceRefresh) {
           const apiPostData = result.data as unknown as CommunityPostResponse;
           
+          // Preserve the original post time when refreshing after comment
+          const originalAgoTime = forceRefresh && post.ago_time ? post.ago_time : (apiPostData.ago_time || "Recently");
+          
           // Map the API response to our expected HomePostData format
           const mappedPost: HomePostData = {
             _id: apiPostData._id,
@@ -294,7 +297,7 @@ export default function CommunityPostPage() {
                 lulu: 0
               }
             },
-            ago_time: apiPostData.ago_time || "Recently",
+            ago_time: originalAgoTime,
             feedId: apiPostData.feedId || postId,
             author: apiPostData.author,
             whoCanComment: apiPostData.whoCanComment,
@@ -323,7 +326,7 @@ export default function CommunityPostPage() {
         setCommentsData([]);
       }
     } catch (error) {
-    
+      console.log("error: ", error);
       setError("An error occurred while fetching post details.");
       setCommentsData([]);
     }
@@ -401,6 +404,7 @@ export default function CommunityPostPage() {
         fetchPostDetailsAndComments(true);
       }
     } catch (error) {
+      console.log("error: ", error);
       toast.error("Failed to post comment. Please try again.");
       
       // Remove the optimistic comment

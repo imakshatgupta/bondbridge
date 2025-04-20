@@ -40,6 +40,15 @@ const EditProfilePage: React.FC = () => {
     bio: bio || '',
   });
 
+  useEffect(() => {
+    setFormData({
+      username,
+      email,
+      interests,
+      bio: bio || '',
+    });
+  }, [username, email, interests, bio]);
+
   const [selectedAvatar, setSelectedAvatar] = useState(avatar);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(interests);
   const [customProfilePic, setCustomProfilePic] = useState<File | null>(null);
@@ -299,6 +308,8 @@ const EditProfilePage: React.FC = () => {
     
     const { data, success } = await executeUpdateProfile(profileData);
 
+    console.log("data: ", data);
+
     if (success && data) {
       // Update Redux store with appropriate profile picture data
       const updatedUserData: {
@@ -310,8 +321,12 @@ const EditProfilePage: React.FC = () => {
       } = {
         username: formData.username,
         email: formData.email,
-        bio: formData.bio
+        bio: formData.bio,
       };
+
+      if(data.user && data.user.profilePic) {
+        updatedUserData.profilePic = data.user.profilePic;
+      }
 
       // If we're using a custom profile pic, the backend will return the URL
       if (activeProfileTab === "custom" && data.user?.profilePic && !shouldDeleteProfilePic && data.user.privacyLevel == 0) {
