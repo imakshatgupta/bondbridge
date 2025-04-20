@@ -301,10 +301,6 @@ export default function HomePage() {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
         if (post._id === postId || post.feedId === postId) {
-          // Get the updated reaction from the API response
-          // Since we don't have the new reaction details here yet,
-          // we'll rely on the Post component's optimistic UI updates for now
-          // The next API call to fetch posts will get the correct data
           return post;
         }
         return post;
@@ -313,26 +309,30 @@ export default function HomePage() {
   };
 
   const handleCommentClick = (postId: string, post: HomePostData) => {
-    navigate(`/post/${postId}`, { state: { post } });
+    if (post.isCommunity) {
+      navigate(`/community/${post.author}/${postId}`, { state: { post } });
+    } else {
+      navigate(`/post/${postId}`, { state: { post } });
+    }
   };
 
   // Process post data to handle both regular and community posts
   const processPostData = (post: HomePostData) => {
-    if (post.isCommunity) {
-      // For community posts, adapt the data structure to match what Post component expects
-      return {
-        ...post,
-        data: {
-          content: post.content || "",
-          media: post.mediaUrls
-            ? post.mediaUrls.map((url) => ({
-                url,
-                type: url.toLowerCase().endsWith(".mp4") ? "video" : "image",
-              }))
-            : null,
-        },
-      };
-    }
+    // if (post.isCommunity) {
+    //   // For community posts, adapt the data structure to match what Post component expects
+    //   return {
+    //     ...post,
+    //     data: {
+    //       content: post.content || "",
+    //       media: post.mediaUrls
+    //         ? post.mediaUrls.map((url) => ({
+    //             url,
+    //             type: url.toLowerCase().endsWith(".mp4") ? "video" : "image",
+    //           }))
+    //         : null,
+    //     },
+    //   };
+    // }
     return post;
   };
   const handlePostDelete = (postId: string) => {
@@ -491,6 +491,8 @@ export default function HomePage() {
                   avatar={post.profilePic}
                   userId={post.isCommunity ? post.communityId || "" : post.userId}
                   caption={processedPost.data.content}
+                  isCommunity={post.isCommunity}
+                  communityId={post.author}
                   media={processedPost.data.media || []}
                   image={
                     processedPost.data.media &&

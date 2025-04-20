@@ -127,8 +127,8 @@ const GroupProfile: React.FC<GroupProfileProps> = ({
         {/* Group avatar and name */}
         <div className="flex flex-col items-center py-6 px-4 border-b">
           <div className="rounded-full border-4 border-primary p-1">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={avatar} alt={name} />
+            <Avatar className="h-24 w-24 bg-muted">
+              <img src={avatar || "/activity/group.svg"} alt={name} className={`w-full h-full object-cover ${!avatar ? 'theme-svg p-2' : ''}`} />
               <AvatarFallback>
                 {name.charAt(0).toUpperCase()}
               </AvatarFallback>

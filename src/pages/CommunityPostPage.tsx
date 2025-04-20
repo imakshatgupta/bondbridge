@@ -144,7 +144,10 @@ export default function CommunityPostPage() {
   // Fetch post details if not provided in state
   useEffect(() => {
     const fetchCommunityPostDetails = async () => {
-      if (!postId || locationPost) return; // Skip if postId is missing or post is already available
+      if (!postId) return; // Skip if postId is missing
+      
+      // If we already have complete post data from location state, use that
+      if (locationPost && locationPost.content && locationPost.media) return;
 
       const result = await executeGetPostDetails(postId.split(":")[0]);
 

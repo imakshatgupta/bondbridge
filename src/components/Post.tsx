@@ -181,7 +181,13 @@ export function Post({
                 <div className="flex items-center justify-between p-4">
                     <div
                         className="flex items-center gap-3 cursor-pointer"
-                        onClick={() => navigate(`/profile/${userId}`)}
+                        onClick={() => {
+                            if (isCommunity && communityId) {
+                                navigate(`/community/${communityId}`);
+                            } else {
+                                navigate(`/profile/${userId}`);
+                            }
+                        }}
                     >
                         <Avatar>
                             <AvatarImage src={avatar} alt={user} />
