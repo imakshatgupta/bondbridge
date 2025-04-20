@@ -280,6 +280,7 @@ const Profile: React.FC<ProfileProps> = ({
                   hour: "2-digit",
                   minute: "2-digit",
                 }),
+                updatedAt: new Date().toISOString(),
                 unread: false,
                 type: "dm",
                 participants: newChat.participants.map((p) => ({

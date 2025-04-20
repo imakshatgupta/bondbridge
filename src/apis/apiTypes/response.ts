@@ -407,6 +407,7 @@ export interface DMChatRoom {
   participants: ChatParticipantInfo[];
   lastMessage?: Message;
   unseenCount: number;
+  updatedAt: string;
   bio?: string;
 }
 
@@ -416,6 +417,7 @@ export interface GroupChatRoom {
   participants: ChatParticipantInfo[];
   lastMessage?: Message;
   unseenCount: number;
+  updatedAt: string;
   admin: string;
   bio?: string;
   groupName?: string;
@@ -428,6 +430,7 @@ export interface CommunityChatRoom {
   participants: ChatParticipantInfo[];
   lastMessage?: Message;
   unseenCount: number;
+  updatedAt: string;
   admin: string;
   bio?: string;
   groupName?: string;
