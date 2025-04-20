@@ -368,7 +368,7 @@ const ReactionComponent = ({
         }
         
         // The community API handles both add and remove reactions
-        const result = await executeReactOnPost(communityId, {
+        const result = await executeReactOnPost(communityId as string, {
           postId: entityId,
           reactionType: reactionType
         });
