@@ -2,15 +2,16 @@ import React, { useRef, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import QuickSuggestions from "./QuickSuggestions";
-import { Mic, Smile } from "lucide-react";
-import { 
-  SpeechRecognition, 
-  SpeechRecognitionEvent, 
-  SpeechRecognitionErrorEvent, 
+import { Mic, Smile, CornerUpLeft, X } from "lucide-react";
+import {
+  SpeechRecognition,
+  SpeechRecognitionEvent,
+  SpeechRecognitionErrorEvent,
   registerRecognitionInstance,
-  unregisterRecognitionInstance
+  unregisterRecognitionInstance,
 } from "@/types/speech-recognition";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import { Message } from "@/store/chatSlice";
 
 interface MessageInputProps {
   newMessage: string;
@@ -22,6 +23,8 @@ interface MessageInputProps {
   loadingSuggestions: boolean;
   disabled?: boolean;
   disabledMessage?: string;
+  replyToMessage?: Message | null;
+  onCancelReply?: () => void;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
@@ -33,11 +36,15 @@ const MessageInput: React.FC<MessageInputProps> = ({
   suggestions,
   loadingSuggestions,
   disabled = false,
-  disabledMessage = "Type Your Message Here..."
+  disabledMessage = "Type Your Message Here...",
+  replyToMessage = null,
+  onCancelReply,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isListening, setIsListening] = useState(false);
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(
+    null
+  );
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -51,7 +58,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
           recognition.stop();
           setIsListening(false);
         } catch (error) {
-          console.error('Error stopping speech recognition on unmount:', error);
+          console.error("Error stopping speech recognition on unmount:", error);
         }
       }
     };
@@ -77,6 +84,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
     };
   }, [showEmojiPicker]);
 
+  // Focus input when reply is selected
+  useEffect(() => {
+    if (replyToMessage && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [replyToMessage]);
+
   const handleSuggestionClick = (suggestion: string) => {
     setNewMessage(suggestion);
     // Focus the input field after setting the message
@@ -86,48 +100,52 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const startSpeechRecognition = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    if (
+      !("webkitSpeechRecognition" in window) &&
+      !("SpeechRecognition" in window)
+    ) {
       alert("Speech recognition is not supported in your browser");
       return;
     }
 
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognitionInstance = new SpeechRecognitionAPI();
-    
+
     recognitionInstance.continuous = true;
     recognitionInstance.interimResults = true;
-    recognitionInstance.lang = 'en-US';
-    
+    recognitionInstance.lang = "en-US";
+
     recognitionInstance.onstart = () => {
       setIsListening(true);
       // Register this instance in our tracker
       registerRecognitionInstance(recognitionInstance);
     };
-    
+
     recognitionInstance.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join('');
-      
+        .map((result) => result[0].transcript)
+        .join("");
+
       setNewMessage(transcript);
       handleTyping();
     };
-    
+
     recognitionInstance.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('Speech recognition error', event.error);
+      console.error("Speech recognition error", event.error);
       setIsListening(false);
       unregisterRecognitionInstance(recognitionInstance);
     };
-    
+
     recognitionInstance.onend = () => {
       setIsListening(false);
       unregisterRecognitionInstance(recognitionInstance);
     };
-    
+
     setRecognition(recognitionInstance);
     recognitionInstance.start();
   };
-  
+
   const stopSpeechRecognition = () => {
     if (recognition) {
       recognition.stop();
@@ -136,7 +154,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       unregisterRecognitionInstance(recognition);
     }
   };
-  
+
   const toggleSpeechRecognition = () => {
     if (isListening) {
       stopSpeechRecognition();
@@ -148,11 +166,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     // Get current value
     const currentValue = newMessage;
-    
+
     // If input has focus, use cursor position, otherwise append to end
     let start = 0;
     let end = 0;
-    
+
     if (inputRef.current) {
       start = inputRef.current.selectionStart || currentValue.length;
       end = inputRef.current.selectionEnd || currentValue.length;
@@ -160,19 +178,19 @@ const MessageInput: React.FC<MessageInputProps> = ({
       start = currentValue.length;
       end = currentValue.length;
     }
-    
+
     // Create new value with emoji inserted at cursor position
-    const newValue = 
-      currentValue.substring(0, start) + 
-      emojiData.emoji + 
+    const newValue =
+      currentValue.substring(0, start) +
+      emojiData.emoji +
       currentValue.substring(end);
-    
+
     // Update message state
     setNewMessage(newValue);
-    
+
     // Call typing handler
     handleTyping();
-    
+
     // Focus the input and set cursor position after emoji
     setTimeout(() => {
       if (inputRef.current) {
@@ -181,7 +199,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         inputRef.current.selectionEnd = start + emojiData.emoji.length;
       }
     }, 0);
-    
+
     setShowEmojiPicker(false);
   };
 
@@ -196,6 +214,37 @@ const MessageInput: React.FC<MessageInputProps> = ({
         />
       )}
 
+      {/* Reply indicator */}
+      {replyToMessage && onCancelReply && (
+        <div className="flex items-center justify-between border-l-4 border-primary/70 bg-primary/10 p-2 px-3 rounded-r-md mb-2">
+          <div className="flex items-center gap-2">
+            <CornerUpLeft size={16} className="text-primary/80" />
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-muted-foreground">
+                {replyToMessage.isUser
+                  ? "Replying to yourself"
+                  : `Replying to ${replyToMessage.senderName || "Unknown"}`}
+              </span>
+              <span className="text-xs text-foreground line-clamp-1">
+                {typeof replyToMessage.text === "string"
+                  ? replyToMessage.text.length > 70
+                    ? `${replyToMessage.text.substring(0, 70)}...`
+                    : replyToMessage.text
+                  : "Shared content"}
+              </span>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 rounded-full hover:bg-destructive/10 cursor-pointer"
+            onClick={onCancelReply}
+          >
+            <X size={14} />
+          </Button>
+        </div>
+      )}
+
       {/* Input field */}
       <div className="flex items-center gap-2 py-3">
         <div className="flex-1 flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 relative">
@@ -207,7 +256,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
               handleTyping();
             }}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder={disabled ? disabledMessage : "Type Your Message Here..."}
+            placeholder={
+              disabled ? disabledMessage : "Type Your Message Here..."
+            }
             className="flex-1 border-0 bg-transparent rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
             disabled={disabled}
           />
@@ -224,12 +275,12 @@ const MessageInput: React.FC<MessageInputProps> = ({
             >
               <Smile className="h-4 w-4" />
             </Button>
-            
+
             {showEmojiPicker && (
               <div
                 ref={emojiPickerRef}
                 className="absolute bottom-12 right-0 z-[100]"
-                style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)' }}
+                style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)" }}
               >
                 <EmojiPicker
                   onEmojiClick={handleEmojiClick}
@@ -256,7 +307,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
             )}
           </Button>
         </div>
-        
+
         <Button
           onClick={handleSendMessage}
           disabled={!newMessage.trim() || disabled}
@@ -281,4 +332,4 @@ const MessageInput: React.FC<MessageInputProps> = ({
   );
 };
 
-export default MessageInput; 
+export default MessageInput;

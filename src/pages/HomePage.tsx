@@ -30,6 +30,7 @@ export default function HomePage() {
   const [preloadedMedia, setPreloadedMedia] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const preloadContainerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,7 @@ export default function HomePage() {
   const dispatch = useAppDispatch();
 
   // Use our custom hook for API calls
-  const [executeFetchHomepageData, isLoading] = useApiCall(fetchHomepageData);
+  const [executeFetchHomepageData] = useApiCall(fetchHomepageData);
   const [executeGetSelfStories, isLoadingSelfStories] =
     useApiCall(getSelfStories);
   const [executeProfileFetch] = useApiCall(fetchUserProfile);
@@ -81,6 +82,53 @@ export default function HomePage() {
 
     fetchCompleteUserProfile();
   }, [currentUserId]);
+
+  // Load initial data
+  useEffect(() => {
+    const loadHomepageData = async () => {
+      // Fetch self stories first
+      const selfStoriesResult = await executeGetSelfStories();
+      if (selfStoriesResult.success && selfStoriesResult.data) {
+        setSelfStories(selfStoriesResult.data);
+      }
+
+      // Then fetch homepage data
+      const result = await executeFetchHomepageData(1);
+
+      if (result.success && result.data) {
+        const { postsData, storiesData } = result.data as HomepageResponse;
+
+        setPosts(postsData.posts);
+
+        // Sort stories to show users with unseen stories first
+        const sortedStories = [...storiesData.stories].sort((a, b) => {
+          // Check if user A has any unseen stories
+          const aHasUnseenStories = a.stories.some((story) => story.seen === 0);
+          // Check if user B has any unseen stories
+          const bHasUnseenStories = b.stories.some((story) => story.seen === 0);
+
+          if (aHasUnseenStories && !bHasUnseenStories) {
+            return -1; // A comes first
+          } else if (!aHasUnseenStories && bHasUnseenStories) {
+            return 1; // B comes first
+          } else {
+            // If both have the same seen status, sort by latest story time
+            return b.latestStoryTime - a.latestStoryTime;
+          }
+        });
+
+        setStories(sortedStories);
+        setHasMore(postsData.hasMore || false);
+      } else {
+        setError(result.data?.message || "Failed to load homepage data");
+      }
+
+      // Set loading to false after data is fetched
+      setIsLoading(false);
+    };
+
+    loadHomepageData();
+  }, []);
 
   // Load more posts when page changes
   const loadMorePosts = useCallback(async () => {
@@ -143,50 +191,6 @@ export default function HomePage() {
       loadMorePosts();
     }
   }, [page]);
-
-  // Load initial data
-  useEffect(() => {
-    const loadHomepageData = async () => {
-      // Fetch self stories first
-      const selfStoriesResult = await executeGetSelfStories();
-      if (selfStoriesResult.success && selfStoriesResult.data) {
-        setSelfStories(selfStoriesResult.data);
-      }
-
-      // Then fetch homepage data
-      const result = await executeFetchHomepageData(1);
-
-      if (result.success && result.data) {
-        const { postsData, storiesData } = result.data as HomepageResponse;
-
-        setPosts(postsData.posts);
-
-        // Sort stories to show users with unseen stories first
-        const sortedStories = [...storiesData.stories].sort((a, b) => {
-          // Check if user A has any unseen stories
-          const aHasUnseenStories = a.stories.some((story) => story.seen === 0);
-          // Check if user B has any unseen stories
-          const bHasUnseenStories = b.stories.some((story) => story.seen === 0);
-
-          if (aHasUnseenStories && !bHasUnseenStories) {
-            return -1; // A comes first
-          } else if (!aHasUnseenStories && bHasUnseenStories) {
-            return 1; // B comes first
-          } else {
-            // If both have the same seen status, sort by latest story time
-            return b.latestStoryTime - a.latestStoryTime;
-          }
-        });
-
-        setStories(sortedStories);
-        setHasMore(postsData.hasMore || false);
-      } else {
-        setError(result.data?.message || "Failed to load homepage data");
-      }
-    };
-
-    loadHomepageData();
-  }, []);
 
   // Preload all story media (images and videos)
   useEffect(() => {
@@ -297,10 +301,6 @@ export default function HomePage() {
     setPosts((prevPosts) =>
       prevPosts.map((post) => {
         if (post._id === postId || post.feedId === postId) {
-          // Get the updated reaction from the API response
-          // Since we don't have the new reaction details here yet,
-          // we'll rely on the Post component's optimistic UI updates for now
-          // The next API call to fetch posts will get the correct data
           return post;
         }
         return post;
@@ -309,26 +309,30 @@ export default function HomePage() {
   };
 
   const handleCommentClick = (postId: string, post: HomePostData) => {
-    navigate(`/post/${postId}`, { state: { post } });
+    if (post.isCommunity) {
+      navigate(`/community/${post.author}/${postId}`, { state: { post } });
+    } else {
+      navigate(`/post/${postId}`, { state: { post } });
+    }
   };
 
   // Process post data to handle both regular and community posts
   const processPostData = (post: HomePostData) => {
-    if (post.isCommunity) {
-      // For community posts, adapt the data structure to match what Post component expects
-      return {
-        ...post,
-        data: {
-          content: post.content || "",
-          media: post.mediaUrls
-            ? post.mediaUrls.map((url) => ({
-                url,
-                type: url.toLowerCase().endsWith(".mp4") ? "video" : "image",
-              }))
-            : null,
-        },
-      };
-    }
+    // if (post.isCommunity) {
+    //   // For community posts, adapt the data structure to match what Post component expects
+    //   return {
+    //     ...post,
+    //     data: {
+    //       content: post.content || "",
+    //       media: post.mediaUrls
+    //         ? post.mediaUrls.map((url) => ({
+    //             url,
+    //             type: url.toLowerCase().endsWith(".mp4") ? "video" : "image",
+    //           }))
+    //         : null,
+    //     },
+    //   };
+    // }
     return post;
   };
   const handlePostDelete = (postId: string) => {
@@ -487,6 +491,8 @@ export default function HomePage() {
                   avatar={post.profilePic}
                   userId={post.isCommunity ? post.communityId || "" : post.userId}
                   caption={processedPost.data.content}
+                  isCommunity={post.isCommunity}
+                  communityId={post.author}
                   media={processedPost.data.media || []}
                   image={
                     processedPost.data.media &&

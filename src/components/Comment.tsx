@@ -11,6 +11,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { CommentData } from "../apis/apiTypes/response";
 import { CommentProps } from "../types/home";
 import { deleteComment } from "@/apis/commonApiCalls/commentsApi";
+import { deleteComment as deleteCommunityComment } from "@/apis/commonApiCalls/communitiesApi";
 import { Link } from "react-router-dom";
 import { getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { ReportModal } from './ReportModal';
@@ -27,11 +28,13 @@ const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCom
     postAuthorId={postAuthorId}
     onCommentDeleted={onCommentDeleted}
     isPending={isPending}
+    isCommunity={false}
+    communityId=""
   />
 ));
 ReplyComment.displayName = 'ReplyComment';
 
-export function Comment({ comment, isReply = false, postId, currentUserId, postAuthorId, onCommentDeleted, isPending = false }: CommentProps) {
+export function Comment({ comment, isReply = false, postId, currentUserId, postAuthorId, onCommentDeleted, isPending = false, isCommunity = false, communityId = "" }: CommentProps) {
   // Check if the comment is pending based on its ID (starts with 'temp-')
   const isCommentPending = isPending || comment.commentId.startsWith('temp-');
   
@@ -52,6 +55,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   
   // Use the useApiCall hook for API calls
   const [executeDeleteComment] = useApiCall(deleteComment);
+  const [executeDeleteCommunityComment] = useApiCall(deleteCommunityComment);
   const [executeGetAllReactions,] = useApiCall(getAllReactions);
 
   // Default likes to 0 if not provided
@@ -160,7 +164,25 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
       return;
     }
 
-    const { success } = await executeDeleteComment(comment.commentId, postId);
+    let success = false;
+
+    if (isCommunity) {
+      // Use community API for community comments
+      if (!communityId) {
+        console.error("Cannot delete community comment: missing community ID");
+        return;
+      }
+
+      const result = await executeDeleteCommunityComment(communityId, {
+        postId: postId,
+        commentId: comment.commentId
+      });
+      success = result.success;
+    } else {
+      // Use regular comment API for non-community comments
+      const result = await executeDeleteComment(comment.commentId, postId);
+      success = result.success;
+    }
     
     if (success) {
       // Notify parent component about deletion
@@ -168,7 +190,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
         onCommentDeleted(comment.commentId);
       }
     }
-  }, [comment.commentId, postId, onCommentDeleted, executeDeleteComment, isCommentPending]);
+  }, [comment.commentId, postId, communityId, isCommunity, onCommentDeleted, executeDeleteComment, executeDeleteCommunityComment, isCommentPending]);
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const reporterId = localStorage.getItem('userId') || '';

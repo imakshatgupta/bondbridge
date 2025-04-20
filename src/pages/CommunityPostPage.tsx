@@ -150,6 +150,65 @@ export default function CommunityPostPage() {
     setCurrentUserId(userId);
   }, []);
 
+  // Fetch post details if not provided in state
+  useEffect(() => {
+    const fetchCommunityPostDetails = async () => {
+      if (!postId) return; // Skip if postId is missing
+      
+      // If we already have complete post data from location state, use that
+      if (locationPost && locationPost.content && locationPost.media) return;
+
+      const result = await executeGetPostDetails(postId.split(":")[0]);
+
+      if (result.success && result.data) {
+        const apiPostData = result.data as unknown as CommunityPostResponse;
+        
+        // Map the API response to our expected HomePostData format
+        const mappedPost: HomePostData = {
+          _id: apiPostData._id,
+          name: apiPostData.name,
+          profilePic: apiPostData.profilePic,
+          userId: apiPostData.author, // Community ID
+          data: apiPostData.data,
+          commentCount: apiPostData.commentCount || 0,
+          reactionCount: apiPostData.reactionCount || 0,
+          reaction: apiPostData.reaction || {
+            hasReacted: false,
+            reactionType: null,
+          },
+          reactionDetails: {
+            total: apiPostData.reactionCount || 0,
+            types: {
+              like: 0,
+              love: 0,
+              haha: 0,
+              lulu: 0
+            }
+          },
+          ago_time: apiPostData.ago_time || "Recently",
+          feedId: apiPostData.feedId || postId,
+          author: apiPostData.author,
+          whoCanComment: apiPostData.whoCanComment,
+          privacy: apiPostData.privacy,
+          content_type: apiPostData.content_type,
+          taggedUsers: apiPostData.taggedUsers,
+          hideFrom: apiPostData.hideFrom || [],
+          status: apiPostData.status,
+          createdAt: apiPostData.createdAt,
+          weekIndex: apiPostData.weekIndex || "",
+          isCommunity: true,
+          communityId: apiPostData.author // Store community ID
+        };
+        
+        setPost(mappedPost);
+      } else {
+        setError("Failed to load post details. Please try again.");
+      }
+    };
+
+    fetchCommunityPostDetails();
+  }, [postId, locationPost]);
+
   // Helper function to sort comments by creation time (newest first)
   const sortCommentsByTime = (comments: ExtendedCommentData[]): ExtendedCommentData[] => {
     return [...comments].sort((a, b) => {
@@ -492,6 +551,20 @@ export default function CommunityPostPage() {
                     }}
                     currentUserId={currentUserId || ""}
                     postId={postId}
+                    isCommunity
+                    communityId={post.communityId}
+                    onCommentDeleted={(commentId) => {
+                      // Remove the deleted comment from state
+                      setCommentsData(prevComments => 
+                        prevComments.filter(c => c._id !== commentId)
+                      );
+                      
+                      // Update comment count on the post
+                      setPost(prevPost => ({
+                        ...prevPost,
+                        commentCount: Math.max(0, (prevPost.commentCount || 0) - 1),
+                      }));
+                    }}
                   />
                 ))}
 

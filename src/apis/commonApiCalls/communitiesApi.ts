@@ -257,3 +257,30 @@ export const commentOnPost = async (
   }
   return response.data.post;
 };
+
+/**
+ * Interface for delete comment request parameters
+ */
+interface DeleteCommentRequest {
+  postId: string;
+  commentId: string;
+}
+
+/**
+ * Function to delete a comment on a community post
+ * @param communityId Community ID
+ * @param params Request parameters (postId and commentId)
+ * @returns Promise with delete comment response
+ */
+export const deleteComment = async (
+  communityId: string,
+  params: DeleteCommentRequest
+): Promise<{ success: boolean; message: string }> => {
+  const url = `/communities/${communityId}/post/comment?postId=${params.postId}&commentId=${params.commentId}`;
+  const response = await adminApiClient.delete<{ success: boolean; message: string }>(url);
+  
+  if (!response.data.success) {
+    throw new Error('Failed to delete comment');
+  }
+  return response.data;
+};

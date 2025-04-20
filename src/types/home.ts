@@ -31,4 +31,6 @@ export interface CommentProps {
   postAuthorId?: string; // Add post author ID to check if current user is post owner
   onCommentDeleted?: (commentId: string) => void; // Callback for parent components
   isPending?: boolean; // Indicates if the comment is being processed
+  isCommunity?: boolean;
+  communityId?: string;
 }
