@@ -363,10 +363,11 @@ const Profile: React.FC<ProfileProps> = ({
 
   // Prepare menu items for other profile -> block, share, report
   const menuItems = [
-    {
+    // Only show block option if user is not already blocked
+    ...(localIsBlocked ? [] : [{
       ...BlockMenuItem,
       onClick: handleBlockUser
-    },
+    }]),
     {
       ...ShareMenuItem,
       onClick: () => console.log('Share clicked')

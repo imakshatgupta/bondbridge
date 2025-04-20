@@ -634,6 +634,22 @@ export interface PostDetailsData {
     hasReacted: boolean;
     reactionType: string | null;
   };
+  comments?: Array<{
+    _id: string;
+    content: string;
+    author: string;
+    userDetails: {
+      _id: string;
+      name: string;
+      profilePic: string;
+      avatar: string;
+      status: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    likes: number;
+    replies: Array<any>;
+  }>;
 }
 
 export interface GetPostDetailsResponse {
