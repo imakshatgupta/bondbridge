@@ -447,7 +447,7 @@ export function MediaCropModal({
         }
 
         // If current zoom is less than new min zoom, update it
-        // This hook ONLY ensures zoom validity, no recentering here.
+        // This hook ONLY ensures zoom validity, no re-centering here.
         if (zoom < newMinZoom) {
           setZoom(newMinZoom * 1.05);
           // Constraint check will be handled by the zoom useEffect

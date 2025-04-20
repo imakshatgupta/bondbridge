@@ -33,6 +33,7 @@ import SharePostPage from "./SharePostPage";
 import { ReportModal } from './ReportModal';
 import ReactionComponent from "./global/ReactionComponent";
 import VideoObserver from "./common/VideoObserver";
+import { TruncatedText } from "@/components/ui/TruncatedText";
 
 export function Post({
     user,
@@ -197,13 +198,28 @@ export function Post({
                             <AvatarFallback>{user?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold">{user}</p>
+                            <p className="font-semibold flex items-center gap-2">
+                                {user}
+                                {isCommunity && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-[#4f9dc7]">
+                                        <path d="M9 12l2 2 4-4"></path>
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                    </svg>
+                                )}
+                            </p>
                         </div>
                     </div>
                     <ThreeDotsMenu items={menuItems} />
                 </div>
                 <CardContent className="p-4 pt-0">
-                    <p className="text-card-foreground">{caption}</p>
+                    <TruncatedText 
+                        text={caption} 
+                        limit={200} 
+                        showToggle={true} 
+                        className="text-card-foreground w-full" 
+                        buttonClassName="text-foreground text-xs mt-1 cursor-pointer hover:underline font-bold"
+                        align="left"
+                    />
 
                     {hasMultipleMedia && media && (
                         <div className="mt-4 rounded-lg overflow-hidden">

@@ -205,7 +205,7 @@ const EditProfilePage: React.FC = () => {
   };
 
   // Function to handle emoji selection
-  const handleEmojiSelect = (emojiData: any) => {
+  const handleEmojiSelect = (emojiData: { emoji: string }) => {
     setFormData({
       ...formData,
       bio: formData.bio + emojiData.emoji,
