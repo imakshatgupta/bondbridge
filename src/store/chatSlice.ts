@@ -46,6 +46,7 @@ export interface Message {
   senderId?: string;
   replyTo?: string;
   reactions?: Reaction[];
+  deviceId?: string;
 }
 
 // export interface GroupItem {
