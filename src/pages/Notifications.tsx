@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import FriendRequest from "@/components/notifications/FriendRequest";
 import SentRequest from "@/components/notifications/SentRequest";
@@ -15,7 +15,7 @@ import {
 import { useApiCall } from "@/apis/globalCatchError";
 import LogoLoader from "@/components/LogoLoader";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Bell, UserPlus, AlertCircle, ArrowLeft, ArrowRight } from "lucide-react";
+import { Bell, UserPlus, AlertCircle, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -57,6 +57,7 @@ interface UpdatedNotificationsResponse {
     unseen: ApiNotification[];
     totalCount: number;
     totalPages: number;
+    unseenCount: number;
   };
 }
 
@@ -65,7 +66,17 @@ const Notifications = () => {
   const [seenNotifications, setSeenNotifications] = useState<ApiNotification[]>([]);
   const [friendRequests, setFriendRequests] = useState<FollowRequest[]>([]);
   const [sentRequests, setSentRequests] = useState<FollowRequest[]>([]);
+  const [unseenCount, setUnseenCount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [activeTab, setActiveTab] = useState("notifications");
+  
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const scrollPositionRef = useRef<number>(0);
+  const notificationsContainerRef = useRef<HTMLDivElement>(null);
 
   const [executeNotificationsFetch, isLoadingNotifications] = useApiCall(fetchNotifications);
   const [executeFollowRequestsFetch, isLoadingFollowRequests] = useApiCall(fetchFollowRequests);
@@ -73,7 +84,9 @@ const Notifications = () => {
   const [executeMarkAsSeen] = useApiCall(markNotificationAsSeen);
   const [executeClearAll] = useApiCall(clearAllNotifications);
 
-  const isLoading = isLoadingNotifications || isLoadingFollowRequests || isLoadingSentRequests;
+  // Only show full screen loader on initial load
+  const isInitialLoading = isLoadingNotifications && page === 1 && !isFetchingMore;
+  const isLoading = isLoadingFollowRequests || isLoadingSentRequests || isInitialLoading;
 
   const handleMarkAsSeen = async (notificationId: string) => {
     const result = await executeMarkAsSeen(notificationId);
@@ -85,12 +98,20 @@ const Notifications = () => {
         const updatedNotification = { ...notificationToMove, seen: true };
         setUnseenNotifications(prev => prev.filter(n => n._id !== notificationId));
         setSeenNotifications(prev => [updatedNotification, ...prev]);
+        // Decrement unseen count
+        setUnseenCount(prev => Math.max(0, prev - 1));
       }
     }
   };
 
   // Handle optimistic notification deletion
   const handleDeleteNotification = (notificationId: string) => {
+    // Check if the notification is unseen before removing
+    const isUnseen = unseenNotifications.some(n => n._id === notificationId);
+    if (isUnseen) {
+      setUnseenCount(prev => Math.max(0, prev - 1));
+    }
+    
     // Optimistically remove the notification from both unseen and seen lists
     setUnseenNotifications(prev => prev.filter(n => n._id !== notificationId));
     setSeenNotifications(prev => prev.filter(n => n._id !== notificationId));
@@ -100,10 +121,12 @@ const Notifications = () => {
     // Store current state for potential rollback
     const originalUnseen = [...unseenNotifications];
     const originalSeen = [...seenNotifications];
+    const originalUnseenCount = unseenCount;
 
     // Optimistically clear notifications
     setUnseenNotifications([]);
     setSeenNotifications([]);
+    setUnseenCount(0);
 
     const result = await executeClearAll();
     if (result.status === 404 || !result.success) {
@@ -111,18 +134,43 @@ const Notifications = () => {
       toast.error("Failed to Clear Notifications");
       setUnseenNotifications(originalUnseen);
       setSeenNotifications(originalSeen);
+      setUnseenCount(originalUnseenCount);
     }
   };
 
-  const loadData = async () => {
-    // Fetch notifications
-    const notificationsResult = await executeNotificationsFetch();
-    console.log("notificationsResult: ", notificationsResult);
+  const saveScrollPosition = () => {
+    scrollPositionRef.current = window.scrollY;
+  };
+
+  const restoreScrollPosition = () => {
+    // Use requestAnimationFrame to ensure the DOM has updated
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollPositionRef.current);
+    });
+  };
+
+  const loadData = async (currentPage = 1, append = false) => {
+    // If appending data, save current scroll position
+    if (append) {
+      saveScrollPosition();
+    }
+    
+    // Fetch notifications with pagination
+    const notificationsResult = await executeNotificationsFetch({
+      page: currentPage,
+      limit: 10,
+    });
+    
     if (notificationsResult.success && notificationsResult.data?.success) {
       // Cast the response to our updated interface
       const response = notificationsResult.data as unknown as UpdatedNotificationsResponse;
       
       if (response.data) {
+        // Set unseen count from API response
+        if (!append) {
+          setUnseenCount(response.data.unseenCount);
+        }
+        
         // Filter out notifications of type "call"
         const filteredUnseen = Array.isArray(response.data.unseen) 
           ? response.data.unseen.filter(notification => notification.type !== "call")
@@ -131,18 +179,48 @@ const Notifications = () => {
         const filteredSeen = Array.isArray(response.data.seen)
           ? response.data.seen.filter(notification => notification.type !== "call") 
           : [];
+        
+        if (append) {
+          // Append new notifications to existing ones
+          setUnseenNotifications(prev => [...prev, ...filteredUnseen]);
+          setSeenNotifications(prev => [...prev, ...filteredSeen]);
           
-        setUnseenNotifications(filteredUnseen);
-        setSeenNotifications(filteredSeen);
+          // Restore scroll position after state update
+          setTimeout(restoreScrollPosition, 0);
+        } else {
+          // Replace existing notifications
+          setUnseenNotifications(filteredUnseen);
+          setSeenNotifications(filteredSeen);
+        }
+        
+        // Check if there are more notifications to load
+        const totalNotifications = filteredUnseen.length + filteredSeen.length;
+        // If both arrays are empty, there's nothing more to load
+        setHasMore(totalNotifications > 0 && 
+                  (response.data.currentPage < response.data.totalPages || 
+                   response.data.hasMore === true));
       } else {
-        setUnseenNotifications([]);
-        setSeenNotifications([]);
+        if (!append) {
+          setUnseenNotifications([]);
+          setSeenNotifications([]);
+          setUnseenCount(0);
+        }
+        setHasMore(false);
       }
       setError(null);
     } else {
-      setUnseenNotifications([]);
-      setSeenNotifications([]);
+      if (!append) {
+        setUnseenNotifications([]);
+        setSeenNotifications([]);
+        setUnseenCount(0);
+      }
+      setHasMore(false);
       setError(notificationsResult.data?.message || "Failed to load notifications");
+    }
+
+    if (append) {
+      // Restore scroll position again after all state updates
+      setTimeout(restoreScrollPosition, 50);
     }
 
     // Fetch follow requests with pagination
@@ -165,7 +243,64 @@ const Notifications = () => {
     }
   };
 
+  // Load more notifications when user scrolls to the bottom
+  const loadMoreNotifications = useCallback(async () => {
+    if (!hasMore || isLoadingNotifications || isFetchingMore || activeTab !== "notifications") return;
+    
+    setIsFetchingMore(true);
+    saveScrollPosition();
+    
+    try {
+      const nextPage = page + 1;
+      await loadData(nextPage, true);
+      setPage(nextPage);
+    } catch (error) {
+      console.error("Error loading more notifications:", error);
+    } finally {
+      setIsFetchingMore(false);
+      // Ensure scroll position is maintained after loading completes
+      setTimeout(restoreScrollPosition, 100);
+    }
+  }, [page, hasMore, isLoadingNotifications, isFetchingMore, activeTab]);
+
+  // Set up IntersectionObserver for infinite scrolling
   useEffect(() => {
+    // Clean up previous observer if it exists
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    
+    // Only set up observer if we have more content to load and we're not already loading
+    if (!hasMore || isLoading || isFetchingMore || !loadMoreRef.current || activeTab !== "notifications") return;
+    
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isLoadingNotifications && !isFetchingMore) {
+          loadMoreNotifications();
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+    
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, isLoading, isLoadingNotifications, isFetchingMore, loadMoreNotifications, activeTab]);
+
+  useEffect(() => {
+    // Reset page when tab changes
+    setPage(1);
+    setHasMore(true);
+    
+    // Load initial data
     loadData();
   }, []);
 
@@ -196,7 +331,13 @@ const Notifications = () => {
   };
 
   const handleRefresh = () => {
+    setPage(1);
+    setHasMore(true);
     loadData();
+  };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   // Get total notifications count
@@ -210,7 +351,7 @@ const Notifications = () => {
         </Link>
       </div>
 
-      {isLoading ? (
+      {isInitialLoading ? (
         <div className="flex items-center justify-center h-[65vh]">
           <LogoLoader size="md" />
         </div>
@@ -224,11 +365,11 @@ const Notifications = () => {
           className="my-8"
         />
       ) : (
-        <Tabs defaultValue="notifications" className="">
+        <Tabs defaultValue="notifications" className="" onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-3  ">
             <TabsTrigger value="notifications" className="cursor-pointer ">
               Notifications{" "}
-              {unseenNotifications.length > 0 && `(${unseenNotifications.length})`}
+              {unseenCount > 0 && `(${unseenCount})`}
             </TabsTrigger>
             <TabsTrigger value="friend-requests" className="cursor-pointer">
               Friend Requests{" "}
@@ -240,8 +381,8 @@ const Notifications = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="notifications" className="mt-4 ">
-            <div className="space-y-4">
+          <TabsContent value="notifications" className="mt-4">
+            <div className="space-y-4" ref={notificationsContainerRef}>
               {totalNotificationsCount > 0 ? (
                 <>
                   <div className="flex justify-end">
@@ -254,11 +395,13 @@ const Notifications = () => {
                       Clear All
                     </Button>
                   </div>
-                  {[...unseenNotifications, ...seenNotifications.slice(0, 5)].map((notification) => (
+                  {[...unseenNotifications, ...seenNotifications].map((notification) => (
                     <Notification
                       key={notification._id}
                       _id={notification._id}
-                      title={(notification.details.notificationText || notification.details.content || "")}
+                      type={notification.type}
+                      title={notification.sender.name}
+                      content={notification.details.notificationText || notification.details.content || ""}
                       profilePic={notification.sender.profilePic}
                       avatar={notification.sender.profilePic}
                       timestamp={notification.timestamp}
@@ -273,6 +416,16 @@ const Notifications = () => {
                       }}
                     />
                   ))}
+                  
+                  {/* Load more indicator at the bottom */}
+                  <div ref={loadMoreRef} className="flex justify-center py-4">
+                    {isFetchingMore && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">Loading more notifications...</span>
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <EmptyState

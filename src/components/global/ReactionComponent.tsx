@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -6,6 +6,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { addReaction, deleteReaction, getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { GetAllReactionsResponse, ReactionUser } from "@/apis/apiTypes/response";
 import { toast } from "sonner";
+import { fetchPostDetails, reactOnPost } from "@/apis/commonApiCalls/communitiesApi";
 
 // Reaction types and their emojis
 export const REACTIONS = {
@@ -16,6 +17,43 @@ export const REACTIONS = {
 };
 
 export type ReactionType = keyof typeof REACTIONS;
+
+// Define types for the community post response
+interface ReactionUserDetails {
+  _id: string;
+  name: string;
+  profilePic: string;
+  avatar: string;
+  status: string;
+}
+
+interface PostReactionDetails {
+  userId: string;
+  reactionType: string;
+  userDetails: ReactionUserDetails;
+}
+
+interface PostReactionData {
+  total: number;
+  reactions?: PostReactionDetails[];
+  types: {
+    like: number;
+    love: number;
+    haha: number;
+    lulu: number;
+  };
+  userCounts?: {
+    like: number;
+    love: number;
+    haha: number;
+    lulu: number;
+  };
+}
+
+interface PostReaction {
+  hasReacted: boolean;
+  reactionType: string | null;
+}
 
 interface ReactionComponentProps {
   entityId: string;
@@ -35,6 +73,8 @@ interface ReactionComponentProps {
     lulu?: number;
     [key: string]: number | undefined;
   };
+  isCommunity?: boolean;
+  communityId?: string;
 }
 
 const ReactionComponent = ({
@@ -45,7 +85,9 @@ const ReactionComponent = ({
   showCount = true,
   initialTotalCount = 0,
   iconSize = "md",
-  initialReactionCounts
+  initialReactionCounts,
+  isCommunity = false,
+  communityId
 }: ReactionComponentProps) => {
   const [showReactionPopover, setShowReactionPopover] = useState(false);
   const [currentReaction, setCurrentReaction] = useState<ReactionType | null>(
@@ -73,12 +115,15 @@ const ReactionComponent = ({
     lulu: []
   });
   const [showTooltip, setShowTooltip] = useState<ReactionType | null>(null);
-  const [, setIsLoadingUsers] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const reactionTimeoutRef = useRef<number | null>(null);
   const [executeAddReaction] = useApiCall(addReaction);
   const [executeDeleteReaction] = useApiCall(deleteReaction);
   const [executeGetAllReactions] = useApiCall(getAllReactions);
+  const [executeFetchPostDetails] = useApiCall(fetchPostDetails);
+  const [executeReactOnPost] = useApiCall(reactOnPost);
   const [isReactionsLoaded, setIsReactionsLoaded] = useState(false);
+  const shouldFetchRef = useRef(true);
 
   // Calculate icon size class
   const getIconSizeClass = () => {
@@ -90,45 +135,101 @@ const ReactionComponent = ({
   };
 
   // Fetch all reaction data in a single call
-  const fetchReactionData = async () => {
-    if (!entityId) return;
+  const fetchReactionData = useCallback(async (force = false) => {
+    if (!entityId || (isLoadingUsers && !force)) return;
+    if (!force && !shouldFetchRef.current) return;
 
     try {
       setIsLoadingUsers(true);
-      const result = await executeGetAllReactions(entityId, entityType);
-      if (result.success && result.data) {
-        const responseData = result.data as GetAllReactionsResponse;
-        
-        // Initialize counts and users objects
-        const counts: Record<ReactionType, number> = {
-          like: 0,
-          love: 0, 
-          haha: 0,
-          lulu: 0
-        };
-        
-        const users: Record<ReactionType, ReactionUser[]> = {
-          like: [],
-          love: [],
-          haha: [],
-          lulu: []
-        };
-        
-        // Process the reaction data
-        let total = 0;
-        responseData.reactions.forEach(reaction => {
-          const type = reaction.reactionType as ReactionType;
-          if (type in counts) {
-            counts[type] = reaction.count;
-            users[type] = reaction.users;
-            total += reaction.count;
+      shouldFetchRef.current = false;
+      
+      if (isCommunity) {
+        // For community posts, use the fetchPostDetails API
+        const result = await executeFetchPostDetails(entityId);
+        if (result.success && result.data) {
+          const postData = result.data;
+          
+          // Process reaction data from the post details
+          const reactionDetails = postData.reactionDetails as PostReactionData;
+          const counts: Record<ReactionType, number> = {
+            like: reactionDetails.types.like || 0,
+            love: reactionDetails.types.love || 0,
+            haha: reactionDetails.types.haha || 0,
+            lulu: reactionDetails.types.lulu || 0
+          };
+          
+          // Process user data for each reaction type
+          const users: Record<ReactionType, ReactionUser[]> = {
+            like: [],
+            love: [],
+            haha: [],
+            lulu: []
+          };
+          
+          // Map reactions to their respective types
+          if (reactionDetails.reactions && Array.isArray(reactionDetails.reactions)) {
+            reactionDetails.reactions.forEach((reaction: PostReactionDetails) => {
+              const type = reaction.reactionType as ReactionType;
+              if (type in users) {
+                users[type].push({
+                  userId: reaction.userId,
+                  name: reaction.userDetails.name || '',
+                  profilePic: reaction.userDetails.profilePic || reaction.userDetails.avatar || ''
+                });
+              }
+            });
           }
-        });
-        
-        setReactionCounts(counts);
-        setReactionUsers(users);
-        setTotalCount(total);
-        setIsReactionsLoaded(true);
+          
+          setReactionCounts(counts);
+          setReactionUsers(users);
+          setTotalCount(reactionDetails.total || 0);
+          
+          // Update current reaction if user has reacted
+          if (postData.reaction) {
+            const postReaction = postData.reaction as PostReaction;
+            setCurrentReaction(postReaction.hasReacted ? 
+              postReaction.reactionType as ReactionType : null);
+          }
+          
+          setIsReactionsLoaded(true);
+        }
+      } else {
+        // For non-community content, use the original API
+        const result = await executeGetAllReactions(entityId, entityType);
+        if (result.success && result.data) {
+          const responseData = result.data as GetAllReactionsResponse;
+          
+          // Initialize counts and users objects
+          const counts: Record<ReactionType, number> = {
+            like: 0,
+            love: 0, 
+            haha: 0,
+            lulu: 0
+          };
+          
+          const users: Record<ReactionType, ReactionUser[]> = {
+            like: [],
+            love: [],
+            haha: [],
+            lulu: []
+          };
+          
+          // Process the reaction data
+          let total = 0;
+          responseData.reactions.forEach(reaction => {
+            const type = reaction.reactionType as ReactionType;
+            if (type in counts) {
+              counts[type] = reaction.count;
+              users[type] = reaction.users;
+              total += reaction.count;
+            }
+          });
+          
+          setReactionCounts(counts);
+          setReactionUsers(users);
+          setTotalCount(total);
+          setIsReactionsLoaded(true);
+        }
       }
     } catch (error) {
       console.error("Error fetching reactions:", error);
@@ -136,7 +237,7 @@ const ReactionComponent = ({
     } finally {
       setIsLoadingUsers(false);
     }
-  };
+  }, [entityId, entityType, executeGetAllReactions, executeFetchPostDetails, isCommunity, isLoadingUsers]);
 
   // Update current reaction when initialReaction changes
   useEffect(() => {
@@ -145,21 +246,36 @@ const ReactionComponent = ({
 
   // Update totalCount when initialTotalCount prop changes
   useEffect(() => {
-    setTotalCount(initialTotalCount);
+    if (initialTotalCount > 0) {
+      setTotalCount(initialTotalCount);
+    }
   }, [initialTotalCount]);
 
   // Update reactionCounts when initialReactionCounts changes
   useEffect(() => {
-    if (initialReactionCounts) {
+    if (initialReactionCounts && Object.values(initialReactionCounts).some(count => count && count > 0)) {
       setReactionCounts({
         like: initialReactionCounts.like || 0,
         love: initialReactionCounts.love || 0,
         haha: initialReactionCounts.haha || 0,
         lulu: initialReactionCounts.lulu || 0
       });
-      // Don't set isReactionsLoaded here as we still want to fetch user data
     }
   }, [initialReactionCounts]);
+
+  // For community posts, fetch reaction data on mount
+  useEffect(() => {
+    if (isCommunity && entityId && !isReactionsLoaded) {
+      shouldFetchRef.current = true;
+      fetchReactionData();
+    }
+  }, [isCommunity, entityId, isReactionsLoaded, fetchReactionData]);
+
+  // When entityId changes, reset the loaded state to allow refetching
+  useEffect(() => {
+    setIsReactionsLoaded(false);
+    shouldFetchRef.current = true;
+  }, [entityId]);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -176,6 +292,7 @@ const ReactionComponent = ({
     
     // Fetch reaction data if not already loaded
     if (!isReactionsLoaded) {
+      shouldFetchRef.current = true;
       fetchReactionData();
     }
 
@@ -243,62 +360,130 @@ const ReactionComponent = ({
     // Set loading state
     setIsLikeLoading(true);
 
-    const reactionData = {
-      entityId,
-      entityType,
-      reactionType
-    };
-
     try {
-      let result;
-      if (isSameReaction) {
-        // If clicking the same reaction, remove it
-        result = await executeDeleteReaction(reactionData);
-      } else {
-        if (wasReacted && currentReaction) {
-          // First remove the previous reaction
-          await executeDeleteReaction({
-            entityId,
-            entityType,
-            reactionType: currentReaction
-          });
+      if (isCommunity) {
+        // For community posts
+        if (!communityId) {
+          throw new Error("Community ID is required for community posts");
         }
-        // Then add the new reaction
-        result = await executeAddReaction(reactionData);
-      }
-
-      if (!result.success) {
-        // Revert UI changes if API call fails
-        setCurrentReaction(wasReacted ? currentReaction : null);
         
-        // Also revert reaction counts
-        setReactionCounts(prev => {
-          const currentCounts = { ...prev };
-          if (isSameReaction) {
-            // We tried to remove, but failed, so add back
-            currentCounts[reactionType] += 1;
-          } else if (wasReacted && currentReaction) {
-            // We tried to switch, but failed, so revert
-            currentCounts[reactionType] -= 1;
-            currentCounts[currentReaction] += 1;
-          } else {
-            // We tried to add, but failed, so remove
-            currentCounts[reactionType] -= 1;
-          }
-          return currentCounts;
+        // The community API handles both add and remove reactions
+        const result = await executeReactOnPost(communityId as string, {
+          postId: entityId,
+          reactionType: reactionType
         });
         
-        // Revert total count
-        setTotalCount(oldTotal);
-        toast.error("Failed to update reaction");
-      } else {
-        // Notify parent component about the change
-        if (onReactionChange) {
-          onReactionChange(!isSameReaction, isSameReaction ? null : reactionType);
+        if (result.success && result.data) {
+          // Process the response and update the state
+          const postData = result.data;
+          const reactionDetails = postData.reactionDetails as PostReactionData;
+          
+          // Update counts from API response
+          setReactionCounts({
+            like: reactionDetails.types.like || 0,
+            love: reactionDetails.types.love || 0,
+            haha: reactionDetails.types.haha || 0,
+            lulu: reactionDetails.types.lulu || 0
+          });
+          
+          setTotalCount(reactionDetails.total || 0);
+          
+          // Update current reaction
+          if (postData.reaction) {
+            const postReaction = postData.reaction as PostReaction;
+            setCurrentReaction(postReaction.hasReacted ? 
+              postReaction.reactionType as ReactionType : null);
+            
+            // Notify parent component about the change
+            if (onReactionChange) {
+              onReactionChange(
+                postReaction.hasReacted,
+                postReaction.reactionType
+              );
+            }
+          }
+          
+          // Fetch fresh reaction data to update users list
+          fetchReactionData();
+        } else {
+          // Revert UI changes if API call fails
+          setCurrentReaction(wasReacted ? currentReaction : null);
+          setTotalCount(oldTotal);
+          
+          // Revert reaction counts
+          setReactionCounts(prev => {
+            const currentCounts = { ...prev };
+            if (isSameReaction) {
+              currentCounts[reactionType] += 1;
+            } else if (wasReacted && currentReaction) {
+              currentCounts[reactionType] -= 1;
+              currentCounts[currentReaction] += 1;
+            } else {
+              currentCounts[reactionType] -= 1;
+            }
+            return currentCounts;
+          });
+          
+          toast.error("Failed to update reaction");
         }
-        
-        // Always fetch fresh reaction data after a successful reaction update
-        fetchReactionData();
+      } else {
+        // For non-community content
+        const reactionData = {
+          entityId,
+          entityType,
+          reactionType
+        };
+
+        let result;
+        if (isSameReaction) {
+          // If clicking the same reaction, remove it
+          result = await executeDeleteReaction(reactionData);
+        } else {
+          if (wasReacted && currentReaction) {
+            // First remove the previous reaction
+            await executeDeleteReaction({
+              entityId,
+              entityType,
+              reactionType: currentReaction
+            });
+          }
+          // Then add the new reaction
+          result = await executeAddReaction(reactionData);
+        }
+
+        if (!result.success) {
+          // Revert UI changes if API call fails
+          setCurrentReaction(wasReacted ? currentReaction : null);
+          
+          // Also revert reaction counts
+          setReactionCounts(prev => {
+            const currentCounts = { ...prev };
+            if (isSameReaction) {
+              // We tried to remove, but failed, so add back
+              currentCounts[reactionType] += 1;
+            } else if (wasReacted && currentReaction) {
+              // We tried to switch, but failed, so revert
+              currentCounts[reactionType] -= 1;
+              currentCounts[currentReaction] += 1;
+            } else {
+              // We tried to add, but failed, so remove
+              currentCounts[reactionType] -= 1;
+            }
+            return currentCounts;
+          });
+          
+          // Revert total count
+          setTotalCount(oldTotal);
+          toast.error("Failed to update reaction");
+        } else {
+          // Notify parent component about the change
+          if (onReactionChange) {
+            onReactionChange(!isSameReaction, isSameReaction ? null : reactionType);
+          }
+          
+          // Always fetch fresh reaction data after a successful reaction update
+          fetchReactionData();
+        }
       }
     } catch (error) {
       console.error("Error handling reaction:", error);
@@ -346,8 +531,10 @@ const ReactionComponent = ({
   return (
     <Popover open={showReactionPopover} onOpenChange={(open) => {
       setShowReactionPopover(open);
-      if (open && !isReactionsLoaded) {
-        fetchReactionData();
+      if (open) {
+        // Always fetch fresh user data when popover opens
+        shouldFetchRef.current = true;
+        fetchReactionData(true);
       }
     }}>
       <PopoverTrigger asChild>

@@ -15,6 +15,7 @@ export interface ChatItem {
   avatar: string;
   lastMessage: string;
   timestamp: string;
+  updatedAt: string;
   unread: boolean;
   type: "dm" | "group" | "community";
   bio?: string;
@@ -29,6 +30,12 @@ export interface ChatItem {
   backgroundImage?: string;
 }
 
+export interface Reaction {
+  userId: string;
+  reaction: string;
+  timestamp: number;
+}
+
 export interface Message {
   id: string;
   text: string | object;
@@ -37,6 +44,8 @@ export interface Message {
   senderName?: string;
   senderAvatar?: string;
   senderId?: string;
+  replyTo?: string;
+  reactions?: Reaction[];
 }
 
 // export interface GroupItem {
@@ -124,8 +133,54 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       state.messages.push(action.payload);
     },
+    updateMessageId: (
+      state,
+      action: PayloadAction<{ oldId: string; newId: string }>
+    ) => {
+      const { oldId, newId } = action.payload;
+      const message = state.messages.find((msg) => msg.id === oldId);
+      if (message) {
+        message.id = newId;
+      }
+    },
     setIsTyping: (state, action: PayloadAction<boolean>) => {
       state.isTyping = action.payload;
+    },
+    // Add a reaction to a message
+    addReaction: (
+      state,
+      action: PayloadAction<{ messageId: string; reaction: Reaction }>
+    ) => {
+      const { messageId, reaction } = action.payload;
+      const message = state.messages.find((msg) => msg.id === messageId);
+
+      if (message) {
+        if (!message.reactions) {
+          message.reactions = [];
+        }
+
+        // Remove any existing reaction from this user to avoid duplicates
+        message.reactions = message.reactions.filter(
+          (r) => r.userId !== reaction.userId
+        );
+
+        // Add the new reaction
+        message.reactions.push(reaction);
+      }
+    },
+    // Remove a reaction from a message
+    removeReaction: (
+      state,
+      action: PayloadAction<{ messageId: string; userId: string }>
+    ) => {
+      const { messageId, userId } = action.payload;
+      const message = state.messages.find((msg) => msg.id === messageId);
+
+      if (message && message.reactions) {
+        message.reactions = message.reactions.filter(
+          (r) => r.userId !== userId
+        );
+      }
     },
     // Transform chat rooms from API to ChatItem format
     transformAndSetChats: (
@@ -187,6 +242,7 @@ const chatSlice = createSlice({
               name: otherParticipant?.name || "Unknown",
               avatar: otherParticipant?.profilePic || "",
               lastMessage: lastMessageText,
+              updatedAt: chatRoom.updatedAt,
               timestamp: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -196,12 +252,13 @@ const chatSlice = createSlice({
               bio: chatRoom.bio,
               participants,
             };
-          } else {
+          } else {            
             return {
               id: chatRoom.chatRoomId,
               name: chatRoom.groupName || "Group Chat",
               avatar: chatRoom.profileUrl || "",
               lastMessage: lastMessageText,
+              updatedAt: chatRoom.updatedAt,
               timestamp: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -228,15 +285,15 @@ const chatSlice = createSlice({
     // Delete a group from the chat list
     deleteGroup: (state, action: PayloadAction<string>) => {
       const groupId = action.payload;
-      
+
       // Remove from the main chats array
-      state.chats = state.chats.filter(chat => chat.id !== groupId);
-      
+      state.chats = state.chats.filter((chat) => chat.id !== groupId);
+
       // Remove from the filtered groups
       state.filteredChats.groups = state.filteredChats.groups.filter(
-        group => group.id !== groupId
+        (group) => group.id !== groupId
       );
-      
+
       // Clear activeChat if it's the deleted group
       if (state.activeChat?.id === groupId) {
         state.activeChat = null;
@@ -245,14 +302,14 @@ const chatSlice = createSlice({
     // Restore a group when deletion fails
     restoreGroup: (state, action: PayloadAction<ChatItem>) => {
       const group = action.payload;
-      
+
       // Add back to main chats array if not already there
-      if (!state.chats.some(chat => chat.id === group.id)) {
+      if (!state.chats.some((chat) => chat.id === group.id)) {
         state.chats.push(group);
       }
-      
+
       // Add back to filtered groups if not already there
-      if (!state.filteredChats.groups.some(g => g.id === group.id)) {
+      if (!state.filteredChats.groups.some((g) => g.id === group.id)) {
         state.filteredChats.groups.push(group);
       }
     },
@@ -266,10 +323,13 @@ export const {
   setLoadingMessages,
   setMessages,
   addMessage,
+  updateMessageId,
   setIsTyping,
   transformAndSetChats,
   deleteGroup,
   restoreGroup,
+  addReaction,
+  removeReaction,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

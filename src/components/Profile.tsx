@@ -280,6 +280,7 @@ const Profile: React.FC<ProfileProps> = ({
                   hour: "2-digit",
                   minute: "2-digit",
                 }),
+                updatedAt: new Date().toISOString(),
                 unread: false,
                 type: "dm",
                 participants: newChat.participants.map((p) => ({
@@ -363,10 +364,11 @@ const Profile: React.FC<ProfileProps> = ({
 
   // Prepare menu items for other profile -> block, share, report
   const menuItems = [
-    {
+    // Only show block option if user is not already blocked
+    ...(localIsBlocked ? [] : [{
       ...BlockMenuItem,
       onClick: handleBlockUser
-    },
+    }]),
     {
       ...ShareMenuItem,
       onClick: () => console.log('Share clicked')

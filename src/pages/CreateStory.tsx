@@ -761,7 +761,7 @@ const CreateStory = () => {
 
             {/* Story Content - Incorporating improved media handling from first file */}
             <div className="h-full w-full flex items-center justify-center relative z-10">
-            {currentStory.type === "text" && currentContentText.trim() && (
+            {currentStory.type === "text" && (
             <div className="absolute top-4 right-4 z-50">
               <Button
                 variant="ghost"
@@ -788,7 +788,7 @@ const CreateStory = () => {
                 )}
               </Button>
               {rewriteError && (
-                <p className="text-destructive font-bold text-xs mt-1">{rewriteError}</p>
+                <p className="text-white font-bold text-xs mt-1">{rewriteError}</p>
               )}
             </div>
           )}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, ArrowRight, Smile } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/store";
 import LogoLoader from "@/components/LogoLoader";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 export default function CommentsPage() {
   const navigate = useNavigate();
@@ -121,6 +122,9 @@ export default function CommentsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [, setPendingComment] = useState<string | null>(null);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
   // Get current user from Redux store
   const currentUser = useAppSelector((state) => state.currentUser);
@@ -399,6 +403,31 @@ export default function CommentsPage() {
     navigate("/");
   };
 
+  // Handle emoji selection
+  const handleEmojiSelect = (emojiData: EmojiClickData) => {
+    setNewComment(newComment + emojiData.emoji);
+  };
+
+  // Handle click outside emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   // Loading indicator
   if (pageLoading) {
     return (
@@ -464,6 +493,8 @@ export default function CommentsPage() {
               userId={post.userId}
               avatar={post.profilePic}
               caption={post.data.content}
+              isCommunity={post.isCommunity}
+              communityId={post.communityId}
               media={post.data.media || []}
               comments={post.commentCount}
               datePosted={post.ago_time}
@@ -500,18 +531,41 @@ export default function CommentsPage() {
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="pr-12 rounded-full bg-muted"
+                className="pr-20 rounded-full bg-muted"
                 disabled={isPosting}
               />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
-                onClick={handleSubmitComment}
-                disabled={!newComment.trim() || isPosting}
-              >
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <Button
+                  ref={emojiButtonRef}
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground cursor-pointer"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-primary"
+                  onClick={handleSubmitComment}
+                  disabled={!newComment.trim() || isPosting}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+              {showEmojiPicker && (
+                <div 
+                  ref={emojiPickerRef}
+                  className="absolute right-0 bottom-12 z-50"
+                >
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiSelect}
+                    width={300}
+                    height={400}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
