@@ -27,7 +27,7 @@ export const INITIAL_PROFILE_STATE = {
 export const GET_AUTH_HEADERS = () => ({
   token: localStorage.getItem("token") || "",
   userId: localStorage.getItem("userId") || "",
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
+  deviceId: localStorage.getItem("deviceId") || "",
 });
 
 export const AVAILABLE_INTERESTS = [

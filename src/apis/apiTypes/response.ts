@@ -42,6 +42,7 @@ export type SendOTPResponse = ApiResponse<{
 export type VerifyOTPResponse = {
   verified: boolean;
   token: string;
+  deviceId: string;
   message: string;
   userDetails: {
     _id: string;
@@ -54,6 +55,7 @@ export type VerifyOTPResponse = {
 export type LoginResponse = {
   token: string;
   socketToken: string;
+  deviceId: string;
   message: string;
   userDetails: {
     statusCode: number;
@@ -112,6 +114,7 @@ export type CreateProfileResponse = {
   };
   apiToken: string;
   socketToken: string;
+  deviceId: string;
 };
 
 export type FetchAvatarsResponse = {
