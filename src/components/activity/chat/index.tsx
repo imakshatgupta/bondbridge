@@ -302,7 +302,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
           // Try to find our temporary message with the same content
           const existingTempMsg = currentMessages.find((msg: Message) => {
-            console.log("Checking message:", msg);
             return (
               msg.senderId === userId &&
               msg.text === data.content &&
@@ -455,6 +454,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         replyTo: replyToMessage?.id,
         // Add the tempId as a custom property to help with matching on server response
         clientTempId: tempId, // Use a different name to avoid conflicts with server fields
+        deviceId: deviceId,
       };
 
       // Add message to local state immediately for better UX
