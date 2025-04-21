@@ -42,6 +42,7 @@ export type SendOTPResponse = ApiResponse<{
 export type VerifyOTPResponse = {
   verified: boolean;
   token: string;
+  deviceId: string;
   message: string;
   userDetails: {
     _id: string;

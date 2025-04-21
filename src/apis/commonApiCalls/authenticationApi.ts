@@ -75,6 +75,7 @@ export const verifyOTP = async (otpData: VerifyOTPRequest): Promise<VerifyOTPRes
     if (response.data.token && response.data.userDetails?._id) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userId', response.data.userDetails._id);
+      localStorage.setItem('deviceId', response.data.deviceId);
     }
     
     return response.data;
