@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, ArrowRight, Smile } from "lucide-react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 import { toast } from "react-hot-toast";
 import { useAppSelector } from "@/store";
 import LogoLoader from "@/components/LogoLoader";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 export default function CommentsPage() {
   const navigate = useNavigate();
@@ -121,6 +122,9 @@ export default function CommentsPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [, setPendingComment] = useState<string | null>(null);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
 
   // Get current user from Redux store
   const currentUser = useAppSelector((state) => state.currentUser);
@@ -147,7 +151,7 @@ export default function CommentsPage() {
 
       const result = await executeGetPostDetails({ feedId: postId });
 
-      if (result.success && result.data) {
+      if (result.success && result.data && result.data.post) {
         const apiPostData = result.data.post;
         // Map the API response to our expected HomePostData format
         const mappedPost: HomePostData = {
@@ -176,6 +180,8 @@ export default function CommentsPage() {
           weekIndex: apiPostData.weekIndex,
         };
         setPost(mappedPost);
+      } else if (result.data && result.data.notFound) {
+        setError("Post not found or you don't have permission to view it.");
       } else {
         setError("Failed to load post details. Please try again.");
       }
@@ -397,145 +403,226 @@ export default function CommentsPage() {
     navigate("/");
   };
 
+  // Handle emoji selection
+  const handleEmojiSelect = (emojiData: EmojiClickData) => {
+    setNewComment(newComment + emojiData.emoji);
+  };
+
+  // Handle click outside emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  // Loading indicator
+  if (pageLoading) {
+    return (
+      <div className="flex flex-col h-screen">
+        <div className="h-full flex items-center justify-center">
+          <LogoLoader />
+        </div>
+      </div>
+    );
+  }
+
+  // Error state with user-friendly message
+  if (error) {
+    return (
+      <div className="flex flex-col">  
+        <div className="h-[80vh] w-full flex flex-col items-center justify-center">
+          <div className="text-center max-w-md px-4">
+            <div className="mb-6 w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold mb-2">
+              {error.includes("not found") ? "Post Not Found" : "Error"}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {error}
+            </p>
+            <button 
+              onClick={() => navigate(-1)} 
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors cursor-pointer"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative max-w-2xl mx-auto bg-background min-h-screen flex flex-col">
-      {/* Show LogoLoader while page is loading */}
-      {pageLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <LogoLoader size="md" />
-        </div>
-      ) : (
-        <>
-          {/* Header */}
-          <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              className="mr-2 cursor-pointer"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-lg font-semibold">Comments</h1>
-          </div>
+      {/* Header */}
+      <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="mr-2 cursor-pointer"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-lg font-semibold">Comments</h1>
+      </div>
 
-          {/* Content Container */}
-          <div className="flex flex-col flex-1 overflow-hidden">
-            {/* Post Summary and Comment Input */}
-            <div className="flex-none">
-              {post && (
-                <Post
-                  user={post.name}
-                  userId={post.userId}
-                  avatar={post.profilePic}
-                  caption={post.data.content}
-                  media={post.data.media || []}
-                  comments={post.commentCount}
-                  datePosted={post.ago_time}
-                  feedId={post.feedId}
-                  isOwner={currentUserId === post.userId}
-                  onCommentClick={() => {}}
-                  onLikeClick={() => {}}
-                  onDelete={handlePostDelete}
-                  initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
-                  initialReactionCount={post.reactionCount || 0}
-                  initialReactionDetails={post.reactionDetails || { 
-                    total: post.reactionCount || 0,
-                    types: { like: 0, love: 0, haha: 0, lulu: 0 }
-                  }}
-                />
-              )}
+      {/* Content Container */}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Post Summary and Comment Input */}
+        <div className="flex-none">
+          {post && (
+            <Post
+              user={post.name}
+              userId={post.userId}
+              avatar={post.profilePic}
+              caption={post.data.content}
+              isCommunity={post.isCommunity}
+              communityId={post.communityId}
+              media={post.data.media || []}
+              comments={post.commentCount}
+              datePosted={post.ago_time}
+              feedId={post.feedId}
+              isOwner={currentUserId === post.userId}
+              onCommentClick={() => {}}
+              onLikeClick={() => {}}
+              onDelete={handlePostDelete}
+              initialReaction={post.reaction || { hasReacted: false, reactionType: null }}
+              initialReactionCount={post.reactionCount || 0}
+              initialReactionDetails={post.reactionDetails || { 
+                total: post.reactionCount || 0,
+                types: { like: 0, love: 0, haha: 0, lulu: 0 }
+              }}
+            />
+          )}
 
-              {/* Comment Input */}
-              <div className="p-4 border-b flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={currentUser.profilePic || currentUser.avatar}
-                    alt="Your avatar"
-                  />
-                  <AvatarFallback>
-                    {currentUser.nickname?.charAt(0) ||
-                      currentUser.username?.charAt(0) ||
-                      "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 relative">
-                  <Input
-                    placeholder="Add Your Comment"
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    className="pr-12 rounded-full bg-muted"
-                    disabled={isPosting}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
-                    onClick={handleSubmitComment}
-                    disabled={!newComment.trim() || isPosting}
-                  >
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
+          {/* Comment Input */}
+          <div className="p-4 border-b flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage
+                src={currentUser.profilePic || currentUser.avatar}
+                alt="Your avatar"
+              />
+              <AvatarFallback>
+                {currentUser.nickname?.charAt(0) ||
+                  currentUser.username?.charAt(0) ||
+                  "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 relative">
+              <Input
+                placeholder="Add Your Comment"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="pr-20 rounded-full bg-muted"
+                disabled={isPosting}
+              />
+              <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <Button
+                  ref={emojiButtonRef}
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground cursor-pointer"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  <Smile className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="text-primary"
+                  onClick={handleSubmitComment}
+                  disabled={!newComment.trim() || isPosting}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
-            </div>
-
-            {/* Comments List */}
-            <div className="flex-1 overflow-y-auto">
-              {error ? (
-                <div className="p-4 text-center text-destructive">
-                  {error}.{" "}
-                  <Button
-                    variant="link"
-                    onClick={() => window.location.reload()}
-                  >
-                    Try again
-                  </Button>
+              {showEmojiPicker && (
+                <div 
+                  ref={emojiPickerRef}
+                  className="absolute right-0 bottom-12 z-50"
+                >
+                  <EmojiPicker
+                    onEmojiClick={handleEmojiSelect}
+                    width={300}
+                    height={400}
+                  />
                 </div>
-              ) : commentsData.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  No comments yet. Be the first to comment!
-                </div>
-              ) : (
-                commentsData.map((comment, index) => (
-                  <div
-                    key={`${comment.commentId}-${index}`}
-                    ref={
-                      index === commentsData.length - 1
-                        ? lastCommentRef
-                        : undefined
-                    }
-                  >
-                    <Comment
-                      comment={{
-                        ...comment,
-                        likes: 0,
-                        hasReplies: false,
-                      }}
-                      postId={postId}
-                      currentUserId={
-                        localStorage.getItem("userId") || undefined
-                      }
-                      postAuthorId={post.userId}
-                      onCommentDeleted={(commentId) => {
-                        setCommentsData((prev) =>
-                          prev.filter((c) => c.commentId !== commentId)
-                        );
-                        setPost((prevPost) => ({
-                          ...prevPost,
-                          commentCount: prevPost.commentCount - 1,
-                        }));
-                      }}
-                      isPending={comment.commentId.startsWith("temp-")}
-                    />
-                  </div>
-                ))
               )}
             </div>
           </div>
-        </>
-      )}
+        </div>
+
+        {/* Comments List */}
+        <div className="flex-1 overflow-y-auto">
+          {error ? (
+            <div className="p-4 text-center text-destructive">
+              {error}.{" "}
+              <Button
+                variant="link"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </Button>
+            </div>
+          ) : commentsData.length === 0 ? (
+            <div className="p-4 text-center text-muted-foreground">
+              No comments yet. Be the first to comment!
+            </div>
+          ) : (
+            commentsData.map((comment, index) => (
+              <div
+                key={`${comment.commentId}-${index}`}
+                ref={
+                  index === commentsData.length - 1
+                    ? lastCommentRef
+                    : undefined
+                }
+              >
+                <Comment
+                  comment={{
+                    ...comment,
+                    likes: 0,
+                    hasReplies: false,
+                  }}
+                  postId={postId}
+                  currentUserId={
+                    localStorage.getItem("userId") || undefined
+                  }
+                  postAuthorId={post.userId}
+                  onCommentDeleted={(commentId) => {
+                    setCommentsData((prev) =>
+                      prev.filter((c) => c.commentId !== commentId)
+                    );
+                    setPost((prevPost) => ({
+                      ...prevPost,
+                      commentCount: prevPost.commentCount - 1,
+                    }));
+                  }}
+                  isPending={comment.commentId.startsWith("temp-")}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

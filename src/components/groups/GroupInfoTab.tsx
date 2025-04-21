@@ -2,6 +2,9 @@ import React, { useRef, useState, useEffect } from "react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Smile } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 
 interface GroupInfo {
   name: string;
@@ -18,6 +21,37 @@ interface GroupInfoTabProps {
 const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange, onValidationChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Handle clicks outside the emoji picker
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        emojiButtonRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node) &&
+        !emojiButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  // Handle emoji selection
+  const handleEmojiSelect = (emojiData: any) => {
+    onChange({
+      ...groupInfo,
+      description: groupInfo.description + emojiData.emoji
+    });
+  };
 
   // Validate required fields and update parent component
   useEffect(() => {
@@ -117,15 +151,40 @@ const GroupInfoTab: React.FC<GroupInfoTabProps> = ({ groupInfo, onChange, onVali
         <label htmlFor="description" className="text-sm font-medium">
           Description <span className="text-destructive -ml-1">*</span>
         </label>
-        <Textarea
-          id="description"
-          placeholder="Describe Your Group..."
-          value={groupInfo.description}
-          onChange={(e) =>
-            onChange({ ...groupInfo, description: e.target.value })
-          }
-          rows={4}
-        />
+        <div className="relative">
+          <Textarea
+            id="description"
+            placeholder="Describe Your Group..."
+            value={groupInfo.description}
+            onChange={(e) =>
+              onChange({ ...groupInfo, description: e.target.value })
+            }
+            rows={4}
+            className="pb-10"
+          />
+          <Button
+            ref={emojiButtonRef}
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 bottom-2 cursor-pointer text-muted-foreground hover:text-foreground"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          >
+            <Smile className="h-5 w-5" />
+          </Button>
+          {showEmojiPicker && (
+            <div 
+              ref={emojiPickerRef}
+              className="absolute right-0 bottom-14 z-50"
+            >
+              <EmojiPicker
+                onEmojiClick={handleEmojiSelect}
+                width={300}
+                height={400}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

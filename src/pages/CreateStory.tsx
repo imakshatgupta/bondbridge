@@ -20,6 +20,7 @@ import { useAppSelector } from "../store";
 import { WORD_LIMIT } from "@/lib/constants";
 import { countCharacters, exceededCharLimit } from "@/lib/utils";
 import { toast } from "sonner";
+import { rewriteWithBondChat } from "../apis/commonApiCalls/createPostApi";
 
 type StoryTheme = {
   name: string;
@@ -90,8 +91,10 @@ const CreateStory = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [rewriteError, setRewriteError] = useState<string>("");
 
   const [executeUploadStory, isUploading] = useApiCall(uploadStory);
+  const [executeRewriteWithBondChat, isRewritingWithBondChat] = useApiCall(rewriteWithBondChat);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -574,6 +577,29 @@ const CreateStory = () => {
     };
   }, [showEmojiPicker]);
 
+  const handleRewriteWithBondChat = async () => {
+    // Clear any previous error
+    setRewriteError("");
+    
+    // Only proceed if there's content to rewrite
+    if (!currentContentText.trim()) {
+      setRewriteError("Please add some text to rewrite");
+      return;
+    }
+
+    // Execute the API call with error handling
+    const { data, success } = await executeRewriteWithBondChat(currentContentText);
+
+    if (success && data) {
+      // Update the content with the rewritten text
+      setStories((prev) =>
+        prev.map((story, idx) =>
+          idx === currentPage ? { ...story, content: data.rewritten } : story
+        )
+      );
+    }
+  };
+
   return (
     <div className="relative h-full bg-background text-foreground">
       {/* Top Controls */}
@@ -710,7 +736,7 @@ const CreateStory = () => {
         </div>
 
         {/* Story Content Area */}
-        <div className="flex-1 p-4 relative z-50">
+        <div className="flex-1 p-4 relative z-50">         
           <div className="flex justify-center  absolute -bottom-1.5 left-1/2 -translate-x-1/2">
             <span
               className="text-xs"
@@ -733,66 +759,67 @@ const CreateStory = () => {
               ></div>
             )}
 
-            {/* Delete and Add Page Buttons
-            {stories.length > 1 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-12 left-4 rounded-full bg-accent/10 hover:bg-accent/20 z-20"
-                onClick={handleDeletePage}
-              >
-                <Trash2 className="w-5 h-5" />
-              </Button>
-            )}
-
-            {stories.length < 10 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-12 right-4 rounded-full bg-accent/10 hover:bg-accent/20 z-20"
-                onClick={handleAddPage}
-              >
-                <Plus className="w-5 h-5" />
-              </Button>
-            )} */}
-
-            {/* Progress Indicators */}
-            {/* <div className="absolute top-4 left-4 right-4 flex gap-1 z-10">
-              {stories.map((_, index) => (
-                <div
-                  key={index}
-                  className="h-1 flex-1 rounded-full overflow-hidden bg-muted/30"
-                >
-                  <div
-                    className={`h-full bg-foreground ${index === currentPage ? 'w-full' : 'w-0'}`}
-                  />
-                </div>
-              ))}
-            </div> */}
-
             {/* Story Content - Incorporating improved media handling from first file */}
             <div className="h-full w-full flex items-center justify-center relative z-10">
+            {currentStory.type === "text" && (
+            <div className="absolute top-4 right-4 z-50">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs flex items-center gap-1 cursor-pointer border-2 border-primary bg-background"
+                onClick={handleRewriteWithBondChat}
+                disabled={isRewritingWithBondChat}
+              >
+                {isRewritingWithBondChat ? (
+                  <div className="flex items-center gap-1">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent"></div>
+                    <span className="text-foreground border-primary">
+                      Rewriting...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <img src="/bondchat.svg" alt="BondChat" className="w-4 h-4" />
+                    <div className="text-foreground">
+                      Re-write with{" "}
+                      <span className="grad font-bold">BondChat </span>
+                    </div>
+                  </>
+                )}
+              </Button>
+              {rewriteError && (
+                <p className="text-white font-bold text-xs mt-1">{rewriteError}</p>
+              )}
+            </div>
+          )}
               {currentStory.type === "text" && (
                 <div className="w-full px-4">
-                  <textarea
-                    ref={textareaRef}
-                    value={currentContentText}
-                    onChange={(e) => {
-                      handleTextChange(e.target.value);
-                    }}
-                    // maxLength={150}
-                    placeholder="What's on your mind..."
-                    className="w-full bg-transparent resize-none outline-none text-center overflow-hidden"
-                    style={{
-                      color: currentTheme.textColor,
-                      height: "120px", // Fixed height for 5 lines
-                      lineHeight: "24px",
-                      padding: "0",
-                      boxSizing: "border-box",
-                    }}
-                    rows={5}
-                    autoFocus
-                  />
+                  {isRewritingWithBondChat ? (
+                    <div className="w-full animate-pulse pb-2">
+                      <div className="h-6 bg-[var(--secondary)] opacity-40 rounded mb-2 w-3/4"></div>
+                      <div className="h-6 bg-[var(--secondary)] opacity-40 rounded mb-2 w-5/6"></div>
+                      <div className="h-6 bg-[var(--secondary)] opacity-40 rounded w-2/3"></div>
+                  </div>
+                  ) : (
+                    <textarea
+                      ref={textareaRef}
+                      value={currentContentText}
+                      onChange={(e) => {
+                        handleTextChange(e.target.value);
+                      }}
+                      placeholder="What's on your mind..."
+                      className="w-full bg-transparent resize-none outline-none text-center overflow-hidden"
+                      style={{
+                        color: currentTheme.textColor,
+                        height: "120px", // Fixed height for 5 lines
+                        lineHeight: "24px",
+                        padding: "0",
+                        boxSizing: "border-box",
+                      }}
+                      rows={5}
+                      autoFocus
+                    />
+                  )}
                 </div>
               )}
 

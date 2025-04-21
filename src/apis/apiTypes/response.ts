@@ -400,6 +400,7 @@ export interface Message {
   timestamp: number;
   senderName?: string;
   senderAvatar?: string;
+  replyTo?: string;
 }
 
 export interface DMChatRoom {
@@ -408,6 +409,7 @@ export interface DMChatRoom {
   participants: ChatParticipantInfo[];
   lastMessage?: Message;
   unseenCount: number;
+  updatedAt: string;
   bio?: string;
 }
 
@@ -417,6 +419,7 @@ export interface GroupChatRoom {
   participants: ChatParticipantInfo[];
   lastMessage?: Message;
   unseenCount: number;
+  updatedAt: string;
   admin: string;
   bio?: string;
   groupName?: string;
@@ -429,6 +432,7 @@ export interface CommunityChatRoom {
   participants: ChatParticipantInfo[];
   lastMessage?: Message;
   unseenCount: number;
+  updatedAt: string;
   admin: string;
   bio?: string;
   groupName?: string;
@@ -475,6 +479,7 @@ export interface ChatMessage {
   senderName?: string;
   senderAvatar?: string;
   media?: string;
+  replyTo?: string;
 }
 
 export interface GetMessagesResponse {
@@ -594,6 +599,23 @@ export interface GetAllReactionsResponse {
   reactions: Reaction[];
 }
 
+export interface CommentReply {
+  _id: string;
+  content: string;
+  author: string;
+  userDetails: {
+    _id: string;
+    name: string;
+    profilePic: string;
+    avatar: string;
+    status: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  likes: number;
+  replies: Array<CommentReply>;
+}
+
 export interface PostDetailsData {
   _id: string;
   author: string;
@@ -634,12 +656,29 @@ export interface PostDetailsData {
     hasReacted: boolean;
     reactionType: string | null;
   };
+  comments?: Array<{
+    _id: string;
+    content: string;
+    author: string;
+    userDetails: {
+      _id: string;
+      name: string;
+      profilePic: string;
+      avatar: string;
+      status: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+    likes: number;
+    replies: Array<CommentReply>;
+  }>;
 }
 
 export interface GetPostDetailsResponse {
   success: boolean;
   message: string;
-  post: PostDetailsData;
+  post?: PostDetailsData;
+  notFound?: boolean;
 }
 
 export interface CommunityResponse {

@@ -37,11 +37,18 @@ interface CreatePostProps {
   submitButtonText?: string;
   submitHandler?: (data: PostData) => void;
   initialContent?: string;
+  initialMediaFiles?: CroppedFile[];
   postId?: string;
   onCancel?: () => void;
+  readOnlyMedia?: boolean;
 }
 
-const VideoPreview: React.FC<{ videoFile: File }> = ({ videoFile }) => {
+// Add a helper type that extends CroppedFile to include previewUrl explicitly
+interface MediaFileWithUrl extends CroppedFile {
+  previewUrl?: string;
+}
+
+const VideoPreview: React.FC<{ videoFile: File | string }> = ({ videoFile }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const videoUrlRef = useRef<string | null>(null);
   const [videoId, setVideoId] = useState<string>("");
@@ -50,8 +57,11 @@ const VideoPreview: React.FC<{ videoFile: File }> = ({ videoFile }) => {
   const [showControls, setShowControls] = useState(false);
 
   useEffect(() => {
-    // Create an object URL from the file
-    const objectUrl = URL.createObjectURL(videoFile);
+    // Check if videoFile is a string (URL) or a File object
+    const objectUrl = typeof videoFile === 'string' 
+      ? videoFile 
+      : URL.createObjectURL(videoFile);
+    
     videoUrlRef.current = objectUrl;
 
     // Generate a unique ID for this video
@@ -60,7 +70,7 @@ const VideoPreview: React.FC<{ videoFile: File }> = ({ videoFile }) => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Set the video source to the object URL
+    // Set the video source to the URL
     video.src = objectUrl;
     video.muted = isMuted;
 
@@ -72,8 +82,8 @@ const VideoPreview: React.FC<{ videoFile: File }> = ({ videoFile }) => {
     video.addEventListener("loadeddata", handleLoadedData);
 
     return () => {
-      // Revoke the object URL when component unmounts
-      if (videoUrlRef.current) {
+      // Only revoke the object URL if we created it (i.e., videoFile is a File object)
+      if (typeof videoFile !== 'string' && videoUrlRef.current) {
         URL.revokeObjectURL(videoUrlRef.current);
       }
       video.removeEventListener("loadeddata", handleLoadedData);
@@ -147,8 +157,10 @@ const CreatePost = ({
   submitButtonText = "Post",
   submitHandler,
   initialContent = "",
+  initialMediaFiles = [],
   postId,
   onCancel,
+  readOnlyMedia = false,
 }: CreatePostProps) => {
   const navigate = useNavigate();
   const [content, setContent] = useState(initialContent);
@@ -295,6 +307,29 @@ const CreatePost = ({
   // Use the API call hook for the rewriteWithBondChat function
   const [executeRewriteWithBondChat, isRewritingWithBondChat] =
     useApiCall(rewriteWithBondChat);
+
+  // Initialize media files and previews from props if they exist
+  useEffect(() => {
+    if (initialMediaFiles.length > 0) {
+      console.log('Received initialMediaFiles:', initialMediaFiles);
+      setMediaFiles(initialMediaFiles);
+      
+      // Create previews for the initial media files
+      const previews = initialMediaFiles.map(file => {
+        console.log('Creating preview for file:', file);
+        if (file.type.startsWith('video/')) {
+          console.log('Video file detected, using "video" as preview');
+          return 'video';
+        }
+        // Only use previewUrl for initial media files, as they're not real File objects
+        console.log('Using previewUrl:', (file as MediaFileWithUrl).previewUrl);
+        return (file as MediaFileWithUrl).previewUrl || '';
+      });
+      
+      console.log('Created previews:', previews);
+      setMediaPreviews(previews);
+    }
+  }, [initialMediaFiles]);
 
   // Update content when initialContent changes (for edit mode)
   useEffect(() => {
@@ -523,6 +558,9 @@ const CreatePost = ({
 
   // When removing media, we need to update the active preview
   const handleRemoveMedia = (index: number) => {
+    // If media is read-only, don't allow removal
+    if (readOnlyMedia) return;
+    
     setMediaFiles((prev) => prev.filter((_, i) => i !== index));
     setMediaPreviews((prev) => prev.filter((_, i) => i !== index));
 
@@ -921,7 +959,7 @@ const CreatePost = ({
               <Mic size={20} className={isListening ? "animate-pulse" : ""} />
             </button>
           </div>
-          {uploadMedia && (
+          {uploadMedia && !readOnlyMedia && (
             <>
               <label className="cursor-pointer hover:opacity-75 transition-opacity relative">
                 <input
@@ -1068,14 +1106,26 @@ const CreatePost = ({
                     preview={mediaPreviews[index]}
                     isActive={index === activePreviewIndex}
                     onDragStart={(e, idx) => {
+                      if (readOnlyMedia) {
+                        e.preventDefault();
+                        return;
+                      }
                       e.dataTransfer.setData("text/plain", idx.toString());
                       e.dataTransfer.effectAllowed = "move";
                     }}
                     onDragOver={(e) => {
+                      if (readOnlyMedia) {
+                        e.preventDefault();
+                        return;
+                      }
                       e.preventDefault();
                       e.dataTransfer.dropEffect = "move";
                     }}
                     onDrop={(e, toIndex) => {
+                      if (readOnlyMedia) {
+                        e.preventDefault();
+                        return;
+                      }
                       e.preventDefault();
                       const fromIndex = parseInt(
                         e.dataTransfer.getData("text/plain"),
@@ -1093,21 +1143,31 @@ const CreatePost = ({
               <div className="relative">
                 {mediaFiles[activePreviewIndex]?.type.startsWith("video/") ? (
                   <div className="relative w-full h-full">
-                    <VideoPreview videoFile={mediaFiles[activePreviewIndex]} />
+                    <VideoPreview 
+                      videoFile={
+                        // Check if we have a previewUrl first (for existing media)
+                        (mediaFiles[activePreviewIndex] as MediaFileWithUrl).previewUrl || 
+                        // Otherwise use the file object directly (for new uploads)
+                        mediaFiles[activePreviewIndex]
+                      } 
+                    />
                   </div>
                 ) : (
                   <img
-                    src={mediaPreviews[activePreviewIndex]}
+                    // Use previewUrl for existing media images
+                    src={(mediaFiles[activePreviewIndex] as MediaFileWithUrl).previewUrl || mediaPreviews[activePreviewIndex]}
                     alt="Active Preview"
                     className="w-full h-full object-contain"
                   />
                 )}
-                <button
-                  onClick={() => handleRemoveMedia(activePreviewIndex)}
-                  className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full hover:bg-black/90 transition-colors cursor-pointer"
-                >
-                  <Trash2 size={18} className="text-white" />
-                </button>
+                {!readOnlyMedia && (
+                  <button
+                    onClick={() => handleRemoveMedia(activePreviewIndex)}
+                    className="absolute top-2 right-2 bg-black/70 p-1.5 rounded-full hover:bg-black/90 transition-colors cursor-pointer"
+                  >
+                    <Trash2 size={18} className="text-white" />
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -135,17 +135,32 @@ export const getPostDetails = async (
   if (!feedId) {
     throw new Error("Feed ID is required");
   }
-  const response = await apiClient.get<GetPostDetailsResponse>(
-    `/get-post-details`,
-    { params: { feedId } }
-  );
+  
+  try {
+    const response = await apiClient.get<GetPostDetailsResponse>(
+      `/get-post-details`,
+      { params: { feedId } }
+    );
 
-  console.log("response", response);
+    console.log("response", response);
 
-  if (response.status === 200 && response.data) {
-    return response.data;
-  } else {
-    throw new Error(response.data.message || "Failed to fetch post details");
+    if (response.status === 200 && response.data) {
+      return response.data;
+    } else {
+      throw new Error(response.data.message || "Failed to fetch post details");
+    }
+  } catch (error: any) {
+    // Check if it's a 403 unauthorized access error
+    if (error.response && error.response.status === 403) {
+      // Return a formatted response indicating post not found
+      return {
+        success: false,
+        message: "Post not found or you don't have permission to view it",
+        notFound: true
+      };
+    }
+    // Rethrow other errors
+    throw error;
   }
 };
 
