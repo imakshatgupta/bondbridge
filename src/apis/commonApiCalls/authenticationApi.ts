@@ -75,6 +75,7 @@ export const verifyOTP = async (otpData: VerifyOTPRequest): Promise<VerifyOTPRes
     if (response.data.token && response.data.userDetails?._id) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userId', response.data.userDetails._id);
+      localStorage.setItem('deviceId', response.data.deviceId);
     }
     
     return response.data;
@@ -105,6 +106,7 @@ export const loginUser = async (loginData: LoginRequest): Promise<LoginResponse>
       localStorage.setItem('socketToken', response.data.socketToken)
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('userId', response.data.userDetails._id);
+      localStorage.setItem('deviceId', response.data.deviceId);
     }
     
     return response.data;
@@ -134,6 +136,7 @@ export const setPassword = async (data: SetPasswordRequest): Promise<SetPassword
       token?: string;
       userDetails?: { _id: string };
       socketToken?: string;
+      deviceId?: string;
     }
     const extendedResponse = response.data as ExtendedPasswordResponse;
     if (extendedResponse.token && extendedResponse.userDetails?._id) {
@@ -143,6 +146,10 @@ export const setPassword = async (data: SetPasswordRequest): Promise<SetPassword
       // Set socketToken if available
       if (extendedResponse.socketToken) {
         localStorage.setItem('socketToken', extendedResponse.socketToken);
+      }
+
+      if (extendedResponse.deviceId) {
+        localStorage.setItem('deviceId', extendedResponse.deviceId);
       }
     }
     

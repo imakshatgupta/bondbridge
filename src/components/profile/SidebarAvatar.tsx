@@ -26,7 +26,7 @@ const SidebarAvatar: React.FC<SidebarAvatarProps> = ({
         <img
           src={avatarSrc}
           alt={`${username}'s avatar`}
-          className="w-12 h-12 rounded-full"
+          className="w-12 h-12 rounded-full object-cover"
         />
         <p className="text-sidebar-foreground truncate">{username}</p>
       </div>

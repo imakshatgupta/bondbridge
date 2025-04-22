@@ -163,6 +163,7 @@ const CreateGroup: React.FC = () => {
               hour: "2-digit",
               minute: "2-digit",
             }),
+            updatedAt: chatRoom.updatedAt || new Date().toISOString(),
             unread: false,
             type: "group" as const,
             admin: chatRoom.admin,

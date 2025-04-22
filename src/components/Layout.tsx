@@ -172,7 +172,7 @@ const Layout: React.FC<LayoutProps> = ({
                           <img
                             src={currentUser?.profilePic || currentUser?.avatar}
                             alt="Profile"
-                            className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border"
+                            className="w-20 h-20 rounded-full mb-2 border-2 border-sidebar-border object-cover"
                           />
                         </Link>
                         <h3 className="font-semibold text-xl text-sidebar-foreground truncate max-w-full">

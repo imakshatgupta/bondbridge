@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import {
   FollowRequest,
   deleteSentRequest,
@@ -92,15 +90,13 @@ const SentRequest = ({
           />
         </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full text-foreground hover:text-muted-foreground hover:bg-destructive/10 cursor-pointer"
+          <button
+            className="pr-4 text-foreground cursor-pointer"
             onClick={handleCancel}
             disabled={isPending}
           >
-            <X className="h-6 w-6" />
-          </Button>
+            <div className="text-sm border border-destructive hover:bg-destructive/20 rounded-3xl px-2 py-1">Cancel</div>
+          </button>
       </div>
     </div>
   );

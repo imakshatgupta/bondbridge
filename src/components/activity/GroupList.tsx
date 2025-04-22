@@ -2,6 +2,7 @@ import { ChatItem } from "@/store/chatSlice";
 import { useAppDispatch } from "../../store";
 import { setActiveChat } from "../../store/chatSlice";
 import { useEffect, useState, useMemo } from "react";
+import { getRelativeTime } from "@/lib/utils";
 
 interface GroupListProps {
   groups: ChatItem[];
@@ -95,9 +96,11 @@ const GroupList = ({ groups, isLoading, onSelectGroup }: GroupListProps) => {
                 </p>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground">
-              {group.timestamp}
-            </span>
+            {!hasLeftGroup && (
+              <span className="text-xs text-muted-foreground">
+                {getRelativeTime(group.updatedAt)}
+              </span>
+            )}
           </div>
         );
       })}

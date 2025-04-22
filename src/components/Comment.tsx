@@ -1,7 +1,7 @@
 import { useState, useCallback, memo, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Reply, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ThreeDotsMenu, { 
   DeleteMenuItem, 
@@ -11,10 +11,10 @@ import { useApiCall } from "@/apis/globalCatchError";
 import { CommentData } from "../apis/apiTypes/response";
 import { CommentProps } from "../types/home";
 import { deleteComment } from "@/apis/commonApiCalls/commentsApi";
+import { deleteComment as deleteCommunityComment } from "@/apis/commonApiCalls/communitiesApi";
 import { Link } from "react-router-dom";
 import { getAllReactions } from "@/apis/commonApiCalls/reactionApi";
 import { ReportModal } from './ReportModal';
-import ReactionComponent from "./global/ReactionComponent";
 
 // Memoized reply component to prevent unnecessary re-renders
 const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCommentDeleted, isPending }: 
@@ -27,11 +27,13 @@ const ReplyComment = memo(({ comment, postId, currentUserId, postAuthorId, onCom
     postAuthorId={postAuthorId}
     onCommentDeleted={onCommentDeleted}
     isPending={isPending}
+    isCommunity={false}
+    communityId=""
   />
 ));
 ReplyComment.displayName = 'ReplyComment';
 
-export function Comment({ comment, isReply = false, postId, currentUserId, postAuthorId, onCommentDeleted, isPending = false }: CommentProps) {
+export function Comment({ comment, isReply = false, postId, currentUserId, postAuthorId, onCommentDeleted, isPending = false, isCommunity = false, communityId = "" }: CommentProps) {
   // Check if the comment is pending based on its ID (starts with 'temp-')
   const isCommentPending = isPending || comment.commentId.startsWith('temp-');
   
@@ -52,6 +54,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   
   // Use the useApiCall hook for API calls
   const [executeDeleteComment] = useApiCall(deleteComment);
+  const [executeDeleteCommunityComment] = useApiCall(deleteCommunityComment);
   const [executeGetAllReactions,] = useApiCall(getAllReactions);
 
   // Default likes to 0 if not provided
@@ -106,8 +109,6 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
   // Memoize handlers to prevent recreation on each render
   const toggleReplies = useCallback(() => setShowReplies(prev => !prev), []);
 
-  const toggleReplyInput = useCallback(() => setShowReplyInput(prev => !prev), []);
-
   const handleReplyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setReplyText(e.target.value);
   }, []);
@@ -160,7 +161,25 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
       return;
     }
 
-    const { success } = await executeDeleteComment(comment.commentId, postId);
+    let success = false;
+
+    if (isCommunity) {
+      // Use community API for community comments
+      if (!communityId) {
+        console.error("Cannot delete community comment: missing community ID");
+        return;
+      }
+
+      const result = await executeDeleteCommunityComment(communityId, {
+        postId: postId,
+        commentId: comment.commentId
+      });
+      success = result.success;
+    } else {
+      // Use regular comment API for non-community comments
+      const result = await executeDeleteComment(comment.commentId, postId);
+      success = result.success;
+    }
     
     if (success) {
       // Notify parent component about deletion
@@ -168,7 +187,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
         onCommentDeleted(comment.commentId);
       }
     }
-  }, [comment.commentId, postId, onCommentDeleted, executeDeleteComment, isCommentPending]);
+  }, [comment.commentId, postId, communityId, isCommunity, onCommentDeleted, executeDeleteComment, executeDeleteCommunityComment, isCommentPending]);
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const reporterId = localStorage.getItem('userId') || '';
@@ -254,7 +273,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
             <ThreeDotsMenu items={menuItems} />
           </div>
 
-          <div className="flex items-center gap-4 mt-2">
+          {/* <div className="flex items-center gap-4 mt-2">
             <ReactionComponent 
               entityId={comment.commentId}
               entityType="comment"
@@ -288,7 +307,7 @@ export function Comment({ comment, isReply = false, postId, currentUserId, postA
                 Reply
               </Button>
             )}
-          </div>
+          </div> */}
 
           {showReplyInput && (
             <div className="mt-2 relative">

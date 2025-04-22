@@ -15,6 +15,7 @@ export interface ChatItem {
   avatar: string;
   lastMessage: string;
   timestamp: string;
+  updatedAt: string;
   unread: boolean;
   type: "dm" | "group" | "community";
   bio?: string;
@@ -45,6 +46,7 @@ export interface Message {
   senderId?: string;
   replyTo?: string;
   reactions?: Reaction[];
+  deviceId?: string;
 }
 
 // export interface GroupItem {
@@ -241,6 +243,7 @@ const chatSlice = createSlice({
               name: otherParticipant?.name || "Unknown",
               avatar: otherParticipant?.profilePic || "",
               lastMessage: lastMessageText,
+              updatedAt: chatRoom.updatedAt,
               timestamp: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -250,12 +253,13 @@ const chatSlice = createSlice({
               bio: chatRoom.bio,
               participants,
             };
-          } else {
+          } else {            
             return {
               id: chatRoom.chatRoomId,
               name: chatRoom.groupName || "Group Chat",
               avatar: chatRoom.profileUrl || "",
               lastMessage: lastMessageText,
+              updatedAt: chatRoom.updatedAt,
               timestamp: new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",

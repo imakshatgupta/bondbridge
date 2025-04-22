@@ -1,4 +1,4 @@
-import { ProfilePostData } from './response';
+import { ProfilePostData, CommentData } from './response';
 
 // Community Member Types
 export interface MemberDetail {
@@ -184,3 +184,41 @@ export interface TransformedCommunityPost {
 
 // Re-export ProfilePostData as CommunityPostDetail for semantic clarity
 export type CommunityPostDetail = ProfilePostData;
+
+// Extended comment data interfaces for community posts
+export interface CommentDetailsData {
+  _id: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+  author: string;
+  userDetails?: {
+    name?: string;
+    profilePic?: string;
+    avatar?: string;
+  };
+  likes?: number;
+  replies?: CommentDetailsData[];
+}
+
+export interface PostDetailsData {
+  _id?: string;
+  feedId?: string;
+  comments?: CommentDetailsData[];
+}
+
+// Define an extended CommentData interface that includes additional fields
+export interface ExtendedCommentData extends Omit<CommentData, 'agoTime'> {
+  _id: string;
+  content?: string;
+  likeCount?: number;
+  isLiked?: boolean;
+  updatedAt?: string;
+  agoTime?: string;
+  user: {
+    userId: string;
+    name: string;
+    profilePic: string;
+    _id?: string;
+  };
+}

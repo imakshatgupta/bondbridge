@@ -80,7 +80,7 @@ export function Comments({
             <Button
               size="icon"
               variant="ghost"
-              className="absolute right-1 top-1/2 -translate-y-1/2 text-primary"
+              className="absolute right-1 top-1/2 -translate-y-1/2 text-foreground"
               disabled={!newComment.trim()}
             >
               <ArrowRight className="h-5 w-5" />

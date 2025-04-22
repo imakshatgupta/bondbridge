@@ -53,6 +53,7 @@ interface MessageResponse {
   replyTo?: string;
   tempId?: string; // Original tempId field
   clientTempId?: string; // Add clientTempId for message matching
+  deviceId?: string;
 }
 
 interface TypingResponse {
@@ -107,6 +108,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Hooks
   const { socket } = useSocket();
   const userId = localStorage.getItem("userId") || "";
+  const deviceId = localStorage.getItem("deviceId") || "";
+
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const {
@@ -146,16 +149,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   );
   const hasLeftGroup = currentUserParticipant?.status === "left";
 
-  //   const scrollToBottom = () => {
-  //     messagesEndRef.current?.scrollIntoView({
-  //       behavior: "smooth",
-  //       block: "end",
-  //     });
-  //   };
-
-  // useEffect(() => {
-  //     scrollToBottom();
-  //   }, [messages]);
   // Combined useEffect for fetching messages and suggestions
   useEffect(() => {
     const fetchMessageHistory = async () => {
@@ -251,7 +244,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (socket && chatId) {
       // Join the chat room
       socket.emit("join", chatId);
-      fetchMessageHistory();
+      
+      // Check if user has left the group before fetching messages
+      if (hasLeftGroup) {
+        dispatch(setLoadingMessages(false));
+      } else {
+        fetchMessageHistory();
+      }
 
       // Set up socket event listeners
       const handleReceiveMessage = (data: MessageResponse) => {
@@ -268,6 +267,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // Check if the message is from current user
         const isFromCurrentUser = data.senderId === userId;
         const isPost = isPostShare(data.content);
+        let isFromSameDevice = true;
+        if (data.deviceId) {
+          isFromSameDevice = data.deviceId === deviceId;
+        }
 
         // Check if this message has our clientTempId (special case for matching our own sent messages)
         if (
@@ -299,7 +302,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
           // Try to find our temporary message with the same content
           const existingTempMsg = currentMessages.find((msg: Message) => {
-            console.log("Checking message:", msg);
             return (
               msg.senderId === userId &&
               msg.text === data.content &&
@@ -323,7 +325,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
 
         // If it's not a post share and it's from the current user, we've probably already added it
-        if (!isPost && isFromCurrentUser) {
+        if (!isPost && isFromCurrentUser && isFromSameDevice) {
           return;
         }
 
@@ -424,7 +426,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         socket.emit("leave", chatId);
       };
     }
-  }, [socket, chatId, userId, chat]);
+  }, [socket, chatId, userId, chat, hasLeftGroup]);
 
   // Handlers
   const handleSendMessage = () => {
@@ -452,6 +454,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         replyTo: replyToMessage?.id,
         // Add the tempId as a custom property to help with matching on server response
         clientTempId: tempId, // Use a different name to avoid conflicts with server fields
+        deviceId: deviceId,
       };
 
       // Add message to local state immediately for better UX
@@ -464,6 +467,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         senderName: userName,
         senderAvatar: userAvatar,
         replyTo: replyToMessage?.id,
+        deviceId: deviceId,
       };
 
       // First dispatch the message addition
@@ -808,17 +812,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Add a wrapper div with flex-1 and overflow handling */}
       <div className="flex-1 overflow-hidden relative">
-        <MessageList
-          messages={messages}
-          isLoadingMessages={isLoadingMessages}
-          isTyping={isTyping}
-          typingUser={typingUser || null}
-          chatType={chat.type}
-          userId={userId}
-          onReplyToMessage={handleReplyToMessage}
-          onAddReaction={handleAddReaction}
-          onRemoveReaction={handleRemoveReaction}
-        />
+        {hasLeftGroup ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="bg-secondary/20 rounded-lg p-6 text-center">
+              <h3 className="text-xl font-semibold">You have Left the Group</h3>
+              <p className="text-muted-foreground text-sm mt-2">You can no longer send or receive messages in this group</p>
+            </div>
+          </div>
+        ) : (
+          <MessageList
+            messages={messages}
+            isLoadingMessages={isLoadingMessages}
+            isTyping={isTyping}
+            typingUser={typingUser || null}
+            chatType={chat.type}
+            userId={userId}
+            onReplyToMessage={handleReplyToMessage}
+            onAddReaction={handleAddReaction}
+            onRemoveReaction={handleRemoveReaction}
+          />
+        )}
       </div>
 
       <MessageInput
