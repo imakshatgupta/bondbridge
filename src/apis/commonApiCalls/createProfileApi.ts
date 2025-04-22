@@ -71,6 +71,11 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
       console.log("Saving socketToken to localStorage:", response.data.socketToken);
       localStorage.setItem('socketToken', response.data.socketToken);
     }
+
+    if (response.data.deviceId) {
+      console.log("Saving deviceId to localStorage:", response.data.deviceId);
+      localStorage.setItem('deviceId', response.data.deviceId);
+    }
     
     return response.data;
   } else {

@@ -547,7 +547,7 @@ export default function CommentsPage() {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="text-primary"
+                  className="text-foreground"
                   onClick={handleSubmitComment}
                   disabled={!newComment.trim() || isPosting}
                 >

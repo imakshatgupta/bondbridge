@@ -68,6 +68,7 @@ interface MessageResponse {
   senderAvatar?: string;
   isBot?: boolean;
   media?: string;
+  deviceId?: string;
 }
 
 // Interface for message objects in the API response
@@ -228,6 +229,8 @@ export default function BondChat() {
   const userId = localStorage.getItem("userId") || "";
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
   const BOT_ID = import.meta.env.VITE_BOT_ID; // Access the bot ID from environment variables
+  const deviceId = localStorage.getItem("deviceId") || "";
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -304,10 +307,10 @@ export default function BondChat() {
 
       // Create audio source from base64
       const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
-      
+
       // Set volume based on current speaker state
       audio.volume = isSpeakerOnRef.current ? 1 : 0;
-      
+
       setAudioRef(audio);
 
       // Set up event handlers
@@ -415,11 +418,15 @@ export default function BondChat() {
     // Set up socket event listeners
     const handleReceiveMessage = (data: MessageResponse) => {
       console.log("Received message:", data);
-      // Skip if it's our own message (we'll add it optimistically)
-      if (data.senderId === userId) return;
+      if (data.senderId === userId && data.deviceId === deviceId) {
+        console.log("Skipping message from same device", data);
+        return;
+      }
 
       // Hide typing indicator when bot message is received
       setIsBotTyping(false);
+
+      const isFromCurrentUser = data.senderId === userId;
 
       // Handle different content types
       let messageContent: string | MessageContent =
@@ -446,17 +453,23 @@ export default function BondChat() {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        isUser: false,
+        isUser: isFromCurrentUser,
         avatar: "/bondchat.svg",
         username: "Bond Chat",
         media: data.media, // Store audio data from Polly if available
       };
 
+      console.log("Adding message:", newMsg);
+
       setMessages((prev) => [...prev, newMsg]);
+
+      if (isFromCurrentUser) {
+        setTimeout(() => setIsBotTyping(true), 400);
+      }
 
       // Play audio if we have audio data - regardless of speaker state
       // Volume will be set based on isSpeakerOnRef.current
-      if (data.media) {
+      if (data.media && data.deviceId === deviceId) {
         playAudioFromBase64(data.media);
       }
     };
@@ -506,6 +519,7 @@ export default function BondChat() {
       senderAvatar: "/profile/user.png",
       isSpeakerOn: isSpeakerOnRef.current, // Use ref value to ensure latest state
       voice: voiceTypeRef.current, // Always send voice type regardless of speaker status
+      deviceId: deviceId,
     };
 
     // Add message to local state immediately for better UX
@@ -691,7 +705,7 @@ export default function BondChat() {
                   <div className="w-[60%] h-[1.5px] bg-current rotate-45 transform origin-center"></div>
                 </div>
               )}
-          </Button>
+            </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

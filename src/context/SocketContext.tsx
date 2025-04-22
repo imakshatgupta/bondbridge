@@ -19,6 +19,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const socketToken = localStorage.getItem("socketToken");
+  const deviceId = localStorage.getItem("deviceId");
 
   useEffect(() => {
     // Only attempt to connect if socketToken exists
@@ -31,6 +32,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     const newSocket = io(`${import.meta.env.VITE_API_SOCKET_URL}`, {
       auth: {
         token: socketToken,
+        deviceId: deviceId,
       },
       reconnection: true, // Enable reconnection
       reconnectionAttempts: Infinity, // Unlimited reconnection attempts

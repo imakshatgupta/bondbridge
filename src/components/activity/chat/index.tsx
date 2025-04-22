@@ -53,6 +53,7 @@ interface MessageResponse {
   replyTo?: string;
   tempId?: string; // Original tempId field
   clientTempId?: string; // Add clientTempId for message matching
+  deviceId?: string;
 }
 
 interface TypingResponse {
@@ -107,6 +108,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Hooks
   const { socket } = useSocket();
   const userId = localStorage.getItem("userId") || "";
+  const deviceId = localStorage.getItem("deviceId") || "";
+
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const {
@@ -264,6 +267,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         // Check if the message is from current user
         const isFromCurrentUser = data.senderId === userId;
         const isPost = isPostShare(data.content);
+        let isFromSameDevice = true;
+        if (data.deviceId) {
+          isFromSameDevice = data.deviceId === deviceId;
+        }
 
         // Check if this message has our clientTempId (special case for matching our own sent messages)
         if (
@@ -295,7 +302,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
           // Try to find our temporary message with the same content
           const existingTempMsg = currentMessages.find((msg: Message) => {
-            console.log("Checking message:", msg);
             return (
               msg.senderId === userId &&
               msg.text === data.content &&
@@ -319,7 +325,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
 
         // If it's not a post share and it's from the current user, we've probably already added it
-        if (!isPost && isFromCurrentUser) {
+        if (!isPost && isFromCurrentUser && isFromSameDevice) {
           return;
         }
 
@@ -448,6 +454,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         replyTo: replyToMessage?.id,
         // Add the tempId as a custom property to help with matching on server response
         clientTempId: tempId, // Use a different name to avoid conflicts with server fields
+        deviceId: deviceId,
       };
 
       // Add message to local state immediately for better UX
@@ -460,6 +467,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         senderName: userName,
         senderAvatar: userAvatar,
         replyTo: replyToMessage?.id,
+        deviceId: deviceId,
       };
 
       // First dispatch the message addition
