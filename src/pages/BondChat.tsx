@@ -214,6 +214,7 @@ export default function BondChat() {
   const isSpeakerOnRef = useRef(false); // Add a ref to track current speaker state
   const voiceTypeRef = useRef<string>("male"); // Updated ref for voice type to use "male"
   const [isBotTyping, setIsBotTyping] = useState(false); // Add state for typing indicator
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false); // Add state to track if waiting for response
 
   // Add new state for speech recognition active
   const [isSpeechActive, setIsSpeechActive] = useState(false);
@@ -299,10 +300,16 @@ export default function BondChat() {
     if (!base64Audio) return;
 
     try {
-      // Stop any current audio
+      // First completely stop and clean up any existing audio
       if (audioRef) {
         audioRef.pause();
         audioRef.currentTime = 0;
+        audioRef.onplaying = null;
+        audioRef.onended = null;
+        audioRef.onpause = null;
+        audioRef.onerror = null;
+        setAudioRef(null);
+        setIsAudioPlaying(false);
       }
 
       // Create audio source from base64
@@ -425,6 +432,9 @@ export default function BondChat() {
 
       // Hide typing indicator when bot message is received
       setIsBotTyping(false);
+      
+      // Allow sending new messages now that we've received a response
+      setIsWaitingForResponse(false);
 
       const isFromCurrentUser = data.senderId === userId;
 
@@ -502,7 +512,22 @@ export default function BondChat() {
   }, [isSpeakerOn]);
 
   const handleSendMessage = (text: string) => {
-    if (!text.trim() || !socket || !isConnected || !chatRoomId) return;
+    if (!text.trim() || !socket || !isConnected || !chatRoomId || isWaitingForResponse) return;
+
+    // Stop any currently playing audio when sending a new message
+    if (audioRef) {
+      audioRef.pause();
+      audioRef.currentTime = 0;
+      audioRef.onplaying = null;
+      audioRef.onended = null;
+      audioRef.onpause = null;
+      audioRef.onerror = null;
+      setAudioRef(null);
+      setIsAudioPlaying(false);
+    }
+
+    // Set waiting for response to true to prevent sending another message
+    setIsWaitingForResponse(true);
 
     // Show typing indicator when message is sent
     setTimeout(() => setIsBotTyping(true), 700);
@@ -909,9 +934,11 @@ export default function BondChat() {
             placeholder={
               isLoading
                 ? "Loading conversation..."
-                : "Type Your Message Here..."
+                : isWaitingForResponse
+                  ? "Waiting for response..."
+                  : "Type Your Message Here..."
             }
-            disabled={isLoading}
+            disabled={!!(isLoading || isWaitingForResponse)}
             isAudioPlaying={isAudioPlaying}
             expectAudioAfterSend={isSpeakerOn}
             onSpeechStateChange={handleSpeechStateChange}
