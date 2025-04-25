@@ -533,10 +533,8 @@ const Profile: React.FC<ProfileProps> = ({
 
         </div>
         <h1 className="text-xl font-semibold">
-          {isCurrentUser
-            ? privacyLevel == 1
-              ? nickname
-              : reduxUsername || username
+          {isCurrentUser?
+            reduxUsername || username
             : username}
         </h1>
         {/* Only show bio if not blocked */}
