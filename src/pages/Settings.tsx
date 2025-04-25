@@ -26,7 +26,7 @@ const Settings = () => {
   const [searchParams] = useSearchParams();
 
   // Get user data from Redux store
-  const { username, nickname, email, avatar, privacyLevel, profilePic } =
+  const { username,  email, avatar, privacyLevel, profilePic } =
     useAppSelector((state) => state.currentUser);
 
   const handleSettingsClick = (page: SettingPage) => {
@@ -170,7 +170,7 @@ const Settings = () => {
           </Avatar>
           <div>
             <h2 className="text-xl font-semibold">
-              {privacyLevel == 1 ? nickname : username}
+              {username}
             </h2>
             <p className="text-muted-foreground">
               {email || "No Email Available"}
