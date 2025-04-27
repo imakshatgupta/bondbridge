@@ -18,6 +18,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import CommunityFeed from "./activity/CommunityFeed";
 import { TruncatedText } from "./ui/TruncatedText";
 import MobileAppDownload from "./MobileAppDownload";
+import FollowingFollowers from "./FollowingFollowers";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -156,7 +157,7 @@ const Layout: React.FC<LayoutProps> = ({
                 )}
               </div>
             ) : (
-              <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl">
+              <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl overflow-y-auto h-[calc(100vh-64px)] app-scrollbar">
                 {isLoadingProfile ? (
                   // Show skeleton loaders when loading
                   <>
@@ -192,6 +193,12 @@ const Layout: React.FC<LayoutProps> = ({
                             View Profile
                           </Button>
                         </Link>
+                      </div>
+                    </div>
+
+                    <div className="p-4 border-2 border-sidebar-border">
+                      <div className="max-h-[45vh] overflow-y-auto app-scrollbar">
+                        <FollowingFollowers sidebar={true} />
                       </div>
                     </div>
 
