@@ -366,13 +366,14 @@ const ReactionComponent = ({
         if (!communityId) {
           throw new Error("Community ID is required for community posts");
         }
+
+        console.log("communityId:",communityId, "entityId:",entityId, "reactionType:",reactionType)
         
         // The community API handles both add and remove reactions
         const result = await executeReactOnPost(communityId as string, {
           postId: entityId,
           reactionType: reactionType
         });
-        
         if (result.success && result.data) {
           // Process the response and update the state
           const postData = result.data;
