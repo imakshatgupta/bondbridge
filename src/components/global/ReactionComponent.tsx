@@ -146,6 +146,7 @@ const ReactionComponent = ({
       if (isCommunity) {
         // For community posts, use the fetchPostDetails API
         const result = await executeFetchPostDetails(entityId);
+        console.log("result:",result, result.success, result.data)
         if (result.success && result.data) {
           const postData = result.data;
           
@@ -237,7 +238,7 @@ const ReactionComponent = ({
     } finally {
       setIsLoadingUsers(false);
     }
-  }, [entityId, entityType, executeGetAllReactions, executeFetchPostDetails, isCommunity, isLoadingUsers]);
+  }, [communityId]);
 
   // Update current reaction when initialReaction changes
   useEffect(() => {
