@@ -471,7 +471,7 @@ export default function CommentsPage() {
   return (
     <div className="relative max-w-2xl mx-auto bg-background min-h-screen flex flex-col">
       {/* Header */}
-      <div className="sticky -top-10 z-10 bg-background p-4 pt-2 flex items-center border-b">
+      <div className="sticky -top-10 z-10 bg-background pb-4 flex items-center border-b">
         <Button
           variant="ghost"
           size="icon"

@@ -43,6 +43,7 @@ interface PostData extends Partial<CreatePostRequest> {
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
   uploadMedia?: boolean;
+  isAnonymousEditing?: boolean;
   submitButtonText?: string;
   submitHandler?: (data: PostData) => void;
   initialContent?: string;
@@ -163,6 +164,7 @@ const VideoPreview: React.FC<{ videoFile: File | string }> = ({ videoFile }) => 
 
 const CreatePost = ({
   onSubmit,
+  isAnonymousEditing = false,
   uploadMedia = true,
   submitButtonText = "Post",
   submitHandler,
@@ -923,7 +925,7 @@ const CreatePost = ({
   };
 
   return (
-    <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
+    <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg">
       <div className="flex items-center mb-4">
         <Button
           variant="ghost"
@@ -977,7 +979,7 @@ const CreatePost = ({
         ) : (
           // Original Static Avatar for non-community posts
           <Avatar className="h-10 w-10">
-            <AvatarImage src={profilePic || avatar} alt={username || "Profile"} />
+            <AvatarImage src={isAnonymousEditing ? "/profile/anonymous.png" : profilePic || avatar} alt={username || "Profile"} />
             <AvatarFallback>
               {username ? username[0].toUpperCase() : "U"}
             </AvatarFallback>

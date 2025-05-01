@@ -51,9 +51,9 @@ export function Post({
     onLikeClick,
     feedId,
     onDelete,
-    isCommunity=false,
-    isAnonymous=false,
-    isCommunityAdmin=false,
+    isCommunity = false,
+    isAnonymous = false,
+    isCommunityAdmin = false,
     communityId,
     initialReaction = { hasReacted: false, reactionType: null },
     initialReactionCount = 0,
@@ -119,13 +119,25 @@ export function Post({
     };
 
     const handleEditPost = () => {
-        navigate(`/edit-post/${feedId}`, {
-            state: {
-                caption,
-                postId: feedId,
-                media
-            }
-        });
+        if (isCommunity) {
+            navigate(`/edit-community-post/${communityId}/${feedId}`, {
+                state: {
+                    caption,
+                    postId: feedId,
+                    media,
+                    isAnonymous,
+                }
+            });
+        }
+        else {
+            navigate(`/edit-post/${feedId}`, {
+                state: {
+                    caption,
+                    postId: feedId,
+                    media
+                }
+            });
+        }
     };
 
     // Handle reaction changes
@@ -135,18 +147,18 @@ export function Post({
             hasReacted,
             reactionType
         });
-        
+
         // Update reaction count optimistically
         // If adding a reaction and previously had none
         if (hasReacted && !reaction.hasReacted) {
             setReactionCount((prev: number) => prev + 1);
-        } 
+        }
         // If removing a reaction
         else if (!hasReacted && reaction.hasReacted) {
             setReactionCount((prev: number) => Math.max(0, prev - 1));
         }
         // If changing reaction type, count stays the same
-        
+
         // Notify parent component about the change (if needed)
         if (onLikeClick) {
             onLikeClick();
@@ -176,7 +188,7 @@ export function Post({
     const toggleMute = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsMuted(prev => !prev);
-        
+
         // Update all video elements for this post
         Object.values(videoRefs.current).forEach(videoEl => {
             if (videoEl) {
@@ -199,7 +211,7 @@ export function Post({
             <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4 " data-post-id={feedId}>
                 {/* Video observer component to handle autoplay/pause based on visibility */}
                 {feedId && <VideoObserver feedId={feedId} media={media} />}
-                
+
                 <div className="flex items-center justify-between p-4 pb-2">
                     <div
                         className="flex items-center gap-3 cursor-pointer"
@@ -224,11 +236,11 @@ export function Post({
                     <ThreeDotsMenu items={menuItems} />
                 </div>
                 <CardContent className="p-4 pt-0">
-                    <TruncatedText 
-                        text={caption} 
-                        limit={400} 
-                        showToggle={true} 
-                        className="text-card-foreground w-full mt-0" 
+                    <TruncatedText
+                        text={caption}
+                        limit={400}
+                        showToggle={true}
+                        className="text-card-foreground w-full mt-0"
                         buttonClassName="text-foreground text-xs mt-1 cursor-pointer hover:underline font-bold"
                         align="left"
                     />
@@ -249,7 +261,7 @@ export function Post({
                                                 </div>
                                             )}
                                             {item.type === "video" && (
-                                                <div 
+                                                <div
                                                     className="max-h-[100vh] relative bg-background flex items-center justify-center"
                                                     onMouseEnter={() => setShowControls(true)}
                                                     onMouseLeave={() => setShowControls(false)}
@@ -265,7 +277,7 @@ export function Post({
                                                         muted={isMuted}
                                                         playsInline
                                                     />
-                                                    <button 
+                                                    <button
                                                         className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
                                                         onClick={toggleMute}
                                                     >
@@ -281,7 +293,7 @@ export function Post({
                             </Carousel>
                         </div>
                     )}
-                    
+
                     {!hasMultipleMedia && hasSingleMedia && (
                         <div className="mt-3 rounded-lg overflow-hidden">
                             {media && media.length > 0 && media[0].type === "image" && (
@@ -294,7 +306,7 @@ export function Post({
                                 </div>
                             )}
                             {media && media.length > 0 && media[0].type === "video" && (
-                                <div 
+                                <div
                                     className="max-h-[100vh] relative bg-background flex items-center justify-center"
                                     onMouseEnter={() => setShowControls(true)}
                                     onMouseLeave={() => setShowControls(false)}
@@ -310,7 +322,7 @@ export function Post({
                                         muted={isMuted}
                                         playsInline
                                     />
-                                    <button 
+                                    <button
                                         className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
                                         onClick={toggleMute}
                                     >
@@ -324,7 +336,7 @@ export function Post({
                     <div className="flex items-center justify-between mt-4 text-muted-foreground">
                         <div className="flex items-center gap-3">
                             {feedId && (
-                                <ReactionComponent 
+                                <ReactionComponent
                                     entityId={feedId}
                                     entityType="feed"
                                     initialReaction={reaction}
@@ -350,7 +362,7 @@ export function Post({
                             </button>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                         {agoTimeString || timeAgo}
+                            {agoTimeString || timeAgo}
                         </div>
                     </div>
                 </CardContent>

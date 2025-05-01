@@ -126,7 +126,7 @@ export interface CommunityPostResponse {
   feedId: string | null;
   weekIndex: string | null;
   userId: string | null;
-  ago_time: string;
+  ago_time?: string;
   isCommunity: boolean;
   isAnonymous: boolean;
   isAdmin?: boolean;
