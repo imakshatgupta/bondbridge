@@ -7,16 +7,16 @@ interface OTPFormProps {
   onResendOTP: () => void;
 }
 
-const OTPForm: React.FC<OTPFormProps> = ({ onVerify, onResendOTP }) => {
+const OTPForm: React.FC<OTPFormProps> = ({ onVerify,  onResendOTP }) => {
   const [otp, setOtp] = useState('');
-  // const [showOTP, setShowOTP] = useState(true);
+  const [, setShowOTP] = useState(true);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
 
   useEffect(() => {
     // Timer for showing OTP - 20 seconds
     const otpTimer = setTimeout(() => {
-      // setShowOTP(false);
+      setShowOTP(false);
     }, 10000);
 
     // Timer for enabling resend - 60 seconds (1 minute)
@@ -46,7 +46,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, onResendOTP }) => {
     onResendOTP();
     setCanResend(false);
     setCountdown(60);
-    // setShowOTP(true);
+    setShowOTP(true);
     
     // Reset the resend timer
     const resendTimer = setInterval(() => {
@@ -62,7 +62,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, onResendOTP }) => {
     
     // Reset the OTP display timer
     setTimeout(() => {
-      // setShowOTP(false);
+      setShowOTP(false);
     }, 20000);
   };
 
@@ -95,7 +95,7 @@ const OTPForm: React.FC<OTPFormProps> = ({ onVerify, onResendOTP }) => {
           onClick={handleResendOTP}
           variant="link"
           disabled={!canResend}
-          className="text-sm text-foreground hover:underline cursor-pointer"
+          className="text-sm text-foreground hover:underline cursor-pointer pb-20"
         >
           {canResend ? "Resend OTP" : `Resend OTP in ${countdown}s`}
         </Button>
