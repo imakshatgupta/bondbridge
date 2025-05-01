@@ -146,7 +146,6 @@ const ReactionComponent = ({
       if (isCommunity) {
         // For community posts, use the fetchPostDetails API
         const result = await executeFetchPostDetails(entityId);
-        console.log("result:",result, result.success, result.data)
         if (result.success && result.data) {
           const postData = result.data;
           
@@ -367,8 +366,6 @@ const ReactionComponent = ({
         if (!communityId) {
           throw new Error("Community ID is required for community posts");
         }
-
-        console.log("communityId:",communityId, "entityId:",entityId, "reactionType:",reactionType)
         
         // The community API handles both add and remove reactions
         const result = await executeReactOnPost(communityId as string, {

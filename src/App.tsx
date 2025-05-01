@@ -158,6 +158,14 @@ const AuthenticatedRoutes: React.FC = () => {
             }
           />
           <Route
+            path="/edit-community-post/:communityId/:postId"
+            element={
+              <Layout showSidebars={true}>
+                <EditPost communityPost={true} />
+              </Layout>
+            }
+          />
+          <Route
             path="/create-story"
             element={
               <Layout showSidebars={true} className="!p-0">

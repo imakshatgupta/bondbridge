@@ -10,7 +10,6 @@ import {
   TransformedCommunityPost,
   ReactionResponse 
 } from '../apiTypes/communitiesTypes';
-import { PostDetailsData } from '../apiTypes/response';
 
 /**
  * Helper function to transform a community post to a standardized format
@@ -25,7 +24,7 @@ export const transformCommunityPost = (
   return {
     id: post._id,
     author: {
-      id: post.author || '',
+      id: post.userId || '',
       name: post.name || '',
       profilePic: post.profilePic || '',
     },
@@ -178,7 +177,6 @@ export const fetchCommunityPosts = async (
       console.warn('API reported failure to fetch community posts');
       return [];
     }
-    console.log(response.data.posts)
     // Transform posts to consistent format
     return (response.data.posts || []).map(post => transformCommunityPost(post, communityId));
   } catch (error) {
@@ -192,8 +190,8 @@ export const fetchCommunityPosts = async (
  * @param postId Post ID
  * @returns Promise with post details data
  */
-export const fetchPostDetails = async (postId: string): Promise<PostDetailsData> => {
-  const response = await adminApiClient.get<{ success: boolean; post: PostDetailsData }>(
+export const fetchPostDetails = async (postId: string): Promise<CommunityPostResponse> => {
+  const response = await adminApiClient.get<{ success: boolean; post: CommunityPostResponse }>(
     `/posts/${postId}`
   );
   
@@ -241,6 +239,7 @@ export const reactOnPost = async (
 interface CommentOnPostRequest {
   postId: string;
   content: string;
+  isAnonymous?: boolean;
 }
 
 /**
@@ -252,12 +251,13 @@ interface CommentOnPostRequest {
 export const commentOnPost = async (
   communityId: string,
   params: CommentOnPostRequest
-): Promise<PostDetailsData> => {
+): Promise<CommunityPostResponse> => {
   
   const url = `/communities/${communityId}/post/comment`;
-  const response = await adminApiClient.post<{ success: boolean; post: PostDetailsData }>(url, {
+  const response = await adminApiClient.post<{ success: boolean; post: CommunityPostResponse }>(url, {
     postId: params.postId,
-    content: params.content
+    content: params.content,
+    isAnonymous: params.isAnonymous
   });
   
   if (!response.data.success) {
@@ -304,5 +304,29 @@ export const deletePost = async (communityId: string, postId: string): Promise<{
   const url = `/communities/${communityId}/post?postId=${postId}`;
   const response = await adminApiClient.delete<{ success: boolean; message: string }>(url);
   
+  return response.data;
+};
+
+/**
+ * Function to edit the content of a community post
+ * @param communityId Community ID
+ * @param postId Post ID
+ * @param content New content for the post
+ * @returns Promise with the edit post response
+ */
+export const editCommunityPost = async (
+  communityId: string, 
+  postId: string,
+  content: string
+): Promise<{ success: boolean; message?: string }> => {
+  const url = `/communities/${communityId}/post`;
+  const response = await adminApiClient.put<{ success: boolean; message?: string }>(url, {
+    content: content,
+    postId: postId
+  });
+  
+  if (!response.data.success) {
+    throw new Error(response.data.message || 'Failed to edit community post');
+  }
   return response.data;
 };
