@@ -13,7 +13,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { TruncatedText } from "@/components/ui/TruncatedText";
 
-const FollowingFollowers = () => {
+interface FollowingFollowersProps {
+  sidebar?: boolean;
+}
+
+const FollowingFollowers = ({ sidebar = false }: FollowingFollowersProps) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "following";
@@ -72,67 +76,95 @@ const FollowingFollowers = () => {
     setRemovingFollowerId(null);
   };
 
+  const renderLoading = () => (
+    <div className={cn(
+      "flex justify-center items-center",
+      sidebar ? "min-h-[100px]" : "min-h-[200px]"
+    )}>
+      <Loader2 className={cn(
+        "animate-spin text-primary",
+        sidebar ? "h-5 w-5" : "h-8 w-8"
+      )} />
+    </div>
+  );
+
+  const renderEmptyState = () => (
+    <div className={cn(
+      "text-center text-muted-foreground",
+      sidebar ? "py-3" : "py-8"
+    )}>
+      No Users Found
+    </div>
+  );
+
   const FollowingList = ({ users, isLoading }: { users: FollowingFollowerUser[], isLoading: boolean }) => {
     if (isLoading) {
-      return (
-        <div className="flex justify-center items-center min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      );
+      return renderLoading();
     }
 
     if (!Array.isArray(users) || users.length === 0) {
-      return (
-        <div className="text-center text-muted-foreground py-8">
-          No Users Found
-        </div>
-      );
+      return renderEmptyState();
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {users.map((user) => (
           <Card
             key={user._id}
             className={cn(
               "transition-all duration-200 hover:shadow-md",
-              "border border-border/50 hover:border-border"
+              "border border-border/50 hover:border-border",
+              sidebar && "shadow-none"
             )}
           >
-            <div className="flex items-center p-4">
+            <div className={cn(
+              "flex items-center",
+              sidebar ? "p-2" : "p-4"
+            )}>
               <div 
-                className="flex items-center gap-4 flex-1 cursor-pointer" 
+                className="flex items-center gap-2 flex-1 cursor-pointer" 
                 onClick={() => handleUserClick(user._id)}
               >
-                <Avatar className="h-12 w-12 border-2 border-border/50">
+                <Avatar className={cn(
+                  "border-2 border-border/50",
+                  sidebar ? "h-8 w-8" : "h-12 w-12"
+                )}>
                   <AvatarImage src={user.profilePic || user.avatar} alt={user.name} />
                   <AvatarFallback className="bg-primary/5 text-primary font-medium">
                     {user.name[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-medium text-foreground truncate">{user.name}</span>
-                  <TruncatedText 
-                    text={user.bio} 
-                    limit={50}
-                    className="text-sm text-muted-foreground" 
-                    buttonClassName="text-primary text-xs ml-1 cursor-pointer hover:underline"
-                    showToggle={false}
-                  />
+                  <span className={cn(
+                    "font-medium text-foreground truncate",
+                    sidebar && "text-sm"
+                  )}>{sidebar ? user.name.length > 20 ? `${user.name.substring(0, 20)}...` : user.name : user.name}</span>
+                  {!sidebar && (
+                    <TruncatedText 
+                      text={user.bio} 
+                      limit={50}
+                      className="text-sm text-muted-foreground" 
+                      buttonClassName="text-primary text-xs ml-1 cursor-pointer hover:underline"
+                      showToggle={false}
+                    />
+                  )}
                 </div>
               </div>
               <Button 
                 variant="outline" 
-                size="sm"
+                size={sidebar ? "sm" : "sm"}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleUnfollow(user._id);
                 }}
                 disabled={unfollowingUserId === user._id}
-                className="min-w-[80px] justify-center cursor-pointer"
+                className={cn(
+                  "justify-center cursor-pointer",
+                  sidebar ? "min-w-[60px] text-xs py-1 px-2 h-7" : "min-w-[80px]"
+                )}
               >
                 {unfollowingUserId === user._id ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Unfollowing</>
+                  <><Loader2 className="h-3 w-3 animate-spin mr-1" /> {sidebar ? 'Un...' : 'Unfollowing'}</>
                 ) : (
                   'Unfollow'
                 )}
@@ -146,65 +178,72 @@ const FollowingFollowers = () => {
 
   const FollowersList = ({ users, isLoading }: { users: FollowingFollowerUser[], isLoading: boolean }) => {
     if (isLoading) {
-      return (
-        <div className="flex justify-center items-center min-h-[200px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      );
+      return renderLoading();
     }
 
     if (!Array.isArray(users) || users.length === 0) {
-      return (
-        <div className="text-center text-muted-foreground py-8">
-          No Users Found
-        </div>
-      );
+      return renderEmptyState();
     }
 
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {users.map((user) => (
           <Card
             key={user._id}
             className={cn(
               "transition-all duration-200 hover:shadow-md",
-              "border border-border/50 hover:border-border"
+              "border border-border/50 hover:border-border",
+              sidebar && "shadow-none"
             )}
           >
-            <div className="flex items-center p-4">
+            <div className={cn(
+              "flex items-center",
+              sidebar ? "p-2" : "p-4"
+            )}>
               <div 
-                className="flex items-center gap-4 flex-1 cursor-pointer" 
+                className="flex items-center gap-2 flex-1 cursor-pointer" 
                 onClick={() => handleUserClick(user._id)}
               >
-                <Avatar className="h-12 w-12 border-2 border-border/50">
+                <Avatar className={cn(
+                  "border-2 border-border/50",
+                  sidebar ? "h-8 w-8" : "h-12 w-12"
+                )}>
                   <AvatarImage src={user.profilePic || user.avatar} alt={user.name} />
                   <AvatarFallback className="bg-primary/5 text-primary font-medium">
                     {user.name[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col min-w-0">
-                  <span className="font-medium text-foreground truncate">{user.name}</span>
-                  <TruncatedText 
-                    text={user.bio} 
-                    limit={50}
-                    className="text-sm text-muted-foreground" 
-                    buttonClassName="text-primary text-xs ml-1 cursor-pointer hover:underline"
-                    showToggle={false}
-                  />
+                  <span className={cn(
+                    "font-medium text-foreground truncate",
+                    sidebar && "text-sm"
+                  )}>{sidebar ? user.name.length > 20 ? `${user.name.substring(0, 20)}...` : user.name : user.name}</span>
+                  {!sidebar && (
+                    <TruncatedText 
+                      text={user.bio} 
+                      limit={50}
+                      className="text-sm text-muted-foreground" 
+                      buttonClassName="text-primary text-xs ml-1 cursor-pointer hover:underline"
+                      showToggle={false}
+                    />
+                  )}
                 </div>
               </div>
               <Button 
                 variant="outline" 
-                size="sm"
+                size={sidebar ? "sm" : "sm"}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleRemoveFollower(user._id);
                 }}
                 disabled={removingFollowerId === user._id}
-                className="min-w-[80px] justify-center cursor-pointer"
+                className={cn(
+                  "justify-center cursor-pointer",
+                  sidebar ? "min-w-[60px] text-xs py-1 px-2 h-7" : "min-w-[80px]"
+                )}
               >
                 {removingFollowerId === user._id ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Removing</>
+                  <><Loader2 className="h-3 w-3 animate-spin mr-1" /> {sidebar ? 'Rem...' : 'Removing'}</>
                 ) : (
                   'Remove'
                 )}
@@ -217,18 +256,25 @@ const FollowingFollowers = () => {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto py-4 px-4">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-4 -ml-2 cursor-pointer"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back
-      </Button>
+    <div className={cn(
+      sidebar ? "mx-auto w-full" : "container max-w-2xl mx-auto py-4 px-4"
+    )}>
+      {!sidebar && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-4 -ml-2 cursor-pointer"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+      )}
       <Tabs defaultValue={initialTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className={cn(
+          "grid w-full grid-cols-2",
+          sidebar ? "mb-3" : "mb-6"
+        )}>
           <TabsTrigger value="following" className="cursor-pointer">Following</TabsTrigger>
           <TabsTrigger value="followers" className="cursor-pointer">Followers</TabsTrigger>
         </TabsList>

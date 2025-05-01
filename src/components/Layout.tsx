@@ -18,6 +18,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import CommunityFeed from "./activity/CommunityFeed";
 import { TruncatedText } from "./ui/TruncatedText";
 import MobileAppDownload from "./MobileAppDownload";
+import FollowingFollowers from "./FollowingFollowers";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -156,7 +157,7 @@ const Layout: React.FC<LayoutProps> = ({
                 )}
               </div>
             ) : (
-              <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl">
+              <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl overflow-y-auto h-[calc(100vh-64px)] app-scrollbar">
                 {isLoadingProfile ? (
                   // Show skeleton loaders when loading
                   <>
@@ -195,8 +196,14 @@ const Layout: React.FC<LayoutProps> = ({
                       </div>
                     </div>
 
+                    <div className="border-2 border-sidebar-border">
+                      <div className="max-h-[45vh] p-4 overflow-y-auto app-scrollbar">
+                        <FollowingFollowers sidebar={true} />
+                      </div>
+                    </div>
+
                     <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
-                      <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground text-center">
+                      <h3 className="font-semibold  mb-4 text-sidebar-foreground text-center">
                         Suggested Friends
                       </h3>
                       {isLoadingSuggested ? (
@@ -209,7 +216,7 @@ const Layout: React.FC<LayoutProps> = ({
                           </p>
                         </div>
                       ) : (
-                        <ul className="space-y-3">
+                        <ul className="space-y-1">
                           {sidebarUsers.map((user) => (
                             <SidebarAvatar
                               key={user.id}
