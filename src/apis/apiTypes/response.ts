@@ -133,6 +133,8 @@ export interface CommentData {
   comment: string;
   createdAt: string;
   agoTime: string;
+  isAnonymous?: boolean;
+  isAdmin?: boolean;
   user: {
     userId: string;
     name: string;
