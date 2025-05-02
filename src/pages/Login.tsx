@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { LoginResponse } from "../apis/apiTypes/response";
 import { useDispatch } from "react-redux";
 import { updateCurrentUser } from "../store/currentUserSlice";
+import { Eye, EyeOff } from "lucide-react";
 
 // Custom styles for the phone input component that change with theme
 const customPhoneInputStyles = `
@@ -86,6 +87,7 @@ const Login: React.FC = () => {
   const phoneInputRef = useRef(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [passwordType, setPasswordType] = useState("password");
 
   // Use our custom hook for API calls
   const [executeLogin, isLoggingIn] = useApiCall(loginUser);
@@ -272,7 +274,7 @@ const Login: React.FC = () => {
             </Label>
             <div className="relative">
               <Input
-                type="password"
+                type={passwordType}
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -287,33 +289,10 @@ const Login: React.FC = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  const passwordInput = document.getElementById(
-                    "password"
-                  ) as HTMLInputElement;
-                  passwordInput.type =
-                    passwordInput.type === "password" ? "text" : "password";
+                  setPasswordType(passwordType === "password" ? "text" : "password");
                 }}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
+                {passwordType === "password" ? <Eye /> : <EyeOff />}
               </Button>
             </div>
             {authError && (
