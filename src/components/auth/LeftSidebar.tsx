@@ -106,7 +106,7 @@ const LeftSidebar: React.FC = () => {
           <li>
             <Popover>
               <PopoverTrigger asChild>
-                <Button size={"lg"} className="text-lg w-full cursor-pointer">
+                <Button size={"lg"} className="text-lg w-38 cursor-pointer">
                   + Post
                 </Button>
               </PopoverTrigger>
