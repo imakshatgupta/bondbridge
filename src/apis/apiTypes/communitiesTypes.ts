@@ -225,6 +225,8 @@ export interface CommentDetailsData {
   createdAt: string;
   updatedAt?: string;
   author: string;
+  isAnonymous?: boolean;
+  isAdmin?: boolean;
   userDetails?: {
     name?: string;
     profilePic?: string;

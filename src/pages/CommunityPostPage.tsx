@@ -34,15 +34,15 @@ const transformApiPostToUiPost = (apiPost: CommunityPostResponse, communityId?: 
   const finalCommunityId = communityId || apiPost.author;
 
   if (!finalCommunityId) {
-      console.error("Could not determine community ID for post:", apiPost._id);
-      // Return null or a minimally viable object based on requirements
-      return null;
+    console.error("Could not determine community ID for post:", apiPost._id);
+    // Return null or a minimally viable object based on requirements
+    return null;
   }
 
   // Ensure reactionDetails and types exist, providing defaults
   const reactionDetails: ReactionDetails = {
     total: apiPost.reactionCount || 0,
-    reactions: [], 
+    reactions: [],
     types: {
       like: apiPost.reactionDetails?.types?.like || 0,
       love: apiPost.reactionDetails?.types?.love || 0,
@@ -83,48 +83,48 @@ const transformApiPostToUiPost = (apiPost: CommunityPostResponse, communityId?: 
 
 // Helper to transform location state post if present
 const transformLocationPostToUiPost = (locationPost: TransformedCommunityPost | undefined | null): TransformedCommunityPost | null => {
-    if (!locationPost || !locationPost.id) return null;
+  if (!locationPost || !locationPost.id) return null;
 
-    // Ensure reactionDetails and types exist, providing defaults
-    const reactionDetails: ReactionDetails = {
-      total: locationPost.stats?.reactionCount || 0,
-      reactions: locationPost.reactionDetails?.reactions || [],
-      types: {
-        like: locationPost.reactionDetails?.types?.like || 0,
-        love: locationPost.reactionDetails?.types?.love || 0,
-        haha: locationPost.reactionDetails?.types?.haha || 0,
-        lulu: locationPost.reactionDetails?.types?.lulu || 0,
-      }
-    };
-
-
-    const reaction: Reaction = {
-        hasReacted: locationPost.stats?.hasReacted || false,
-        reactionType: locationPost.stats?.reactionType || null
+  // Ensure reactionDetails and types exist, providing defaults
+  const reactionDetails: ReactionDetails = {
+    total: locationPost.stats?.reactionCount || 0,
+    reactions: locationPost.reactionDetails?.reactions || [],
+    types: {
+      like: locationPost.reactionDetails?.types?.like || 0,
+      love: locationPost.reactionDetails?.types?.love || 0,
+      haha: locationPost.reactionDetails?.types?.haha || 0,
+      lulu: locationPost.reactionDetails?.types?.lulu || 0,
     }
+  };
 
-    return {
-        id: locationPost.id,
-        author: {
-            id: locationPost.author?.id || "",
-            name: locationPost.author?.name || "",
-            profilePic: locationPost.author?.profilePic || "",
-        },
-        content: locationPost.content || "",
-        createdAt: locationPost.createdAt || Date.now(),
-        media: locationPost.media || [],
-        stats: {
-            commentCount: locationPost.stats?.commentCount || 0,
-            reactionCount: locationPost.stats?.reactionCount || 0,
-            hasReacted: reaction.hasReacted,
-            reactionType: reaction.reactionType,
-        },
-        reactionDetails: reactionDetails,
-        communityId: locationPost.communityId || "",
-        isAnonymous: locationPost.isAnonymous || false,
-        isAdmin: locationPost.isAdmin || false,
-        ago_time: locationPost.ago_time || getRelativeTime(new Date(locationPost.createdAt || Date.now()).toISOString()),
-    };
+
+  const reaction: Reaction = {
+    hasReacted: locationPost.stats?.hasReacted || false,
+    reactionType: locationPost.stats?.reactionType || null
+  }
+
+  return {
+    id: locationPost.id,
+    author: {
+      id: locationPost.author?.id || "",
+      name: locationPost.author?.name || "",
+      profilePic: locationPost.author?.profilePic || "",
+    },
+    content: locationPost.content || "",
+    createdAt: locationPost.createdAt || Date.now(),
+    media: locationPost.media || [],
+    stats: {
+      commentCount: locationPost.stats?.commentCount || 0,
+      reactionCount: locationPost.stats?.reactionCount || 0,
+      hasReacted: reaction.hasReacted,
+      reactionType: reaction.reactionType,
+    },
+    reactionDetails: reactionDetails,
+    communityId: locationPost.communityId || "",
+    isAnonymous: locationPost.isAnonymous || false,
+    isAdmin: locationPost.isAdmin || false,
+    ago_time: locationPost.ago_time || getRelativeTime(new Date(locationPost.createdAt || Date.now()).toISOString()),
+  };
 };
 
 export default function CommunityPostPage() {
@@ -153,7 +153,7 @@ export default function CommunityPostPage() {
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     setCurrentUserId(userId);
-    
+
   }, []);
 
   // Helper function to sort comments by creation time (newest first)
@@ -174,7 +174,8 @@ export default function CommunityPostPage() {
     return apiPostDetails.comments.map((comment: CommentDetailsData): ExtendedCommentData => {
       // Provide default user details if missing
       const userDetails = comment.userDetails || {};
-      const isAnonymous = comment.author == "anonymous";
+      const isAnonymous = comment.isAnonymous;
+      const isAdmin = comment.isAdmin;
       const authorId = comment.author || 'unknown_author'; // Fallback author ID
 
       return {
@@ -185,7 +186,7 @@ export default function CommunityPostPage() {
         comment: comment.content || "", // Use comment content
         content: comment.content || "",
         createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt, 
+        updatedAt: comment.updatedAt,
         agoTime: getRelativeTime(comment.createdAt),
         user: {
           userId: authorId,
@@ -195,6 +196,8 @@ export default function CommunityPostPage() {
         },
         likes: comment.likes || 0,
         likeCount: comment.likes || 0,
+        isAdmin: isAdmin,
+        isAnonymous: isAnonymous,
         hasReplies: Boolean(comment.replies && comment.replies.length > 0),
         isLiked: false, // Default, needs clarification from API if available
         reaction: {
@@ -207,17 +210,15 @@ export default function CommunityPostPage() {
 
   // Primary data fetching function
   const fetchFullPostDetails = async (forceRefresh = false) => {
-    console.log("fetchFullPostDetails")
     if (!postId) {
       setError("No post ID provided");
       setInitialDataLoaded(true); // Stop loading indicator
       return;
     }
-    console.log("forceRefresh:",forceRefresh, "post:",post, "initialDataLoaded:",initialDataLoaded)
 
     // Only fetch if post is not already loaded or forceRefresh is true
     if (!forceRefresh && post && initialDataLoaded) {
-        return;
+      return;
     }
 
     try {
@@ -231,16 +232,16 @@ export default function CommunityPostPage() {
 
 
         if (transformedPost) {
-            setPost(transformedPost);
+          setPost(transformedPost);
 
-             // Extract comments using the raw API data
-            const comments = extractCommentsFromPostDetails(apiPostData);
-            const sortedComments = sortCommentsByTime(comments);
-            setCommentsData(sortedComments);
-            setError(null);
+          // Extract comments using the raw API data
+          const comments = extractCommentsFromPostDetails(apiPostData);
+          const sortedComments = sortCommentsByTime(comments);
+          setCommentsData(sortedComments);
+          setError(null);
         } else {
-             setError("Failed to process post details.");
-             setCommentsData([]);
+          setError("Failed to process post details.");
+          setCommentsData([]);
         }
 
       } else {
@@ -256,8 +257,8 @@ export default function CommunityPostPage() {
       setPost(null);
       setCommentsData([]);
     } finally {
-        // Ensure initial loaded state is set even on error, to hide main loader
-        setInitialDataLoaded(true);
+      // Ensure initial loaded state is set even on error, to hide main loader
+      setInitialDataLoaded(true);
     }
   };
 
@@ -270,10 +271,10 @@ export default function CommunityPostPage() {
   const handleSubmitComment = async () => {
     // Ensure post, post.id, post.communityId are available
     if (!newComment.trim() || !post || !post.id || !post.communityId || isPosting) {
-        if (!post?.communityId) {
-            toast.error("Cannot identify community for this post.");
-        }
-        return;
+      if (!post?.communityId) {
+        toast.error("Cannot identify community for this post.");
+      }
+      return;
     }
 
     const isAnonymousPost = postCommentAs === 'anonymous';
@@ -304,11 +305,11 @@ export default function CommunityPostPage() {
     setCommentsData(prevComments => [optimisticComment, ...prevComments]);
     // Optimistically update comment count on the post state
     setPost(prevPost => prevPost ? ({
-        ...prevPost,
-        stats: {
-            ...prevPost.stats,
-            commentCount: (prevPost.stats.commentCount || 0) + 1,
-        }
+      ...prevPost,
+      stats: {
+        ...prevPost.stats,
+        commentCount: (prevPost.stats.commentCount || 0) + 1,
+      }
     }) : null);
     const originalComment = newComment; // Store original comment for potential revert
     setNewComment("");
@@ -329,12 +330,12 @@ export default function CommunityPostPage() {
         setCommentsData(prevComments =>
           prevComments.filter(comment => comment._id !== optimisticComment._id)
         );
-         setPost(prevPost => prevPost ? ({
-            ...prevPost,
-            stats: {
-                ...prevPost.stats,
-                commentCount: Math.max(0, (prevPost.stats.commentCount || 0) - 1), // Decrement count
-            }
+        setPost(prevPost => prevPost ? ({
+          ...prevPost,
+          stats: {
+            ...prevPost.stats,
+            commentCount: Math.max(0, (prevPost.stats.commentCount || 0) - 1), // Decrement count
+          }
         }) : null);
         setNewComment(originalComment); // Restore input
       } else {
@@ -343,20 +344,20 @@ export default function CommunityPostPage() {
       }
     } catch (error: unknown) {
       console.error("Error posting comment:", error);
-       // Type check before accessing properties
+      // Type check before accessing properties
       const postErrorMessage = error instanceof Error ? error.message : 'Unknown error posting comment';
       toast.error(`An error occurred: ${postErrorMessage}`);
       // Revert optimistic updates
       setCommentsData(prevComments =>
         prevComments.filter(comment => comment._id !== optimisticComment._id)
       );
-       setPost(prevPost => prevPost ? ({
-            ...prevPost,
-            stats: {
-                ...prevPost.stats,
-                commentCount: Math.max(0, (prevPost.stats.commentCount || 0) - 1),
-            }
-        }) : null);
+      setPost(prevPost => prevPost ? ({
+        ...prevPost,
+        stats: {
+          ...prevPost.stats,
+          commentCount: Math.max(0, (prevPost.stats.commentCount || 0) - 1),
+        }
+      }) : null);
       setNewComment(originalComment); // Restore input
     }
   };
@@ -370,32 +371,26 @@ export default function CommunityPostPage() {
   };
 
   // Handle post deletion (assuming deletePost API exists and is imported)
-  const handlePostDelete = async (deletedPostId: string) => {
-      // Optional: Add confirmation dialog here
-      console.log("Attempting to delete post:", deletedPostId); // Placeholder
-      // Example: const success = await executeDeletePost(post.communityId, deletedPostId);
-      // if (success) {
-          toast.success("Post deleted successfully");
-          navigate(-1); // Navigate back after deletion
-      // } else {
-      //    toast.error("Failed to delete post.");
-      // }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handlePostDelete = async (_deletedPostId: string) => {
+    toast.success("Post deleted successfully");
+    navigate(-1); // Navigate back after deletion
   };
 
   // Callback for when a comment is deleted via the Comment component
-   const handleCommentDeleted = (commentId: string) => {
-        setCommentsData(prevComments =>
-            prevComments.filter(c => c._id !== commentId)
-        );
-        // Update comment count on the post state
-        setPost(prevPost => prevPost ? ({
-            ...prevPost,
-            stats: {
-                ...prevPost.stats,
-                commentCount: Math.max(0, (prevPost.stats.commentCount || 0) - 1),
-            }
-        }) : null);
-   };
+  const handleCommentDeleted = (commentId: string) => {
+    setCommentsData(prevComments =>
+      prevComments.filter(c => c._id !== commentId)
+    );
+    // Update comment count on the post state
+    setPost(prevPost => prevPost ? ({
+      ...prevPost,
+      stats: {
+        ...prevPost.stats,
+        commentCount: Math.max(0, (prevPost.stats.commentCount || 0) - 1),
+      }
+    }) : null);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -429,73 +424,73 @@ export default function CommunityPostPage() {
           </div>
         </div>
       ) : !post ? ( // Handle case where post is null after loading attempt
-         <div className="flex-1 flex items-center justify-center p-4 text-center text-muted-foreground">
-            Post not found or failed to load.
-         </div>
+        <div className="flex-1 flex items-center justify-center p-4 text-center text-muted-foreground">
+          Post not found or failed to load.
+        </div>
       ) : (
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Post Summary and Comment Input */}
           <div className="flex-none">
-             {/* Use props aligned with CommunityQuotes.tsx */}
-              <Post
-                user={post.author?.name || "Community User"} // Default name
-                userId={post.author?.id || ""} // Author ID
-                avatar={post.author?.profilePic || ""} // Author avatar
-                caption={post.content || ""}
-                media={post.media || []}
-                comments={post.stats?.commentCount || 0} // Use stats
-                datePosted={post.createdAt || 0}
-                agoTimeString={post.ago_time || getRelativeTime(new Date(post.createdAt || 0).toISOString())} // Use calculated ago_time
-                isOwner={currentUserId === post.author?.id} // Check against author ID
-                feedId={post.id} // Use post.id as feedId
-                onDelete={() => handlePostDelete(post.id)} // Pass post ID to delete handler
-                isCommunity={true} // Hardcoded as true for this page context
-                isAnonymous={post.isAnonymous || false} // Use state value or default
-                isCommunityAdmin={post.isAdmin || false} // Use state value or default
-                communityId={post.communityId || ""} // Use state value
-                initialReaction={post.stats || { hasReacted: false, reactionType: null }} // Pass reaction object from stats
-                initialReactionCount={post.stats?.reactionCount || 0} // Use stats
-                initialReactionDetails={post.reactionDetails || { total: 0, reactions: [], types: {} }} // Pass reaction details
-                onCommentClick={() => {}} // Keep as no-op for now
-                // onLikeClick is handled internally by Post component now based on props
-              />
+            {/* Use props aligned with CommunityQuotes.tsx */}
+            <Post
+              user={post.author?.name || "Community User"} // Default name
+              userId={post.author?.id || ""} // Author ID
+              avatar={post.author?.profilePic || ""} // Author avatar
+              caption={post.content || ""}
+              media={post.media || []}
+              comments={post.stats?.commentCount || 0} // Use stats
+              datePosted={post.createdAt || 0}
+              agoTimeString={post.ago_time || getRelativeTime(new Date(post.createdAt || 0).toISOString())} // Use calculated ago_time
+              isOwner={currentUserId === post.author?.id} // Check against author ID
+              feedId={post.id} // Use post.id as feedId
+              onDelete={() => handlePostDelete(post.id)} // Pass post ID to delete handler
+              isCommunity={true} // Hardcoded as true for this page context
+              isAnonymous={post.isAnonymous || false} // Use state value or default
+              isCommunityAdmin={post.isAdmin || false} // Use state value or default
+              communityId={post.communityId || ""} // Use state value
+              initialReaction={post.stats || { hasReacted: false, reactionType: null }} // Pass reaction object from stats
+              initialReactionCount={post.stats?.reactionCount || 0} // Use stats
+              initialReactionDetails={post.reactionDetails || { total: 0, reactions: [], types: {} }} // Pass reaction details
+              onCommentClick={() => { }} // Keep as no-op for now
+            // onLikeClick is handled internally by Post component now based on props
+            />
 
 
             {/* Comment Input */}
             <div className="p-4 border-t border-b flex items-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                   <div className="flex items-center gap-1.5 cursor-pointer group mr-3">
-                      <Avatar className="h-8 w-8">
-                         {postCommentAs === 'user' ? (
-                            <AvatarImage src={currentUser.profilePic || currentUser.avatar} alt={currentUser.username || "Profile"} />
-                         ) : (
-                            <AvatarImage src="/profile/anonymous.png" alt="Anonymous" />
-                         )}
-                         <AvatarFallback>
-                            {postCommentAs === 'user' ? (currentUser.username ? currentUser.username[0].toUpperCase() : "U") : "A"}
-                         </AvatarFallback>
-                      </Avatar>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                   </div>
+                  <div className="flex items-center gap-1.5 cursor-pointer group mr-3">
+                    <Avatar className="h-8 w-8">
+                      {postCommentAs === 'user' ? (
+                        <AvatarImage src={currentUser.profilePic || currentUser.avatar} alt={currentUser.username || "Profile"} />
+                      ) : (
+                        <AvatarImage src="/profile/anonymous.png" alt="Anonymous" />
+                      )}
+                      <AvatarFallback>
+                        {postCommentAs === 'user' ? (currentUser.username ? currentUser.username[0].toUpperCase() : "U") : "A"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                   <DropdownMenuItem onSelect={() => setPostCommentAs('user')} className="cursor-pointer">
-                      <Avatar className="h-6 w-6 mr-2">
-                         <AvatarImage src={currentUser.profilePic || currentUser.avatar} alt={currentUser.username || "Profile"} />
-                         <AvatarFallback>
-                         {currentUser.username ? currentUser.username[0].toUpperCase() : "U"}
-                         </AvatarFallback>
-                      </Avatar>
-                      Comment as {currentUser.username || "Yourself"}
-                   </DropdownMenuItem>
-                   <DropdownMenuItem onSelect={() => setPostCommentAs('anonymous')} className="cursor-pointer">
-                      <Avatar className="h-6 w-6 mr-2">
-                         <AvatarImage src="/profile/anonymous.png" alt="Anonymous" />
-                         <AvatarFallback>A</AvatarFallback>
-                      </Avatar>
-                      Comment Anonymously
-                   </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setPostCommentAs('user')} className="cursor-pointer">
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarImage src={currentUser.profilePic || currentUser.avatar} alt={currentUser.username || "Profile"} />
+                      <AvatarFallback>
+                        {currentUser.username ? currentUser.username[0].toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    Comment as {currentUser.username || "Yourself"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setPostCommentAs('anonymous')} className="cursor-pointer">
+                    <Avatar className="h-6 w-6 mr-2">
+                      <AvatarImage src="/profile/anonymous.png" alt="Anonymous" />
+                      <AvatarFallback>A</AvatarFallback>
+                    </Avatar>
+                    Comment Anonymously
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -521,9 +516,9 @@ export default function CommunityPostPage() {
 
           {/* Comments Section */}
           <div className="overflow-y-auto flex-1">
-             {/* Check isLoadingPost specifically for comments loading indicator if needed */}
+            {/* Check isLoadingPost specifically for comments loading indicator if needed */}
             {isLoadingPost && commentsData.length === 0 ? (
-                <div className="text-center text-muted-foreground my-8">Loading comments...</div>
+              <div className="text-center text-muted-foreground my-8">Loading comments...</div>
             ) : commentsData.length === 0 ? (
               <div className="text-center text-muted-foreground my-8">
                 No comments yet. Be the first to comment!
@@ -544,6 +539,7 @@ export default function CommunityPostPage() {
                         name: comment.user.name,
                         profilePic: comment.user.profilePic
                       },
+
                       likes: comment.likes || 0,
                       hasReplies: comment.hasReplies || false,
                       parentComment: comment.parentComment || null,
@@ -555,6 +551,7 @@ export default function CommunityPostPage() {
                     currentUserId={currentUserId || ""}
                     postId={post.id || ""} // Pass post ID
                     isCommunity
+                    isAdmin={comment.isAdmin || false}
                     communityId={post.communityId || ""} // Pass community ID
                     onCommentDeleted={handleCommentDeleted} // Use the refactored handler
                   />

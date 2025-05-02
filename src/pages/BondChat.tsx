@@ -204,6 +204,35 @@ const UserMessage = ({ message }: { message: ExtendedMessage }) => {
   );
 };
 
+// Helper function to get current location
+const getCurrentLocation = (): Promise<{ latitude: number; longitude: number } | null> => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      console.warn("Geolocation is not supported by this browser.");
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.warn(`Error getting location: ${error.message}`);
+        resolve(null); // Resolve with null on error (permission denied, unavailable, etc.)
+      },
+      {
+        enableHighAccuracy: false, // Lower accuracy is often faster and sufficient
+        timeout: 5000, // 5 seconds timeout
+        maximumAge: 60000, // Accept cached position up to 1 minute old
+      }
+    );
+  });
+};
+
 export default function BondChat() {
   const [messages, setMessages] = useState<ExtendedMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -511,10 +540,13 @@ export default function BondChat() {
     }
   }, [isSpeakerOn]);
 
-  const handleSendMessage = (text: string) => {
-    if (!text.trim() || !socket || !isConnected || !chatRoomId || isWaitingForResponse) return;
+  const handleSendMessage = async (text: string) => {
+    if (!userId || !chatRoomId) {
+      toast.error("Chat not initialized properly.");
+      return;
+    }
 
-    // Stop any currently playing audio when sending a new message
+    // Stop any currently playing audio
     if (audioRef) {
       audioRef.pause();
       audioRef.currentTime = 0;
@@ -532,6 +564,9 @@ export default function BondChat() {
     // Show typing indicator when message is sent
     setTimeout(() => setIsBotTyping(true), 700);
 
+    // Get current location
+    const location = await getCurrentLocation();
+
     // Create message data
     const messageData = {
       senderId: userId,
@@ -545,6 +580,7 @@ export default function BondChat() {
       isSpeakerOn: isSpeakerOnRef.current, // Use ref value to ensure latest state
       voice: voiceTypeRef.current, // Always send voice type regardless of speaker status
       deviceId: deviceId,
+      location: location, // Add the location object (will be null if fetching failed)
     };
 
     // Add message to local state immediately for better UX
@@ -562,12 +598,20 @@ export default function BondChat() {
     setMessages((prev) => [...prev, tempMessage]);
 
     // Send message through socket
-    socket.emit("sendMessage", messageData, (response: SendMessageResponse) => {
-      console.log("Message sent response:", response);
-      if (!response.success) {
-        toast.error("Failed to send message");
-      }
-    });
+    if (socket && isConnected) {
+        socket.emit("sendMessage", messageData, (response: SendMessageResponse) => {
+          if (!response.success) {
+            toast.error("Failed to send message");
+          }
+        });
+    } else {
+        console.error("Socket not connected, cannot send message.");
+        toast.error("Cannot connect to chat. Please try again later.");
+        // Optionally revert the optimistic message addition
+        setMessages((prev) => prev.filter(msg => msg.id !== tempMessage.id));
+        setIsWaitingForResponse(false); // Allow user to try again if socket disconnected
+        setIsBotTyping(false);
+    }
   };
 
   const scrollToBottom = () => {

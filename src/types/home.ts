@@ -25,6 +25,7 @@ export interface CommentProps {
       reactionType: string | null;
     };
   };
+  isAdmin?: boolean;
   isReply?: boolean;
   postId?: string;
   currentUserId?: string; // Add current user ID to check ownership
