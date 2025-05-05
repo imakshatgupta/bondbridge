@@ -195,12 +195,12 @@ const Settings = () => {
             {referralCode && (
               <div className="flex flex-col">
                 <h4 className="text-muted-foreground text-sm">Refer a Friend</h4>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="text-lg">{referralCode}</Badge>
+                <div className="flex items-center">
+                  <Badge variant="secondary" className="text-lg px-3">{referralCode}</Badge>
                   <Button
                     variant="ghost"
                   size="icon"
-                  className="rounded-none hover:bg-transparent"
+                  className="rounded-none hover:bg-transparent -ml-1"
                   onClick={() => handleCopy(referralCode)}
                   aria-label="Copy referral code"
                 >
