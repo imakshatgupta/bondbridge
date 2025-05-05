@@ -13,6 +13,7 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
     skillSelected, 
     avatar,
     image,
+    referralCode,
     // communities
     generateToken
   } = profileData;
@@ -26,6 +27,7 @@ export const submitProfile = async (profileData: CreateProfileRequest): Promise<
   
   formData.append('name', name);
   formData.append('email', email);
+  formData.append('referralCode', referralCode || "");
 
   // commented out as not being uploaded currently
   formData.append('dob', dateOfBirth);
