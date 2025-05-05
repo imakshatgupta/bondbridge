@@ -12,6 +12,7 @@ interface CurrentUserState {
   token: string;
   userId: string;
   public: number;
+  referralCode: string;
 }
 
 const initialState: CurrentUserState = {
@@ -26,6 +27,7 @@ const initialState: CurrentUserState = {
   token: "",
   userId: "",
   public: 0,
+  referralCode: "",
 };
 
 const currentUserSlice = createSlice({
