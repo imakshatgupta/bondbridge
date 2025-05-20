@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { Separator } from "../components/ui/separator";
-import { Trash2, Image, Smile, Video, Mic, ArrowLeft } from "lucide-react";
+import { Trash2, Image, Smile, Video, Mic, ArrowLeft, ChevronDown } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import {
   createPost,
@@ -9,7 +9,7 @@ import {
 } from "../apis/commonApiCalls/createPostApi";
 import { useApiCall } from "../apis/globalCatchError";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import TextareaAutosize from "react-textarea-autosize";
 import { useAppSelector } from "../store";
 import { useState, useEffect, useRef } from "react";
@@ -25,15 +25,25 @@ const CHARACTER_LIMIT = 150;
 import { CreatePostRequest } from "@/apis/apiTypes/request";
 import { MediaCropModal, CroppedFile } from "@/components/MediaCropModal";
 import VideoObserver from "@/components/common/VideoObserver";
+// Import Dropdown components
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PostData extends Partial<CreatePostRequest> {
   content: string;
   postId?: string;
+  communityId?: string;
+  isAnonymous?: boolean;
 }
 
 interface CreatePostProps {
   onSubmit?: (content: string, media?: File[]) => void;
   uploadMedia?: boolean;
+  isAnonymousEditing?: boolean;
   submitButtonText?: string;
   submitHandler?: (data: PostData) => void;
   initialContent?: string;
@@ -41,6 +51,7 @@ interface CreatePostProps {
   postId?: string;
   onCancel?: () => void;
   readOnlyMedia?: boolean;
+  communityPost?: boolean;
 }
 
 // Add a helper type that extends CroppedFile to include previewUrl explicitly
@@ -153,6 +164,7 @@ const VideoPreview: React.FC<{ videoFile: File | string }> = ({ videoFile }) => 
 
 const CreatePost = ({
   onSubmit,
+  isAnonymousEditing = false,
   uploadMedia = true,
   submitButtonText = "Post",
   submitHandler,
@@ -160,9 +172,11 @@ const CreatePost = ({
   initialMediaFiles = [],
   postId,
   onCancel,
+  communityPost = false,
   readOnlyMedia = false,
 }: CreatePostProps) => {
   const navigate = useNavigate();
+  const { communityId } = useParams<{ communityId: string }>();
   const [content, setContent] = useState(initialContent);
   const [mediaFiles, setMediaFiles] = useState<CroppedFile[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
@@ -183,6 +197,9 @@ const CreatePost = ({
   const [pendingImageFiles, setPendingImageFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
+
+  // State for anonymous posting toggle (only if communityPost is true)
+  const [postAs, setPostAs] = useState<"user" | "anonymous">("user");
 
   // Track if there are unsaved changes
   const hasUnsavedChanges =
@@ -298,7 +315,7 @@ const CreatePost = ({
   }, [hasUnsavedChanges]);
 
   // Get the current user's avatar from Redux store
-  const { avatar, nickname, profilePic } = useAppSelector(
+  const { avatar,  profilePic, username } = useAppSelector(
     (state) => state.currentUser
   );
 
@@ -772,7 +789,7 @@ const CreatePost = ({
         content: content.trim(),
       };
 
-      // Only include media files if uploadMedia is true
+      // Add media if enabled
       if (uploadMedia) {
         postData = {
           ...postData,
@@ -781,6 +798,12 @@ const CreatePost = ({
           image: mediaFiles as unknown as File[],
           document: documentFiles,
         };
+      }
+
+      // Add community-specific fields if applicable
+      if (communityPost) {
+        postData.communityId = communityId;
+        postData.isAnonymous = postAs === "anonymous";
       }
 
       // If editing a post, add postId
@@ -793,56 +816,57 @@ const CreatePost = ({
         if (submitHandler) {
           // Use custom submit handler if provided
           await submitHandler(postData);
-          success = true; // Assume success if handler doesn't throw
+          success = true;
         } else {
-          // Execute the default API call with error handling
+          // Prepare data for the default API call
           const apiPostData: CreatePostRequest = {
             content: postData.content,
             whoCanComment: postData.whoCanComment ?? 1,
             privacy: postData.privacy ?? 1,
             image: postData.image,
             document: postData.document,
+            // Add community fields for API call if needed (ensure API supports these)
+            ...(communityPost && {
+              isCommunityPost: true,
+              communityId: postData.communityId,
+              isAnonymous: postData.isAnonymous,
+            })
           };
 
+          // Use default API call
           const result = await executeCreatePost(apiPostData);
           success = result.success;
 
           if (success && result.data) {
-            // Show success message
             toast.success(
               postId
                 ? "Post updated successfully!"
                 : "Post created successfully!"
             );
-
-            // Clear form after successful submission
             setContent("");
             setMediaFiles([]);
             setMediaPreviews([]);
             setDocumentFiles([]);
-
-            // Call the onSubmit prop if provided
             onSubmit?.(content, [...mediaFiles, ...documentFiles]);
           }
         }
 
         if (success) {
-          // Set the flag *before* navigating
           isNavigatingAfterSubmitRef.current = true;
-          navigate("/");
+          // Navigate appropriately (e.g., back to community page or home)
+          if (communityPost && communityId) {
+             navigate(`/community/${communityId}`);
+          } else {
+             navigate("/");
+          }
         }
       } catch (error) {
-        // Error handled by useApiCall or custom handler
         console.error("Submission failed:", error);
         success = false;
       } finally {
-        // Only reset submitting state if navigation didn't happen
-        // If navigation happened, the component will unmount anyway
         if (!success) {
           setIsSubmitting(false);
         }
-        // Important: Reset the ref if submission failed, otherwise
-        // a subsequent navigation attempt might be incorrectly allowed.
         if (!success) {
           isNavigatingAfterSubmitRef.current = false;
         }
@@ -901,25 +925,66 @@ const CreatePost = ({
   };
 
   return (
-    <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg p-6">
+    <div className="bg-[var(--background)] text-[var(--foreground)] rounded-lg">
       <div className="flex items-center mb-4">
         <Button
           variant="ghost"
           size="sm"
           className="text-[var(--foreground)] p-0 mr-2 cursor-pointer"
-          onClick={() => navigate("/")}
+          onClick={() => communityPost && communityId ? navigate(`/community/${communityId}`) : navigate("/")}
         >
           <ArrowLeft size={20} />
         </Button>
       </div>
       
       <div className="flex items-start gap-3 pb-4">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={profilePic || avatar} alt={nickname || "Profile"} />
-          <AvatarFallback>
-            {nickname ? nickname[0].toUpperCase() : "U"}
-          </AvatarFallback>
-        </Avatar>
+        {/* Conditional Avatar/Dropdown */}
+        {communityPost ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 cursor-pointer group">
+                <Avatar className="h-10 w-10">
+                  {postAs === 'user' ? (
+                    <AvatarImage src={profilePic || avatar} alt={username || "Profile"} />
+                  ) : (
+                    <AvatarImage src="/profile/anonymous.png" alt="Anonymous" />
+                  )}
+                   <AvatarFallback>
+                    {postAs === 'user' ? (username ? username[0].toUpperCase() : "U") : "A"}
+                   </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium group-hover:text-muted-foreground">{postAs === 'user' ? (username || "User") : "Anonymous"}</span>
+                 <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onSelect={() => setPostAs('user')} className="cursor-pointer">
+                <Avatar className="h-6 w-6 mr-2">
+                   <AvatarImage src={profilePic || avatar} alt={username || "Profile"} />
+                   <AvatarFallback>
+                    {username ? username[0].toUpperCase() : "U"}
+                   </AvatarFallback>
+                </Avatar>
+                Post as {username || "Yourself"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setPostAs('anonymous')} className="cursor-pointer">
+                 <Avatar className="h-6 w-6 mr-2">
+                   <AvatarImage src="/profile/anonymous.png" alt="Anonymous" />
+                   <AvatarFallback>A</AvatarFallback>
+                 </Avatar>
+                 Post Anonymously
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          // Original Static Avatar for non-community posts
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={isAnonymousEditing ? "/profile/anonymous.png" : profilePic || avatar} alt={username || "Profile"} />
+            <AvatarFallback>
+              {username ? username[0].toUpperCase() : "U"}
+            </AvatarFallback>
+          </Avatar>
+        )}
 
         <div className="flex items-center gap-3 ml-auto">
           <Button
@@ -1139,7 +1204,7 @@ const CreatePost = ({
             )}
 
             {/* Main Preview */}
-            <div className="relative w-full rounded-lg overflow-hidden bg-muted">
+            <div className="relative w-full rounded-lg overflow-hidden bg-muted max-h-[70vh]">
               <div className="relative">
                 {mediaFiles[activePreviewIndex]?.type.startsWith("video/") ? (
                   <div className="relative w-full h-full">
@@ -1157,7 +1222,7 @@ const CreatePost = ({
                     // Use previewUrl for existing media images
                     src={(mediaFiles[activePreviewIndex] as MediaFileWithUrl).previewUrl || mediaPreviews[activePreviewIndex]}
                     alt="Active Preview"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain max-h-[70vh] "
                   />
                 )}
                 {!readOnlyMedia && (
@@ -1173,33 +1238,6 @@ const CreatePost = ({
           </div>
         )}
 
-        {documentFiles.length > 0 && (
-          <div className="mt-2 space-y-2">
-            {documentFiles.map((file, index) => (
-              <div
-                key={index}
-                className="p-2 bg-[var(--secondary)] rounded-md flex justify-between items-center"
-              >
-                <span className="text-sm text-[var(--muted-foreground)]">
-                  {file.name}
-                </span>
-                <button
-                  onClick={() =>
-                    setDocumentFiles((prev) =>
-                      prev.filter((_, i) => i !== index)
-                    )
-                  }
-                  className="p-1 hover:bg-[var(--secondary-hover)] rounded-full"
-                >
-                  <Trash2
-                    size={16}
-                    className="text-[var(--muted-foreground)]"
-                  />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Media Crop Modal */}

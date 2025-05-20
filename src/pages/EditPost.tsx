@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import CreatePost from './CreatePost';
 import { updatePost } from '@/apis/commonApiCalls/createPostApi';
+import { editCommunityPost } from '@/apis/commonApiCalls/communitiesApi';
 import { useApiCall } from '@/apis/globalCatchError';
 import { toast } from 'sonner';
 import { CroppedFile } from '@/components/MediaCropModal';
 import { MediaItem, PostData, UpdatePostParams } from '@/constants/posts';
 
-const EditPost = () => {
+const EditPost = ({ communityPost = false }: { communityPost?: boolean }) => {
   const navigate = useNavigate();
-  const { postId } = useParams<{ postId: string }>();
+  const { communityId, postId } = useParams<{ communityId: string, postId: string }>();
   const location = useLocation();
   const [initialContent, setInitialContent] = useState<string>('');
   const [initialMedia, setInitialMedia] = useState<CroppedFile[]>([]);
+  const isAnonymous = location.state?.isAnonymous || false;
   const [isLoading, setIsLoading] = useState(true);
   const [executeUpdatePost] = useApiCall(updatePost);
+  const [executeEditCommunityPost] = useApiCall(editCommunityPost);
 
   useEffect(() => {
     // Check if we have location state with post data
@@ -80,12 +83,23 @@ const EditPost = () => {
         return;
       }
 
-      const updateParams: UpdatePostParams = {
-        postId,
-        content: postData.content
-      };
-      
-      const result = await executeUpdatePost(updateParams);
+      let result: { success: boolean; message?: string };
+
+      if (communityPost) {
+        if (!communityId) {
+          toast.error('Community ID is missing for community post edit');
+          return;
+        }
+        // Call the community post edit function
+        result = await executeEditCommunityPost(communityId, postId, postData.content);
+      } else {
+        // Call the regular post edit function
+        const updateParams: UpdatePostParams = {
+          postId,
+          content: postData.content
+        };
+        result = await executeUpdatePost(updateParams);
+      }
       
       if (result.success) {
         toast.success('Post updated successfully!');
@@ -114,6 +128,7 @@ const EditPost = () => {
         initialContent={initialContent}
         initialMediaFiles={initialMedia}
         postId={postId}
+        isAnonymousEditing={isAnonymous}
         onCancel={handleCancel}
         readOnlyMedia={true} // This flag will indicate media should be displayed but not editable
       />

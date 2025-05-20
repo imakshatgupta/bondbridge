@@ -111,6 +111,7 @@ export type CreateProfileResponse = {
     interests: string[];
     name: string;
     profilePic?: string;
+    referralCode?: string;
   };
   apiToken: string;
   socketToken: string;
@@ -133,6 +134,8 @@ export interface CommentData {
   comment: string;
   createdAt: string;
   agoTime: string;
+  isAnonymous?: boolean;
+  isAdmin?: boolean;
   user: {
     userId: string;
     name: string;

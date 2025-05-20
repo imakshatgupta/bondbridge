@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/carousel";
 import { useApiCall } from "@/apis/globalCatchError";
 import { deletePost } from "@/apis/commonApiCalls/createPostApi";
+import { deletePost as deleteCommunityPost } from "@/apis/commonApiCalls/communitiesApi";
 import { toast } from "sonner";
 import { PostProps } from "@/types/post";
 import {
@@ -34,6 +35,7 @@ import { ReportModal } from './ReportModal';
 import ReactionComponent from "./global/ReactionComponent";
 import VideoObserver from "./common/VideoObserver";
 import { TruncatedText } from "@/components/ui/TruncatedText";
+import { getRelativeTime } from "@/lib/utils";
 
 export function Post({
     user,
@@ -43,17 +45,21 @@ export function Post({
     media = [],
     comments,
     datePosted,
+    // agoTimeString = "", //not used because we are using the datePosted (createdAt)
     isOwner = false,
     onCommentClick,
     onLikeClick,
     feedId,
     onDelete,
-    isCommunity,
+    isCommunity = false,
+    isAnonymous = false,
+    isCommunityAdmin = false,
     communityId,
     initialReaction = { hasReacted: false, reactionType: null },
     initialReactionCount = 0,
     initialReactionDetails = { total: 0, types: { like: 0, love: 0, haha: 0, lulu: 0 } }
 }: PostProps) {
+    console.log("datePosted", datePosted);
     const navigate = useNavigate();
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -62,7 +68,11 @@ export function Post({
     const videoRefs = useRef<Record<number, HTMLVideoElement>>({});
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const currentUserId = localStorage.getItem('userId') || '';
-    
+    const timestamp = (datePosted ? datePosted : 0) * (isCommunity ? 1 : 1000);
+    // normal backend sends in seconds, community sends in milliseconds
+
+    const date = new Date(timestamp);
+    const timeAgo = getRelativeTime(date.toISOString());
     // Use state to track reactions but initialize from props
     const [reactionCount, setReactionCount] = useState(initialReactionCount);
     const [reactionDetails, setReactionDetails] = useState(initialReactionDetails);
@@ -80,6 +90,7 @@ export function Post({
     };
 
     const [executeDeletePost] = useApiCall(deletePost);
+    const [executeDeleteCommunityPost] = useApiCall(deleteCommunityPost);
 
     // Determine if we should show a carousel or a single image
     const hasMultipleMedia = media && media.length > 1;
@@ -92,8 +103,13 @@ export function Post({
     const handleDeletePost = async () => {
         if (!feedId) return;
         setIsDeleteDialogOpen(false);
-        
-        const result = await executeDeletePost(feedId);
+        let result;
+        if (isCommunity) {
+            result = await executeDeleteCommunityPost(communityId ?? "", feedId);
+        }
+        else {
+            result = await executeDeletePost(feedId);
+        }
 
         if (result.success) {
             toast.success("Post deleted successfully");
@@ -107,13 +123,25 @@ export function Post({
     };
 
     const handleEditPost = () => {
-        navigate(`/edit-post/${feedId}`, {
-            state: {
-                caption,
-                postId: feedId,
-                media
-            }
-        });
+        if (isCommunity) {
+            navigate(`/edit-community-post/${communityId}/${feedId}`, {
+                state: {
+                    caption,
+                    postId: feedId,
+                    media,
+                    isAnonymous,
+                }
+            });
+        }
+        else {
+            navigate(`/edit-post/${feedId}`, {
+                state: {
+                    caption,
+                    postId: feedId,
+                    media
+                }
+            });
+        }
     };
 
     // Handle reaction changes
@@ -123,18 +151,18 @@ export function Post({
             hasReacted,
             reactionType
         });
-        
+
         // Update reaction count optimistically
         // If adding a reaction and previously had none
         if (hasReacted && !reaction.hasReacted) {
             setReactionCount((prev: number) => prev + 1);
-        } 
+        }
         // If removing a reaction
         else if (!hasReacted && reaction.hasReacted) {
             setReactionCount((prev: number) => Math.max(0, prev - 1));
         }
         // If changing reaction type, count stays the same
-        
+
         // Notify parent component about the change (if needed)
         if (onLikeClick) {
             onLikeClick();
@@ -164,7 +192,7 @@ export function Post({
     const toggleMute = (e: React.MouseEvent) => {
         e.stopPropagation();
         setIsMuted(prev => !prev);
-        
+
         // Update all video elements for this post
         Object.values(videoRefs.current).forEach(videoEl => {
             if (videoEl) {
@@ -184,23 +212,23 @@ export function Post({
 
     return (
         <>
-            <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4" data-post-id={feedId}>
+            <Card className="rounded-none border-x-0 border-t-0 shadow-none mb-4 " data-post-id={feedId}>
                 {/* Video observer component to handle autoplay/pause based on visibility */}
                 {feedId && <VideoObserver feedId={feedId} media={media} />}
-                
-                <div className="flex items-center justify-between p-4">
+
+                <div className="flex items-center justify-between p-4 pb-2">
                     <div
                         className="flex items-center gap-3 cursor-pointer"
                         onClick={handleProfileClick}
                     >
                         <Avatar>
-                            <AvatarImage src={avatar} alt={user} />
-                            <AvatarFallback>{user?.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={isAnonymous ? "/profile/anonymous.png" : avatar} alt={isAnonymous ? "Anonymous" : user} />
+                            <AvatarFallback>{isAnonymous ? "A" : user?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
                             <p className="font-semibold flex items-center gap-2">
-                                {user}
-                                {isCommunity && (
+                                {isAnonymous ? "Anonymous" : user}
+                                {isCommunityAdmin && (
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-[#4f9dc7]">
                                         <path d="M9 12l2 2 4-4"></path>
                                         <circle cx="12" cy="12" r="10"></circle>
@@ -212,33 +240,33 @@ export function Post({
                     <ThreeDotsMenu items={menuItems} />
                 </div>
                 <CardContent className="p-4 pt-0">
-                    <TruncatedText 
-                        text={caption} 
-                        limit={200} 
-                        showToggle={true} 
-                        className="text-card-foreground w-full" 
+                    <TruncatedText
+                        text={caption}
+                        limit={400}
+                        showToggle={true}
+                        className="text-card-foreground w-full mt-0"
                         buttonClassName="text-foreground text-xs mt-1 cursor-pointer hover:underline font-bold"
                         align="left"
                     />
 
                     {hasMultipleMedia && media && (
-                        <div className="mt-4 rounded-lg overflow-hidden">
+                        <div className="mt-3 rounded-lg overflow-hidden">
                             <Carousel className="w-full">
                                 <CarouselContent>
                                     {media.map((item, index) => (
                                         <CarouselItem key={`${userId}-media-${index}`}>
                                             {item.type === "image" && (
-                                                <div className="max-h-[100vh] relative bg-background flex items-end justify-center">
+                                                <div className="max-h-[70vh] relative bg-background flex items-end justify-center">
                                                     <img
                                                         src={item.url}
                                                         alt={`Post media ${index + 1}`}
-                                                        className="max-h-[100vh] w-full object-contain"
+                                                        className="max-h-[70vh] w-full object-contain"
                                                     />
                                                 </div>
                                             )}
                                             {item.type === "video" && (
-                                                <div 
-                                                    className="max-h-[100vh] relative bg-background flex items-center justify-center"
+                                                <div
+                                                    className="max-h-[70vh] relative bg-background flex items-center justify-center"
                                                     onMouseEnter={() => setShowControls(true)}
                                                     onMouseLeave={() => setShowControls(false)}
                                                 >
@@ -247,13 +275,13 @@ export function Post({
                                                             if (el) videoRefs.current[index] = el;
                                                         }}
                                                         src={item.url}
-                                                        className="max-h-[100vh] w-full object-contain"
+                                                        className="max-h-[70vh] w-full object-contain"
                                                         autoPlay
                                                         loop
                                                         muted={isMuted}
                                                         playsInline
                                                     />
-                                                    <button 
+                                                    <button
                                                         className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
                                                         onClick={toggleMute}
                                                     >
@@ -264,26 +292,26 @@ export function Post({
                                         </CarouselItem>
                                     ))}
                                 </CarouselContent>
-                                <CarouselPrevious className="left-2 bg-background/80" />
-                                <CarouselNext className="right-2 bg-background/80" />
+                                <CarouselPrevious className="left-0 bg-background/80" />
+                                <CarouselNext className="right-0 bg-background/80" />
                             </Carousel>
                         </div>
                     )}
-                    
+
                     {!hasMultipleMedia && hasSingleMedia && (
-                        <div className="mt-4 rounded-lg overflow-hidden">
+                        <div className="mt-3 rounded-lg overflow-hidden">
                             {media && media.length > 0 && media[0].type === "image" && (
-                                <div className="max-h-[100vh] relative bg-background flex items-center justify-center">
+                                <div className="max-h-[70vh] relative bg-background flex items-center justify-center">
                                     <img
                                         src={media[0].url}
                                         alt="Post"
-                                        className="max-h-[100vh] w-full object-contain"
+                                        className="max-h-[70vh] w-full object-contain"
                                     />
                                 </div>
                             )}
                             {media && media.length > 0 && media[0].type === "video" && (
-                                <div 
-                                    className="max-h-[100vh] relative bg-background flex items-center justify-center"
+                                <div
+                                    className="max-h-[70vh] relative bg-background flex items-center justify-center"
                                     onMouseEnter={() => setShowControls(true)}
                                     onMouseLeave={() => setShowControls(false)}
                                 >
@@ -292,13 +320,13 @@ export function Post({
                                             if (el) videoRefs.current[0] = el;
                                         }}
                                         src={media[0].url}
-                                        className="max-h-[100vh] w-full object-contain"
+                                        className="max-h-[70vh] w-full object-contain"
                                         autoPlay
                                         loop
                                         muted={isMuted}
                                         playsInline
                                     />
-                                    <button 
+                                    <button
                                         className={`absolute bottom-4 right-4 p-2 bg-background/70 rounded-full hover:bg-background transition-colors cursor-pointer ${showControls ? 'opacity-100' : 'opacity-0'}`}
                                         onClick={toggleMute}
                                     >
@@ -312,7 +340,7 @@ export function Post({
                     <div className="flex items-center justify-between mt-4 text-muted-foreground">
                         <div className="flex items-center gap-3">
                             {feedId && (
-                                <ReactionComponent 
+                                <ReactionComponent
                                     entityId={feedId}
                                     entityType="feed"
                                     initialReaction={reaction}
@@ -337,13 +365,15 @@ export function Post({
                                 <Share2 className="w-5 h-5" />
                             </button>
                         </div>
-                        <div className="text-sm text-muted-foreground">{datePosted}</div>
+                        <div className="text-sm text-muted-foreground">
+                            {timeAgo}
+                        </div>
                     </div>
                 </CardContent>
 
                 {feedId && (
                     <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-                        <DialogContent className="sm:max-w-md h-[80vh]">
+                        <DialogContent className="sm:max-w-md h-[70vh]">
                             <SharePostPage
                                 postData={{
                                     _id: feedId,

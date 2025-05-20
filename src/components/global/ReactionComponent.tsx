@@ -237,7 +237,7 @@ const ReactionComponent = ({
     } finally {
       setIsLoadingUsers(false);
     }
-  }, [entityId, entityType, executeGetAllReactions, executeFetchPostDetails, isCommunity, isLoadingUsers]);
+  }, [communityId]);
 
   // Update current reaction when initialReaction changes
   useEffect(() => {
@@ -372,7 +372,6 @@ const ReactionComponent = ({
           postId: entityId,
           reactionType: reactionType
         });
-        
         if (result.success && result.data) {
           // Process the response and update the state
           const postData = result.data;

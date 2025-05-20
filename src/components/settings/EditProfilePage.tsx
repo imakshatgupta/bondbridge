@@ -47,13 +47,22 @@ const EditProfilePage: React.FC = () => {
       interests,
       bio: bio || '',
     });
-  }, [username, email, interests, bio]);
+
+    // Update custom profile picture preview if needed
+    setCustomProfilePicPreview(profilePic && profilePic !== avatar ? profilePic : null);
+    setActiveProfileTab(profilePic && profilePic !== avatar ? "custom" : "avatar");
+    
+  }, [username, email, interests, bio, profilePic, avatar]);
 
   const [selectedAvatar, setSelectedAvatar] = useState(avatar);
   const [selectedInterests, setSelectedInterests] = useState<string[]>(interests);
   const [customProfilePic, setCustomProfilePic] = useState<File | null>(null);
-  const [customProfilePicPreview, setCustomProfilePicPreview] = useState<string | null>(profilePic || null);
-  const [activeProfileTab, setActiveProfileTab] = useState<string>(profilePic ? "custom" : "avatar");
+  const [customProfilePicPreview, setCustomProfilePicPreview] = useState<string | null>(
+    profilePic && profilePic !== avatar ? profilePic : null
+  );
+  const [activeProfileTab, setActiveProfileTab] = useState<string>(
+    profilePic && profilePic !== avatar ? "custom" : "avatar"
+  );
   const [shouldDeleteProfilePic, setShouldDeleteProfilePic] = useState(false);
   
   const [maleAvatars, setMaleAvatars] = useState<AvatarData[]>([]);

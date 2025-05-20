@@ -76,7 +76,8 @@ const SetupProfile: React.FC = () => {
     skillSelected,
     avatar,
     image,
-    communitiesSelected
+    communitiesSelected,
+    referralCode
   } = useAppSelector(state => state.createProfile);
 
   // Use our custom hooks for API calls
@@ -86,6 +87,9 @@ const SetupProfile: React.FC = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
+    //delete referral code from session storage
+    sessionStorage.removeItem('referralCode');
+
     // First submit the profile
     const result = await executeSubmit({
       name,
@@ -93,6 +97,7 @@ const SetupProfile: React.FC = () => {
       dateOfBirth,
       password,
       skillSelected,
+      referralCode: referralCode || "",
       image: image || undefined,
       avatar: avatar || undefined,
       generateToken: "1",

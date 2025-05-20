@@ -24,14 +24,9 @@ export const fetchPosts = async (page: number): Promise<FetchPostsResponse> => {
 
     // Handle the actual response structure
     if (response.status === 200) {
-      // Sort posts by createdAt in ascending order (earlier posts first)
-      const sortedPosts = [...(response.data.posts || [])].sort(
-        (a, b) => b.createdAt - a.createdAt
-      );
-
       return {
         success: true,
-        posts: sortedPosts,
+        posts: response.data.posts,
         hasMore: (response.data.posts || []).length > 0, // If we received posts, there might be more
         message: response.data.message,
         count: response.data.count,
@@ -149,6 +144,7 @@ export const getPostDetails = async (
     } else {
       throw new Error(response.data.message || "Failed to fetch post details");
     }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // Check if it's a 403 unauthorized access error
     if (error.response && error.response.status === 403) {

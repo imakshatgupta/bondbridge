@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Gift } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
+import { FileText, Shield } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import {
   setActivePage,
@@ -16,7 +17,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { useApiCall } from "@/apis/globalCatchError";
 import { toast } from "sonner";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 
 const Settings = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +27,7 @@ const Settings = () => {
   const [searchParams] = useSearchParams();
 
   // Get user data from Redux store
-  const { username,  email, avatar, privacyLevel, profilePic } =
+  const { username, email, avatar, privacyLevel, profilePic } =
     useAppSelector((state) => state.currentUser);
 
   const handleSettingsClick = (page: SettingPage) => {
@@ -95,6 +96,8 @@ const Settings = () => {
                 profilePic: result.data.profilePic,
                 avatar: result.data.avatarSrc,
                 privacyLevel: result.data.privacyLevel,
+                referralCode: result.data.referralCode,
+                referralCount: result.data.referralCount,
                 bio: result.data.bio,
                 interests: result.data.interests,
                 public: result.data.public,
@@ -168,14 +171,18 @@ const Settings = () => {
             />
             <AvatarFallback>{username?.substring(0, 2) || "U"}</AvatarFallback>
           </Avatar>
-          <div>
-            <h2 className="text-xl font-semibold">
-              {username}
-            </h2>
-            <p className="text-muted-foreground">
-              {email || "No Email Available"}
-            </p>
+
+          <div className="flex justify-between w-full items-center">
+            <div>
+              <h2 className="text-xl font-semibold">
+                {username}
+              </h2>
+              <p className="text-muted-foreground">
+                {email || "No Email Available"}
+              </p>
+            </div>
           </div>
+
         </div>
       )}
 
@@ -292,6 +299,40 @@ const Settings = () => {
           </div>
           <span>Account</span>
         </button>
+
+        {/* Add New Referrals Link Here */}
+        <button
+          className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
+          onClick={() => handleSettingsClick("referrals")}
+        >
+          <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
+            <Gift className="h-5 w-5" />
+          </div>
+          <span>Referrals</span>
+        </button>
+
+        {/* Legal Links Section */}
+        <div className="mt-3 border-t border-border pt-2">
+          <Link
+            to="/terms"
+            className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
+          >
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
+              <FileText className="h-5 w-5" />
+            </div>
+            <span>Terms & Conditions</span>
+          </Link>
+
+          <Link
+            to="/privacy"
+            className="w-full flex items-center gap-4 p-4 hover:bg-accent/50 cursor-pointer"
+          >
+            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-muted">
+              <Shield className="h-5 w-5" />
+            </div>
+            <span>Privacy Policy</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

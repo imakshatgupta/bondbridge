@@ -5,7 +5,7 @@ import Navbar from "./Navbar";
 import { useAppDispatch, useAppSelector } from "@/store";
 import ChatInterface from "./activity/ChatInterface";
 import { setActiveChat } from "@/store/chatSlice";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { fetchUserProfile } from "@/apis/commonApiCalls/profileApi";
 import { getSuggestedUsers } from "@/apis/commonApiCalls/homepageApi";
 import { SuggestedUser } from "@/apis/apiTypes/response";
@@ -18,6 +18,7 @@ import { useApiCall } from "@/apis/globalCatchError";
 import CommunityFeed from "./activity/CommunityFeed";
 import { TruncatedText } from "./ui/TruncatedText";
 import MobileAppDownload from "./MobileAppDownload";
+import FollowingFollowers from "./FollowingFollowers";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,9 +38,15 @@ const Layout: React.FC<LayoutProps> = ({
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
   const [fetchSuggestedUsers, isLoadingSuggested] = useApiCall(getSuggestedUsers);
+  const location = useLocation();
 
   // Mobile detection - check for cookie to override
   const [useWebVersion, setUseWebVersion] = useState(false);
+  
+  // Define paths accessible on mobile without the app download prompt
+  const publicMobilePaths = ['/login', '/signup', '/setup-profile', '/privacy', '/terms','/forgot-password'];
+  const currentPath = location.pathname;
+  const isPublicMobilePath = publicMobilePaths.includes(currentPath);
   
   useEffect(() => {
     // Check for cookie that allows mobile users to use the web version
@@ -61,6 +68,10 @@ const Layout: React.FC<LayoutProps> = ({
             avatar: result.data.avatarSrc,
             bio: result.data.bio,
             privacyLevel: result.data.privacyLevel,
+            followers: result.data.followers,
+            following: result.data.following,
+            isBlocked: result.data.isBlocked,
+            avatarSrc: result.data.avatarSrc,
           })
         );
       }
@@ -115,12 +126,12 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <>
-    {!useWebVersion && (
+    {!useWebVersion && !isPublicMobilePath && (
       <div className="md:hidden">
         <MobileAppDownload />
       </div>
     )}
-    <div className={`flex-col overflow-hidden h-screen w-screen overflow-x-hidden ${!useWebVersion ? 'hidden md:flex' : 'flex'}`}>
+    <div className={`flex-col overflow-hidden  w-screen overflow-x-hidden ${!useWebVersion && !isPublicMobilePath ? 'hidden md:flex h-screen' : 'flex'}`}>
       <Toaster/>
       {/* Navbar */}
       <Navbar />
@@ -156,7 +167,7 @@ const Layout: React.FC<LayoutProps> = ({
                 )}
               </div>
             ) : (
-              <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl">
+              <div className="p-5 w-1/2 px-12 space-y-6 *:rounded-xl overflow-y-auto h-[calc(100vh-64px)] app-scrollbar">
                 {isLoadingProfile ? (
                   // Show skeleton loaders when loading
                   <>
@@ -195,8 +206,14 @@ const Layout: React.FC<LayoutProps> = ({
                       </div>
                     </div>
 
+                    <div className="border-2 border-sidebar-border">
+                      <div className="max-h-[45vh] p-4 overflow-y-auto app-scrollbar">
+                        <FollowingFollowers sidebar={true} />
+                      </div>
+                    </div>
+
                     <div className="p-6 border-2 overflow-y-auto max-h-[52vh] app-scrollbar">
-                      <h3 className="font-semibold text-lg mb-4 text-sidebar-foreground text-center">
+                      <h3 className="font-semibold  mb-4 text-sidebar-foreground text-center">
                         Suggested Friends
                       </h3>
                       {isLoadingSuggested ? (
@@ -209,7 +226,7 @@ const Layout: React.FC<LayoutProps> = ({
                           </p>
                         </div>
                       ) : (
-                        <ul className="space-y-3">
+                        <ul className="space-y-1">
                           {sidebarUsers.map((user) => (
                             <SidebarAvatar
                               key={user.id}

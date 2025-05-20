@@ -4,12 +4,20 @@ import {
   setName, 
   setEmail, 
   setDateOfBirth,
-  setPassword 
+  setPassword, 
+  setReferralCode
 } from "../../store/createProfileSlice";
 import { RootState } from "../../store";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 interface PersonalInfoTabProps {
   onValidationChange?: (isValid: boolean) => void;
@@ -17,12 +25,20 @@ interface PersonalInfoTabProps {
 
 const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange }) => {
   const dispatch = useDispatch();
-  const { name, email, dateOfBirth, password } = useSelector(
+  const { name, email, dateOfBirth, password, referralCode } = useSelector(
     (state: RootState) => state.createProfile
   );
   const [showPassword, setShowPassword] = useState(false);
   const [ageError, setAgeError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  // Check for referral code in sessionStorage on component mount
+  useEffect(() => {
+    const storedReferralCode = sessionStorage.getItem('referralCode');
+    if (storedReferralCode) {
+      dispatch(setReferralCode(storedReferralCode));
+    }
+  }, [dispatch]);
 
   const isAtLeast18YearsOld = (dateString: string): boolean => {
     const birthDate = new Date(dateString);
@@ -89,6 +105,9 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
       case "password":
         dispatch(setPassword(value));
         break;
+      case "referralCode":
+        dispatch(setReferralCode(value));
+        break;
     }
   };
 
@@ -124,21 +143,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
         />
       </div>
       
-      <div>
-        <Label htmlFor="dob">
-          Date Of Birth<span className="text-destructive -ml-1">*</span>
-        </Label>
-        <Input
-          type="date"
-          id="dob"
-          value={dateOfBirth}
-          onChange={handleChange}
-          className="date-input"
-        />
-        {ageError && (
-          <div className="mt-2 text-foreground text-sm">{ageError}</div>
-        )}
-      </div>
+
       
       <div>
         <Label htmlFor="password">
@@ -183,6 +188,52 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({ onValidationChange })
         {passwordError && (
           <div className="mt-2 text-foreground text-sm">{passwordError}</div>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 md:gap-4 gap-6">
+
+        <div>
+          <Label htmlFor="dob">
+            Date Of Birth<span className="text-destructive -ml-1">*</span>
+          </Label>
+          <Input
+            type="date"
+            id="dob"
+            value={dateOfBirth}
+            onChange={handleChange}
+            className="date-input text-foreground"
+          />
+          {ageError && (
+            <div className="mt-2 text-foreground text-sm">{ageError}</div>
+          )}
+        </div>
+
+        <div>
+          <div className="">
+            <Label htmlFor="referralCode" className="flex items-center space-x-1">
+              Referral Code <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Enter the code if someone referred you.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            </Label>
+            
+          </div>
+          <Input
+            type="text"
+            id="referralCode"
+            value={referralCode}
+            onChange={handleChange}
+            readOnly={!!sessionStorage.getItem('referralCode')}
+            className={sessionStorage.getItem('referralCode') ? 'bg-muted cursor-not-allowed' : ''}
+          />
+        </div>
+
       </div>
     </div>
   );
